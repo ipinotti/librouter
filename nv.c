@@ -10,9 +10,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#if defined(CONFIG_BERLIN)
-#include "../linux/arch/powerpc/platforms/83xx/berlin.h"
-#endif
 #include <mtd/mtd-user.h>
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
@@ -319,154 +316,6 @@ error:
 	return -1;
 }
 
-#ifdef CONFIG_BERLIN_SATROUTER
-
-/* Le a configuracao da memoria nao volatil (flash) e armazena no arquivo 'filename'. 
- * Retorna o tamanho da configuracao, ou -1 em caso de erro.
- * Se a regiao principal estiver corrompida, entao a regiao backup serah utilizada.
- */
-int load_configuration(char *filename)
-{
-	struct _nv nv;
-	char *config=NULL;
-	erase_info_t erase;
-	int fd, data_ok=0, from_bck=0;
-
-	if(search_nv(&nv, DEV_STARTUP_CONFIG) >= 0)
-	{
-		if(nv.config.hdr.magic_number == MAGIC_CONFIG)
-		{
-			if((fd = open(DEV_STARTUP_CONFIG, O_RDONLY)) >= 0)
-			{
-				config = read_nv(fd, &nv.config);
-				close(fd);
-				
-				if(config != NULL)
-					data_ok = 1;
-			}
-		}
-	}
-	if( !data_ok )
-	{
-		/* Tentamos buscar a configuracao no setor de backup */
-		if(search_nv(&nv, DEV_STARTUP_CONFIG_BCK) >= 0)
-		{
-			if(nv.config.hdr.magic_number == MAGIC_CONFIG)
-			{
-				if((fd = open(DEV_STARTUP_CONFIG_BCK, O_RDONLY)) >= 0)
-				{
-					config = read_nv(fd, &nv.config);
-					close(fd);
-					
-					if(config != NULL)
-					{
-						data_ok = 1;
-						from_bck = 1;
-					}
-				}
-			}
-		}
-	}
-	if( data_ok )
-	{
-		if((fd = open(filename, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR)) < 0)
-		{
-			pr_error(1, "could not open %s", filename);
-			free(config);
-			return -1;
-		}
-		write(fd, config, nv.config.hdr.size+1);
-		close(fd);
-		free(config);
-		
-		if( from_bck && nv.config.hdr.size > 0 )
-		{
-			/* Copiamos a configuracao valida do setor de backup para o setor principal */
-			if( (config = malloc(CFG_CONFBCK_SIZE)) )
-			{
-				if((fd = open(DEV_STARTUP_CONFIG_BCK, O_RDONLY)) >= 0)
-				{
-					read(fd, config, CFG_CONFBCK_SIZE);
-					close(fd);
-					
-					if((fd = open(DEV_STARTUP_CONFIG, O_RDWR)) >= 0)
-					{
-						erase.start = 0;
-						erase.length = CFG_CONF_SIZE;
-						if(ioctl(fd, MEMERASE, &erase) == 0)
-						{
-							lseek(fd, 0, SEEK_SET);
-							write(fd, config, (CFG_CONF_SIZE < CFG_CONFBCK_SIZE) ? CFG_CONF_SIZE : CFG_CONFBCK_SIZE);
-						}
-						close(fd);
-					}
-				}
-				free(config);
-			}
-		}
-		return nv.config.hdr.size;
-	}
-	return 0;
-}
-
-int load_previous_configuration(char *filename)
-{
-	char *config;
-	struct _nv nv;
-	int fd, data_ok=0;
-
-	if(search_nv(&nv, DEV_STARTUP_CONFIG) >= 0)
-	{
-		if(nv.previousconfig.hdr.magic_number == MAGIC_CONFIG)
-		{
-			if((fd = open(DEV_STARTUP_CONFIG, O_RDONLY)) >= 0)
-			{
-				config = read_nv(fd, &nv.previousconfig);
-				close(fd);
-				
-				if(config != NULL)
-				{
-					if((fd = open(filename, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR)) >= 0)
-					{
-						write(fd, config, nv.previousconfig.hdr.size+1);
-						close(fd);
-						data_ok = 1;
-					}
-					free(config);
-				}
-			}
-		}
-	}
-	if( !data_ok )
-	{
-		if(search_nv(&nv, DEV_STARTUP_CONFIG_BCK) >= 0)
-		{
-			if(nv.previousconfig.hdr.magic_number == MAGIC_CONFIG)
-			{
-				if((fd = open(DEV_STARTUP_CONFIG_BCK, O_RDONLY)) >= 0)
-				{
-					config = read_nv(fd, &nv.previousconfig);
-					close(fd);
-				
-					if(config != NULL)
-					{
-						if((fd = open(filename, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR)) >= 0)
-						{
-							write(fd, config, nv.previousconfig.hdr.size+1);
-							close(fd);
-							data_ok = 1;
-						}
-						free(config);
-					}
-				}
-			}
-		}
-	}
-	return (data_ok ? nv.previousconfig.hdr.size : -1);
-}
-
-#else /* CONFIG_BERLIN_SATROUTER */
-
 /* Le a configuracao da memoria nao volatil (flash) e armazena no arquivo 'filename' 
  * Retorna o tamanho da configuracao, ou -1 em caso de erro */
 int load_configuration(char *filename)
@@ -529,8 +378,6 @@ int load_previous_configuration(char *filename)
 	return nv.previousconfig.hdr.size;
 }
 
-#endif
-
 #if 0
 #ifdef CONFIG_PROTOTIPO
 int load_slot_configuration(char *filename, int slot)
@@ -566,66 +413,6 @@ int load_slot_configuration(char *filename, int slot)
 #endif
 #endif
 
-#ifdef CONFIG_BERLIN_SATROUTER
-
-int load_ssh_secret(char *filename)
-{
-	char *secret;
-	struct _nv nv;
-	int fd, data_ok=0;
-
-	if(search_nv(&nv, DEV_STARTUP_CONFIG) >= 0)
-	{
-		if(nv.ssh.hdr.magic_number == MAGIC_SSH)
-		{
-			if((fd=open(DEV_STARTUP_CONFIG, O_RDONLY)) >= 0)
-			{
-				secret=read_nv(fd, &nv.ssh);
-				close(fd);
-				
-				if(secret != NULL)
-				{
-					if((fd=open(filename, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR)) >= 0)
-					{
-						write(fd, secret, nv.ssh.hdr.size);
-						close(fd);
-						data_ok = 1;
-					}
-					free(secret);
-				}
-			}
-		}
-	}
-	if( !data_ok )
-	{
-		if(search_nv(&nv, DEV_STARTUP_CONFIG_BCK) >= 0)
-		{
-			if(nv.ssh.hdr.magic_number == MAGIC_SSH)
-			{
-				if((fd=open(DEV_STARTUP_CONFIG_BCK, O_RDONLY)) >= 0)
-				{
-					secret=read_nv(fd, &nv.ssh);
-					close(fd);
-				
-					if(secret != NULL)
-					{
-						if((fd=open(filename, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR)) >= 0)
-						{
-							write(fd, secret, nv.ssh.hdr.size);
-							close(fd);
-							data_ok = 1;
-						}
-						free(secret);
-					}
-				}
-			}
-		}
-	}
-	return (data_ok ? nv.ssh.hdr.size : -1);
-}
-
-#else
-
 int load_ssh_secret(char *filename)
 {
 	int fd;
@@ -656,70 +443,7 @@ int load_ssh_secret(char *filename)
 	return nv.ssh.hdr.size;
 }
 
-#endif
-
 #ifdef OPTION_NTPD
-
-#ifdef CONFIG_BERLIN_SATROUTER
-
-int load_ntp_secret(char *filename)
-{
-	char *secret;
-	struct _nv nv;
-	int fd, data_ok=0;
-
-	if(search_nv(&nv, DEV_STARTUP_CONFIG) >= 0)
-	{
-		if(nv.ntp.hdr.magic_number == MAGIC_NTP)
-		{
-			if( (fd=open(DEV_STARTUP_CONFIG, O_RDONLY)) >= 0 )
-			{
-				secret=read_nv(fd, &nv.ntp);
-				close(fd);
-				
-				if(secret != NULL)
-				{
-					if((fd=open(filename, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR)) >= 0)
-					{
-						write(fd, secret, nv.ntp.hdr.size);
-						close(fd);
-						data_ok = 1;
-					}
-					free(secret);
-				}
-			}
-		}
-	}
-	if( !data_ok )
-	{
-		if(search_nv(&nv, DEV_STARTUP_CONFIG_BCK) >= 0)
-		{
-			if(nv.ntp.hdr.magic_number == MAGIC_NTP)
-			{
-				if( (fd=open(DEV_STARTUP_CONFIG_BCK, O_RDONLY)) >= 0 )
-				{
-					secret=read_nv(fd, &nv.ntp);
-					close(fd);
-				
-					if(secret != NULL)
-					{
-						if((fd=open(filename, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR)) >= 0)
-						{
-							write(fd, secret, nv.ntp.hdr.size);
-							close(fd);
-							data_ok = 1;
-						}
-						free(secret);
-					}
-				}
-			}
-		}
-	}
-	return (data_ok ? nv.ntp.hdr.size : -1);
-}
-
-#else
-
 int load_ntp_secret(char *filename)
 {
 	int fd;
@@ -750,105 +474,7 @@ int load_ntp_secret(char *filename)
 	return nv.ntp.hdr.size;
 }
 
-#endif
-
-#endif
-
-#ifdef CONFIG_BERLIN_SATROUTER
-
-/* Salva na  memoria nao volatil (flash) a configuracao armazenada no arquivo 'filename' */
-int save_configuration(char *filename)
-{
-	int fd;
-	long size;
-	struct _nv nv;
-	struct stat st;
-	cfg_header header;
-	erase_info_t erase;
-	unsigned char *config;
-
-	if ((fd=open(filename, O_RDONLY)) < 0)
-	{
-		pr_error(1, "could not open %s", filename);
-		return -1;
-	}
-	fstat(fd, &st);
-	size=st.st_size;
-	if ((config=malloc(size+1)) == NULL)
-	{
-		pr_error(1, "unable to allocate memory for startup configuration");
-		close(fd);
-		return -1;
-	}
-	read(fd, config, size);
-	close(fd);
-	config[size]=0;
-
-	/* Salvamos primeiro no setor backup */
-	search_nv(&nv, DEV_STARTUP_CONFIG_BCK);
-	if ((fd=open(DEV_STARTUP_CONFIG_BCK, O_RDWR)) < 0)
-	{
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG_BCK);
-		free(config);
-		return -1;
-	}
-	if (clean_nv(fd, size, &nv) < 0)
-	{
-		close(fd);
-		free(config);
-		return -1;
-	}
-	header.magic_number=MAGIC_CONFIG;
-	if(nv.config.hdr.magic_number != MAGIC_CONFIG)
-		header.id=1;
-	else
-		header.id=nv.config.hdr.id+1;
-	header.size=size;
-	header.crc=CalculateCRC32Checksum(config, size);
-	write(fd, &header, sizeof(cfg_header)); /* allow empty config with size == 0 */
-	if (size > 0)
-		write(fd, config, size);
-	close(fd);
-	free(config);
-
-	/* Fazemos uma copia do setor de backup para o setor principal */
-	if( !(config = malloc(CFG_CONFBCK_SIZE)) )
-	{
-		pr_error(1, "could not alloc memory");
-		return -1;
-	}
-	if((fd = open(DEV_STARTUP_CONFIG_BCK, O_RDONLY)) < 0)
-	{
-		pr_error(1, "could not open %s", DEV_STARTUP_CONFIG_BCK);
-		free(config);
-		return -1;
-	}
-	read(fd, config, CFG_CONFBCK_SIZE);
-	close(fd);
-	
-	if((fd = open(DEV_STARTUP_CONFIG, O_RDWR)) < 0)
-	{
-		pr_error(1, "could not open %s", DEV_STARTUP_CONFIG);
-		free(config);
-		return -1;
-	}
-	erase.start = 0;
-	erase.length = CFG_CONF_SIZE;
-	if(ioctl(fd, MEMERASE, &erase) != 0)
-	{
-		pr_error(1, "could not do erase on %s", DEV_STARTUP_CONFIG);
-		free(config);
-		return -1;
-	}
-	lseek(fd, 0, SEEK_SET);
-	write(fd, config, (CFG_CONF_SIZE < CFG_CONFBCK_SIZE) ? CFG_CONF_SIZE : CFG_CONFBCK_SIZE);
-	close(fd);
-	free(config);
-
-	return 0;
-}
-
-#else
+#endif /* OPTION_NTPD */
 
 /* Salva na  memoria nao volatil (flash) a configuracao armazenada no arquivo 'filename' */
 int save_configuration(char *filename)
@@ -901,8 +527,6 @@ int save_configuration(char *filename)
 	free(config);
 	return 0;
 }
-
-#endif
 
 #if 0
 #ifdef CONFIG_PROTOTIPO
@@ -986,53 +610,6 @@ int save_ssh_secret(char *filename)
 	close(fd);
 	secret[size]=0;
 
-#ifdef CONFIG_BERLIN_SATROUTER
-	/* Salvamos no setor de backup */
-	search_nv(&nv, DEV_STARTUP_CONFIG_BCK);
-	if ((fd=open(DEV_STARTUP_CONFIG_BCK, O_RDWR)) < 0)
-	{
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG_BCK);
-		free(secret);
-		return -1;
-	}
-	if (clean_nv(fd, size, &nv) < 0)
-	{
-		close(fd);
-		free(secret);
-		return -1;
-	}
-	header.magic_number=MAGIC_SSH;
-	if (nv.ssh.hdr.magic_number != MAGIC_SSH) header.id=1;
-		else header.id=nv.ssh.hdr.id+1;
-	header.size=size;
-	header.crc=CalculateCRC32Checksum(secret, size);
-	write(fd, &header, sizeof(cfg_header)); /* allow empty config with size == 0 */
-	if (size > 0) write(fd, secret, size);
-	close(fd);
-	
-	/* Salvamos no setor principal */
-	search_nv(&nv, DEV_STARTUP_CONFIG);
-	if ((fd=open(DEV_STARTUP_CONFIG, O_RDWR)) < 0)
-	{
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG);
-		free(secret);
-		return -1;
-	}
-	if (clean_nv(fd, size, &nv) < 0)
-	{
-		close(fd);
-		free(secret);
-		return -1;
-	}
-	header.magic_number=MAGIC_SSH;
-	if (nv.ssh.hdr.magic_number != MAGIC_SSH) header.id=1;
-		else header.id=nv.ssh.hdr.id+1;
-	header.size=size;
-	header.crc=CalculateCRC32Checksum(secret, size);
-	write(fd, &header, sizeof(cfg_header)); /* allow empty config with size == 0 */
-	if (size > 0) write(fd, secret, size);
-	close(fd);
-#else
 	search_nv(&nv, NULL);
 	if ((fd=open(DEV_STARTUP_CONFIG, O_RDWR)) < 0)
 	{
@@ -1054,7 +631,7 @@ int save_ssh_secret(char *filename)
 	write(fd, &header, sizeof(cfg_header)); /* allow empty config with size == 0 */
 	if (size > 0) write(fd, secret, size);
 	close(fd);
-#endif
+
 	free(secret);
 	return 0;
 }
@@ -1086,53 +663,6 @@ int save_ntp_secret(char *filename)
 	close(fd);
 	secret[size]=0;
 
-#ifdef CONFIG_BERLIN_SATROUTER
-	/* Salvamos no setor de backup */
-	search_nv(&nv, DEV_STARTUP_CONFIG_BCK);
-	if ((fd=open(DEV_STARTUP_CONFIG_BCK, O_RDWR)) < 0)
-	{
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG_BCK);
-		free(secret);
-		return -1;
-	}
-	if (clean_nv(fd, size, &nv) < 0)
-	{
-		close(fd);
-		free(secret);
-		return -1;
-	}
-	header.magic_number=MAGIC_NTP;
-	if (nv.ntp.hdr.magic_number != MAGIC_NTP) header.id=1;
-		else header.id=nv.ntp.hdr.id+1;
-	header.size=size;
-	header.crc=CalculateCRC32Checksum(secret, size);
-	write(fd, &header, sizeof(cfg_header)); /* allow empty config with size == 0 */
-	if (size > 0) write(fd, secret, size);
-	close(fd);
-	
-	/* Salvamos no setor principal */
-	search_nv(&nv, DEV_STARTUP_CONFIG);
-	if ((fd=open(DEV_STARTUP_CONFIG, O_RDWR)) < 0)
-	{
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG);
-		free(secret);
-		return -1;
-	}
-	if (clean_nv(fd, size, &nv) < 0)
-	{
-		close(fd);
-		free(secret);
-		return -1;
-	}
-	header.magic_number=MAGIC_NTP;
-	if (nv.ntp.hdr.magic_number != MAGIC_NTP) header.id=1;
-		else header.id=nv.ntp.hdr.id+1;
-	header.size=size;
-	header.crc=CalculateCRC32Checksum(secret, size);
-	write(fd, &header, sizeof(cfg_header)); /* allow empty config with size == 0 */
-	if (size > 0) write(fd, secret, size);
-	close(fd);
-#else
 	search_nv(&nv, NULL);
 	if ((fd=open(DEV_STARTUP_CONFIG, O_RDWR)) < 0)
 	{
@@ -1154,11 +684,11 @@ int save_ntp_secret(char *filename)
 	write(fd, &header, sizeof(cfg_header)); /* allow empty config with size == 0 */
 	if (size > 0) write(fd, secret, size);
 	close(fd);
-#endif
+
 	free(secret);
 	return 0;
 }
-#endif
+#endif /* OPTION_NTPD */
 
 #ifdef OPTION_IPSEC
 int set_stored_secret(char *secret)
@@ -1168,57 +698,6 @@ int set_stored_secret(char *secret)
 	cfg_header header;
 	struct _nv nv;
 
-#ifdef CONFIG_BERLIN_SATROUTER
-	/* Salvamos no setor de backup */
-	search_nv(&nv, DEV_STARTUP_CONFIG_BCK);
-	if ((fd=open(DEV_STARTUP_CONFIG_BCK, O_RDWR)) < 0)
-	{
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG_BCK);
-		return -1;
-	}
-	size=strlen(secret);
-	if (clean_nv(fd, size, &nv) < 0)
-	{
-		close(fd);
-		return -1;
-	}
-	header.magic_number=MAGIC_SECRET;
-	if (nv.secret.hdr.magic_number != MAGIC_SECRET) header.id=1;
-		else header.id=nv.secret.hdr.id+1;
-	header.size=size;
-	header.crc=CalculateCRC32Checksum((u8 *)secret, size);
-	if (header.size > 0)
-	{
-		write(fd, &header, sizeof(cfg_header));
-		write(fd, secret, size);
-	}
-	close(fd);
-	
-	/* Salvamos no setor principal */
-	search_nv(&nv, DEV_STARTUP_CONFIG);
-	if ((fd=open(DEV_STARTUP_CONFIG, O_RDWR)) < 0)
-	{
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG);
-		return -1;
-	}
-	size=strlen(secret);
-	if (clean_nv(fd, size, &nv) < 0)
-	{
-		close(fd);
-		return -1;
-	}
-	header.magic_number=MAGIC_SECRET;
-	if (nv.secret.hdr.magic_number != MAGIC_SECRET) header.id=1;
-		else header.id=nv.secret.hdr.id+1;
-	header.size=size;
-	header.crc=CalculateCRC32Checksum((u8 *)secret, size);
-	if (header.size > 0)
-	{
-		write(fd, &header, sizeof(cfg_header));
-		write(fd, secret, size);
-	}
-	close(fd);
-#else
 	search_nv(&nv, NULL);
 	if ((fd=open(DEV_STARTUP_CONFIG, O_RDWR)) < 0)
 	{
@@ -1242,49 +721,9 @@ int set_stored_secret(char *secret)
 		write(fd, secret, size);
 	}
 	close(fd);
-#endif
+
 	return 0;
 }
-
-#ifdef CONFIG_BERLIN_SATROUTER
-
-char *get_rsakeys_from_nv(void)
-{
-	struct _nv nv;
-	char *secret=NULL;
-	int fd, data_ok=0;
-
-	if(search_nv(&nv, DEV_STARTUP_CONFIG) >= 0)
-	{
-		if(nv.secret.hdr.magic_number == MAGIC_SECRET)
-		{
-			if((fd=open(DEV_STARTUP_CONFIG, O_RDONLY)) >= 0)
-			{
-				secret=read_nv(fd, &nv.secret);
-				close(fd);
-				data_ok = 1;
-			}
-		}
-	}
-	if( !data_ok )
-	{
-		if(search_nv(&nv, DEV_STARTUP_CONFIG_BCK) >= 0)
-		{
-			if(nv.secret.hdr.magic_number == MAGIC_SECRET)
-			{
-				if((fd=open(DEV_STARTUP_CONFIG_BCK, O_RDONLY)) >= 0)
-				{
-					secret=read_nv(fd, &nv.secret);
-					close(fd);
-					data_ok = 1;
-				}
-			}
-		}
-	}
-	return (data_ok ? secret : NULL);
-}
-
-#else /* CONFIG_BERLIN_SATROUTER */
 
 char *get_rsakeys_from_nv(void)
 {
@@ -1304,9 +743,6 @@ char *get_rsakeys_from_nv(void)
 	close(fd);
 	return secret;
 }
-
-#endif /* CONFIG_BERLIN_SATROUTER */
-
 #endif /* OPTION_IPSEC */
 
 #ifdef FEATURES_ON_FLASH

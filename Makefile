@@ -35,6 +35,7 @@ OBJS =	acl.o \
 	lock.o \
 	md5.o \
 	ntp.o \
+	nv.o \
 	pam.o \
 	pim.o \
 	ppcio.o \
@@ -62,6 +63,7 @@ OBJS_BASIC =	args.o \
 		ip.o \
 		ipsec.o \
 		md5.o \
+		nv.o \
 		ppcio.o \
 		process.o \
 		quagga.o \
