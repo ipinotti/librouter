@@ -14,11 +14,7 @@
 #include <libconfig/error.h>
 #include <libconfig/defines.h>
 
-#if defined(CONFIG_DEVFS_FS)
-#define DEV_PPCIO "/dev/misc/ppcio"
-#else
 #define DEV_PPCIO "/dev/ppcio"
-#endif
 
 int read_ppcio(ppcio_data *pd)
 {
@@ -30,7 +26,9 @@ int read_ppcio(ppcio_data *pd)
 		pr_error(1, "can't open %s", DEV_PPCIO);
 		return (-1);
 	}
+#if 0
 	ret=ioctl(fd, PPCIO_READ, pd);
+#endif
 	close(fd);
 	return ret;
 }
@@ -45,25 +43,9 @@ int write_ppcio(ppcio_data *pd)
 		pr_error(1, "can't open %s", DEV_PPCIO);
 		return (-1);
 	}
+#if 0
 	ret=ioctl(fd, PPCIO_WRITE, pd);
+#endif
 	close(fd);
 	return ret;
 }
-#ifdef CONFIG_BERLIN_SATROUTER
-int get_board_hw_id(void)
-{
-	int fd, ret;
-	ppcio_data pd;
-
-#ifdef CONFIG_DEVELOPMENT
-	return BOARD_HW_ID_0;
-#endif
-
-	if((fd = open(DEV_PPCIO, O_RDONLY)) < 0)
-		return -1;
-	ret = ioctl(fd, PPCIO_READ, &pd);
-	close(fd);
-	return ((ret < 0) ? ret : ((int) pd.hw_id));
-}
-#endif
-

@@ -1,6 +1,9 @@
-#include <asm/ppc_io.h>
+typedef struct
+{
+        unsigned char led_sys;
+} ppcio_data;
 
 int read_ppcio(ppcio_data *pd);
 int write_ppcio(ppcio_data *pd);
-int get_board_hw_id(void);
+
 

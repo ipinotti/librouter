@@ -29,7 +29,6 @@
 #include <libconfig/process.h>
 #include <libconfig/str.h>
 #include <libconfig/typedefs.h>
-#include <libconfig/ppcio.h>
 
 #ifdef UDHCPD
 pid_t udhcpd_pid(int eth)

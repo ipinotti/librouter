@@ -9,10 +9,12 @@ CFLAGS += -I$(TOPDIR)/include
 CFLAGS += -I$(TOPDIR)/arch/powerpc/include
 CFLAGS += -I$(TOPDIR)/drivers/net
 CFLAGS += -I$(ROOTDIR)/include
+CFLAGS += -I$(ROOTDIR)/packages/u-boot/include
 CFLAGS += -I$(ROOTDIR)/packages/iproute2/include
 CFLAGS += -I$(ROOTDIR)/packages/net-snmp/include
 LDFLAGS += -L$(ROOTDIR)/lib
 
+# FIXME flashsave.o mib.o nv.o
 OBJS =	acl.o \
 	args.o \
 	crc.o \
@@ -24,7 +26,6 @@ OBJS =	acl.o \
 	dns.o \
 	error.o \
 	exec.o \
-	flashsave.o \
 	hash.o \
 	hash_sn.o \
 	ip.o \
@@ -33,9 +34,7 @@ OBJS =	acl.o \
 	list-lib.o \
 	lock.o \
 	md5.o \
-	mib.o \
 	ntp.o \
-	nv.o \
 	pam.o \
 	pim.o \
 	ppcio.o \
@@ -51,7 +50,7 @@ OBJS =	acl.o \
 	version.o \
 	vlan.o
 
-
+# FIXME flashsave.o nv.o
 OBJS_BASIC =	args.o \
 		crc.o \
 		crc32.o \
@@ -60,11 +59,9 @@ OBJS_BASIC =	args.o \
 		dhcp.o \
 		error.o \
 		exec.o \
-		flashsave.o \
 		ip.o \
 		ipsec.o \
 		md5.o \
-		nv.o \
 		ppcio.o \
 		process.o \
 		quagga.o \
@@ -72,10 +69,10 @@ OBJS_BASIC =	args.o \
 
 OBJSNMP = snmp.o system.o
 
-LIBS = ../iproute2/lib/libnetlink.a ../bridge-utils/libbridge/libbridge.a
+LIBS = ../iproute2/lib/libnetlink.a
 LIBS_PAM = ../pam/libpam/libpam.a ../pam/libpam_misc/libpam_misc.a
 
-all: libconfig.so libconfigsnmp.so
+all: libconfig.so
 
 libconfig_basic: $(OBJS_BASIC) $(LIBS)
 	$(CC) -shared -Wl,-soname,libconfig.so -o libconfig.so $(OBJS_BASIC) $(LIBS) -lc

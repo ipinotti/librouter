@@ -69,6 +69,8 @@ int vlan_vid(int ethernet_no, int vid, int add_del, int bridge)
 	return 0;
 }
 
+
+#if 0
 /* Class of Service */
 int set_vlan_cos(int ethernet_no, int vid, int cos)
 {
@@ -121,5 +123,4 @@ int get_vlan_cos(char *dev_name)
 	close(sock);
 	return if_request.u.cos;
 }
-
-
+#endif

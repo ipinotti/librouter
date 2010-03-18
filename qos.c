@@ -20,7 +20,6 @@
 #include <libconfig/lan.h>
 #include <libconfig/ppp.h>
 #include <libconfig/qos.h>
-#include <libconfig/wan.h>
 #include <libconfig/ip.h>
 
 static int asort(const void *a, const void *b)
@@ -552,43 +551,21 @@ int tc_insert_all(char *dev_name)
 				{
 					case PHY_STAT_100HDX:
 					case PHY_STAT_100FDX:
-						total_avail_band=100000000; /* 100Mbit */
+						total_avail_band = 100000000; /* 100Mbit */
 						break;
 				}
 			}
-				else total_avail_band=10000000; /* 10Mbit */
+				else total_avail_band = 10000000; /* 10Mbit */
 			if (dev_get_link(dev_name)) run_tc_now=log=1;
 			break;
-		case aux:
-			major+=MAX_WAN_INTF; /* offset! */
-			/*  Fall... */
+
 		case serial:
-			protocol=wan_get_protocol(major);
-			if (protocol == SCC_PROTO_MLPPP)
-			{
-				if (ppp_get_state(major)) run_tc_now=1; /* wait for ppp */
-				ppp_get_config(major, &ppp_cfg);
-				if (ppp_cfg.up) log=1;
-			}
-				else if (dev_get_link(dev_name)) run_tc_now=log=1;
-#if 0 /* !!! Verificar impacto do hidden qos no ipperf !!! */
-			if ((protocol == IF_PROTO_FR) || (protocol == IF_PROTO_CISCO)) management=1; /* habilita banda de gerencia! */
-#endif
-			if (wan_get_physical(major)) /* Se a interface estiver no modo sincrono, podemos ler a configuracao de clock */
-			{
-				wan_get_sst(major, &sst);
-				if (sst.clock_type == CLOCK_EXT || sst.clock_type == CLOCK_TXFROMRX)
-				{
-					if (sst.detected_rate == 0) total_avail_band=64000; /* forca a criacao do arquivo! */
-						else total_avail_band=sst.detected_rate;
-				}
-					else total_avail_band=sst.clock_rate;
-			}
-			else /* async */
-			{
-				total_avail_band=ppp_cfg.speed; /* ppp async cfg speed (9600bps ... 115200bps) */
-			}
+			total_avail_band = ppp_cfg.speed; /* ppp async cfg speed (9600bps ... 115200bps) */
+			if (dev_get_link(dev_name))
+				run_tc_now = log = 1;
+			
 			break;
+
 		case loopback:
 		case ipsec:
 		case tunnel:
@@ -1142,13 +1119,12 @@ int tc_insert_all(char *dev_name)
 {
 	FILE *f;
 	char filename[64];
-	frts_cfg_t *frts;
 	intf_qos_cfg_t *intf_cfg;
 	pmark_cfg_t *cfg;
 	pmap_cfg_t *pmap;
-	int root, n, i;
+	int n, i;
 	device_family *fam;
-	int major, protocol;
+	int major;
 	int run_tc_now=0;
 	int raw_bw=0, available_bw=0, remain_bw=0;
 
@@ -1158,32 +1134,18 @@ int tc_insert_all(char *dev_name)
 	if (!f) return -1;
 
 	/* Get status from interfaces */
-	if ((fam=getfamily(dev_name)) == NULL) return -1;
-	major=atoi(dev_name+strlen(fam->cish_string));
-	if (fam->type == aux)
-		major+=MAX_WAN_INTF; /* offset! */
+	if ((fam = getfamily(dev_name)) == NULL) 
+		return -1;
 
-	if (fam->type == serial || fam->type == aux) {
-		protocol = wan_get_protocol(major);
-		if (protocol == SCC_PROTO_MLPPP) {
-				if (ppp_get_state(major)) run_tc_now = 1; /* wait for ppp */
-		} else if (dev_get_link(dev_name)) run_tc_now = 1;
+	major = atoi(dev_name+strlen(fam->cish_string));
+	
+	if (fam->type == serial ) {
+		if (ppp_get_state(major)) 
+			run_tc_now = 1; /* wait for ppp */
 	} else if (fam->type == ethernet) {
 		if (dev_get_link(dev_name)) run_tc_now = 1;
 	}
 
-	/* frame-relay traffic-rate <cir> [<eir>] */
-	if ((n=get_frts_cfg(dev_name, &frts))) {
-		if (frts->eir) 
-			fprintf(f, "qdisc add dev %s root handle 1: frtbf cir %dkbit eir %dkbit mtu %d\n", 
-				dev_name, frts->cir/1024, frts->eir/1024, dev_get_mtu(dev_name));
-		else 
-			fprintf(f, "qdisc add dev %s root handle 1: frtbf cir %dkbit mtu %d\n", 
-				dev_name, frts->cir/1024, dev_get_mtu(dev_name));
-		release_frts_cfg(frts, n);
-		root=0;
-	} else root=1;
-	
 	/* Check if qos config exists */
 	if (get_interface_qos_config(dev_name, &intf_cfg) > 0) {
 		if (intf_cfg->pname[0] != 0) {
@@ -1195,15 +1157,15 @@ int tc_insert_all(char *dev_name)
 			n = pmap->n_mark;
 			cfg = pmap->pmark;
 	
-			if (root)	fprintf(f,"qdisc add dev %s root handle 2: hfsc default 5\n", dev_name);
-			else fprintf(f,"qdisc add dev %s parent 1: handle 2: hfsc default 5\n", dev_name);
+			fprintf(f, "qdisc add dev %s root handle 2: hfsc default 5\n", dev_name);
 			
-			fprintf(f,"class add dev %s parent 2: classid 2:1 hfsc sc rate %dkbit ul rate %dkbit\n", 
-			dev_name, ((intf_cfg->bw/100) * intf_cfg->max_reserved_bw)/1024,  ((intf_cfg->bw/100) * intf_cfg->max_reserved_bw)/1024);
+			fprintf(f, "class add dev %s parent 2: classid 2:1 hfsc sc rate %dkbit ul rate %dkbit\n", 
+				dev_name, ((intf_cfg->bw/100) * intf_cfg->max_reserved_bw)/1024,  ((intf_cfg->bw/100) *
+				intf_cfg->max_reserved_bw)/1024);
 			
 			/* HFSC does not work well without a default class. Create one only for unmarked packets */
 			fprintf(f,"class add dev %s parent 2:1 classid 2:5 hfsc ls rate 1kbit ul rate %dkbit\n", 
-			dev_name, ((intf_cfg->bw/100) * intf_cfg->max_reserved_bw)/1024);
+				dev_name, ((intf_cfg->bw/100) * intf_cfg->max_reserved_bw)/1024);
 	
 			/* Need to know remaining bandwidth */
 			available_bw = (intf_cfg->bw/100) * intf_cfg->max_reserved_bw;

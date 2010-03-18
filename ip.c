@@ -31,7 +31,6 @@
 #include <libconfig/ip.h>
 #include <libconfig/dev.h>
 #include <libconfig/error.h>
-#include <libconfig/bridge.h>
 #include <libconfig/ppcio.h>
 
 /* interface & address local lists */
@@ -591,6 +590,7 @@ int get_mac(char *ifname, char *mac)
 /* !!! Caso especial para ethernet, em funcao do modo bridge */
 char *get_ethernet_dev(char *dev)
 {
+#if 0
 	static char brname[32]; /* dangerous! */
 
 	snprintf(brname, 32, "%s1", BRIDGE_NAME); // TODO - incluir teste para mais de uma bridge
@@ -598,6 +598,7 @@ char *get_ethernet_dev(char *dev)
 	if (br_checkif(brname, dev))
 		return brname;
 	else
+#endif
 		return dev;
 }
 

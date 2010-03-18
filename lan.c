@@ -22,9 +22,6 @@
 #include <libconfig/typedefs.h>
 #include <libconfig/args.h>
 #include <libconfig/error.h>
-#include <libconfig/wan.h>
-#include <libconfig/fr.h>
-#include <libconfig/chdlc.h>
 #include <libconfig/ppp.h>
 #include <libconfig/dev.h>
 #include <libconfig/defines.h>
@@ -47,6 +44,7 @@ int lan_get_status(char *ifname)
 	strcpy(ifr.ifr_name, ifname);
 	if ((p=strchr(ifr.ifr_name, '.')) != NULL) *p=0; /* vlan uses ethernetX status! */
 
+#if 0 
 	err=ioctl(fd, SIOCGPHYSTATUS, &ifr);
 	close(fd);
 
@@ -55,6 +53,7 @@ int lan_get_status(char *ifname)
 		pr_error(1, "SIOCGPHYSTATUS");
 		return(-1);
 	}
+#endif
 	return ifr.ifr_ifru.ifru_ivalue;
 }
 

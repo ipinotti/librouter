@@ -263,6 +263,7 @@ int dev_exists(char *dev)
 
 int clear_interface_counters(char *dev)
 {
+#if 0
 	struct ifreq ifr;
 	int fd, err;
 
@@ -279,6 +280,9 @@ int clear_interface_counters(char *dev)
 	}
 	close(fd);
 	return err;
+#else
+	return 0;
+#endif
 }
 
 char *dev_get_description(char *dev)
@@ -502,6 +506,7 @@ int arp_add(char *host, char *mac) /* <ipaddress> <mac> */
 
 int notify_driver_about_shutdown(char *dev)
 {
+#if 0
 	int sock;
 	struct ifreq ifr;
 
@@ -520,6 +525,9 @@ int notify_driver_about_shutdown(char *dev)
 	}
 	close(sock);
 	return 0;
+#else
+	return 0;
+#endif
 }
 
 #ifdef CONFIG_BUFFERS_USE_STATS

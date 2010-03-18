@@ -347,6 +347,7 @@ int change_tunnel(char *name, tunnel_param_type type, void *param)
 				}
 				p.link = 0; /* Disable interface association! */
 				break;
+#if 0
 			case source_interface:
 				if (param != NULL) {
 					strncpy(p.linkname, (char *)param, IFNAMSIZ);
@@ -357,14 +358,9 @@ int change_tunnel(char *name, tunnel_param_type type, void *param)
 						if (get_interface_address((char *)param, &addr, NULL, NULL, NULL) == 0)
 							p.iph.saddr = addr.s_addr;
 					}
-					#if 0 /* !!! problem with ppp intf! */
-					else {
-						fprintf(stderr, "%% Source interface %s not found.\n", (char *)param);
-						return -1;
-					}
-					#endif
 				}
 				break;
+#endif
 			case destination:
 				if (param != NULL) {
 					if (inet_aton((char *)param, &address) != 0)
@@ -493,14 +489,14 @@ void dump_tunnel_interface(FILE *out, int conf_format, char *name)
 					fprintf(out, " tunnel mode gre\n");
 					break;
 			}
-			if (p.link) {
-					fprintf(out, " tunnel source %s\n", linux_to_cish_dev_cmdline(p.linkname));
-			} else {
+			//if (p.link) {
+			//		fprintf(out, " tunnel source %s\n", linux_to_cish_dev_cmdline(p.linkname));
+			//} else {
 				if (p.iph.saddr) {
 					address.s_addr=p.iph.saddr;
 					fprintf(out, " tunnel source %s\n", inet_ntoa(address));
 				}
-			}
+			//}
 			if (p.iph.daddr) {
 				address.s_addr=p.iph.daddr;
 				fprintf(out, " tunnel destination %s\n", inet_ntoa(address));
@@ -524,11 +520,11 @@ void dump_tunnel_interface(FILE *out, int conf_format, char *name)
 				if (p.iph.saddr) {
 					fprintf(out, "source ");
 					address.s_addr=p.iph.saddr;
-					if (p.link) {
-						fprintf(out, "%s (%s)", inet_ntoa(address), p.linkname);
-					} else {
+					//if (p.link) {
+					//	fprintf(out, "%s (%s)", inet_ntoa(address), p.linkname);
+					//} else {
 						fprintf(out, "%s", inet_ntoa(address));
-					}
+					//}
 					if (p.iph.daddr)
 						fprintf(out, ", ");
 				}

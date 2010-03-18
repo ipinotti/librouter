@@ -11,7 +11,6 @@
 #include <libconfig/defines.h>
 #include <libconfig/nv.h>
 #include <libconfig/ppp.h>
-#include <libconfig/wan.h>
 #include <libconfig/process.h>
 #include <libconfig/ipsec.h>
 #include <libconfig/ip.h>
@@ -111,15 +110,9 @@ int ppp_set_config(int serial_no, ppp_config *cfg)
 	snprintf(file, 32, PPP_CFG_FILE, serial_no);
 	f=fopen(file, "wb");
 	if (!f) return -1;
-	if (serial_no < MAX_WAN_INTF)
-	{
-		cfg->sync_nasync = wan_get_physical(serial_no);
-		#if defined(CONFIG_DEVFS_FS)
-		snprintf(cfg->osdevice, 16, "/dev/tts/wan%d", serial_no);
-		#else
-		snprintf(cfg->osdevice, 16, "ttyW%d", serial_no);
-		#endif
-	}
+
+	snprintf(cfg->osdevice, 16, "ttyS%d", serial_no);
+
 	fwrite(cfg, sizeof(ppp_config), 1, f);
 	fclose(f);
 	return notify_systtyd();
@@ -130,21 +123,8 @@ void ppp_set_defaults(int serial_no, ppp_config *cfg)
 	/* Clean memory! */
 	memset(cfg, 0, sizeof(ppp_config));
 
-	if (serial_no < MAX_WAN_INTF) {
-#if defined(CONFIG_DEVFS_FS)
-		snprintf(cfg->osdevice, 16, "tts/wan%d", serial_no);
-#else
-		snprintf(cfg->osdevice, 16, "ttyW%d", serial_no);
-#endif
-		snprintf(cfg->cishdevice, 16, "serial%d", serial_no);
-	} else {
-#if defined(CONFIG_DEVFS_FS)
-		snprintf(cfg->osdevice, 16, "tts/aux%d", serial_no-MAX_WAN_INTF);
-#else
-		snprintf(cfg->osdevice, 16, "ttyS%d", serial_no-MAX_WAN_INTF);
-#endif
-		snprintf(cfg->cishdevice, 16, "aux%d", serial_no-MAX_WAN_INTF);
-	}
+	snprintf(cfg->osdevice, 16, "ttyS%d", serial_no);
+
 	cfg->unit=serial_no;
 	cfg->speed=9600;
 	cfg->echo_failure=3;
@@ -378,7 +358,7 @@ void ppp_pppd_arglist(char **arglist, ppp_config *cfg, int server)
 	if (cfg->ip_unnumbered != -1) { /* Teste para verificar se IP UNNUMBERED esta ativo */
 		char ethernetdev[16];
 		sprintf(ethernetdev, "ethernet%d", cfg->ip_unnumbered);
-		get_ethernet_ip_addr(ethernetdev, addr, mask); /* Captura o endereço e mascara da interface Ethernet */
+		get_ethernet_ip_addr(ethernetdev, addr, mask); /* Captura o endereï¿½o e mascara da interface Ethernet */
 		strncpy(cfg->ip_addr, addr, 16); /* Atualiza cfg com os dados da ethernet */
 		cfg->ip_addr[15]=0;
 		strncpy(cfg->ip_mask, mask, 16);
