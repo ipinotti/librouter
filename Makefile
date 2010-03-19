@@ -14,7 +14,6 @@ CFLAGS += -I$(ROOTDIR)/packages/iproute2/include
 CFLAGS += -I$(ROOTDIR)/packages/net-snmp/include
 LDFLAGS += -L$(ROOTDIR)/lib
 
-# FIXME flashsave.o mib.o nv.o
 OBJS =	acl.o \
 	args.o \
 	crc.o \
@@ -28,12 +27,14 @@ OBJS =	acl.o \
 	exec.o \
 	hash.o \
 	hash_sn.o \
+	flashsave.o \
 	ip.o \
 	ipsec.o \
 	lan.o \
 	list-lib.o \
 	lock.o \
 	md5.o \
+	mib.o \
 	ntp.o \
 	nv.o \
 	pam.o \
@@ -51,7 +52,6 @@ OBJS =	acl.o \
 	version.o \
 	vlan.o
 
-# FIXME flashsave.o nv.o
 OBJS_BASIC =	args.o \
 		crc.o \
 		crc32.o \
@@ -60,6 +60,7 @@ OBJS_BASIC =	args.o \
 		dhcp.o \
 		error.o \
 		exec.o \
+		flashsave.o \
 		ip.o \
 		ipsec.o \
 		md5.o \
