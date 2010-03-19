@@ -52,33 +52,11 @@ OBJS =	acl.o \
 	version.o \
 	vlan.o
 
-OBJS_BASIC =	args.o \
-		crc.o \
-		crc32.o \
-		dev.o \
-		device.o \
-		dhcp.o \
-		error.o \
-		exec.o \
-		flashsave.o \
-		ip.o \
-		ipsec.o \
-		md5.o \
-		nv.o \
-		ppcio.o \
-		process.o \
-		quagga.o \
-		str.o
-
 OBJSNMP = snmp.o system.o
 
-LIBS = ../iproute2/lib/libnetlink.a
-LIBS_PAM = ../pam/libpam/libpam.a ../pam/libpam_misc/libpam_misc.a
+LIBS = ../iproute2/lib/libnetlink.a ../pam/libpam/libpam.a ../pam/libpam_misc/libpam_misc.a
 
-all: libconfig.so
-
-libconfig_basic: $(OBJS_BASIC) $(LIBS)
-	$(CC) -shared -Wl,-soname,libconfig.so -o libconfig.so $(OBJS_BASIC) $(LIBS) -lc
+all: libconfig.so libconfigsnmp.so
 
 libconfig.so: $(OBJS) $(LIBS)
 	$(CC) -shared -Wl,-soname,libconfig.so -o libconfig.so $(OBJS) $(LDFLAGS) $(LIBS) $(LIBS_PAM) -lc -ldl
