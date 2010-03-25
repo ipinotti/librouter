@@ -20,10 +20,10 @@
 
 #include <cish/options.h>
 
-#include <u-boot/include/linux/types.h>
-#include <u-boot/include/image.h>
-#include <u-boot/include/rtc.h>
-#include <u-boot/include/zlib.h>
+#include <u-boot/types.h>
+#include <u-boot/image.h>
+#include <u-boot/rtc.h>
+#include <u-boot/zlib.h>
 
 #include <libconfig/defines.h>
 #include <libconfig/flashsave.h>
