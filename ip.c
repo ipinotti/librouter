@@ -212,10 +212,9 @@ int get_addrinfo(struct nlmsghdr *n)
 
 	if (!rta_tb[IFA_LOCAL])
 		rta_tb[IFA_LOCAL] = rta_tb[IFA_ADDRESS];
-#ifndef CONFIG_BERLIN_SATROUTER
+
 	if (!rta_tb[IFA_ADDRESS])
 		rta_tb[IFA_ADDRESS] = rta_tb[IFA_LOCAL];
-#endif
 
 	if (ifa->ifa_family != AF_INET) return 0;
 

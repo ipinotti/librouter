@@ -3,17 +3,12 @@
 #undef OPTION_HID_QOS
 #undef OPTION_QOS_HTML
 
-#ifndef OPTION_NEW_QOS_CONFIG
-#include "../cish/options.h"
-#endif
-
 typedef struct
 {
 	unsigned int cir;
 	unsigned int eir;
 } frts_cfg_t;
 
-#ifdef OPTION_NEW_QOS_CONFIG
 typedef enum { FIFO=1, RED, SFQ, WFQ } queue_type;
 
 typedef enum { BOOL_FALSE, BOOL_TRUE } boolean;
@@ -71,44 +66,6 @@ void dump_qos_config(FILE *out);
 void qos_dump_interface(char *dev_name);
 void qos_dump_interfaces(void);
 char *check_active_qos(char *policy);
-
-#else /* OPTION_NEW_QOS_CONFIG */
-
-typedef enum { queue_fifo, queue_sfq, queue_red, queue_wfq } policy_queue;
-
-typedef struct
-{
-	unsigned long	mark;
-	unsigned int	prio;
-	unsigned int 	bandwidth_bps;
-	unsigned int	bandwidth_perc;
-	unsigned int	bandwidth_temp;
-	unsigned int	burst;
-	policy_queue	queue;
-	unsigned int	fifo_limit;
-	unsigned int	sfq_perturb;
-	unsigned int	red_latency;
-	unsigned int	red_probability;
-	unsigned char	red_ecn;
-	unsigned int 	wfq_hold_queue;
-} qos_cfg_t;
-
-int get_qos_cfg(char *dev_name, qos_cfg_t **cfg);
-int release_qos_cfg(qos_cfg_t *cfg, int n);
-int add_qos_cfg(char *dev_name, qos_cfg_t *cfg);
-int del_qos_cfg(char *dev_name, unsigned int mark);
-int check_qos_cfg_mark(char *dev_name, unsigned int mark);
-int check_qos_cfg_totals(char *dev_name, int prio, unsigned int *bandwidth_bps, unsigned int *bandwidth_perc, unsigned int *bandwidth_temp);
-#ifdef OPTION_QOS_HTML
-void qos_dump_interface(char *dev_name, int html);
-void qos_dump_interfaces(int html);
-void qos_dump_all_policies_html(void);
-void qos_dump_interfaces_stats_html(void);
-#else
-void qos_dump_interface(char *dev_name);
-void qos_dump_interfaces(void);
-#endif
-#endif /* OPTION_NEW_QOS_CONFIG */
 
 void clean_qos_cfg(char *dev_name);
 int get_qos_stats_by_devmark(char *dev_name, int mark);

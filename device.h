@@ -1,19 +1,16 @@
 #ifndef _DEVICES_H
 #define _DEVICES_H 1
 
-typedef enum 
-{
+typedef enum {
 	none,
-	aux,
 	ethernet,
 	loopback,
-	serial,
+	mobile, /* 3G */
 	tunnel,
 	ipsec
 } device_type;
 
-typedef struct 
-{
+typedef struct {
 	device_type type;
 	const char *cish_string;
 } device_family;

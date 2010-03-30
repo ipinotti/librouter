@@ -10,14 +10,11 @@
 
 /* !!! bridge1 */
 device_family DEV_FAM[] = { /* type, cish_string */
-  {aux, "aux"},
   {ethernet, "ethernet"},
   {loopback, "loopback"},
-  {serial, "serial"},
   {tunnel, "tunnel"},
-#ifdef OPTION_IPSEC
+  {mobile, "mobile"},
   {ipsec, "ipsec"},
-#endif
   {none, NULL}
 };
 
@@ -48,13 +45,8 @@ char *convert_device(const char *device, int major, int minor)
 	if(fam)
 	{
 		switch(fam->type) {
-			case aux:
-				result=(char *)malloc(strlen (fam->cish_string) + 6);
-				sprintf(result, "%s%i", fam->cish_string, major >= MAX_WAN_INTF ? major-MAX_WAN_INTF : major);
-				return result;
 			case ethernet:
 			case loopback:
-			case serial:
 			case tunnel:
 			case ipsec:
 			default:
