@@ -623,23 +623,6 @@ void set_ethernet_ip_addr(char *ifname, char *addr, char *mask) /* main ethernet
 
 	if (strcmp(dev, "ethernet0") == 0)
 		reload_udhcpd(0); /* udhcpd integration! */
-#ifdef CONFIG_BERLIN_MU0
-	else if (strcmp(dev, "ethernet1") == 0)
-			reload_udhcpd(1); /* udhcpd integration! */
-#elif defined(CONFIG_BERLIN_SATROUTER)
-	switch( get_board_hw_id() )
-	{
-		case BOARD_HW_ID_1:
-			break;
-		case BOARD_HW_ID_0:
-		case BOARD_HW_ID_2:
-		case BOARD_HW_ID_3:
-		case BOARD_HW_ID_4:
-			if (strcmp(dev, "ethernet1") == 0)
-				reload_udhcpd(1); /* udhcpd integration! */
-			break;
-	}
-#endif
 }
 
 void set_ethernet_ip_addr_secondary(char *ifname, char *addr, char *mask)

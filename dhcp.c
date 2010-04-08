@@ -110,46 +110,13 @@ int get_dhcp(void)
 {
 	int ret=DHCP_NONE;
 	char daemon0[64];
-#if defined(CONFIG_BERLIN_MU0) || defined(CONFIG_BERLIN_SATROUTER)
-	char daemon1[64];
-#endif
+
 
 	sprintf(daemon0, DHCPD_DAEMON, 0);
-#ifdef CONFIG_BERLIN_MU0
-	sprintf(daemon1, DHCPD_DAEMON, 1);
-#elif defined(CONFIG_BERLIN_SATROUTER)
-	switch( get_board_hw_id() )
-	{
-		case BOARD_HW_ID_1:
-			break;
-		case BOARD_HW_ID_0:
-		case BOARD_HW_ID_2:
-		case BOARD_HW_ID_3:
-		case BOARD_HW_ID_4:
-			sprintf(daemon1, DHCPD_DAEMON, 1);
-			break;
-	}
-#endif
 
 	if (is_daemon_running(daemon0))
 		ret = DHCP_SERVER;
-#if defined(CONFIG_BERLIN_MU0)
-	if (is_daemon_running(daemon1))
-		ret = DHCP_SERVER;
-#elif defined(CONFIG_BERLIN_SATROUTER)
-	switch( get_board_hw_id() )
-	{
-		case BOARD_HW_ID_1:
-			break;
-		case BOARD_HW_ID_0:
-		case BOARD_HW_ID_2:
-		case BOARD_HW_ID_3:
-		case BOARD_HW_ID_4:
-			if (is_daemon_running(daemon1))
-				ret = DHCP_SERVER;
-			break;
-	}
-#endif
+
 	if( ret == DHCP_SERVER )
 		return ret;
 
@@ -172,23 +139,7 @@ int set_dhcpd(int on_off, int eth)
 	}
 	sprintf(daemon, DHCPD_DAEMON, 0);
 	ret=init_program(0, daemon);
-#ifdef CONFIG_BERLIN_MU0
-	sprintf(daemon, DHCPD_DAEMON, 1);
-	ret|=init_program(0, daemon);
-#elif defined(CONFIG_BERLIN_SATROUTER)
-	switch( get_board_hw_id() )
-	{
-		case BOARD_HW_ID_1:
-			break;
-		case BOARD_HW_ID_0:
-		case BOARD_HW_ID_2:
-		case BOARD_HW_ID_3:
-		case BOARD_HW_ID_4:
-			sprintf(daemon, DHCPD_DAEMON, 1);
-			ret|=init_program(0, daemon);
-			break;
-	}
-#endif
+
 	return ret;
 }
 
@@ -277,55 +228,9 @@ int set_dhcp_server(int save_dns, char *cmdline)
 	inet_aton(mask, &dhcp_mask);
 	if ((dhcp_network.s_addr!=eth_network.s_addr)||(dhcp_mask.s_addr!=eth_mask.s_addr))
 	{
-#if defined(CONFIG_BERLIN_MU0)
-		if (dev_exists("ethernet1"))
-		{
-			get_interface_address(get_ethernet_dev("ethernet1"), &eth_addr, &eth_mask, 0, 0);
-			eth_network.s_addr = eth_addr.s_addr&eth_mask.s_addr;
-			inet_aton(network, &dhcp_network);
-			inet_aton(mask, &dhcp_mask);
-		}
-		if ((dhcp_network.s_addr!=eth_network.s_addr)||(dhcp_mask.s_addr!=eth_mask.s_addr))
-		{
-			pr_error(0, "network segment not in ethernet segment address");
-			destroy_args(args);
-			return (-1);
-		}
-		else eth=1;
-#elif defined(CONFIG_BERLIN_SATROUTER)
-		switch( get_board_hw_id() )
-		{
-			case BOARD_HW_ID_0:
-			case BOARD_HW_ID_2:
-			case BOARD_HW_ID_3:
-			case BOARD_HW_ID_4:
-				if (dev_exists("ethernet1"))
-				{
-					get_interface_address(get_ethernet_dev("ethernet1"), &eth_addr, &eth_mask, 0, 0);
-					eth_network.s_addr = eth_addr.s_addr&eth_mask.s_addr;
-					inet_aton(network, &dhcp_network);
-					inet_aton(mask, &dhcp_mask);
-				}
-				if ((dhcp_network.s_addr!=eth_network.s_addr)||(dhcp_mask.s_addr!=eth_mask.s_addr))
-				{
-					pr_error(0, "network segment not in ethernet segment address");
-					destroy_args(args);
-					return (-1);
-				}
-				else eth=1;
-				break;
-			case BOARD_HW_ID_1:
-			default:
-				pr_error(0, "network segment not in ethernet segment address");
-				destroy_args(args);
-				return (-1);
-				break;
-		}
-#else
 		pr_error(0, "network segment not in ethernet segment address");
 		destroy_args(args);
 		return (-1);
-#endif
 	}
 	else eth=0;
 #endif
@@ -478,39 +383,7 @@ int get_dhcp_server(char *buf)
 		}
 		fclose(file);
 	}
-#ifdef CONFIG_BERLIN_MU0
-	sprintf(filename, FILE_DHCPDCONF, 1);
-	if ((file=fopen(filename, "r")) != NULL)
-	{
-		if( udhcpd_pid(1) != -1 )
-		{
-			fseek(file, 1, SEEK_SET); /* pula o '#' */
-			fgets(buf+strlen(buf), 1023-strlen(buf), file);
-		}
-		fclose(file);
-	}
-#elif defined(CONFIG_BERLIN_SATROUTER)
-	switch( get_board_hw_id() )
-	{
-		case BOARD_HW_ID_1:
-			break;
-		case BOARD_HW_ID_0:
-		case BOARD_HW_ID_2:
-		case BOARD_HW_ID_3:
-		case BOARD_HW_ID_4:
-			sprintf(filename, FILE_DHCPDCONF, 1);
-			if ((file=fopen(filename, "r")) != NULL)
-			{
-				if( udhcpd_pid(1) != -1 )
-				{
-					fseek(file, 1, SEEK_SET); /* pula o '#' */
-					fgets(buf+strlen(buf), 1023-strlen(buf), file);
-				}
-				fclose(file);
-			}
-			break;
-	}
-#endif
+
 	len=strlen(buf);
 	if (len > 0) buf[len-1]=0; /* overwrite '\n' */
 	return 0;

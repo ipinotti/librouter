@@ -3,29 +3,6 @@
 #include <libconfig/typedefs.h>
 
 #define DEV_STARTUP_CONFIG "/dev/startup-config"
-#ifdef CONFIG_BERLIN_SATROUTER
-#define DEV_STARTUP_CONFIG_BCK "/dev/startup-config-bck"
-#endif
-
-#ifdef FEATURES_ON_FLASH
-#define FILE_FEATURES "/dev/feature"
-#else
-#ifdef CONFIG_BERLIN_REVOLD
-#elif CONFIG_BERLIN_REV0
-#define I2C_HC08_ADDR 0x68 /* Use RTC NVRAM */
-#define I2C_HC08_FEATURE_ADDR 0x10
-#else
-#define I2C_HC08_ADDR 0x30
-
-#define I2C_HC08_PRODUCT 0x00
-#define I2C_HC08_DATEVERSION 0x30
-#define I2C_HC08_ID_ADDR 0x50
-#define I2C_HC08_MAC_ADDR 0x80
-#define I2C_HC08_SERIAL_ADDR 0x90
-#define I2C_HC08_FEATURE_ADDR 0xa0 /* 0xa0 0xbf */
-#define I2C_HC08_ERASE_ADDR 0xf0
-#endif
-#endif
 
 #define MAGIC_CONFIG 0xf2572c30
 #define MAGIC_SECRET 0xf2572c31
@@ -85,9 +62,7 @@ int load_previous_configuration(char *filename);
 int load_slot_configuration(char *filename, int slot);
 #endif
 int save_configuration(char *filename);
-#ifdef CONFIG_PROTOTIPO
-int save_slot_configuration(char *filename, int slot);
-#endif
+
 #ifdef FEATURES_ON_FLASH
 int load_features(void *buf, long size);
 int save_features(void *buf, long size);

@@ -9,18 +9,11 @@
 #include <libconfig/dhcp.h>
 #include <libconfig/debug.h>
 
-#if 0
-#include <libconfig/cish_defines.h>
-#include "../cish/cish_config.h"
-#endif
-
 static debuginfo DEBUG[] = { /* !!! Check cish_defines.h */
 	{"acl","kernel: (acl)","Access list service", 0},
 	{"bgp","bgpd[","BGP routing service", 0},
 	{"bridge","kernel: bridge","Bridge daemon", 0},
-#ifndef CONFIG_BERLIN_SATROUTER
 	{"chat","chat[","Chat service", 0},
-#endif
 	{"config","config[","Configuration service", 0},
 #ifdef OPTION_IPSEC
 	{"crypto","pluto[","VPN daemon", 0},
@@ -40,17 +33,13 @@ static debuginfo DEBUG[] = { /* !!! Check cish_defines.h */
 #ifdef OPTION_IPSEC
 	{"l2tp","l2tpd","L2TP daemon", 0},
 #endif
-#ifndef CONFIG_BERLIN_SATROUTER
 	{"login","login[","Login daemon", 0},
-#endif
 #ifdef OPTION_NTPD
 	{"ntp","ntpd[","NTP daemon", 0},
 #endif
 	{"ospf","ospfd[","OSPF routing service", 0},
-//	{"ppp","pppd[","PPP daemon", 0},
-#ifndef CONFIG_BERLIN_SATROUTER
+	{"ppp","pppd[","PPP daemon", 0},
 	{"rfc1356","rfc1356[","RFC1356 tunnel", 0},
-#endif
 	{"rip","ripd[","RIP routing service", 0},
 	{"ppp","kernel: (sppp)","PPP daemon", 0},
 #ifdef OPTION_OPENSSH
@@ -59,24 +48,10 @@ static debuginfo DEBUG[] = { /* !!! Check cish_defines.h */
 	{"ssh","dropbear[","SSH service", 0},
 #endif
 	{"systty","systtyd[","System control service", 0},
-#ifdef OPTION_X25MAP
-	{"trace","kernel: trace","Trace events", 0},
-#endif
 #ifdef OPTION_VRRP
 	{"vrrp","Keepalived_vrrp","VRRP service", 0},
 #endif
-#ifndef CONFIG_BERLIN_SATROUTER
-	{"x25","kernel: X.25","X.25 layer 3", 0},
-#ifdef OPTION_X25MAP
-	{"x25map","x25mapd[","X25map service", 0},
-#endif
-#ifdef OPTION_X25XOT
-	{"xot","xotd[","XOT service", 0},
-#endif
-#endif
-#ifdef CONFIG_DEVELOPMENT /* !!! show zebra related messages */
 	{"zebra","zebra[","Routing daemon", 0},
-#endif
 	{NULL, NULL, NULL, 0}
 };
 
@@ -143,28 +118,6 @@ void set_debug_all(int on_off)
 	printf ("  All debugging %s\n", on_off ? "enabled" : "disabled");
 }
 
-#if defined(CONFIG_BERLIN_SATROUTER) && defined(CONFIG_LOG_CONSOLE)
-
-#define TIOGSERDEBUG	0x545F	/* get low level uart debug */
-
-unsigned int get_debug_console(void)
-{
-	int pf;
-	unsigned int debug;
-
-	if( (pf = open(TTS_AUX1, O_RDWR | O_NDELAY)) < 0 )
-		return 0;
-	if( ioctl(pf, TIOGSERDEBUG, &debug) != 0 )
-	{
-		close(pf);
-		return 0;
-	}
-	close(pf);
-	return debug;
-}
-
-#endif
-
 void dump_debug(void)
 {
 	int i;
@@ -173,10 +126,6 @@ void dump_debug(void)
 	{
 		if (DEBUG[i].enabled) printf("  %s debugging is on\n", DEBUG[i].description);
 	}
-#if defined(CONFIG_BERLIN_SATROUTER) && defined(CONFIG_LOG_CONSOLE)
-	if( get_debug_console() )
-		printf("  console debugging is on\n");
-#endif
 }
 
 int get_debug_state(const char *token)

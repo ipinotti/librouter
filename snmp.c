@@ -1459,3 +1459,8 @@ void load_prepare_snmp_users(void)
 	}
 }
 
+void start_default_snmp(void)
+{
+	snmp_set_community("public", 1, 0);	/* Start with default community */
+	return;
+}

@@ -95,4 +95,7 @@ int add_snmp_user(char *user, int rw, char *authpriv, char *authproto, char *pri
 int remove_snmp_user(char *user);
 unsigned int list_snmp_users(char ***store);
 void load_prepare_snmp_users(void);
+void start_default_snmp(void);
+
+
 
