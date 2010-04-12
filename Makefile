@@ -50,6 +50,7 @@ OBJS =	acl.o \
 	time.o \
 	tunnel.o \
 	version.o \
+	modem3G.o \
 	vlan.o
 
 OBJSNMP = snmp.o
