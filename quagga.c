@@ -1,4 +1,4 @@
-#include <linux/config.h>
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -14,6 +14,9 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 #include <signal.h>
+
+#include <linux/config.h>
+
 #include <libconfig/device.h>
 #include <libconfig/error.h>
 #include <libconfig/exec.h>
@@ -430,49 +433,6 @@ int validateip(char *ip)
 	return (octets_to_u_int(&tmp, ip));
 }
 
-#if 0
-// Adiciona uma rota estatica diretamente no kernel (sem utilizar o zebra)
-int add_route_dev(char *target, char *netmask, char *device)
-{
-	struct rtentry rt;
-	int skfd;
-	struct sockaddr_in *s;
-
-	memset((char *) &rt, 0, sizeof(struct rtentry));
-
-	rt.rt_flags = RTF_UP;
-
-	s = (struct sockaddr_in *)&rt.rt_dst;
-	s->sin_family = AF_INET;
-	s->sin_port = 0;
-	inet_aton(target, &(s->sin_addr));
-
-	s = (struct sockaddr_in *)&rt.rt_genmask;
-	s->sin_family = AF_INET;
-	s->sin_port = 0;
-	inet_aton(netmask, &(s->sin_addr));
-
-	rt.rt_dev = device;
-
-	/* Create a socket to the INET kernel. */
-	if ((skfd=socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-	{
-		pr_error(1, "socket");
-		return (-1);
-	}
-	/* Tell the kernel to accept this route. */
-	if (ioctl(skfd, SIOCADDRT, &rt) < 0)
-	{
-		pr_error(1, "SIOCADDRT");
-		close(skfd);
-		return (-1);
-	}
-	/* Close the socket. */
-	close(skfd);
-	return (0);
-}
-#endif
-
 #define PROG_RIPD "ripd"
 
 int get_ripd(void)
@@ -487,16 +447,6 @@ int set_ripd(int on_noff)
 	ret=init_program(on_noff, PROG_RIPD);
 	if (on_noff)
 	{
-#if 0 /* Old way... */
-		int pid, i;
- 
-		for (i=0; i < 3; i++)
-		{
-			pid = get_pid(PROG_RIPD);
-			if (!pid) sleep(1); else break;
-		}
-		sleep(1);
-#else
 		int i;
 		struct stat s_stat;
 
@@ -514,7 +464,6 @@ int set_ripd(int on_noff)
 			sleep(1); /* Wait for daemon with 3s timeout! */
 		}
 		sleep(1); /* to be nice! */
-#endif
 	}
 	return ret;
 }
@@ -568,16 +517,6 @@ int set_ospfd(int on_noff)
 	ret=init_program(on_noff, PROG_OSPFD);
 	if (on_noff)
 	{
-#if 0 /* Old way... */
-		int pid, i;
-
-		for (i=0; i < 3; i++)
-		{
-			pid = get_pid(PROG_OSPFD);
-			if (!pid) sleep(1); else break;
-		}
-		sleep(1);
-#else
 		int i;
 		struct stat s_stat;
 
@@ -595,12 +534,10 @@ int set_ospfd(int on_noff)
 			sleep(1); /* Wait for daemon with 3s timeout! */
 		}
 		sleep(1); /* to be nice! */
-#endif
 	}
 	return ret;
 }
 
-#if 1
 int zebra_hup(void)
 {
 	FILE *F;
@@ -617,7 +554,6 @@ int zebra_hup(void)
 	}
 	return 0;
 }
-#endif
 
 /*  Testa presenca de rota default dinamica por RIP ou OSPF!
     -1 daemon nao carregado
@@ -671,33 +607,3 @@ int rota_flutuante(void)
 	fclose(f);
 	return ret;
 }
-
-#ifdef CONFIG_BERLIN_SATROUTER
-
-int is_network_up(void)
-{
-	FILE *f;
-	char buf[1024];
-	int ret=-1, line=0;
-
-	if( (f = zebra_show_cmd("show ip route")) ) {
-		ret = 0;
-		while( !feof(f) ) {
-			if( fgets(buf, 1024, f) ) {
-				line++;
-				striplf(buf);
-				if( line > 3 ) {
-					if( strlen(buf) > 4 ) {
-						ret = 1;
-						break;
-					}
-				}
-			}
-		}
-		fclose(f);
-	}
-	return ret;
-}
-
-#endif
-

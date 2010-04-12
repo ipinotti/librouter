@@ -52,7 +52,7 @@ OBJS =	acl.o \
 	version.o \
 	vlan.o
 
-OBJSNMP = snmp.o system.o
+OBJSNMP = snmp.o
 
 LIBS = ../iproute2/lib/libnetlink.a ../pam/libpam/libpam.a ../pam/libpam_misc/libpam_misc.a
 

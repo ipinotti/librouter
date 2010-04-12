@@ -104,89 +104,6 @@ void destroy_args(arglist *lst)
 	free (lst);
 }
 
-#ifdef CONFIG_BERLIN_SATROUTER
-
-enum terminal_sequence
-{
-	TERMSEQ_START=1,
-	TERMSEQ_FDIGIT,
-	TERMSEQ_SDIGIT,
-	TERMSEQ_STOP
-};
-
-void test_seq_and_blank(char *start)
-{
-	int i, state;
-	char *stop=NULL, *p=start;
-	char *special[] =
-	{
-		"[H",		// TERM_HOME
-		"[2K",		// TERM_CLEARLINE
-		"[J",		// TERM_CLEARDOWN
-		"[1J",		// TERM_CLEARUP
-		"[2J",		// TERM_CLEAR
-		"[2D",
-		"[0m",		// TERM_RESETATTR
-		"[1m",		// TERM_FONTBRIGHT
-		"[2m",		// TERM_FONTDIM
-		"[4m",		// TERM_FONTUNDERSCORE
-		"[5m",		// TERM_FONTBLINK
-		"[7m",		// TERM_FONTREVERSE
-		"[30m",		// TERM_FONTBLACK
-		"[31m",		// TERM_FONTRED
-		"[37m",		// TERM_FONTWHITE
-		NULL
-	};
-	
-	/* Testa contra lista de sequencias conhecidas */
-	for(i=0; special[i]; i++)
-	{
-		if(strlen(start) >= strlen(special[i]))
-		{
-			if(!strncmp(start, special[i], strlen(special[i])))
-			{
-				memset(start, ' ', strlen(special[i]));
-				return;
-			}
-		}
-	}
-	
-	for(state=TERMSEQ_START; state != TERMSEQ_STOP; p++)
-	{
-		switch(state)
-		{
-			case TERMSEQ_START:
-				if(*p == '[')	state = TERMSEQ_FDIGIT;
-				break;
-			case TERMSEQ_FDIGIT:
-				if(isdigit(*p) == 0)
-				{
-					if(*p == ';')	state = TERMSEQ_SDIGIT;
-					else		return;
-				}
-				break;
-			case TERMSEQ_SDIGIT:
-				if(isdigit(*p) == 0)
-				{
-					if(*p == 'f')
-					{
-						stop = p;
-						state = TERMSEQ_STOP;
-					}
-					else		return;
-				}
-				break;
-		}
-	}
-	if(state == TERMSEQ_STOP)
-	{
-		for(p=start; p <= stop; p++)	*p = ' ';
-		return;
-	}
-}
-
-#endif
-
 int parse_args_din(char *cmd_line, arg_list *rcv_p)
 {
 	int i, count = 0, n_args = 0;
@@ -204,14 +121,6 @@ int parse_args_din(char *cmd_line, arg_list *rcv_p)
 		if( isprint(*p) == 0 )
 			*p=' ';
 	}
-
-#ifdef CONFIG_BERLIN_SATROUTER
-	/* Exclui sequencias de terminal */
-	for( p=buf_local; *p; p++ ) {
-		if( *p == '[' )
-			test_seq_and_blank(p);
-	}
-#endif
 
 	/* Pula eventuais espacos em branco no inicio da linha recebida */
 	for( init=buf_local; (*init == ' ') || (*init == '\t') || (*init == '\n'); init++ );

@@ -1,4 +1,3 @@
-#include <linux/config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,9 +13,7 @@
 #include <sys/reboot.h>
 #include <sys/stat.h>
 
-// #if defined(CONFIG_BERLIN)
-// #include "../linux/arch/powerpc/platforms/83xx/berlin.h"
-// #endif
+#include <linux/config.h>
 
 #include <cish/options.h>
 
