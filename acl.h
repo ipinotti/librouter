@@ -47,9 +47,9 @@ struct acl_config {
 void acl_create_new(char *);
 void acl_apply(struct acl_config *);
 int acl_exists(char *);
-int acl_matched_acl_exists(char *acl, char *iface_in, char *iface_out, char *chain);
+int acl_matched_exists(char *acl, char *iface_in, char *iface_out, char *chain);
 int acl_get_iface_acls(char *iface, char *in_acl, char *out_acl);
-int acl_get_acl_refcount(char *acl);
+int acl_get_refcount(char *acl);
 int acl_clean_iface_acls(char *iface);
 int acl_copy_iface_acls(char *src, char *trg);
 int acl_interface_ipsec(int add_del, int chain, char *dev, char *listno);
