@@ -6,8 +6,8 @@
  * will be zero.
  */
 
-#include <libconfig/typedefs.h>
-#include <libconfig/crc.h> /* Checksum and CRC definitions */
+#include "typedefs.h"
+#include "crc.h" /* Checksum and CRC definitions */
 
 /*
  * Function:	CalculateCRC32Checksum

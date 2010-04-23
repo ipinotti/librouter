@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libconfig/version.h>
-#include <libconfig/nv.h>
+#include "version.h"
+#include "nv.h"
 
 #define FILE_BOOT_IMG "/dev/uboot_image"
 #define FILE_SYSTEM_IMG "/dev/system_image"

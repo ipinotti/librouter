@@ -1,5 +1,5 @@
-#include <libconfig/defines.h>
-#include <libconfig/typedefs.h>
+#include "defines.h"
+#include "typedefs.h"
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <linux/if.h>

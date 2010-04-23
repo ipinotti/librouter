@@ -1,4 +1,4 @@
-#include <linux/config.h>
+/*#include <linux/config.h>*/
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,14 +22,14 @@
 #include <linux/netlink.h>
 
 #include <libnetlink.h>
-#include <ll_map.h>
+/*#include <ll_map.h>*/
 #include <fnmatch.h>
 
-#include <libconfig/typedefs.h>
-#include <libconfig/defines.h>
-#include <libconfig/ip.h>
-#include <libconfig/error.h>
-#include <libconfig/dev.h>
+#include "typedefs.h"
+#include "defines.h"
+#include "ip.h"
+#include "error.h"
+#include "dev.h"
 
 static int get_ctl_fd(void)
 {

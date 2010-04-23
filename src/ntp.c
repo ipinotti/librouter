@@ -6,14 +6,14 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <cish/options.h>
-#include <libconfig/args.h>
-#include <libconfig/defines.h>
-#include <libconfig/error.h>
-#include <libconfig/exec.h>
-#include <libconfig/ntp.h>
-#include <libconfig/nv.h>
-#include <libconfig/ppp.h>
+#include "options.h"
+#include "args.h"
+#include "defines.h"
+#include "error.h"
+#include "exec.h"
+#include "ntp.h"
+#include "nv.h"
+#include "ppp.h"
 
 #ifdef OPTION_NTPD
 void ntp_hup(void)

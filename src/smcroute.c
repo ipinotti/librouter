@@ -12,14 +12,14 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <linux/if.h>
-#include <cish/options.h>
-#include <libconfig/error.h>
-#include <libconfig/exec.h>
-#include <libconfig/defines.h>
-#include <libconfig/device.h>
-#include <libconfig/dev.h>
-#include <libconfig/ip.h>
-#include <libconfig/smcroute.h>
+#include "options.h"
+#include "error.h"
+#include "exec.h"
+#include "defines.h"
+#include "device.h"
+#include "dev.h"
+#include "ip.h"
+#include "smcroute.h"
 
 #ifdef OPTION_SMCROUTE
 

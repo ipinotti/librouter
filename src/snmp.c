@@ -10,17 +10,17 @@
 #include <sys/stat.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
-#include <libconfig/defines.h>
-#include <libconfig/args.h>
-#include <libconfig/error.h>
-#include <libconfig/str.h>
-#include <libconfig/exec.h>
-#include <libconfig/process.h>
-#include <libconfig/str.h>
-#include <libconfig/snmp.h>
-#include <libconfig/mib.h>
-#include <libconfig/lock.h>
-#include <libconfig/nv.h>
+#include "defines.h"
+#include "args.h"
+#include "error.h"
+#include "str.h"
+#include "exec.h"
+#include "process.h"
+#include "str.h"
+#include "snmp.h"
+#include "mib.h"
+#include "lock.h"
+#include "nv.h"
 
 struct trap_sink
 {

@@ -3,13 +3,13 @@
 #include <string.h>
 #include <syslog.h>
 
-#include <cish/options.h>
-#include <libconfig/defines.h>
-#include <libconfig/acl.h>
-#include <libconfig/args.h>
-#include <libconfig/str.h>
-#include <libconfig/exec.h>
-#include <libconfig/ip.h>
+#include "options.h"
+#include "defines.h"
+#include "acl.h"
+#include "args.h"
+#include "str.h"
+#include "exec.h"
+#include "ip.h"
 
 //#define DEBUG_CMD(x) printf("cmd = %s\n", x)
 //#define DEBUG_CMD(x) syslog(LOG_DEBUG, "%s\n", x)

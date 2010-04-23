@@ -8,11 +8,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <libconfig/nv.h>
-#include <libconfig/ppcio.h>
-#include <libconfig/typedefs.h>
-#include <libconfig/error.h>
-#include <libconfig/defines.h>
+#include "nv.h"
+#include "ppcio.h"
+#include "typedefs.h"
+#include "error.h"
+#include "defines.h"
 
 #define DEV_PPCIO "/dev/ppcio"
 

@@ -24,14 +24,14 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <syslog.h>
-#include <libconfig/typedefs.h>
-#include <libconfig/defines.h>
-#include <libconfig/args.h>
-#include <libconfig/dhcp.h>
-#include <libconfig/ip.h>
-#include <libconfig/dev.h>
-#include <libconfig/error.h>
-#include <libconfig/ppcio.h>
+#include "typedefs.h"
+#include "defines.h"
+#include "args.h"
+#include "dhcp.h"
+#include "ip.h"
+#include "dev.h"
+#include "error.h"
+#include "ppcio.h"
 
 /* interface & address local lists */
 int link_table_index;

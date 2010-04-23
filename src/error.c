@@ -2,7 +2,7 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <string.h>
-#include <libconfig/error.h>
+#include "error.h"
 
 void pr_error(int output_strerror, char *fmt, ...)
 {

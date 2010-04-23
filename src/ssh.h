@@ -1,4 +1,4 @@
-#include <cish/options.h>
+#include "options.h"
 
 #ifdef OPTION_OPENSSH
 #define SSH_KEY_FILE "/etc/ssh/ssh_host_rsa_key"

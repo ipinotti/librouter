@@ -10,8 +10,8 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <termios.h>
-#include <libconfig/str.h>
-#include <libconfig/error.h>
+#include "str.h"
+#include "error.h"
 
 int isblank (int c);
 

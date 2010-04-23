@@ -20,9 +20,9 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <termios.h>
-#include <libconfig/str.h>
-#include <libconfig/error.h>
-#include <libconfig/modem3G.h>
+#include "str.h"
+#include "error.h"
+#include "modem3G.h"
 
 #define arq1 "chat-modem-3g"
 #define arq2 "modem-3g"

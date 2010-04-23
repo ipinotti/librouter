@@ -19,14 +19,14 @@
 #include <linux/sockios.h>
 #include <linux/mii.h>
 #include <linux/ethtool.h>
-#include <libconfig/typedefs.h>
-#include <libconfig/args.h>
-#include <libconfig/error.h>
-#include <libconfig/ppp.h>
-#include <libconfig/dev.h>
-#include <libconfig/defines.h>
-#include <libconfig/ppcio.h>
-#include <libconfig/lan.h>
+#include "typedefs.h"
+#include "args.h"
+#include "error.h"
+#include "ppp.h"
+#include "dev.h"
+#include "defines.h"
+#include "ppcio.h"
+#include "lan.h"
 
 int lan_get_status(char *ifname)
 {

@@ -2,7 +2,7 @@
 #include <sys/sem.h>
 #include <syslog.h>
 
-#include <libconfig/defines.h>
+#include "defines.h"
 
 union semun
 {

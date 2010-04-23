@@ -152,10 +152,10 @@ Cisco1700-PD3(config-if)#tunnel udlr ?
 #include <arpa/inet.h>
 #include <linux/byteorder/big_endian.h>
 #include <linux/if_tunnel.h>
-#include <libconfig/dev.h>
-#include <libconfig/device.h>
-#include <libconfig/ip.h>
-#include <libconfig/tunnel.h>
+#include "dev.h"
+#include "device.h"
+#include "ip.h"
+#include "tunnel.h"
 
 #if 0
 static int do_ioctl_get_iftype(char *dev)

@@ -11,8 +11,8 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <utmp.h>
-#include <libconfig/process.h>
-#include <libconfig/error.h>
+#include "process.h"
+#include "error.h"
 
 /* Retorna informacoes sobre um processo.
  * progname 	- nome do processo

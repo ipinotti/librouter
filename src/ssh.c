@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <libconfig/defines.h>
-#include <libconfig/args.h>
-#include <libconfig/error.h>
-#include <libconfig/nv.h>
-#include <libconfig/ssh.h>
+#include "defines.h"
+#include "args.h"
+#include "error.h"
+#include "nv.h"
+#include "ssh.h"
 
 int ssh_create_rsakey(int keysize)
 {

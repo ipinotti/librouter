@@ -1,9 +1,9 @@
-#include <linux/config.h>
+/*#include <linux/config.h>*/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <libconfig/args.h>
+#include "args.h"
 
 #define isspace_local(c) ((c==' ')||(c=='\t'))
 

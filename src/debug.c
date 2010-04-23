@@ -4,10 +4,10 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <syslog.h>
-#include <cish/options.h>
-#include <libconfig/defines.h>
-#include <libconfig/dhcp.h>
-#include <libconfig/debug.h>
+#include "options.h"
+#include "defines.h"
+#include "dhcp.h"
+#include "debug.h"
 
 static debuginfo DEBUG[] = { /* !!! Check cish_defines.h */
 	{"acl","kernel: (acl)","Access list service", 0},

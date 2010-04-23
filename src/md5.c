@@ -20,7 +20,7 @@
 
 /* Written by Ulrich Drepper <drepper@gnu.ai.mit.edu>, 1995.  */
 
-#include <libconfig/md5_config.h>
+#include "md5_config.h"
 #include <sys/types.h>
 
 #if STDC_HEADERS || defined _LIBC
@@ -32,7 +32,7 @@
 # endif
 #endif
 
-#include <libconfig/md5.h>
+#include "md5.h"
 
 #ifdef _LIBC
 # include <endian.h>

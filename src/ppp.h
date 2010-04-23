@@ -1,5 +1,5 @@
 #include <linux/config.h>
-#include <libconfig/typedefs.h>
+#include "typedefs.h"
 
 #define PPP_CFG_FILE "/var/run/serial%d.config" /* 0 1 2 */
 #define L2TP_PPP_CFG_FILE "/var/run/l2tp.%s.config" /* l2tpd */

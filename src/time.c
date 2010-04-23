@@ -11,8 +11,8 @@
 #include <linux/config.h>
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
-#include <cish/options.h>
-#include <libconfig/error.h>
+#include "options.h"
+#include "error.h"
 
 #define	TZ_MAGIC	"TZif"
 

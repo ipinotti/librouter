@@ -17,12 +17,12 @@
 #include <linux/if.h>
 #include <linux/sockios.h>
 #include <linux/if_vlan.h>
-#include <libconfig/typedefs.h>
-#include <libconfig/vlan.h>
-#include <libconfig/ip.h>
-#include <libconfig/dev.h>
-#include <libconfig/error.h>
-#include <libconfig/defines.h>
+#include "typedefs.h"
+#include "vlan.h"
+#include "ip.h"
+#include "dev.h"
+#include "error.h"
+#include "defines.h"
 
 int vlan_exists(int ethernet_no, int vid)
 {

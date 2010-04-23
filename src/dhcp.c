@@ -1,14 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <sys/time.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-#include <linux/config.h>
+/*#include <linux/config.h>*/
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <linux/route.h>
@@ -17,18 +19,18 @@
 #include <sys/mman.h> /*mmap*/
 #include <syslog.h> /*syslog*/
 
-#include <cish/options.h>
-#include <libconfig/args.h>
-#include <libconfig/error.h>
-#include <libconfig/exec.h>
-#include <libconfig/defines.h>
-#include <libconfig/dev.h>
-#include <libconfig/dhcp.h>
-#include <libconfig/ip.h>
-#include <libconfig/ipsec.h>
-#include <libconfig/process.h>
-#include <libconfig/str.h>
-#include <libconfig/typedefs.h>
+#include "options.h"
+#include "args.h"
+#include "error.h"
+#include "exec.h"
+#include "defines.h"
+#include "dev.h"
+#include "dhcp.h"
+#include "ip.h"
+#include "ipsec.h"
+#include "process.h"
+#include "str.h"
+#include "typedefs.h"
 
 #ifdef UDHCPD
 pid_t udhcpd_pid(int eth)

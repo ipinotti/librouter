@@ -6,16 +6,16 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
-#include <cish/options.h>
-#include <libconfig/defines.h>
-#include <libconfig/device.h>
-#include <libconfig/exec.h>
-#include <libconfig/ipsec.h>
-#include <libconfig/str.h>
-#include <libconfig/nv.h>
-#include <libconfig/error.h>
-#include <libconfig/quagga.h>
-#include <libconfig/process.h>
+#include "options.h"
+#include "defines.h"
+#include "device.h"
+#include "exec.h"
+#include "ipsec.h"
+#include "str.h"
+#include "nv.h"
+#include "error.h"
+#include "quagga.h"
+#include "process.h"
 
 #ifdef OPTION_IPSEC
 int get_starter_pid(void)

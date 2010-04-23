@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <libconfig/md5.h>
+#include "md5.h"
 
 unsigned char *hash_sn_str(unsigned char *serial)
 {

@@ -1,10 +1,16 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <string.h>
 #include <unistd.h>
-#include <resolv.h>
-#include <libconfig/args.h>
-#include <libconfig/dns.h>
-#include <libconfig/error.h>
-#include <libconfig/str.h>
+//#include <resolv.h>
+
+#include "args.h"
+#include "dns.h"
+#include "error.h"
+#include "str.h"
 
 struct _entry_info {
 	unsigned int active;

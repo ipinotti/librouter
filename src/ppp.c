@@ -6,15 +6,15 @@
 #include <syslog.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <cish/options.h>
-#include <libconfig/cish_defines.h>
-#include <libconfig/defines.h>
-#include <libconfig/nv.h>
-#include <libconfig/ppp.h>
-#include <libconfig/process.h>
-#include <libconfig/ipsec.h>
-#include <libconfig/ip.h>
-#include <libconfig/pam.h>
+#include "options.h"
+#include "cish_defines.h"
+#include "defines.h"
+#include "nv.h"
+#include "ppp.h"
+#include "process.h"
+#include "ipsec.h"
+#include "ip.h"
+#include "pam.h"
 
 int notify_systtyd(void)
 {

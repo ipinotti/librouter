@@ -10,7 +10,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <libconfig/getpid.h>
+#include "getpid.h"
 
 /* List of processes. */
 static PROC plist[MAX_NUM_PROCESSES];

@@ -8,7 +8,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-#include "../zlib/zlib.h"
+#include <zlib.h>
 
 #define local static
 #define ZEXPORT	/* empty */

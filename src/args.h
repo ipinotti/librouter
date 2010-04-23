@@ -1,7 +1,7 @@
 #ifndef _ARGS_H
 #define _ARGS_H 1
 
-#include <libconfig/typedefs.h>
+#include "typedefs.h"
 
 typedef struct
 {

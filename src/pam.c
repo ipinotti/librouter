@@ -7,13 +7,13 @@
 #include <sys/mman.h>
 #include <security/pam_appl.h>
 #include <security/pam_misc.h>
-#include <libconfig/args.h>
-#include <libconfig/cish_defines.h>
-#include <libconfig/defines.h>
-#include <libconfig/ssh.h>
-#include <libconfig/typedefs.h>
-#include <libconfig/pam.h>
-#include <libconfig/ppp.h>
+#include "args.h"
+#include "cish_defines.h"
+#include "defines.h"
+#include "ssh.h"
+#include "typedefs.h"
+#include "pam.h"
+#include "ppp.h"
 
 #undef AAA_DEBUG 
 #ifdef AAA_DEBUG

@@ -12,6 +12,9 @@ AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
 
 # Check endianess
 AC_C_BIGENDIAN
@@ -37,6 +40,7 @@ AC_FUNC_MMAP
 AC_CHECK_FUNCS([bzero ftruncate getpagesize inet_ntoa localtime_r memmove memset munmap socket stime strcasecmp strchr strdup strerror strncasecmp strrchr strstr strtol tzset])
 
 AM_PROG_LIBTOOL
+AM_MAINTAINER_MODE
 
 SHAVE_INIT([m4], [enable]) # dnl Make the output pretty
 

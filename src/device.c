@@ -2,11 +2,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <cish/options.h>
-#include <libconfig/defines.h>
-#include <libconfig/device.h>
-#include <libconfig/args.h>
-#include <libconfig/str.h>
+#include "options.h"
+#include "defines.h"
+#include "device.h"
+#include "args.h"
+#include "str.h"
 
 /* !!! bridge1 */
 device_family DEV_FAM[] = { /* type, cish_string */

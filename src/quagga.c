@@ -17,12 +17,12 @@
 
 #include <linux/config.h>
 
-#include <libconfig/device.h>
-#include <libconfig/error.h>
-#include <libconfig/exec.h>
-#include <libconfig/process.h>
-#include <libconfig/quagga.h>
-#include <libconfig/str.h>
+#include "device.h"
+#include "error.h"
+#include "exec.h"
+#include "process.h"
+#include "quagga.h"
+#include "str.h"
 
 static int fd_daemon;
 

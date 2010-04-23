@@ -1,6 +1,6 @@
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -11,14 +11,15 @@
 #include <dirent.h>
 #include <time.h>
 #include <syslog.h>
-#include <cish/options.h>
-#include <libconfig/defines.h>
-#include <libconfig/exec.h>
-#include <libconfig/error.h>
-#include <libconfig/initreq.h>
-#include <libconfig/args.h>
-#include <libconfig/process.h>
-#include <libconfig/str.h>
+
+#include "options.h"
+#include "defines.h"
+#include "exec.h"
+#include "error.h"
+#include "initreq.h"
+#include "args.h"
+#include "process.h"
+#include "str.h"
 
 int telinit(char c, int sleeptime)
 {

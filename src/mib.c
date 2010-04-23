@@ -3,10 +3,10 @@
 #include <string.h>
 #include <syslog.h>
 #include <sys/shm.h>
-#include <libconfig/defines.h>
-#include <libconfig/args.h>
-#include <libconfig/mib.h>
-#include <libconfig/lock.h>
+#include "defines.h"
+#include "args.h"
+#include "mib.h"
+#include "lock.h"
 
 #undef SNMP_TRANSLATE_DEBUG
 

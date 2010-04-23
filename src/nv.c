@@ -20,17 +20,17 @@
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
 
-#include <cish/options.h>
+#include "options.h"
 
-#include <libconfig/nv.h>
-#include <libconfig/args.h>
-#include <libconfig/crc.h>
-#include <libconfig/error.h>
-#include <libconfig/time.h>
-#include <libconfig/defines.h>
-#include <libconfig/flashsave.h>
-#include <libconfig/exec.h>
-#include <libconfig/crc32.h>
+#include "nv.h"
+#include "args.h"
+#include "crc.h"
+#include "error.h"
+#include "time.h"
+#include "defines.h"
+#include "flashsave.h"
+#include "exec.h"
+#include "crc32.h"
 
 #include <u-boot/image.h>
 

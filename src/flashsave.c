@@ -15,17 +15,17 @@
 
 #include <linux/config.h>
 
-#include <cish/options.h>
+#include "options.h"
 
 #include <u-boot/types.h>
 #include <u-boot/image.h>
 #include <u-boot/rtc.h>
 #include <u-boot/zlib.h>
 
-#include <libconfig/defines.h>
-#include <libconfig/flashsave.h>
-#include <libconfig/crc32.h>
-#include <libconfig/nv.h>
+#include "defines.h"
+#include "flashsave.h"
+#include "crc32.h"
+#include "nv.h"
 
 static int month_days[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 

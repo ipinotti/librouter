@@ -6,14 +6,14 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <cish/options.h>
-#include <libconfig/args.h>
-#include <libconfig/defines.h>
-#include <libconfig/device.h>
-#include <libconfig/error.h>
-#include <libconfig/exec.h>
-#include <libconfig/pim.h>
-#include <libconfig/str.h>
+#include "options.h"
+#include "args.h"
+#include "defines.h"
+#include "device.h"
+#include "error.h"
+#include "exec.h"
+#include "pim.h"
+#include "str.h"
 
 #ifdef OPTION_PIMD
 static void pimdd_hup(void)

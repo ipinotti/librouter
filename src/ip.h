@@ -2,9 +2,9 @@
 #include <sys/ioctl.h>
 #include <linux/if.h>
 #include <linux/netdevice.h>
-#include <libconfig/defines.h>
-#include <libconfig/typedefs.h>
-#include <libconfig/shm.h>
+#include "defines.h"
+#include "typedefs.h"
+#include "shm.h"
 
 typedef struct
 {

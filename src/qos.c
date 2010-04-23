@@ -12,15 +12,15 @@
 #include <syslog.h>
 #include <linux/hdlc.h>
 #include <linux/mii.h>
-#include <libconfig/args.h>
-#include <libconfig/defines.h>
-#include <libconfig/device.h>
-#include <libconfig/exec.h>
-#include <libconfig/dev.h>
-#include <libconfig/lan.h>
-#include <libconfig/ppp.h>
-#include <libconfig/qos.h>
-#include <libconfig/ip.h>
+#include "args.h"
+#include "defines.h"
+#include "device.h"
+#include "exec.h"
+#include "dev.h"
+#include "lan.h"
+#include "ppp.h"
+#include "qos.h"
+#include "ip.h"
 
 static int asort(const void *a, const void *b)
 {

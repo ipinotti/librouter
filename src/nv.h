@@ -1,6 +1,6 @@
 #include <linux/config.h>
-#include <cish/options.h>
-#include <libconfig/typedefs.h>
+#include "options.h"
+#include "typedefs.h"
 
 #define DEV_STARTUP_CONFIG "/dev/startup-config"
 
