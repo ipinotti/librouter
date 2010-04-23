@@ -43,6 +43,8 @@ libconfig_la_SOURCES = \
 	version.c \
 	vlan.c 
 
+libconfig_ladir = $(includedir)/libconfig
+
 libconfig_la_HEADERS = \
 	acl.h \
 	args.h \

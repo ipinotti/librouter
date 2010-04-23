@@ -6,9 +6,9 @@ test -z "$srcdir" && srcdir=.
 
 ORIGDIR=`pwd`
 cd $srcdir
-PROJECT=cish
+PROJECT=libconfig
 TEST_TYPE=-f
-FILE=src/cish_main.h
+FILE=src/typedefs.h
 
 DIE=0
 
