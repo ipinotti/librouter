@@ -1,3 +1,6 @@
+#ifndef _IPSEC_H
+#define _IPSEC_H
+
 int get_ipsec(void);
 int set_ipsec(int opt);
 int get_l2tp(void);
@@ -68,3 +71,4 @@ enum
   ESP = 2	 
 };
 
+#endif

@@ -1,3 +1,5 @@
+#ifndef _IP_H
+#define _IP_H
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <linux/if.h>
@@ -59,3 +61,4 @@ unsigned int is_valid_port(char *data);
 unsigned int is_valid_netmask(char *data);
 int get_iface_stats(char *ifname, void *store);
 
+#endif

@@ -1,3 +1,5 @@
+#ifndef _DEV_H
+#define _DEV_H
 #include "defines.h"
 #include "typedefs.h"
 #include <sys/types.h>
@@ -35,3 +37,4 @@ int dev_set_txring(char *, int);
 int dev_get_txring(char *);
 int dev_set_weight(char *, int);
 int dev_get_weight(char *);
+#endif

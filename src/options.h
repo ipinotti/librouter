@@ -1,3 +1,5 @@
+#ifndef _OPTIONS_H
+#define _OPTIONS_H
 /* #include <linux/config.h> */
 
 /*****************************************************************************/
@@ -32,3 +34,5 @@
 #define PIMS_DAEMON 	"pimsd"
 #define PIMD_DAEMON 	"pimdd"
 #define SMC_DAEMON 		"smcroute"
+
+#endif

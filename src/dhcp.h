@@ -1,3 +1,6 @@
+#ifndef _DHCP_H
+#define _DHCP_H
+
 #define UDHCPD
 
 enum { DHCP_NONE, DHCP_SERVER, DHCP_RELAY };
@@ -42,3 +45,4 @@ int get_dhcp_local(void);
 int set_dhcp_server_local(int save_dns, char *cmdline);
 int get_dhcp_server_local(char *buf);
 
+#endif

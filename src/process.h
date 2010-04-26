@@ -1,3 +1,6 @@
+#ifndef _PROCESS_H
+#define _PROCESS_H
+
 #define MAX_PROC_CMDLINE   256
 
 pid_t get_process_info(char *progname, char *arg, char *proc_cmdline);
@@ -8,4 +11,4 @@ int get_runlevel(void);
 #define get_pid(a) get_process_info(a, NULL, NULL)
 #define get_pid_with_arg(a, b) get_process_info(a, b, NULL)
 
-
+#endif

@@ -1,6 +1,4 @@
-lib_LTLIBRARIES = \
-		libconfig.la
-
+lib_LTLIBRARIES = libconfig.la
 libconfig_la_SOURCES = \
 	acl.c \
 	args.c \
@@ -38,13 +36,12 @@ libconfig_la_SOURCES = \
 	snmp.c \
 	ssh.c \
 	str.c \
-	time.c \
+	libtime.c \
 	tunnel.c \
 	version.c \
 	vlan.c 
 
 libconfig_ladir = $(includedir)/libconfig
-
 libconfig_la_HEADERS = \
 	acl.h \
 	args.h \
@@ -85,9 +82,8 @@ libconfig_la_HEADERS = \
 	snmp.h \
 	ssh.h \
 	str.h \
-	time.h \
+	libtime.h \
 	tunnel.h \
 	typedefs.h \
 	version.h \
 	vlan.h
-
