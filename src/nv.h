@@ -1,4 +1,4 @@
-#include <linux/config.h>
+/*#include <linux/config.h>*/
 #include "options.h"
 #include "typedefs.h"
 

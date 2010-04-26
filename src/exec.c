@@ -621,11 +621,12 @@ int test_file_write_size(char *filename, unsigned int maxsize, char *buf, unsign
 	int fd, max;
 	struct stat st;
 	char *p, *local, *start;
+	mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 
 	if( (filename == NULL) || (maxsize == 0) || (buf == NULL) || (len == 0) || (len > maxsize) )
 		return -1;
 
-	if( (fd = open(filename, O_RDONLY | O_CREAT)) < 0 )
+	if( (fd = open(filename, O_RDONLY | O_CREAT, mode)) < 0 )
 		return -1;
 	if( fstat(fd, &st) < 0 ) {
 		close(fd);

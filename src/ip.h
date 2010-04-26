@@ -4,9 +4,9 @@
 #include <sys/ioctl.h>
 #include <linux/if.h>
 #include <linux/netdevice.h>
+#include <linux/netlink.h>
 #include "defines.h"
 #include "typedefs.h"
-#include "shm.h"
 
 struct ipaddr_table {
 	char ifname[IFNAMSIZ];
