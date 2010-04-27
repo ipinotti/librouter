@@ -2,9 +2,19 @@
 #include <sys/ioctl.h>
 #include <linux/if.h>
 #include <linux/netdevice.h>
+#include <linux/netlink.h>
 
 #include <libconfig/defines.h>
 #include <libconfig/typedefs.h>
+
+//#define DEBUG
+#ifdef DEBUG
+#define ip_dbg(x,...) \
+	printf("%s : %d => ", __FUNCTION__, __LINE__); \
+	printf(x,##__VA_ARGS__)
+#else
+#define ip_dbg(x,...)
+#endif
 
 struct ipaddr_table {
 	char ifname[IFNAMSIZ];

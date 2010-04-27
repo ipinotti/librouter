@@ -4,8 +4,11 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <ctype.h>
+#include <string.h>
+
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+
 #include <linux/config.h>
 #include <linux/if.h>
 #include <linux/if_packet.h>
@@ -15,10 +18,9 @@
 #include <linux/sockios.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <string.h>
+
 #include <linux/sockios.h>
 #include <fnmatch.h>
-#include <linux/netlink.h>
 #include <libnetlink.h>
 #include <ll_map.h>
 #include <sys/ipc.h>
@@ -210,9 +212,6 @@ static int __get_addrinfo (struct nlmsghdr *n, struct ipaddr_table *ipaddr)
 	int len = n->nlmsg_len;
 	struct rtattr *rta_tb[IFA_MAX + 1];
 
-	//if (ipaddr_index >= MAX_NUM_IPS)
-	//	return 0;
-
 	if (n->nlmsg_type != RTM_NEWADDR && n->nlmsg_type != RTM_DELADDR)
 		return 0;
 
@@ -254,8 +253,6 @@ static int __get_addrinfo (struct nlmsghdr *n, struct ipaddr_table *ipaddr)
 
 	strncpy (ipaddr->ifname, (char*) RTA_DATA (rta_tb[IFA_LABEL]), IFNAMSIZ);
 
-	//ipaddr_index++;
-
 	return 0;
 }
 
@@ -285,9 +282,6 @@ static int __get_linkinfo (struct nlmsghdr *n, struct link_table *link)
 	struct ifinfomsg *ifi = NLMSG_DATA(n);
 	struct rtattr * tb[IFLA_MAX + 1];
 	int len = n->nlmsg_len;
-
-	//if (link_table_index >= MAX_NUM_LINKS)
-	//	return 0;
 
 	if (n->nlmsg_type != RTM_NEWLINK && n->nlmsg_type != RTM_DELLINK)
 		return 0;
@@ -328,8 +322,6 @@ static int __get_linkinfo (struct nlmsghdr *n, struct link_table *link)
 
 	link->flags = ifi->ifi_flags;
 	link->type = ifi->ifi_type;
-
-	//link_table_index++;
 
 	return 0;
 }
@@ -373,7 +365,7 @@ int get_if_list (struct intf_info *info)
 	 */
 	for (l = linfo; l;) {
 		/* Update link pointer if __get_linkinfo succeeds */
-		if (__get_linkinfo (&l->h, link))
+		if (!__get_linkinfo (&l->h, link))
 			link++;
 		tmp = l;
 		l = l->next;
@@ -382,8 +374,12 @@ int get_if_list (struct intf_info *info)
 
 	for (a = ainfo; a;) {
 		/* Update ipaddr pointer if __get_addrinfo succeeds */
-		if (__get_addrinfo (&a->h, ipaddr))
+		if (!__get_addrinfo (&a->h, ipaddr)) {
+			ip_dbg("__getaddrinfo succeeded for %s\n", ipaddr->ifname);
+			ip_dbg("ip address is %s\n", inet_ntoa(ipaddr->local));
+			ip_dbg("bitmask is %d\n", ipaddr->bitlen);
 			ipaddr++;
+		}
 		tmp = a;
 		a = a->next;
 		free (tmp);
