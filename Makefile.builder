@@ -16,7 +16,7 @@ config: configure
 	fi
 
 configure:
-	./autogen.sh
+	autoreconf -i
 
 install:
 	$(MAKE) install
@@ -25,4 +25,4 @@ clean:
 	$(MAKE) clean
 
 distclean:
-	$(MAKE) clean
+	$(MAKE) distclean

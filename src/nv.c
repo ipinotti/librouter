@@ -26,7 +26,7 @@
 #include "args.h"
 #include "crc.h"
 #include "error.h"
-#include "time.h"
+#include "libtime.h"
 #include "defines.h"
 #include "flashsave.h"
 #include "exec.h"

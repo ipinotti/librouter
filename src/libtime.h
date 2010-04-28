@@ -1,4 +1,3 @@
-#if 0
 struct rtc_time
 {
 	int tm_sec;
@@ -20,4 +19,3 @@ int get_date(char *buf, int size);
 int set_date(int day, int mon, int year, int hour, int min, int sec);
 int set_rtc_with_system_date(void);
 int set_system_date_with_rtc(void);
-#endif
