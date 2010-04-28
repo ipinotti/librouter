@@ -48,6 +48,11 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 
 # Checks for libraries.
+AC_CHECK_LIB(pam, pam_get_data,, exit)
+AC_CHECK_LIB(pam_misc, pam_misc_setenv,, exit)
+AC_CHECK_LIB(crypto, RSA_public_encrypt,, exit)
+AC_CHECK_LIB(netsnmp, snmpv3_store,, exit)
+
 
 # Checks for header files.
 AC_HEADER_RESOLV
@@ -74,5 +79,6 @@ SHAVE_INIT([m4], [enable]) # dnl Make the output pretty
 AC_CONFIG_FILES([m4/shave
 		 m4/shave-libtool
 		 Makefile
-		 src/Makefile])
+		 src/Makefile
+		 src/libnetlink/Makefile])
 AC_OUTPUT

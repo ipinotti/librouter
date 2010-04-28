@@ -1,4 +1,5 @@
-lib_LTLIBRARIES = libconfig.la
+SUBDIRS = libnetlink
+lib_LTLIBRARIES = libconfig.la libconfigsnmp.la
 libconfig_la_SOURCES = \
 	acl.c \
 	args.c \
@@ -12,7 +13,6 @@ libconfig_la_SOURCES = \
 	error.c \
 	exec.c \
 	flashsave.c \
-	getpid.c \
 	hash.c \
 	hash_sn.c \
 	ip.c \
@@ -41,6 +41,17 @@ libconfig_la_SOURCES = \
 	version.c \
 	vlan.c 
 
+libconfig_la_LIBADD = $(top_builddir)/src/libnetlink/libnetlink.la
+
+
+libconfigsnmp_la_SOURCES = \
+	snmp.c
+
+libconfigsnmp_ladir = $(includedir)/libconfig
+
+libconfigsnmp_la_HEADERS = \
+	snmp.h
+
 libconfig_ladir = $(includedir)/libconfig
 libconfig_la_HEADERS = \
 	acl.h \
@@ -55,7 +66,6 @@ libconfig_la_HEADERS = \
 	error.h \
 	exec.h \
 	flashsave.h \
-	getpid.h \
 	hash.h \
 	hash_sn.h \
 	initreq.h \

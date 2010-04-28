@@ -19,11 +19,14 @@
 #include <linux/sockios.h>
 #include <fnmatch.h>
 #include <linux/netlink.h>
-#include <libnetlink.h>
-#include <ll_map.h>
+
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <syslog.h>
+
+#include "libnetlink/libnetlink.h"
+#include "libnetlink/ll_map.h"
+
 #include "typedefs.h"
 #include "defines.h"
 #include "args.h"

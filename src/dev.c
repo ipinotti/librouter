@@ -21,7 +21,7 @@
 #include <linux/sockios.h>
 #include <linux/netlink.h>
 
-#include <libnetlink.h>
+#include "libnetlink/libnetlink.h"
 /*#include <ll_map.h>*/
 #include <fnmatch.h>
 

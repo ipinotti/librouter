@@ -27,7 +27,6 @@
 #define arq1 "chat-modem-3g"
 #define arq2 "modem-3g"
 
-
 /**
  * Adquire o APN - Acess Point Name, no arquivo de script - ARQ1,
  * através da função find_string_in_file_nl, descrita em str.c
@@ -38,17 +37,16 @@
  * @param apn
  * @return
  */
-int modem3g_get_apn (char * apn){
+int modem3g_get_apn (char * apn)
+{
 	//arq1 == "chat-modem-3g";
 
 	char key[] = "\"IP\",";
 
-	find_string_in_file_nl(arq1,&key,apn,100);
+	find_string_in_file_nl (arq1, key, apn, 100);
 
 	return 1;
-
 }
-
 
 /**
  * Grava o APN - Acess Point Name, no arquivo de script - ARQ1,
@@ -61,17 +59,16 @@ int modem3g_get_apn (char * apn){
  * @param apn
  * @return
  */
-int modem3g_set_apn (char * apn){
+int modem3g_set_apn (char * apn)
+{
 	//arq1 == "chat-modem-3g";
 
 	char key[] = "\"IP\",";
 
-	replace_string_in_file_nl(arq1,&key,apn);
+	replace_string_in_file_nl (arq1, key, apn);
 
 	return 1;
-
 }
-
 
 /**
  * Adquire o USERNAME, no arquivo de script - ARQ2,
@@ -83,18 +80,16 @@ int modem3g_set_apn (char * apn){
  * @param username
  * @return
  */
-int modem3g_get_username (char * username){
+int modem3g_get_username (char * username)
+{
 	//arq2 == "modem-3g";
 
 	char key[] = "user";
 
-	find_string_in_file_nl(arq2,&key,username,100);
+	find_string_in_file_nl (arq2, key, username, 100);
 
 	return 1;
-
-
 }
-
 
 /**
  * Grava o USERNAME, no arquivo de script - ARQ2,
@@ -107,17 +102,16 @@ int modem3g_get_username (char * username){
  * @param username
  * @return
  */
-int modem3g_set_username (char * username){
+int modem3g_set_username (char * username)
+{
 	//arq2 == "modem-3g";
 
 	char key[] = "user";
 
-	replace_string_in_file_nl(arq2,&key,username);
+	replace_string_in_file_nl (arq2, key, username);
 
 	return 1;
-
 }
-
 
 /**
  * Adquire o PASSWORD, no arquivo de script - ARQ2,
@@ -129,17 +123,16 @@ int modem3g_set_username (char * username){
  * @param password
  * @return
  */
-int modem3g_get_password (char * password){
+int modem3g_get_password (char * password)
+{
 	//arq2 == "modem-3g";
 
 	char key[] = "password";
 
-	find_string_in_file_nl(arq2,&key,password,100);
+	find_string_in_file_nl (arq2, key, password, 100);
 
 	return 1;
-
 }
-
 
 /**
  * Grava o PASSWORD, no arquivo de script - ARQ2,
@@ -152,13 +145,13 @@ int modem3g_get_password (char * password){
  * @param password
  * @return
  */
-int modem3g_set_password (char * password){
+int modem3g_set_password (char * password)
+{
 	//arq2 == "modem-3g";
 
 	char key[] = "password";
 
-	replace_string_in_file_nl(arq2,&key,password);
+	replace_string_in_file_nl (arq2, key, password);
 
 	return 1;
-
 }

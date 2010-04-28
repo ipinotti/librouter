@@ -13,18 +13,14 @@
 #include <sys/reboot.h>
 #include <sys/stat.h>
 
-/* #include <linux/config.h> */
+#include <linux/autoconf.h>
 
 #include "options.h"
 
-#include <linux/rtc.h>
-#include <zlib.h>
-/*
 #include <u-boot/types.h>
 #include <u-boot/image.h>
 #include <u-boot/rtc.h>
 #include <u-boot/zlib.h>
-*/
 
 #include "defines.h"
 #include "flashsave.h"
