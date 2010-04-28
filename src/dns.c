@@ -531,7 +531,7 @@ void dns_lookup(int on_off)
 		symlink(FILE_RESOLVRELAYCONF, FILE_RESOLVCONF);
 	else
 		unlink(FILE_RESOLVCONF);
-	res_init();
+	__res_init();
 }
 
 int is_domain_lookup_enabled(void)
