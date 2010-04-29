@@ -80,6 +80,7 @@ libconfig_la_HEADERS = \
 	modem3G.h \
 	ntp.h \
 	nv.h \
+	options.h \
 	pam.h \
 	pim.h \
 	ppcio.h \
