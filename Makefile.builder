@@ -20,6 +20,8 @@ configure:
 
 install:
 	$(MAKE) install
+	#HACK FIXME!
+	find -iname "*.so*" -exec cp -af {} $(ROOTDIR)/lib \;
 
 clean:
 	$(MAKE) clean
