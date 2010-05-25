@@ -13,8 +13,9 @@ device_family DEV_FAM[] = { /* type, cish_string */
   {ethernet, "ethernet"},
   {loopback, "loopback"},
   {tunnel, "tunnel"},
-  {mobile, "mobile"},
   {ipsec, "ipsec"},
+//  {mobile, "mobile"}, situação anterior a implementação do 3G
+  {m3G, "m3G"},
   {none, NULL}
 };
 
@@ -49,6 +50,7 @@ char *convert_device(const char *device, int major, int minor)
 			case loopback:
 			case tunnel:
 			case ipsec:
+			case m3G:
 			default:
 				if (minor >= 0)
 				{

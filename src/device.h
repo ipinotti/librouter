@@ -5,7 +5,8 @@ typedef enum {
 	none,
 	ethernet,
 	loopback,
-	mobile, /* 3G */
+//	mobile /* 3G */ situação anterior a implementação do 3G
+	m3G, /* 3G */
 	tunnel,
 	ipsec
 } device_type;

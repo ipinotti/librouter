@@ -24,28 +24,37 @@
 #include "error.h"
 #include "modem3G.h"
 
-#define arq1 "chat-modem-3g"
-#define arq2 "modem-3g"
+#define arq1 "/etc/ppp/chat-modem-3g-"
+#define arq2 "/etc/ppp/peers/modem-3g-"
 
 /**
  * Adquire o APN - Acess Point Name, no arquivo de script - ARQ1,
  * através da função find_string_in_file_nl, descrita em str.c
  *
  * Retorna APN por parâmetro e retorna 1 se sucesso.
- * Caso ocorra problema, é retornado controle de erros referente a função descrita em str.c
+ * Caso ocorra problema, é retornado -1 e controle de erros referente a função descrita em str.c
  *
  * @param apn
  * @return
  */
-int modem3g_get_apn (char * apn)
+int modem3g_get_apn (char * apn, int devcish)
 {
-	//arq1 == "chat-modem-3g";
+	//arq1 == "chat-modem-3g-";
 
+	int check=0;
+	char file[100] = arq1;
+	char device[10];
 	char key[] = "\"IP\",";
 
-	find_string_in_file_nl (arq1, key, apn, 100);
+	snprintf(device,10,"%d",devcish);
+	strcat(file,device);
 
-	return 1;
+	check = find_string_in_file_nl (file, key, apn, 100);
+
+	if (check == 0)
+		return 1;
+	else
+		return -1;
 }
 
 /**
@@ -54,20 +63,29 @@ int modem3g_get_apn (char * apn)
  * APN é passado por parâmetro.
  *
  * Retorna 1 se sucesso.
- * Caso ocorra problema, é retornado controle de erros referente a função descrita em str.c
+ * Caso ocorra problema, é retornado -1 e controle de erros referente a função descrita em str.c
  *
  * @param apn
  * @return
  */
-int modem3g_set_apn (char * apn)
+int modem3g_set_apn (char * apn, int devcish)
 {
-	//arq1 == "chat-modem-3g";
+	//arq1 == "chat-modem-3g-";
 
+	int check=0;
+	char file[100] = arq1;
+	char device[10];
 	char key[] = "\"IP\",";
 
-	replace_string_in_file_nl (arq1, key, apn);
+	snprintf(device,10,"%d",devcish);
+	strcat(file,device);
 
-	return 1;
+	check = replace_string_in_file_nl (file, key, apn);
+
+	if (check == 0)
+		return 1;
+	else
+		return -1;
 }
 
 /**
@@ -75,20 +93,30 @@ int modem3g_set_apn (char * apn)
  * através da função find_string_in_file_nl, descrita em str.c
  *
  * Retorna USERNAME por parâmetro e retorna 1 se sucesso.
- * Caso ocorra problema, é retornado controle de erros referente a função descrita em str.c
+ * Caso ocorra problema, é retornado -1 e controle de erros referente a função descrita em str.c
  *
  * @param username
  * @return
  */
-int modem3g_get_username (char * username)
+int modem3g_get_username (char * username, int devcish)
 {
-	//arq2 == "modem-3g";
+	//arq2 == "modem-3g-";
 
+	int check=0;
+	char file[100] = arq2;
+	char device[10];
 	char key[] = "user";
 
-	find_string_in_file_nl (arq2, key, username, 100);
+	snprintf(device,10,"%d",devcish);
+	strcat(file,device);
 
-	return 1;
+	check = find_string_in_file_nl (file, key, username, 100);
+
+	if (check == 0)
+		return 1;
+	else
+		return -1;
+
 }
 
 /**
@@ -97,20 +125,29 @@ int modem3g_get_username (char * username)
  * USERNAME é passado por parâmetro.
  *
  * Retorna 1 se sucesso.
- * Caso ocorra problema, é retornado controle de erros referente a função descrita em str.c
+ * Caso ocorra problema, é retornado -1 e controle de erros referente a função descrita em str.c
  *
  * @param username
  * @return
  */
-int modem3g_set_username (char * username)
+int modem3g_set_username (char * username, int devcish)
 {
-	//arq2 == "modem-3g";
+	//arq2 == "modem-3g-";
 
+	int check=0;
+	char file [100] = arq2;
+	char device[10];
 	char key[] = "user";
 
-	replace_string_in_file_nl (arq2, key, username);
+	snprintf(device,10,"%d",devcish);
+	strcat(file,device);
 
-	return 1;
+	check = replace_string_in_file_nl (file, key, username);
+
+	if (check == 0)
+		return 1;
+	else
+		return -1;
 }
 
 /**
@@ -118,20 +155,29 @@ int modem3g_set_username (char * username)
  * através da função find_string_in_file_nl, descrita em str.c
  *
  * Retorna PASSWORD por parâmetro e retorna 1 se sucesso.
- * Caso ocorra problema, é retornado controle de erros referente a função descrita em str.c
+ * Caso ocorra problema, é retornado -1 e controle de erros referente a função descrita em str.c
  *
  * @param password
  * @return
  */
-int modem3g_get_password (char * password)
+int modem3g_get_password (char * password, int devcish)
 {
-	//arq2 == "modem-3g";
+	//arq2 == "modem-3g-";
 
+	int check=0;
+	char file [100] = arq2;
+	char device[10];
 	char key[] = "password";
 
-	find_string_in_file_nl (arq2, key, password, 100);
+	snprintf(device,10,"%d",devcish);
+	strcat(file,device);
 
-	return 1;
+	check = find_string_in_file_nl (file, key, password, 100);
+
+	if (check == 0)
+		return 1;
+	else
+		return -1;
 }
 
 /**
@@ -140,18 +186,27 @@ int modem3g_get_password (char * password)
  * PASSWORD é passado por parâmetro.
  *
  * Retorna 1 se sucesso.
- * Caso ocorra problema, é retornado controle de erros referente a função descrita em str.c
+ * Caso ocorra problema, é retornado -1 e controle de erros referente a função descrita em str.c
  *
  * @param password
  * @return
  */
-int modem3g_set_password (char * password)
+int modem3g_set_password (char * password, int devcish)
 {
-	//arq2 == "modem-3g";
+	//arq2 == "modem-3g-";
 
+	int check=0;
+	char file [100] = arq2;
+	char device[10];
 	char key[] = "password";
 
-	replace_string_in_file_nl (arq2, key, password);
+	snprintf(device,10,"%d",devcish);
+	strcat(file,device);
 
-	return 1;
+	check = replace_string_in_file_nl (file, key, password);
+
+	if (check == 0)
+		return 1;
+	else
+		return -1;
 }

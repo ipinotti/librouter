@@ -8,11 +8,11 @@
 #ifndef _MODEM3G_H
 #define _MODEM3G_H
 
-int get_APN (char * apn);
-int set_APN (char * apn);
-int get_USERNAME (char * username);
-int set_USERNAME (char * username);
-int get_PASSWORD (char * password);
-int set_PASSWORD (char * password);
+int modem3g_get_apn (char * apn, int devcish);
+int modem3g_set_apn (char * apn, int devcish);
+int modem3g_get_username (char * username, int devcish);
+int modem3g_set_username (char * username, int devcish);
+int modem3g_get_password (char * password, int devcish);
+int modem3g_set_password (char * password, int devcish);
 
 #endif

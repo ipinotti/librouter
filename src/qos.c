@@ -374,8 +374,9 @@ int tc_insert_all(char *dev_name)
 		return -1;
 
 	major = atoi(dev_name+strlen(fam->cish_string));
-	
-	if (fam->type == mobile ) {
+
+//	if (fam->type == mobile ) {  --> situação anterior a implementação do 3G
+	if (fam->type == m3G ) {
 		if (ppp_get_state(major)) 
 			run_tc_now = 1; /* wait for ppp */
 	} else if (fam->type == ethernet) {

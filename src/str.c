@@ -13,6 +13,7 @@
 #include "str.h"
 #include "error.h"
 
+
 int isblank (int c);
 
 // Procura pela string "key" dentro da string "buffer", e retorna
