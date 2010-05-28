@@ -1,4 +1,3 @@
-#include <linux/config.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,6 +5,9 @@
 #include <syslog.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include <linux/autoconf.h>
+
 #include "options.h"
 #include "cish_defines.h"
 #include "defines.h"
@@ -15,6 +17,36 @@
 #include "ipsec.h"
 #include "ip.h"
 #include "pam.h"
+
+/**
+ * ppp_reload_backupd - signal backupd to reload configuration
+ *
+ * If backupd configuration is changed, it must
+ * be aware of it by means of this function.
+ *
+ * @param: void
+ * @ret: 0 if success, -1 if failure
+ */
+int ppp_reload_backupd (void)
+{
+	FILE *f;
+	char buf[16];
+
+	f = fopen("/var/run/backupd.pid", "r");
+	if (!f) {
+		fprintf(stderr, "%% backupd does not seem to be running\n");
+		return 0;
+	}
+
+	fgets(buf, 15, f);
+	fclose(f);
+
+	if (kill((pid_t) atoi(buf), SIGUSR1)) {
+		fprintf(stderr, "%% backupd[%i] seems to be down\n", atoi(buf));
+		return (-1);
+	}
+	return 0;
+}
 
 int notify_systtyd (void)
 {

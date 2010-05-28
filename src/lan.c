@@ -44,7 +44,7 @@ int lan_get_status(char *ifname)
 	strcpy(ifr.ifr_name, ifname);
 	if ((p=strchr(ifr.ifr_name, '.')) != NULL) *p=0; /* vlan uses ethernetX status! */
 
-#if 0 
+#if 0
 	err=ioctl(fd, SIOCGPHYSTATUS, &ifr);
 	close(fd);
 
