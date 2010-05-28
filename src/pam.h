@@ -47,7 +47,7 @@ typedef struct {
 
 /* Prototypes */
 int discover_pam_current_mode(char *file_name);
-int proceed_third_authentication(char *login, char *program);
+int pam_web_authenticate(char *user, char *pass);
 int discover_pam_current_author_mode(char *file_name);
 int discover_pam_current_acct_mode(char *file_name);
 int discover_pam_current_acct_command_mode(char *file_name);

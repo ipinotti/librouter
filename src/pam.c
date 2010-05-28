@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
+
 #include <security/pam_appl.h>
 #include <security/pam_misc.h>
+
 #include "args.h"
 #include "cish_defines.h"
 #include "defines.h"
@@ -49,101 +52,151 @@ static const aaa_config_t aaa_config[MAX_AAA_TYPES] = {
 	{AAA_ACCT_CMD, AAA_ACCT_TACACS_CMD_ALL}
 };
 
-static int pam_null_conv(int n, const struct pam_message **msg, struct pam_response **resp, void *data)
+static char *web_user = NULL;
+static char *web_pass = NULL;
+
+static int pam_null_conv(int n,
+                         const struct pam_message **msg,
+                         struct pam_response **resp,
+                         void *data)
 {
 	return (PAM_CONV_ERR);
 }
 
-/*  PAM AUTHENTICATION
- *  O objetivo desta rotina eh realizar a autenticacao de um usuario
- *  fora do equipamento atraves dos protocolos RADIUS e TACACS+. A
- *  senha serah solicitada ao usuario de dentro da propria biblioteca
- *  PAM durante o processamento.
+/**
+ * web_conv Conversation function for WEB access
  *
- *  Argumentos:
- *    1) 'login' ponteiro que aponta para a regiao de memoria que contem
- *               o usuario que se deseja autenticar
- *    2) 'program' ponteiro que aponta para a regiao de memoria que
- *                 contem o aplicativo que estah chamando as rotinas PAM
+ * This function is called by the PAM module responsible
+ * for the authentication.
+ *
  */
-int proceed_third_authentication(char *login, char *program)
+static int web_conv(int num_msg, const struct pam_message **msgm,
+	      struct pam_response **response, void *appdata_ptr)
+{
+	int count = 0;
+	struct pam_response *reply;
+
+	if (num_msg <= 0)
+		return PAM_CONV_ERR;
+
+	reply = (struct pam_response *) calloc(num_msg,
+	                sizeof(struct pam_response));
+	if (reply == NULL)
+		return PAM_CONV_ERR;
+
+	/* Supply module with username and password */
+	for (count = 0; count < num_msg; ++count) {
+		char *string = NULL;
+		int nc;
+
+		switch (msgm[count]->msg_style) {
+		case PAM_PROMPT_ECHO_OFF: /* Password */
+			string = web_pass;
+			break;
+		case PAM_PROMPT_ECHO_ON: /* User */
+			string = web_user;
+			break;
+
+		default:
+			syslog(LOG_ERR, "erroneous conversation (%d)\n",
+			                msgm[count]->msg_style);
+		}
+
+		if (string) { /* must add to reply array */
+			/* add string to list of responses */
+
+			reply[count].resp_retcode = 0;
+			reply[count].resp = string;
+			string = NULL;
+		}
+	}
+
+	*response = reply;
+	reply = NULL;
+
+	return PAM_SUCCESS;
+}
+
+/**  pam_web_authenticate
+ *
+ *  Authenticate a user via PAM methods
+ *
+ *  @login: String with user's name
+ *  @program: String with the program's name.
+ *
+ *  @ret AUTH_OK if success, AUTH_NOK if fail to authenticate
+ */
+int pam_web_authenticate(char *user, char *pass)
 {
 	int pam_err;
+	int ret = AUTH_NOK;
 	struct pam_conv fpam_conv;
 	static pam_handle_t *pam_handle = NULL;
-	static struct pam_conv null_conv = {pam_null_conv, NULL};
+	static struct pam_conv null_conv = { pam_null_conv, NULL };
 
-	if( !login || !program )
-		return AUTH_NOK;
+	web_user = strdup(user);
+	web_pass = strdup(pass);
 
-	fpam_conv.conv = misc_conv;
+	fpam_conv.conv = web_conv;
 	fpam_conv.appdata_ptr = NULL;
-	if((pam_err=pam_start(program, login, &null_conv, &pam_handle)) != PAM_SUCCESS)
-	{
-		pam_end(pam_handle, pam_err);
-		pam_handle = NULL;
-		return AUTH_NOK;
-	}
-	if((pam_err=pam_set_item(pam_handle, PAM_CONV, (const void *) &fpam_conv)) != PAM_SUCCESS)
-	{
-		pam_end(pam_handle, pam_err);
-		pam_handle = NULL;
-		return AUTH_NOK;
-	}
-	if((pam_err = pam_authenticate(pam_handle, 0)) != PAM_SUCCESS)
-	{
-		pam_end(pam_handle, pam_err);
-		pam_handle = NULL;
-		return AUTH_NOK;
-	}
+
+	if ((pam_err = pam_start("web", NULL, &null_conv, &pam_handle))
+	                != PAM_SUCCESS)
+		goto web_auth_err;
+
+	if ((pam_err = pam_set_item(pam_handle, PAM_CONV,
+	                (const void *) &fpam_conv)) != PAM_SUCCESS)
+		goto web_auth_err;
+
+	syslog(LOG_INFO, "%s : %d\n", __FUNCTION__, __LINE__);
+
+	if ((pam_err = pam_authenticate(pam_handle, 0)) != PAM_SUCCESS)
+		goto web_auth_err;
 
 	/* Now check if the authenticated user is allowed to login. */
-	if(pam_acct_mgmt(pam_handle, 0) == PAM_AUTHTOK_EXPIRED)
-	{
-		if(pam_chauthtok(pam_handle, 0) != PAM_SUCCESS)
-		{
-			if(pam_handle)
-				pam_end(pam_handle, PAM_ABORT);
-			return AUTH_NOK;
-		}
+	if (pam_acct_mgmt(pam_handle, 0) == PAM_AUTHTOK_EXPIRED) {
+		if (pam_chauthtok(pam_handle, 0) != PAM_SUCCESS)
+			goto web_auth_err;
 	}
 
 	/*
 	 *  Call 'pam_open_session' to open the authenticated session;
 	 *  'pam_close_session' gets called by the process that cleans up the utmp entry (i.e., init);
-	 */ 
-	if(pam_open_session(pam_handle, 0) != PAM_SUCCESS)
-	{
-		if(pam_handle)
-			pam_end(pam_handle, PAM_ABORT);
-		return AUTH_NOK;
-	}
+	 */
+	if (pam_open_session(pam_handle, 0) != PAM_SUCCESS)
+		goto web_auth_err;
 
 	/* 
 	 * Initialize the supplementary group access list. 
 	 * This should be done before pam_setcred because the PAM modules might add groups during the pam_setcred call.
 	 */
-	if(pam_setcred(pam_handle, PAM_ESTABLISH_CRED) != PAM_SUCCESS)
-	{
-		if(pam_handle)
-			pam_end(pam_handle, PAM_ABORT);
-		return AUTH_NOK;
-	}
+	if (pam_setcred(pam_handle, PAM_ESTABLISH_CRED) != PAM_SUCCESS)
+		goto web_auth_err;
 
-	pam_end(pam_handle, PAM_SUCCESS);
 
-	return AUTH_OK;
+	//pam_end(pam_handle, PAM_SUCCESS);
+	ret = AUTH_OK;
+
+web_auth_err:
+
+	if (pam_handle != NULL)
+		pam_end(pam_handle, pam_err);
+	pam_handle = NULL;
+
+	web_user = NULL;
+	web_pass = NULL;
+
+	return ret;
 }
 
 
-/***************** CONFIGURATION ****************************/
-
 /**
  *	discover_pam_current_mode 		Discover mode in file
- *	@file_name : File to be checked
- *	@return : authentication mode currently configured
  *
  *	Read file and discover which Authentication mode is currently active
+ *
+ *	@param file_name : File to be checked
+ *	@return : authentication mode currently configured
  */
 int discover_pam_current_mode(char *file_name)  /* authentication */
 {
@@ -286,7 +339,6 @@ int discover_pam_current_acct_command_mode(char *file_name)  /* command accounti
  */
 static int get_aaa_family(int mode) 
 {
-#if 1
 	int i;
 	for ( i=0; i<(MAX_AAA_TYPES-1); i++ ) {
 		if (mode == aaa_config[i].mode)
@@ -294,31 +346,6 @@ static int get_aaa_family(int mode)
 	}
 
 	return 0;
-#else /* Old way! */
-	if (mode == AAA_AUTH_LOCAL || 
-		mode == AAA_AUTH_RADIUS || 
-		mode == AAA_AUTH_TACACS ||
-	    	mode == AAA_AUTH_RADIUS_LOCAL || 
-		mode == AAA_AUTH_TACACS_LOCAL || 
-		mode == AAA_AUTH_NONE)
-		return AAA_AUTH;
-	else if (mode == AAA_AUTHOR_TACACS || 
-		 mode == AAA_AUTHOR_TACACS_LOCAL || 
-		 mode == AAA_AUTHOR_NONE)
-		return AAA_AUTHOR;
-	else if (mode == AAA_ACCT_TACACS || 
-		mode == AAA_ACCT_NONE)
-		return AAA_ACCT;
-	else if (mode == AAA_ACCT_TACACS_CMD_NONE ||
-		mode == AAA_ACCT_TACACS_CMD_1 ||
-		mode == AAA_ACCT_TACACS_CMD_15 || 
-		mode == AAA_ACCT_TACACS_CMD_ALL ||
-		mode == AAA_ACCT_TACACS_NO_CMD_1 || 
-		mode == AAA_ACCT_TACACS_NO_CMD_15)
-		return AAA_ACCT_CMD;
-	else	
-		return 0;
-#endif
 }
 
 /**
@@ -378,10 +405,13 @@ static int pam_should_uncomment_line(char *buf, int mode)
 }
 
 /**
- *	disable_pam_mode	
- *	@mode : 
- *	@pam_file : 
- *	@return : 
+ *	disable_pam_mode	Disable a mode
+ *
+ *
+ *
+ *	@param mode : Mode to be disabled
+ *	@param pam_file : File name to be read/written to
+ *	@return : 1 if success, 0 otherwise
  */
 static int disable_pam_mode(int mode, char *pam_file)
 {
@@ -530,9 +560,10 @@ int pam_set_mode(char *src, char *dest, int mode, char *pam_file)
 
 /**
  *	conf_pam_mode		Configure PAM mode in configuration file
+ *
  *	@mode: mode to be configured
  *	@change_active_mode: ativar este modo
- *	@return:
+ *	@return: 1 when success, 0 otherwise
  */
 int conf_pam_mode(cish_config *cish_cfg, int mode, int change_active_mode, char *pam_file)
 {
