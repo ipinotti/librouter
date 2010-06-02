@@ -846,3 +846,99 @@ int get_iface_stats (char *ifname, void *store)
 	return -1;
 }
 
+int lconfig_get_iface_config(char *interface, struct interface_conf *conf)
+{
+	struct intf_info info;
+	char mac_bin[6];
+	char name[16];
+	int ret = -1;
+	int i;
+
+
+	memset(&info, 0, sizeof(struct intf_info));
+	memset(conf, 0, sizeof(struct interface_conf));
+
+	/* Get all information */
+	ret = get_if_list(&info);
+
+	if (ret < 0) {
+		printf("%% ERROR : Could not get interfaces information\n");
+		return ret;
+	}
+	/* Start searching for the desired interface,
+	 * if not found return negative value */
+	ret = -1;
+	for (i = 0; i < MAX_NUM_LINKS; i++) {
+		struct ipaddr_table *ipaddr;
+		struct ip_t *main_ip;
+		struct ip_t *sec_ip;
+		int j;
+
+		/* Test if it has a valid name */
+		if (info.link[i].ifname[0] == 0)
+			break;
+
+		/* Check if this is the interface we are looking for */
+		if (strcmp(info.link[i].ifname, interface))
+			continue;
+
+		ret = 0; /* Found the interface */
+
+		/* Fill in the configuration structure */
+		conf->name = info.link[i].ifname;
+		conf->flags = info.link[i].flags;
+		conf->up = (info.link[i].flags & IFF_UP) ? 1 : 0;
+		conf->mtu = info.link[i].mtu;
+		conf->stats = &info.link[i].stats;
+		conf->linktype = info.link[i].type;
+		conf->mac[0] = 0;
+
+		/* Get ethernet 0 MAC if not an ethernet interface */
+		if (get_mac(conf->linktype == ARPHRD_ETHER ? conf->name : "ethernet0", mac_bin) == 0)
+			sprintf(conf->mac, "%02x%02x.%02x%02x.%02x%02x",
+					mac_bin[0], mac_bin[1], mac_bin[2],
+					mac_bin[3], mac_bin[4], mac_bin[5]);
+
+		/* Search for main IP address */
+		ipaddr = &info.ipaddr[0];
+		main_ip = &conf->main_ip;
+
+		for (j = 0; j < MAX_NUM_IPS; j++, ipaddr++) {
+			if (ipaddr->ifname[0] == 0)
+				break; /* Finished */
+
+			if (!strcmp(interface, ipaddr->ifname)) {
+				strcpy(main_ip->ipaddr, inet_ntoa(ipaddr->local));
+				ip_bitlen2mask(ipaddr->bitlen, main_ip->ipmask);
+				/* If point-to-point, there is a remote IP address */
+				if (conf->flags & IFF_POINTOPOINT)
+					strcpy(main_ip->ippeer, inet_ntoa(ipaddr->remote));
+
+				break; /* Found main IP, break main loop */
+			}
+		}
+
+		/* Search for aliases */
+		strncpy(name, conf->name, 14);
+		strcat(name, ":0");
+
+		/* Go through IP configuration */
+		ipaddr = &info.ipaddr[0];
+		sec_ip = &conf->sec_ip[0];
+		for (j = 0; j < MAX_NUM_IPS; j++, ipaddr++) {
+
+			if (ipaddr->ifname[0] == 0)
+				break; /* Finished */
+
+			if (strcmp(name, ipaddr->ifname) == 0) {
+				strcpy(sec_ip->ipaddr, inet_ntoa(ipaddr->local));
+				ip_bitlen2mask(ipaddr->bitlen, sec_ip->ipmask);
+				sec_ip++;
+			}
+		}
+
+	}
+
+	return ret;
+}
+

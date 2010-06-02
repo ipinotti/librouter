@@ -545,3 +545,15 @@ int is_domain_lookup_enabled(void)
 	return 0;
 }
 
+void lconfig_dns_dump_nameservers(FILE *out)
+{
+	char addr[16];
+	unsigned int i;
+
+	/* Lista servidores DNS estaticos */
+	for (i = 0; i < DNS_MAX_SERVERS; i++) {
+		if (get_nameserver_by_type_index(DNS_STATIC_NAMESERVER, i, addr) < 0)
+			break;
+		fprintf(out, "ip name-server %s\n", addr);
+	}
+}

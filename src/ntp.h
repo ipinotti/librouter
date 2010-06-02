@@ -19,3 +19,5 @@ int do_exclude_ntp_server(char *addr);
 int do_exclude_ntp_trustedkeys(char *num);
 int do_ntp_key_set(char *key_num, char *value);
 
+void lconfig_ntp_dump(FILE *out);
+

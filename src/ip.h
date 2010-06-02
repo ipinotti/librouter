@@ -18,6 +18,44 @@
 #define ip_dbg(x,...)
 #endif
 
+
+/* Addresses and Masks */
+struct ip_t {
+	char ipaddr[16];
+	char ipmask[16];
+	char ippeer[16];
+};
+
+/* IP Tables variables */
+#define IPT_BUF_SIZE 100
+struct iptables_t {
+	char in_acl[IPT_BUF_SIZE];
+	char out_acl[IPT_BUF_SIZE];
+	char in_mangle[IPT_BUF_SIZE];
+	char out_mangle[IPT_BUF_SIZE];
+	char in_nat[IPT_BUF_SIZE];
+	char out_nat[IPT_BUF_SIZE];
+};
+
+struct interface_conf {
+	char *name;
+	struct iptables_t ipt;
+	int mtu;
+	int flags;
+	int up;
+	int running;
+	struct net_device_stats *stats;
+	unsigned short linktype;
+	int txqueue;
+	char mac[32];
+	struct ip_t main_ip;
+	struct ip_t sec_ip[MAX_NUM_IPS];
+	enum dump_type {
+		DUMP_INTF_CONFIG,
+		DUMP_INTF_STATUS
+	} type;
+};
+
 struct ipaddr_table {
 	char ifname[IFNAMSIZ];
 	struct in_addr local;
@@ -95,6 +133,8 @@ void set_interface_no_ip_addr_secondary(char *ifname, char *addr, char *mask);
 unsigned int is_valid_port(char *data);
 unsigned int is_valid_netmask(char *data);
 int get_iface_stats(char *ifname, void *store);
+
+int lconfig_get_iface_config(char *interface, struct interface_conf *conf);
 
 #ifdef OPTION_SHM_IP_TABLE
 int create_ipaddr_shm (int flags);

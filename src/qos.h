@@ -62,9 +62,10 @@ void cfg_interface_reserved_bw(char *dev, int reserved_bw);
 void cfg_interface_bw(char *dev, int bw);
 int get_interface_qos_config (char *dev, intf_qos_cfg_t **intf_cfg);
 int create_interface_qos_config (char *dev);
-void dump_qos_config(FILE *out);
-void qos_dump_interface(char *dev_name);
-void qos_dump_interfaces(void);
+
+void lconfig_qos_dump_config(FILE *out);
+void lconfig_qos_dump_interfaces(void);
+
 char *check_active_qos(char *policy);
 
 void clean_qos_cfg(char *dev_name);

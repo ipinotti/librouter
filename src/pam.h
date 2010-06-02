@@ -1,4 +1,8 @@
 
+#define FILE_PASSWD "/etc/passwd"
+#define FILE_RADDB_SERVER "/etc/raddb/server"
+#define FILE_TACDB_SERVER "/etc/tacdb/server"
+
 #define	AUTH_NOK		0
 #define	AUTH_OK			1
 #define	AUTH_FACTORY		2

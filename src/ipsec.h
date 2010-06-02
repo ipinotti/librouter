@@ -1,6 +1,22 @@
 #ifndef _IPSEC_H
 #define _IPSEC_H
 
+enum {
+	STOP = 0, START, RESTART, RELOAD
+};
+
+enum {
+	ADDR_DEFAULT = 1, ADDR_INTERFACE, ADDR_ANY, ADDR_IP, ADDR_FQDN
+};
+
+enum {
+	RSA = 1, SECRET = 2
+};
+
+enum {
+	AH = 1, ESP = 2
+};
+
 int get_ipsec(void);
 int set_ipsec(int opt);
 int get_l2tp(void);
@@ -42,33 +58,6 @@ int get_ipsec_auto(char *ipsec_conn);
 int get_ipsec_remote_addr(char *ipsec_conn, char *buf);
 int get_mpc180(void);
 
-enum
-{
-  STOP = 0,
-  START,
-  RESTART,
-  RELOAD
-};
-
-enum
-{
-  ADDR_DEFAULT = 1,
-  ADDR_INTERFACE,
-  ADDR_ANY,
-  ADDR_IP,
-  ADDR_FQDN
-};
-
-enum
-{
-  RSA = 1,
-  SECRET = 2	 
-};
-
-enum
-{
-  AH = 1,
-  ESP = 2	 
-};
+void lconfig_crypto_dump(FILE *out);
 
 #endif
