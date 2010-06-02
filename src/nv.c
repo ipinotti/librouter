@@ -34,7 +34,7 @@
 
 #include <u-boot/image.h>
 
-#undef DEBUG
+//#define DEBUG
 
 static int search_nv(struct _nv *nv, char *startup_config_path)
 {
@@ -117,7 +117,7 @@ static int search_nv(struct _nv *nv, char *startup_config_path)
 		default:
 			pr_error(0, "bad magic number on startup configuration");
 #ifdef DEBUG
-			printf("bad magic:0x%x at 0x%lx\n", header.magic_number, ftell(f));
+			printf("bad magic:0x%x at 0x%lx\n", header.magic_number, ftell(f) - sizeof(cfg_header));
 #endif
 #if 1 /* continue to read loop after bad magic! */
 			break;
