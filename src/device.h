@@ -3,17 +3,18 @@
 
 typedef enum {
 	none,
-	ethernet,
-	loopback,
+	eth,
+	lo,
 //	mobile /* 3G */ situação anterior a implementação do 3G
-	m3G, /* 3G */
-	tunnel,
+	ppp, /* 3G */
+	tun,
 	ipsec
 } device_type;
 
 typedef struct {
 	device_type type;
 	const char *cish_string;
+	const char *linux_string;
 } device_family;
 
 extern device_family DEV_FAM[];

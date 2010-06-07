@@ -28,6 +28,7 @@
 #define MAX_PPP_USER 256
 #define MAX_PPP_PASS 256
 #define MAX_CHAT_SCRIPT 256
+#define MAX_PPP_APN 256
 
 #define SERVER_FLAGS_ENABLE 0x01
 #define SERVER_FLAGS_INCOMING 0x02
@@ -88,6 +89,7 @@ typedef struct
 	int peer_mask;
 	int multilink; /* Enable multilink (mp) option */
 	int debug;
+	char apn[MAX_PPP_APN];
 #ifdef CONFIG_HDLC_SPPP_LFI
 	int fragment_size;
 	int priomarks[CONFIG_MAX_LFI_PRIORITY_MARKS];
