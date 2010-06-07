@@ -20,9 +20,11 @@ libconfig_la_SOURCES = \
 	lan.c \
 	list-lib.c \
 	lock.c \
+	mangle.c \
 	md5.c \
 	mib.c \
 	modem3G.c \
+	nat.c \
 	ntp.c \
 	nv.c \
 	pam.c \
@@ -32,6 +34,7 @@ libconfig_la_SOURCES = \
 	process.c \
 	qos.c \
 	quagga.c \
+	config_fetcher.c \
 	smcroute.c \
 	snmp.c \
 	ssh.c \
@@ -74,10 +77,12 @@ libconfig_la_HEADERS = \
 	lan.h \
 	list-lib.h \
 	lock.h \
+	mangle.h \
 	md5_config.h \
 	md5.h \
 	mib.h \
 	modem3G.h \
+	nat.h \
 	ntp.h \
 	nv.h \
 	options.h \
@@ -88,6 +93,7 @@ libconfig_la_HEADERS = \
 	process.h \
 	qos.h \
 	quagga.h \
+	config_fetcher.h \
 	shm.h \
 	smcroute.h \
 	snmp.h \

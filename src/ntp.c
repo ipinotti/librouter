@@ -799,3 +799,84 @@ int ntp_get(int *timeout, char *ip)
 }
 #endif
 
+void lconfig_ntp_dump(FILE *out)
+{
+	int i, printed_something = 0;
+	FILE *f;
+	arglist *args;
+	char *p, line[200];
+
+#ifdef OPTION_NTPD_authenticate
+	if (is_ntp_auth_used()) fprintf(out, "ntp authenticate\n");
+	else fprintf(out, "no ntp authenticate\n");
+#endif
+
+	if ((f = fopen(FILE_NTP_CONF, "r"))) {
+		while (fgets(line, 200, f)) {
+			if ((p = strchr(line, '\n')))
+				*p = '\0';
+			if (strlen(line)) {
+				args = make_args(line);
+				if (!strcmp(args->argv[0], "restrict")) /* restrict <ipaddr> mask <mask> */
+				{
+					if (args->argc >= 4) {
+						printed_something = 1;
+						fprintf(
+						                out,
+						                "ntp restrict %s %s\n",
+						                args->argv[1],
+						                args->argv[3]);
+					}
+				}
+				destroy_args(args);
+			}
+		}
+		fseek(f, 0, SEEK_SET);
+		while (fgets(line, 200, f)) {
+			if ((p = strchr(line, '\n')))
+				*p = '\0';
+			if (strlen(line)) {
+				args = make_args(line);
+				if (!strcmp(args->argv[0], "trustedkey")) {
+					printed_something = 1;
+					if (args->argc > 1) {
+						for (i = 1; i < args->argc; i++)
+							fprintf(
+							                out,
+							                "ntp trusted-key %s\n",
+							                args->argv[i]);
+					} else
+						fprintf(out,
+						                "no ntp trusted-key\n");
+				}
+				destroy_args(args);
+			}
+		}
+
+		fseek(f, 0, SEEK_SET);
+		while (fgets(line, 200, f)) {
+			if ((p = strchr(line, '\n')))
+				*p = '\0';
+			if (strlen(line)) {
+				args = make_args(line);
+				if (args->argc >= 2 && !strcmp(args->argv[0],
+				                "server")) /* server <ipaddr> iburst [key 1-16] */
+				{
+					printed_something = 1;
+					fprintf(out, "ntp server %s",
+					                args->argv[1]);
+					if (args->argc >= 5 && !strcmp(
+					                args->argv[3], "key"))
+						fprintf(out, " key %s\n",
+						                args->argv[4]);
+					else
+						fprintf(out, "\n");
+				}
+				destroy_args(args);
+			}
+		}
+		fclose(f);
+		if (printed_something)
+			fprintf(out, "!\n");
+	}
+}

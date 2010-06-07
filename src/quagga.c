@@ -1,4 +1,3 @@
-
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -17,6 +16,7 @@
 
 #include <linux/config.h>
 
+#include "options.h"
 #include "device.h"
 #include "error.h"
 #include "exec.h"
@@ -33,57 +33,60 @@ static int fd_daemon;
 /* Making connection to protocol daemon */
 int daemon_connect(char *path)
 {
-	int i, ret=0, sock, len;
+	int i, ret = 0, sock, len;
 	struct sockaddr_un addr;
 	struct stat s_stat;
 
 	fd_daemon = -1;
 
 	/* Stat socket to see if we have permission to access it. */
-	for (i=0; i < 3; i++) /* Wait for daemon with 3s timeout! */
+	for (i = 0; i < 3; i++) /* Wait for daemon with 3s timeout! */
 	{
-		if (stat(path, &s_stat) < 0)
-		{
-			if (errno != ENOENT)
-			{
-				fprintf(stderr, "daemon_connect(%s): stat = %s\n", path, strerror(errno));
-				return(-1);
+		if (stat(path, &s_stat) < 0) {
+			if (errno != ENOENT) {
+				fprintf(
+				                stderr,
+				                "daemon_connect(%s): stat = %s\n",
+				                path, strerror(errno));
+				return (-1);
 			}
-		}
-			else break;
+		} else
+			break;
 		sleep(1);
 	}
-	if (!S_ISSOCK(s_stat.st_mode))
-	{
+	if (!S_ISSOCK(s_stat.st_mode)) {
 		fprintf(stderr, "daemon_connect(%s): Not a socket\n", path);
-		return(-1);
+		return (-1);
 	}
-	if (!(s_stat.st_mode & S_IWUSR) || !(s_stat.st_mode & S_IRUSR))
-	{
-		fprintf(stderr, "daemon_connect(%s): No permission to access socket\n", path);
-		return(-1);
+	if (!(s_stat.st_mode & S_IWUSR) || !(s_stat.st_mode & S_IRUSR)) {
+		fprintf(
+		                stderr,
+		                "daemon_connect(%s): No permission to access socket\n",
+		                path);
+		return (-1);
 	}
-	if ((sock=socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
-	{
-		fprintf(stderr, "daemon_connect(): socket = %s\n", strerror(errno));
-		return(-1);
+	if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+		fprintf(stderr, "daemon_connect(): socket = %s\n", strerror(
+		                errno));
+		return (-1);
 	}
-	memset(&addr, 0, sizeof (struct sockaddr_un));
-	addr.sun_family=AF_UNIX;
-	strncpy(addr.sun_path, path, strlen (path));
-	len=sizeof(addr.sun_family)+strlen(addr.sun_path);
-	for (i=0; i < 3; i++) {
-		if ((ret=connect(sock, (struct sockaddr *)&addr, len)) == 0)
+	memset(&addr, 0, sizeof(struct sockaddr_un));
+	addr.sun_family = AF_UNIX;
+	strncpy(addr.sun_path, path, strlen(path));
+	len = sizeof(addr.sun_family) + strlen(addr.sun_path);
+	for (i = 0; i < 3; i++) {
+		if ((ret = connect(sock, (struct sockaddr *) &addr, len)) == 0)
 			break;
 		sleep(1);
 	}
 	if (ret == -1) {
-		fprintf(stderr, "daemon_connect(): connect = %s\n", strerror(errno));
+		fprintf(stderr, "daemon_connect(): connect = %s\n", strerror(
+		                errno));
 		close(sock);
-		return(-1);
+		return (-1);
 	}
-	fd_daemon=sock;
-	return(0);
+	fd_daemon = sock;
+	return (0);
 }
 
 int daemon_client_execute(char *line, FILE *fp, char *buf_daemon, int show)
@@ -91,38 +94,39 @@ int daemon_client_execute(char *line, FILE *fp, char *buf_daemon, int show)
 	int i, ret, nbytes;
 	char buf[1024];
 
-	if (fd_daemon < 0) return 0;
-	ret = write(fd_daemon, line, strlen(line)+1);
-	if (ret <= 0)
-	{
-		fprintf(stderr, "daemon_client_execute(%s): write error!\n", line);
+	if (fd_daemon < 0)
+		return 0;
+	ret = write(fd_daemon, line, strlen(line) + 1);
+	if (ret <= 0) {
+		fprintf(stderr, "daemon_client_execute(%s): write error!\n",
+		                line);
 		fd_daemon_close();
 		return 0;
 	}
-	if (buf_daemon) strcpy(buf_daemon,buf);	/* clean buf_daemon before writing to it */
-	while (1)
-	{
-		nbytes = read(fd_daemon, buf, sizeof(buf)-1);
-		if (nbytes <= 0 && errno != EINTR)
-		{
-			fprintf(stderr, "daemon_client_execute(%s): read error!\n", line);
+	if (buf_daemon)
+		strcpy(buf_daemon, buf); /* clean buf_daemon before writing to it */
+	while (1) {
+		nbytes = read(fd_daemon, buf, sizeof(buf) - 1);
+		if (nbytes <= 0 && errno != EINTR) {
+			fprintf(
+			                stderr,
+			                "daemon_client_execute(%s): read error!\n",
+			                line);
 			fd_daemon_close();
 			return 0;
 		}
-		if (nbytes > 0)
-		{
+		if (nbytes > 0) {
 			buf[nbytes] = '\0';
-			if (show)
-			{
+			if (show) {
 				fprintf(fp, "%s", buf);
 				fflush(fp);
 			}
-			if (buf_daemon) strcat(buf_daemon, buf);/* Uses strcat to not overwrite*/	
-			if (nbytes >= 4)
-			{
+			if (buf_daemon)
+				strcat(buf_daemon, buf);/* Uses strcat to not overwrite*/
+			if (nbytes >= 4) {
 				i = nbytes - 4;
-				if (buf[i] == '\0' && buf[i + 1] == '\0' && buf[i + 2] == '\0')
-				{
+				if (buf[i] == '\0' && buf[i + 1] == '\0'
+				                && buf[i + 2] == '\0') {
 					ret = buf[i + 3];
 					break;
 				}
@@ -134,7 +138,8 @@ int daemon_client_execute(char *line, FILE *fp, char *buf_daemon, int show)
 
 void fd_daemon_close(void)
 {
-	if (fd_daemon > 0) close(fd_daemon);
+	if (fd_daemon > 0)
+		close(fd_daemon);
 	fd_daemon = -1;
 }
 
@@ -144,15 +149,15 @@ FILE *zebra_show_cmd(const char *cmdline)
 	FILE *f;
 	char *new_cmdline;
 
-	if (daemon_connect(ZEBRA_PATH) < 0) return NULL;
+	if (daemon_connect(ZEBRA_PATH) < 0)
+		return NULL;
 
-	f=fopen(ZEBRA_OUTPUT_FILE, "wt");
-	if (!f)
-	{
+	f = fopen(ZEBRA_OUTPUT_FILE, "wt");
+	if (!f) {
 		fd_daemon_close();
 		return NULL;
 	}
-	new_cmdline = cish_to_linux_dev_cmdline((char*)cmdline);
+	new_cmdline = cish_to_linux_dev_cmdline((char*) cmdline);
 	daemon_client_execute("enable", stdout, NULL, 0);
 	daemon_client_execute(new_cmdline, f, NULL, 1);
 	fclose(f);
@@ -167,15 +172,15 @@ FILE *ospf_show_cmd(const char *cmdline)
 	FILE *f;
 	char *new_cmdline;
 
-	if (daemon_connect(OSPF_PATH) < 0) return NULL;
+	if (daemon_connect(OSPF_PATH) < 0)
+		return NULL;
 
-	f=fopen(OSPF_OUTPUT_FILE, "wt");
-	if (!f)
-	{
+	f = fopen(OSPF_OUTPUT_FILE, "wt");
+	if (!f) {
 		fd_daemon_close();
 		return NULL;
 	}
-	new_cmdline=cish_to_linux_dev_cmdline((char*)cmdline);
+	new_cmdline = cish_to_linux_dev_cmdline((char*) cmdline);
 	daemon_client_execute("enable", stdout, NULL, 0);
 	daemon_client_execute(new_cmdline, f, NULL, 1);
 	fclose(f);
@@ -190,15 +195,15 @@ FILE *rip_show_cmd(const char *cmdline)
 	FILE *f;
 	char *new_cmdline;
 
-	if (daemon_connect(RIP_PATH) < 0) return NULL;
+	if (daemon_connect(RIP_PATH) < 0)
+		return NULL;
 
-	f=fopen(RIP_OUTPUT_FILE, "wt");
-	if (!f)
-	{
+	f = fopen(RIP_OUTPUT_FILE, "wt");
+	if (!f) {
 		fd_daemon_close();
 		return NULL;
 	}
-	new_cmdline=cish_to_linux_dev_cmdline((char*)cmdline);
+	new_cmdline = cish_to_linux_dev_cmdline((char*) cmdline);
 	daemon_client_execute("enable", stdout, NULL, 0);
 	daemon_client_execute(new_cmdline, f, NULL, 1);
 	fclose(f);
@@ -213,15 +218,15 @@ FILE *bgp_show_cmd(const char *cmdline)
 	FILE *f;
 	char *new_cmdline;
 
-	if (daemon_connect(BGP_PATH) < 0) return NULL;
+	if (daemon_connect(BGP_PATH) < 0)
+		return NULL;
 
-	f=fopen(BGP_OUTPUT_FILE, "wt");
-	if (!f)
-	{
+	f = fopen(BGP_OUTPUT_FILE, "wt");
+	if (!f) {
 		fd_daemon_close();
 		return NULL;
 	}
-	new_cmdline=cish_to_linux_dev_cmdline((char*)cmdline);
+	new_cmdline = cish_to_linux_dev_cmdline((char*) cmdline);
 	daemon_client_execute("enable", stdout, NULL, 0);
 	daemon_client_execute(new_cmdline, f, NULL, 1);
 	fclose(f);
@@ -245,34 +250,35 @@ int cidr_to_classic(char *cidr_addr, char *buf)
 	struct in_addr tmp;
 
 	p2 = cidr_addr;
-	p = strstr(cidr_addr,"/");
-	if (p==NULL) return (-1);
+	p = strstr(cidr_addr, "/");
+	if (p == NULL)
+		return (-1);
 
-	for (i=0; i<20;i++)
-	{
-		if (*p2 == '/') break;
-		ip[i]=*p2;
+	for (i = 0; i < 20; i++) {
+		if (*p2 == '/')
+			break;
+		ip[i] = *p2;
 		p2++;
 	}
-	ip[i]= '\0';
-	
-	if (inet_aton(ip, &tmp)==0) return (-1);
+	ip[i] = '\0';
 
-	p ++; //to skip the "/".
+	if (inet_aton(ip, &tmp) == 0)
+		return (-1);
 
-	for(i=0; i<2;i++)
-	{
-		cidr[i]=*p;
+	p++; //to skip the "/".
+
+	for (i = 0; i < 2; i++) {
+		cidr[i] = *p;
 		p++;
 	}
-	cidr[2]='\0';
+	cidr[2] = '\0';
 
 	cidr_to_netmask(atoi(cidr), mask);
-	sprintf(buf, "%s %s", ip ,mask);
+	sprintf(buf, "%s %s", ip, mask);
 
 	return 0;
 }
- 
+
 /* Takes a network address using classic notation (10.5.0.1 255.0.0.0) */
 /* and creates in buf a networ address using cidr notation(10.5.0.1/8) */
 int classic_to_cidr(char *addr, char *mask, char *buf)
@@ -280,9 +286,10 @@ int classic_to_cidr(char *addr, char *mask, char *buf)
 	int bits;
 
 	bits = netmask_to_cidr(mask);
-	if (bits < 0) return (-1); 
+	if (bits < 0)
+		return (-1);
 	sprintf(buf, "%s/%d", addr, bits);
-	
+
 	return 0;
 }
 
@@ -293,9 +300,9 @@ int classic_to_cidr(char *addr, char *mask, char *buf)
 int netmask_to_cidr(char *buf)
 {
 	unsigned int tmp;
-	if (octets_to_u_int(&tmp, buf)<0) return (-1);
-	if (validatemask(tmp)==0)
-	{
+	if (octets_to_u_int(&tmp, buf) < 0)
+		return (-1);
+	if (validatemask(tmp) == 0) {
 		return (bitcount(tmp));
 	}
 	return (-1);
@@ -305,12 +312,11 @@ int netmask_to_cidr(char *buf)
 /* netmask string (e.g. "255.255.255.192"). The argument buf   */
 /* should have at least 16 bytes allocated to it. It's based   */
 /* on Whatmask util source code.                               */
-int cidr_to_netmask( unsigned int cidr, char *buf)
+int cidr_to_netmask(unsigned int cidr, char *buf)
 {
-	if ((0 <= cidr)&&(cidr <= 32))
-	{
+	if ((0 <= cidr) && (cidr <= 32)) {
 		bitfill_from_left(cidr);
-		u_int_to_octets(bitfill_from_left(cidr),buf);
+		u_int_to_octets(bitfill_from_left(cidr), buf);
 		return 0;
 	}
 
@@ -320,39 +326,39 @@ int cidr_to_netmask( unsigned int cidr, char *buf)
 /* Creates a netmask string (e.g. "255.255.255.192")  */
 /* from an unsgined int. The argument buf should have */
 /* at least 16 bytes allocated to it.                 */
-char* u_int_to_octets( unsigned int myVal, char* buf)
+char* u_int_to_octets(unsigned int myVal, char* buf)
 {
 	unsigned int val1, val2, val3, val4;
 
 	val1 = myVal & 0xff000000;
-	val1 = val1  >>24;
+	val1 = val1 >> 24;
 	val2 = myVal & 0x00ff0000;
-	val2 = val2  >>16;
+	val2 = val2 >> 16;
 	val3 = myVal & 0x0000ff00;
-	val3 = val3 >>8;
+	val3 = val3 >> 8;
 	val4 = myVal & 0x000000ff;
 
-	snprintf(buf, 16, "%u" "." "%u" "." "%u" "." "%u", val1, val2, val3, val4);
+	snprintf(buf, 16, "%u" "." "%u" "." "%u" "." "%u", val1, val2, val3,
+	                val4);
 
-	return(buf);
+	return (buf);
 
 }
 
 /* Takes an octet string (e.g. "255.255.255.192")            */
 /* and creates an unsgined int. The argument buf should be   */
 /* the string and myVal is a pointer to an unsigned int      */
-int octets_to_u_int( unsigned int *myVal, char *buf)
+int octets_to_u_int(unsigned int *myVal, char *buf)
 {
 	unsigned int val1, val2, val3, val4;
 	*myVal = 0;
 
-	if( sscanf(buf, "%u" "." "%u" "." "%u" "." "%u", &val1, &val2, &val3, &val4) != 4 )
-	{
-		return(-1); /* failure */
+	if (sscanf(buf, "%u" "." "%u" "." "%u" "." "%u", &val1, &val2, &val3,
+	                &val4) != 4) {
+		return (-1); /* failure */
 	}
 
-	if( val1 > 255 || val2 > 255 || val3 > 255 || val4 > 255   )
-	{      /* bad input */
+	if (val1 > 255 || val2 > 255 || val3 > 255 || val4 > 255) { /* bad input */
 		return (-1);
 	}
 
@@ -373,14 +379,13 @@ int octets_to_u_int( unsigned int *myVal, char *buf)
 /* The fill starts on the left and moves toward the right like this: */
 /* 11111111000000000000000000000000                                  */
 /* The caller must be sure numBits is between 0 and 32 inclusive     */
-unsigned int bitfill_from_left( unsigned int numBits )
+unsigned int bitfill_from_left(unsigned int numBits)
 {
 	unsigned int myVal = 0;
 	int i;
 
 	/* fill up the bits by adding ones so we have numBits ones */
-	for(i = 0; i< numBits; i++)
-	{
+	for (i = 0; i < numBits; i++) {
 		myVal = myVal >> 1;
 		myVal |= 0x80000000;
 	}
@@ -392,8 +397,7 @@ int bitcount(unsigned int myInt)
 {
 	int count = 0;
 
-	while (myInt != 0)
-	{
+	while (myInt != 0) {
 		count += myInt & 1;
 		myInt >>= 1;
 	}
@@ -408,24 +412,21 @@ int validatemask(unsigned int myInt)
 {
 	int foundZero = 0;
 
-	while (myInt != 0)
-	{  /* while more bits to count */
+	while (myInt != 0) { /* while more bits to count */
 
-		if( (myInt  & 0x80000000) !=0)	/* test leftmost bit */
+		if ((myInt & 0x80000000) != 0) /* test leftmost bit */
 		{
-			if(foundZero)
+			if (foundZero)
 				return (-1); /* bad */
-		}
-		else
-		{
+		} else {
 			foundZero = 1;
 		}
 
-	myInt <<= 1; /* shift off the left - zero fill */
+		myInt <<= 1; /* shift off the left - zero fill */
 	}
 
 	return 0; /* good */
-}   
+}
 
 int validateip(char *ip)
 {
@@ -439,28 +440,28 @@ int get_ripd(void)
 {
 	return is_daemon_running(PROG_RIPD);
 }
- 
+
 int set_ripd(int on_noff)
 {
 	int ret;
- 
-	ret=init_program(on_noff, PROG_RIPD);
-	if (on_noff)
-	{
+
+	ret = init_program(on_noff, PROG_RIPD);
+	if (on_noff) {
 		int i;
 		struct stat s_stat;
 
 		/* Stat socket to see if we have permission to access it. */
-		for (i=0; i < 5; i++)
-		{
-			if (stat(RIP_PATH, &s_stat) < 0)
-			{
+		for (i = 0; i < 5; i++) {
+			if (stat(RIP_PATH, &s_stat) < 0) {
 				if (errno != ENOENT) {
-					fprintf(stderr, "set_ripd: stat = %s\n", strerror(errno));
-					return(-1);
+					fprintf(
+					                stderr,
+					                "set_ripd: stat = %s\n",
+					                strerror(errno));
+					return (-1);
 				}
-			}
-				else break;
+			} else
+				break;
 			sleep(1); /* Wait for daemon with 3s timeout! */
 		}
 		sleep(1); /* to be nice! */
@@ -474,28 +475,28 @@ int get_bgpd(void)
 {
 	return is_daemon_running(PROG_BGPD);
 }
- 
+
 int set_bgpd(int on_noff)
 {
 	int ret;
- 
-	ret=init_program(on_noff, PROG_BGPD);
-	if (on_noff)
-	{
+
+	ret = init_program(on_noff, PROG_BGPD);
+	if (on_noff) {
 		int i;
 		struct stat s_stat;
 
 		/* Stat socket to see if we have permission to access it. */
-		for (i=0; i < 5; i++)
-		{
-			if (stat(BGP_PATH, &s_stat) < 0)
-			{
+		for (i = 0; i < 5; i++) {
+			if (stat(BGP_PATH, &s_stat) < 0) {
 				if (errno != ENOENT) {
-					fprintf(stderr, "set_bgpd: stat = %s\n", strerror(errno));
-					return(-1);
+					fprintf(
+					                stderr,
+					                "set_bgpd: stat = %s\n",
+					                strerror(errno));
+					return (-1);
 				}
-			}
-				else break;
+			} else
+				break;
 			sleep(1); /* Wait for daemon with 3s timeout! */
 		}
 		sleep(1); /* to be nice! */
@@ -509,28 +510,28 @@ int get_ospfd(void)
 {
 	return is_daemon_running(PROG_OSPFD);
 }
- 
+
 int set_ospfd(int on_noff)
 {
 	int ret;
- 
-	ret=init_program(on_noff, PROG_OSPFD);
-	if (on_noff)
-	{
+
+	ret = init_program(on_noff, PROG_OSPFD);
+	if (on_noff) {
 		int i;
 		struct stat s_stat;
 
 		/* Stat socket to see if we have permission to access it. */
-		for (i=0; i < 5; i++)
-		{
-			if (stat(OSPF_PATH, &s_stat) < 0)
-			{
+		for (i = 0; i < 5; i++) {
+			if (stat(OSPF_PATH, &s_stat) < 0) {
 				if (errno != ENOENT) {
-					fprintf(stderr, "set_ospfd: stat = %s\n", strerror(errno));
-					return(-1);
+					fprintf(
+					                stderr,
+					                "set_ospfd: stat = %s\n",
+					                strerror(errno));
+					return (-1);
 				}
-			}
-				else break;
+			} else
+				break;
 			sleep(1); /* Wait for daemon with 3s timeout! */
 		}
 		sleep(1); /* to be nice! */
@@ -543,41 +544,41 @@ int zebra_hup(void)
 	FILE *F;
 	char buf[16];
 
-	F=fopen(ZEBRA_PID, "r");
-	if (!F) return 0;
+	F = fopen(ZEBRA_PID, "r");
+	if (!F)
+		return 0;
 	fgets(buf, 16, F);
 	fclose(F);
-	if (kill((pid_t)atoi(buf), SIGHUP))
-	{
-		fprintf (stderr, "%% zebra[%i] seems to be down\n", atoi(buf));
+	if (kill((pid_t) atoi(buf), SIGHUP)) {
+		fprintf(stderr, "%% zebra[%i] seems to be down\n", atoi(buf));
 		return (-1);
 	}
 	return 0;
 }
 
 /*  Testa presenca de rota default dinamica por RIP ou OSPF!
-    -1 daemon nao carregado
-	0 sem rota default dinamica
-	1 com rota default dinamica
-	R>* 0.0.0.0/0 [120/2] via 10.0.0.2, serial 0, 00:00:02
+ -1 daemon nao carregado
+ 0 sem rota default dinamica
+ 1 com rota default dinamica
+ R>* 0.0.0.0/0 [120/2] via 10.0.0.2, serial 0, 00:00:02
 
-	A rota precisa estar selecionada: *>
-	Cuidado com "ip default-route" no ppp
+ A rota precisa estar selecionada: *>
+ Cuidado com "ip default-route" no ppp
  */
 #define ZEBRA_SYSTTY_OUTPUT_FILE "/var/run/.zebra_systty_out"
 int rota_flutuante(void)
 {
 	FILE *f;
 	char buf[128];
-	int ret=0;
+	int ret = 0;
 
 	if (!get_ripd() && !get_ospfd())
 		return -1;
 
-	if (daemon_connect(ZEBRA_PATH) < 0) return -1;
-	f=fopen(ZEBRA_SYSTTY_OUTPUT_FILE, "wt");
-	if (!f)
-	{
+	if (daemon_connect(ZEBRA_PATH) < 0)
+		return -1;
+	f = fopen(ZEBRA_SYSTTY_OUTPUT_FILE, "wt");
+	if (!f) {
 		fd_daemon_close();
 		return -1;
 	}
@@ -585,20 +586,17 @@ int rota_flutuante(void)
 	daemon_client_execute("show ip route", f, NULL, 1);
 	fclose(f);
 	fd_daemon_close();
-	f=fopen(ZEBRA_SYSTTY_OUTPUT_FILE, "rt");
+	f = fopen(ZEBRA_SYSTTY_OUTPUT_FILE, "rt");
 	if (!f)
 		return -1;
-	while (!feof(f) && !ret)
-	{
-		if (fgets(buf, 128, f))
-		{
-			if (strlen(buf) > 13)
-			{
-				if (strncmp(buf, "R>*", 3) == 0 || strncmp(buf, "O>*", 3) == 0)
-				{
-					if (strncmp(buf+4, "0.0.0.0/0", 9) == 0)
-					{
-						ret=1;
+	while (!feof(f) && !ret) {
+		if (fgets(buf, 128, f)) {
+			if (strlen(buf) > 13) {
+				if (strncmp(buf, "R>*", 3) == 0 || strncmp(buf,
+				                "O>*", 3) == 0) {
+					if (strncmp(buf + 4, "0.0.0.0/0", 9)
+					                == 0) {
+						ret = 1;
 					}
 				}
 			}
@@ -607,3 +605,175 @@ int rota_flutuante(void)
 	fclose(f);
 	return ret;
 }
+
+/**
+ *	lconfig_quagga_get_conf		Abre o arquivo de 'filename' e posiciona o file descriptor na linha:
+ *  	- igual a 'key'
+ *  	Retorna o file descriptor, ou NULL se nao for possivel abrir o arquivo
+ *  	ou encontrar a posicao desejada.
+ */
+FILE * lconfig_quagga_get_conf(char *filename, char *key)
+{
+	FILE *f;
+	int len, found = 0;
+	char buf[1024];
+
+	f = fopen(filename, "rt");
+	if (!f)
+		return f;
+	while (!feof(f)) {
+		fgets(buf, 1024, f);
+		len = strlen(buf);
+		striplf(buf);
+		if (strncmp(buf, key, strlen(key)) == 0) {
+			found = 1;
+			fseek(f, -len, SEEK_CUR);
+			break;
+		}
+	}
+	if (found)
+		return f;
+	fclose(f);
+	return NULL;
+}
+
+#ifdef OPTION_BGP
+/**
+ *  lconfig_bgp_get_conf	Abre o arquivo de configuracao do BGP e posiciona o file descriptor
+ *
+ *  main_ninterf = 1 -> posiciona no inicio da configuracao geral ('router bgp "nÃºmero do as"');
+ nesse caso o argumento intf eh ignorado
+ *  main_ninterf = 0 -> posiciona no inicio da configuracao da interface 'intf',
+ *			sendo que 'intf' deve estar no formato linux (ex.: 'eth0')
+ *
+ */
+FILE * lconfig_bgp_get_conf(int main_nip)
+{
+	char key[64];
+
+	if (main_nip)
+		strcpy(key, "router bgp");
+	else
+		sprintf(key, "ip as-path");
+
+	return lconfig_quagga_get_conf(BGPD_CONF, key);
+}
+
+
+/* Search the ASN in bgpd configuration file */
+int lconfig_bgp_get_asn(void)
+{
+	FILE *bgp_conf;
+	const char router_bgp[] = "router bgp ";
+	char *buf, *asn_add;
+	int bgp_asn = 0;
+
+	if (!get_bgpd()) return 0;
+
+	bgp_conf = lconfig_bgp_get_conf(1);
+	if (bgp_conf)
+	{
+		buf=malloc(1024);
+		asn_add=buf;
+		while(!feof(bgp_conf))
+		{
+			fgets(buf, 1024, bgp_conf);
+			if (!strncmp(buf,router_bgp,strlen(router_bgp)))
+			{
+				asn_add+=strlen(router_bgp); //move pointer to the AS number
+				bgp_asn = atoi(asn_add);
+				break;
+			}
+		}
+		fclose(bgp_conf);
+		free(buf);
+	}
+	return bgp_asn;
+}
+#endif /* OPTION_BGP */
+
+/*  Abre o arquivo de configuracao do zebra e posiciona o file descriptor de
+ *  acordo com o argumento:
+ *  main_ninterf = 1 -> posiciona no inicio da configuracao geral (comandos
+ 			'ip route'); nesse caso o argumento intf eh ignorado
+ *  main_ninterf = 0 -> posiciona no inicio da configuracao da interface 'intf',
+ *			sendo que 'intf' deve estar no formato linux (ex.: 'eth0')
+ */
+FILE *zebra_get_conf(int main_ninterf, char *intf)
+{
+	char key[64];
+
+	if (main_ninterf)
+		strcpy(key, "ip route");
+	else
+		sprintf(key, "interface %s", intf);
+
+	return lconfig_quagga_get_conf(ZEBRA_CONF, key);
+}
+
+void zebra_dump_static_routes_conf(FILE *out)
+{
+	FILE *f;
+	char buf[1024];
+
+	f = zebra_get_conf(1, NULL);
+
+	if (!f)
+		return;
+
+	while (!feof(f)) {
+		fgets(buf, 1024, f);
+		if (buf[0] == '!')
+			break;
+		striplf(buf);
+		fprintf(out, "%s\n", linux_to_cish_dev_cmdline(
+		                zebra_to_linux_network_cmdline(buf)));
+	}
+	fprintf(out, "!\n");
+
+	fclose(f);
+}
+
+
+
+/*  Abre o arquivo de configuracao do RIP e posiciona o file descriptor de
+ *  acordo com o argumento:
+ *  main_ninterf = 1 -> posiciona no inicio da configuracao geral ('router rip');
+ 			nesse caso o argumento intf eh ignorado
+ *  main_ninterf = 0 -> posiciona no inicio da configuracao da interface 'intf',
+ *			sendo que 'intf' deve estar no formato linux (ex.: 'eth0')
+ */
+FILE *rip_get_conf(int main_ninterf, char *intf)
+{
+	char key[64];
+
+	if (main_ninterf)
+		strcpy(key, "router rip");
+	else
+		sprintf(key, "interface %s", intf);
+
+	return lconfig_quagga_get_conf(RIPD_CONF, key);
+}
+
+
+/*  Abre o arquivo de configuracao do OSPF e posiciona o file descriptor de
+ *  acordo com o argumento:
+ *  main_ninterf = 1 -> posiciona no inicio da configuracao geral ('router ospf');
+ 			nesse caso o argumento intf eh ignorado
+ *  main_ninterf = 0 -> posiciona no inicio da configuracao da interface 'intf',
+ *			sendo que 'intf' deve estar no formato linux (ex.: 'eth0')
+ */
+FILE *ospf_get_conf(int main_ninterf, char *intf)
+{
+	char key[64];
+
+	if (main_ninterf)
+		strcpy(key, "router ospf");
+	else
+		sprintf(key, "interface %s", intf);
+
+	return lconfig_quagga_get_conf(OSPFD_CONF, key);
+}
+
+
+

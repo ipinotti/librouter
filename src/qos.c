@@ -86,7 +86,7 @@ const char *dscp_to_name(unsigned int dscp)
 /*******************************************************/
 /* Show functions */
 /*******************************************************/
-void dump_qos_config(FILE *out)
+void lconfig_qos_dump_config(FILE *out)
 {
 	struct dirent **namelist;
 	int n, i;
@@ -157,29 +157,7 @@ void dump_qos_config(FILE *out)
 	free(namelist);
 }
 
-void qos_dump_interfaces(void)
-{
-	struct dirent **namelist;
-	int n;
-
-	n=scandir("/var/run", &namelist, 0, asort);
-	if (n < 0) return;
-	while(n--) {
-		char *name = namelist[n]->d_name;
-
-		if (strstr(name, ".service_policy")) {
-			int len=strlen(name);
-			if (len > 15) {
-				name[len-15]=0;
-				qos_dump_interface(name);
-			}
-		}
-		free(namelist[n]);
-	}
-	free(namelist);
-}
-
-void qos_dump_interface(char *dev_name)
+static void qos_dump_interface(char *dev_name)
 {
 	int n, idx, in=0, first=1;
 	long mark;
@@ -346,6 +324,28 @@ void qos_dump_interface(char *dev_name)
 	pclose(f);
 	free_policymap(pmap);
 	release_qos_config(intf_cfg);
+}
+
+void lconfig_qos_dump_interfaces(void)
+{
+	struct dirent **namelist;
+	int n;
+
+	n=scandir("/var/run", &namelist, 0, asort);
+	if (n < 0) return;
+	while(n--) {
+		char *name = namelist[n]->d_name;
+
+		if (strstr(name, ".service_policy")) {
+			int len=strlen(name);
+			if (len > 15) {
+				name[len-15]=0;
+				qos_dump_interface(name);
+			}
+		}
+		free(namelist[n]);
+	}
+	free(namelist);
 }
 
 /********************************************************************************/

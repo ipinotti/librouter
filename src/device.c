@@ -252,3 +252,66 @@ char *linux_to_cish_dev_cmdline(char *cmdline)
 	return new_cmdline;
 }
 
+
+// Recebe uma linha de comando com redes no estilo zebra (ex.: '10.0.0.0/8')
+// e devolve a linha de comando com as redes traduzidas para estilo linux
+// (ex.: '10.0.0.0 255.0.0.0').
+char *zebra_to_linux_network_cmdline(char *cmdline)
+{
+	static char new_cmdline[2048];
+	arglist *args;
+	int i;
+	char addr_net[64];
+
+	new_cmdline[0]=0;
+	if (is_empty(cmdline)) return new_cmdline;
+
+	args=make_args(cmdline);
+
+	for (i=0; i < args->argc; i++)
+	{
+		if (cidr_to_classic(args->argv[i], addr_net)==0)
+			strcat(new_cmdline, addr_net);
+		else
+			strcat(new_cmdline, args->argv[i]);
+		strcat(new_cmdline, " ");
+	}
+
+	destroy_args(args);
+	return new_cmdline;
+}
+
+// Recebe uma linha de comando com redes no estilo linux
+// (ex.: '10.0.0.0 255.0.0.0') e devolve a linha de comando
+// com as redes traduzidas para estilo zebra (ex.: '10.0.0.0/8')
+char *linux_to_zebra_network_cmdline(char *cmdline)
+{
+	static char new_cmdline[2048];
+	arglist *args;
+	int i;
+	char buf[64];
+
+	new_cmdline[0] = 0;
+	if (is_empty(cmdline)) return new_cmdline;
+
+	args=make_args(cmdline);
+
+	for (i=0; i<(args->argc-1); i++)
+	{
+		if ((validateip(args->argv[i])==0)&&
+		    (classic_to_cidr(args->argv[i], args->argv[i+1], buf)==0))
+		{
+			strcat(new_cmdline, buf);
+			i++;
+		}
+		else
+		{
+			strcat(new_cmdline, args->argv[i]);
+		}
+		strcat(new_cmdline, " ");
+	}
+	if (i<args->argc) strcat(new_cmdline, args->argv[i]);
+
+	destroy_args(args);
+	return new_cmdline;
+}

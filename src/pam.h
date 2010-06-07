@@ -1,4 +1,8 @@
 
+#define FILE_PASSWD "/etc/passwd"
+#define FILE_RADDB_SERVER "/etc/raddb/server"
+#define FILE_TACDB_SERVER "/etc/tacdb/server"
+
 #define	AUTH_NOK		0
 #define	AUTH_OK			1
 #define	AUTH_FACTORY		2
@@ -47,7 +51,7 @@ typedef struct {
 
 /* Prototypes */
 int discover_pam_current_mode(char *file_name);
-int proceed_third_authentication(char *login, char *program);
+int pam_web_authenticate(char *user, char *pass);
 int discover_pam_current_author_mode(char *file_name);
 int discover_pam_current_acct_mode(char *file_name);
 int discover_pam_current_acct_command_mode(char *file_name);

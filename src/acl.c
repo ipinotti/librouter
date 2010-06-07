@@ -154,7 +154,7 @@ void acl_apply(struct acl_config *acl)
 
 	/* Check if we already have this rule */
 	if ((f = fopen (TMP_CFG_FILE, "w+"))) {
-		acl_dump (0, f, 1);
+		lconfig_acl_dump (0, f, 1);
 		fseek (f, 0, SEEK_SET);
 
 		/* Parse through all existing rules */
@@ -341,7 +341,7 @@ static void acl_print_rule (const char *action,
 	fprintf (out, "\n");
 }
 
-void acl_dump (char *xacl, FILE *F, int conf_format)
+void lconfig_acl_dump (char *xacl, FILE *F, int conf_format)
 {
 	FILE *ipc;
 	char buf[512];
@@ -540,7 +540,7 @@ void acl_dump (char *xacl, FILE *F, int conf_format)
 	pclose (ipc);
 }
 
-void acl_dump_policy (FILE *F)
+void lconfig_acl_dump_policy (FILE *F)
 {
 	FILE *ipc;
 	char buf[512];
@@ -676,7 +676,7 @@ int acl_matched_exists (char *acl, char *iface_in, char *iface_out, char *chain)
 	return acl_exists;
 }
 
-int acl_get_iface_acls (char *iface, char *in_acl, char *out_acl)
+int lconfig_acl_get_iface_rules (char *iface, char *in_acl, char *out_acl)
 {
 	typedef enum {
 		chain_fwd, chain_in, chain_out, chain_other

@@ -24,6 +24,8 @@ char *convert_device(const char *device, int major, int minor);
 char *convert_os_device (const char *osdev, int mode);
 char *cish_to_linux_dev_cmdline(char *cmdline);
 char *linux_to_cish_dev_cmdline(char *cmdline);
+char *linux_to_zebra_network_cmdline(char *cmdline);
+char *zebra_to_linux_network_cmdline(char *cmdline);
 
 #endif
 
