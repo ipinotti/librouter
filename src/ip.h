@@ -2,6 +2,8 @@
 #define _IP_H
 #include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/socket.h>
+
 #include <linux/if.h>
 #include <linux/netdevice.h>
 #include <linux/netlink.h>
