@@ -5,7 +5,6 @@ typedef enum {
 	none,
 	eth,
 	lo,
-//	mobile /* 3G */ situação anterior a implementação do 3G
 	ppp, /* 3G */
 	tun,
 	ipsec
