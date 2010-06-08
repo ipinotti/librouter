@@ -947,9 +947,6 @@ static void dump_interface_config(FILE *out, struct interface_conf *conf)
 	case ARPHRD_PPP:
 		__dump_ppp_config (out, conf);
 	break;
-	case ARPHRD_ASYNCPPP:
-		__dump_ppp_config (out, conf);
-		break;
 #endif
 	case ARPHRD_ETHER:
 		__dump_ethernet_config(out, conf);
