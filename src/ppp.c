@@ -151,20 +151,27 @@ int ppp_set_config (int serial_no, ppp_config *cfg)
 
 void ppp_set_defaults (int serial_no, ppp_config *cfg)
 {
+	int i=0, length=0;
+
 	/* Clean memory! */
 	memset (cfg, 0, sizeof(ppp_config));
 
-	snprintf (cfg->osdevice, 16, "ttyS%d", serial_no);
+	snprintf (cfg->osdevice, 16, "ttyU%d", serial_no);
 
 	cfg->unit = serial_no;
-	cfg->speed = 9600;
-	cfg->echo_failure = 3;
-	cfg->echo_interval = 5;
-	cfg->novj = 1;
-	cfg->ip_unnumbered = -1;
-	cfg->backup = -1;
-}
 
+	modem3g_get_apn(cfg->apn, serial_no);
+	modem3g_get_username(cfg->auth_user, serial_no);
+	modem3g_get_password(cfg->auth_pass, serial_no);
+
+	//printf("pppd running number %d\n\n", ppp_is_pppd_running(serial_no));
+	cfg->up = ppp_is_pppd_running(serial_no);
+	cfg->ip_unnumbered = -1;
+
+
+//	cfg->backup = -1;
+//	cfg->novj = 1;
+}
 /*
  ABORT "NO CARRIER"
  ABORT "NO DIALTONE"

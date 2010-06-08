@@ -41,7 +41,7 @@ int modem3g_get_apn (char * apn, int devcish)
 {
 	//arq1 == "chat-modem-3g-";
 
-	int check=0;
+	int check=0,length=0,i=0;
 	char file[100] = arq1;
 	char device[10];
 	char key[] = "\"IP\",";
@@ -50,12 +50,20 @@ int modem3g_get_apn (char * apn, int devcish)
 	strcat(file,device);
 
 	check = find_string_in_file_nl (file, key, apn, 100);
+	length = strlen(apn);
+
+	for (i = 1; i < (length-1); ++i)
+		apn[i-1] = apn[i];
+
+	apn[length-3]='\0';
 
 	if (check == 0)
 		return 1;
 	else
 		return -1;
+
 }
+
 
 /**
  * Grava o APN - Acess Point Name, no arquivo de script - ARQ1,

@@ -9,15 +9,26 @@
 #include "str.h"
 
 /* !!! bridge1 */
-device_family DEV_FAM[] = { /* type, cish_string */
-  {ethernet, "ethernet"},
-  {loopback, "loopback"},
-  {tunnel, "tunnel"},
-  {ipsec, "ipsec"},
+//device_family DEV_FAM[] = { /* type, cish_string */
+//  {ethernet, "ethernet"},
+//  {loopback, "loopback"},
+//  {tunnel, "tunnel"},
+//  {ipsec, "ipsec"},
+////  {mobile, "mobile"}, situação anterior a implementação do 3G
+//  {m3G, "m3G"},
+//  {none, NULL}
+//};
+
+device_family DEV_FAM[] = { /* type, cish_string, linux_string */
+  {eth, "eth", "eth"},
+  {lo, "lo", "eth"},
+  {tun, "tun", "tun"},
+  {ipsec, "ipsec", "ipsec"},
 //  {mobile, "mobile"}, situação anterior a implementação do 3G
-  {m3G, "m3G"},
-  {none, NULL}
+  {ppp, "m3G", "ppp"},
+  {none, NULL, NULL}
 };
+
 
 /* ex.: name = 'ethernet'
  * retorna (device_family *){ethernet, "eth", "ethernet"},
@@ -25,11 +36,11 @@ device_family DEV_FAM[] = { /* type, cish_string */
 device_family *getfamily(const char *name)
 {
 	int crsr;
-
 	for (crsr=0; DEV_FAM[crsr].cish_string != NULL; crsr++)
 	{
-		if (strncasecmp(DEV_FAM[crsr].cish_string, name, strlen(DEV_FAM[crsr].cish_string)) == 0)
+		if (strncasecmp(DEV_FAM[crsr].cish_string, name, strlen(DEV_FAM[crsr].cish_string)) == 0){
 			return &DEV_FAM[crsr];
+		}
 	}
 	return NULL;
 }
@@ -46,22 +57,22 @@ char *convert_device(const char *device, int major, int minor)
 	if(fam)
 	{
 		switch(fam->type) {
-			case ethernet:
-			case loopback:
-			case tunnel:
+			case eth:
+			case lo:
+			case tun:
 			case ipsec:
-			case m3G:
+			case ppp:
 			default:
 				if (minor >= 0)
 				{
-					result=(char *)malloc(strlen (fam->cish_string) + 12);
-					sprintf(result, "%s%i.%i", fam->cish_string, major, minor);
+					result=(char *)malloc(strlen (fam->linux_string) + 12);
+					sprintf(result, "%s%i.%i", fam->linux_string, major, minor);
 					return result;
 				}
 				else
 				{
-					result=(char *)malloc(strlen (fam->cish_string) + 6);
-					sprintf(result, "%s%i", fam->cish_string, major);
+					result=(char *)malloc(strlen (fam->linux_string) + 6);
+					sprintf(result, "%s%i", fam->linux_string, major);
 					return result;
 				}
 				break;
@@ -74,54 +85,101 @@ char *convert_device(const char *device, int major, int minor)
 	}
 }
 
+///*
+// * ex.: device = 'serial', major = 0, minor = 16
+// * retorna 'serial0.16'
+// */
+//char *convert_device(const char *device, int major, int minor)
+//{
+//	char *result;
+//	device_family *fam=getfamily(device);
+//
+//	if(fam)
+//	{
+//		switch(fam->type) {
+//			case eth:
+//			case lo:
+//			case tun:
+//			case ipsec:
+//			case ppp:
+//			default:
+//				if (minor >= 0)
+//				{
+//					result=(char *)malloc(strlen (fam->cish_string) + 12);
+//					sprintf(result, "%s%i.%i", fam->cish_string, major, minor);
+//					return result;
+//				}
+//				else
+//				{
+//					result=(char *)malloc(strlen (fam->cish_string) + 6);
+//					sprintf(result, "%s%i", fam->cish_string, major);
+//					return result;
+//				}
+//				break;
+//		}
+//	}
+//	else
+//	{
+//		fprintf(stderr, "%% Unknown device family: %s\n", device);
+//		return (strdup("null0"));
+//	}
+//}
+
+
+
 /*
  * ex.: osdev = 'serial0.16'
  * retorna 'serial 0.16' se mode=0,
  * ou      'serial0.16'  se mode=1.
  */
-char *convert_os_device (const char *osdev, int mode)
+char *convert_os_device(const char *osdev, int mode)
 {
 	static char dev[64];
 	char odev[16];
 	int i, crsr;
 	const char *cishdev;
 
-	crsr=0;
-	while ((crsr < 8) && (osdev[crsr] > 32) && (!isdigit(osdev[crsr]))) ++crsr;
+	crsr = 0;
+	while ((crsr < 8) && (osdev[crsr] > 32) && (!isdigit(osdev[crsr])))
+		++crsr;
 	memcpy(odev, osdev, crsr);
-	odev[crsr]=0;
-	while ((osdev[crsr]) && (!isdigit(osdev[crsr]))) ++crsr; /* skip space! */
+	odev[crsr] = 0;
+	while ((osdev[crsr]) && (!isdigit(osdev[crsr])))
+		++crsr; /* skip space! */
 
-	cishdev=NULL;
-	for (i=0; DEV_FAM[i].cish_string != NULL; i++)
-	{
-		if (strcmp(DEV_FAM[i].cish_string, odev) == 0) { cishdev=DEV_FAM[i].cish_string; break; }
+	cishdev = NULL;
+	for (i = 0; DEV_FAM[i].linux_string != NULL; i++) {
+		if (strcmp(DEV_FAM[i].linux_string, odev) == 0) {
+			cishdev = DEV_FAM[i].cish_string;
+			break;
+		}
 	}
-	if (!cishdev) return NULL;
+	if (!cishdev)
+		return NULL;
 #ifdef OPTION_IPSEC
-	if (DEV_FAM[i].type == ipsec)
-	{
+	if (DEV_FAM[i].type == ipsec) {
 		char filename[32];
 		char iface[16];
 		FILE *f;
 
 		sprintf(filename, "/var/run/%s", osdev);
-		if ((f=fopen(filename, "r")) != NULL)
-		{
+		if ((f = fopen(filename, "r")) != NULL) {
 			fgets(iface, 16, f);
 			fclose(f);
 			striplf(iface);
-			crsr=0;
-			while ((crsr < 8) && (iface[crsr] > 32) && (!isdigit(iface[crsr]))) ++crsr; /* !!! ethernet == 8 */
+			crsr = 0;
+			while ((crsr < 8) && (iface[crsr] > 32)
+			                && (!isdigit(iface[crsr])))
+				++crsr; /* !!! ethernet == 8 */
 			memcpy(odev, iface, crsr);
-			odev[crsr]=0;
-			sprintf(dev, "crypto-%s%s%s", odev, mode ? "" : " ", iface+crsr);
-		}
-			else return NULL;
-	}
-		else
+			odev[crsr] = 0;
+			sprintf(dev, "crypto-%s%s%s", odev, mode ? "" : " ",
+			                iface + crsr);
+		} else
+			return NULL;
+	} else
 #endif
-	sprintf(dev, "%s%s%s", cishdev, mode ? "" : " ", osdev+crsr);
+		sprintf(dev, "%s%s%s", cishdev, mode ? "" : " ", osdev + crsr);
 #if 0
 	if (osdev[crsr] > 32)
 	{
@@ -136,7 +194,8 @@ char *convert_os_device (const char *osdev, int mode)
 		sprintf (dev, "%s%s0", mode ? "" : " ", cishdev);
 	}
 #endif
-	if (mode) dev[0]=toupper(dev[0]);
+	if (mode)
+		dev[0] = toupper(dev[0]);
 	return dev;
 }
 
@@ -157,7 +216,8 @@ char *cish_to_linux_dev_cmdline(char *cmdline)
 		fam=getfamily(args->argv[i]);
 		if (fam)
 		{
-			strcat(new_cmdline, fam->cish_string);
+//			strcat(new_cmdline, fam->cish_string);
+			strcat(new_cmdline, fam->linux_string);
 			i++;
 			if (i >= args->argc) break;
 		}
