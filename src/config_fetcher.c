@@ -34,6 +34,9 @@
 #include "dev.h"
 #include "qos.h"
 
+#define PPPDEV "ppp"
+
+
 /********************/
 /* Helper functions */
 /********************/
@@ -913,6 +916,35 @@ static void __dump_tunnel_config(FILE *out, struct interface_conf *conf)
 }
 #endif
 
+
+#ifdef OPTION_PPP
+static void __dump_ppp_config(FILE *out, struct interface_conf *conf)
+{
+	ppp_config cfg;
+	char *osdev = conf->name;
+	int serial_no;
+
+	/* Get interface index */
+	serial_no = atoi(osdev + strlen(PPPDEV));
+
+	ppp_get_config(serial_no, &cfg);
+
+	__dump_intf_iptables_config(out, conf);
+
+	__dump_policy_interface(out, osdev);
+	dump_rip_interface(out, osdev);
+	dump_ospf_interface(out, osdev);
+
+	fprintf(out, " apn set %s\n", cfg.apn);
+	fprintf(out, " username set %s\n", cfg.auth_user);
+	fprintf(out, " password set %s\n", cfg.auth_pass);
+	fprintf(out, " %sshutdown\n", cfg.up ? "no " : "");
+
+}
+#endif
+
+
+
 /**
  * dump_interface_config : Show interface configuration
  * @param FILE *out : File descriptor to be writen
@@ -947,9 +979,6 @@ static void dump_interface_config(FILE *out, struct interface_conf *conf)
 	case ARPHRD_PPP:
 		__dump_ppp_config (out, conf);
 	break;
-	case ARPHRD_ASYNCPPP:
-		__dump_ppp_config (out, conf);
-		break;
 #endif
 	case ARPHRD_ETHER:
 		__dump_ethernet_config(out, conf);
@@ -1037,6 +1066,8 @@ void lconfig_interfaces_dump(FILE *out)
 		dump_interface_config(out, &conf);
 	}
 }
+
+
 
 /********************************/
 /* End of Interface information */
