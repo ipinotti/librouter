@@ -137,6 +137,7 @@ unsigned int is_valid_netmask(char *data);
 int get_iface_stats(char *ifname, void *store);
 
 int lconfig_get_iface_config(char *interface, struct interface_conf *conf);
+void lconfig_free_iface_config(struct interface_conf *conf);
 
 #ifdef OPTION_SHM_IP_TABLE
 int create_ipaddr_shm (int flags);
