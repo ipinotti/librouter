@@ -4,7 +4,7 @@
  Author      : Igor Pinotti
  Version     :
  Copyright   : Copyrighted
- Description : Functions for modem 3G
+ Description : Procedures for modem 3G
  ============================================================================
  */
 

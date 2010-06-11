@@ -9,16 +9,6 @@
 #include "str.h"
 
 /* !!! bridge1 */
-//device_family DEV_FAM[] = { /* type, cish_string */
-//  {ethernet, "ethernet"},
-//  {loopback, "loopback"},
-//  {tunnel, "tunnel"},
-//  {ipsec, "ipsec"},
-////  {mobile, "mobile"}, situação anterior a implementação do 3G
-//  {m3G, "m3G"},
-//  {none, NULL}
-//};
-
 device_family DEV_FAM[] = { /* type, cish_string, linux_string */
   {eth, "eth", "eth"},
   {lo, "lo", "eth"},
@@ -51,6 +41,8 @@ device_family *getfamily(const char *name)
  */
 char *convert_device(const char *device, int major, int minor)
 {
+	//função modificada, onde a variavel linux_string era anteriormente cish_string
+
 	char *result;
 	device_family *fam=getfamily(device);
 
@@ -84,48 +76,6 @@ char *convert_device(const char *device, int major, int minor)
 		return (strdup("null0"));
 	}
 }
-
-///*
-// * ex.: device = 'serial', major = 0, minor = 16
-// * retorna 'serial0.16'
-// */
-//char *convert_device(const char *device, int major, int minor)
-//{
-//	char *result;
-//	device_family *fam=getfamily(device);
-//
-//	if(fam)
-//	{
-//		switch(fam->type) {
-//			case eth:
-//			case lo:
-//			case tun:
-//			case ipsec:
-//			case ppp:
-//			default:
-//				if (minor >= 0)
-//				{
-//					result=(char *)malloc(strlen (fam->cish_string) + 12);
-//					sprintf(result, "%s%i.%i", fam->cish_string, major, minor);
-//					return result;
-//				}
-//				else
-//				{
-//					result=(char *)malloc(strlen (fam->cish_string) + 6);
-//					sprintf(result, "%s%i", fam->cish_string, major);
-//					return result;
-//				}
-//				break;
-//		}
-//	}
-//	else
-//	{
-//		fprintf(stderr, "%% Unknown device family: %s\n", device);
-//		return (strdup("null0"));
-//	}
-//}
-
-
 
 /*
  * ex.: osdev = 'serial0.16'

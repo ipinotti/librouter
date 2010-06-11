@@ -42,6 +42,7 @@ libconfig_la_SOURCES = \
 	libtime.c \
 	tunnel.c \
 	version.c \
+	usb.c \
 	vlan.c 
 
 libconfig_la_LIBADD = $(top_builddir)/src/libnetlink/libnetlink.la
@@ -103,4 +104,5 @@ libconfig_la_HEADERS = \
 	tunnel.h \
 	typedefs.h \
 	version.h \
+	usb.h \
 	vlan.h
