@@ -8,17 +8,14 @@
 #include "args.h"
 #include "str.h"
 
-/* !!! bridge1 */
 device_family DEV_FAM[] = { /* type, cish_string, linux_string */
-  {eth, "eth", "eth"},
-  {lo, "lo", "eth"},
+  {eth, "ethernet", "ethernet"},
+  {lo, "loopback", "loopback"},
   {tun, "tun", "tun"},
   {ipsec, "ipsec", "ipsec"},
-//  {mobile, "mobile"}, situação anterior a implementação do 3G
   {ppp, "m3G", "ppp"},
   {none, NULL, NULL}
 };
-
 
 /* ex.: name = 'ethernet'
  * retorna (device_family *){ethernet, "eth", "ethernet"},
@@ -44,34 +41,28 @@ char *convert_device(const char *device, int major, int minor)
 	//função modificada, onde a variavel linux_string era anteriormente cish_string
 
 	char *result;
-	device_family *fam=getfamily(device);
+	device_family *fam = getfamily(device);
 
-	if(fam)
-	{
-		switch(fam->type) {
-			case eth:
-			case lo:
-			case tun:
-			case ipsec:
-			case ppp:
-			default:
-				if (minor >= 0)
-				{
-					result=(char *)malloc(strlen (fam->linux_string) + 12);
-					sprintf(result, "%s%i.%i", fam->linux_string, major, minor);
-					return result;
-				}
-				else
-				{
-					result=(char *)malloc(strlen (fam->linux_string) + 6);
-					sprintf(result, "%s%i", fam->linux_string, major);
-					return result;
-				}
-				break;
+	if (fam) {
+		switch (fam->type) {
+		case eth:
+		case lo:
+		case tun:
+		case ipsec:
+		case ppp:
+		default:
+			if (minor >= 0) {
+				result = (char *) malloc(strlen(fam->linux_string) + 12);
+				sprintf(result, "%s%i.%i", fam->linux_string, major, minor);
+				return result;
+			} else {
+				result = (char *) malloc(strlen(fam->linux_string) + 6);
+				sprintf(result, "%s%i", fam->linux_string, major);
+				return result;
+			}
+			break;
 		}
-	}
-	else
-	{
+	} else {
 		fprintf(stderr, "%% Unknown device family: %s\n", device);
 		return (strdup("null0"));
 	}
@@ -104,8 +95,10 @@ char *convert_os_device(const char *osdev, int mode)
 			break;
 		}
 	}
+
 	if (!cishdev)
 		return NULL;
+
 #ifdef OPTION_IPSEC
 	if (DEV_FAM[i].type == ipsec) {
 		char filename[32];
@@ -118,34 +111,21 @@ char *convert_os_device(const char *osdev, int mode)
 			fclose(f);
 			striplf(iface);
 			crsr = 0;
-			while ((crsr < 8) && (iface[crsr] > 32)
-			                && (!isdigit(iface[crsr])))
+			while ((crsr < 8) && (iface[crsr] > 32) && (!isdigit(iface[crsr])))
 				++crsr; /* !!! ethernet == 8 */
 			memcpy(odev, iface, crsr);
 			odev[crsr] = 0;
-			sprintf(dev, "crypto-%s%s%s", odev, mode ? "" : " ",
-			                iface + crsr);
+			sprintf(dev, "crypto-%s%s%s", odev, mode ? "" : " ", iface + crsr);
 		} else
 			return NULL;
 	} else
 #endif
 		sprintf(dev, "%s%s%s", cishdev, mode ? "" : " ", osdev + crsr);
-#if 0
-	if (osdev[crsr] > 32)
-	{
-		tmp = strchr (osdev+crsr, ':');
-		if (tmp) *tmp = '.';
-		tmp = strchr (osdev+crsr, '\n');
-		if (tmp) *tmp = 0;
-		sprintf(dev, "%s%s%s", cishdev, mode ? "" : " ", osdev+crsr);
-	}
-	else
-	{
-		sprintf (dev, "%s%s0", mode ? "" : " ", cishdev);
-	}
-#endif
+
+	/* Make ethernet -> Ethernet */
 	if (mode)
 		dev[0] = toupper(dev[0]);
+
 	return dev;
 }
 

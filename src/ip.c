@@ -939,6 +939,23 @@ int lconfig_get_iface_config(char *interface, struct interface_conf *conf)
 
 	}
 
+	/* If it is a PPP device, it may not exist, but it is
+	 * still needed that we show some configuration */
+	if ( (ret < 0) && (!strncmp(interface,"ppp",3)) ) {
+		conf->name = strdup(interface);
+		conf->linktype = ARPHRD_PPP;
+		ret = 0;
+	}
+
 	return ret;
 }
 
+void lconfig_free_iface_config(struct interface_conf *conf)
+{
+	if (conf == NULL)
+		return;
+
+	/* TODO What to free ? */
+
+	return;
+}

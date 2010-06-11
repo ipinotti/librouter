@@ -9,9 +9,13 @@
 #include <string.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <sys/types.h>
 #include <pwd.h>
 #include <dirent.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <unistd.h>
 
 #include <net/if_arp.h>
 #include <linux/mii.h>
@@ -36,6 +40,7 @@
 
 #define PPPDEV "ppp"
 
+#define CISH_CFG_FILE "/var/run/cish_cfg"
 
 /********************/
 /* Helper functions */
@@ -106,27 +111,21 @@ void lconfig_dump_aaa(FILE *f, cish_config *cish_cfg)
 	/* Dump RADIUS & TACACS servers */
 	for (i = 0; i < MAX_SERVERS; i++) {
 		if (cish_cfg->radius[i].ip_addr[0]) {
-			fprintf(f, "radius-server host %s",
-			                cish_cfg->radius[i].ip_addr);
+			fprintf(f, "radius-server host %s", cish_cfg->radius[i].ip_addr);
 			if (cish_cfg->radius[i].authkey[0])
-				fprintf(f, " key %s",
-				                cish_cfg->radius[i].authkey);
+				fprintf(f, " key %s", cish_cfg->radius[i].authkey);
 			if (cish_cfg->radius[i].timeout)
-				fprintf(f, " timeout %d",
-				                cish_cfg->radius[i].timeout);
+				fprintf(f, " timeout %d", cish_cfg->radius[i].timeout);
 			fprintf(f, "\n");
 		}
 	}
 	for (i = 0; i < MAX_SERVERS; i++) {
 		if (cish_cfg->tacacs[i].ip_addr[0]) {
-			fprintf(f, "tacacs-server host %s",
-			                cish_cfg->tacacs[i].ip_addr);
+			fprintf(f, "tacacs-server host %s", cish_cfg->tacacs[i].ip_addr);
 			if (cish_cfg->tacacs[i].authkey[0])
-				fprintf(f, " key %s",
-				                cish_cfg->tacacs[i].authkey);
+				fprintf(f, " key %s", cish_cfg->tacacs[i].authkey);
 			if (cish_cfg->tacacs[i].timeout)
-				fprintf(f, " timeout %d",
-				                cish_cfg->tacacs[i].timeout);
+				fprintf(f, " timeout %d", cish_cfg->tacacs[i].timeout);
 			fprintf(f, "\n");
 		}
 	}
@@ -148,8 +147,7 @@ void lconfig_dump_aaa(FILE *f, cish_config *cish_cfg)
 		fprintf(f, "aaa authentication login default group tacacs+\n");
 		break;
 	case AAA_AUTH_TACACS_LOCAL:
-		fprintf(f,
-		                "aaa authentication login default group tacacs+ local\n");
+		fprintf(f, "aaa authentication login default group tacacs+ local\n");
 		break;
 	default:
 		fprintf(f, "aaa authentication login none\n");
@@ -165,8 +163,7 @@ void lconfig_dump_aaa(FILE *f, cish_config *cish_cfg)
 		fprintf(f, "aaa authorization exec default group tacacs+\n");
 		break;
 	case AAA_AUTHOR_TACACS_LOCAL:
-		fprintf(f,
-		                "aaa authorization exec default group tacacs+ local\n");
+		fprintf(f, "aaa authorization exec default group tacacs+ local\n");
 		break;
 	}
 	/* Dump aaa accounting mode */
@@ -175,26 +172,21 @@ void lconfig_dump_aaa(FILE *f, cish_config *cish_cfg)
 		fprintf(f, "aaa accounting exec default none\n");
 		break;
 	case AAA_ACCT_TACACS:
-		fprintf(f,
-		                "aaa accounting exec default start-stop group tacacs+\n");
+		fprintf(f, "aaa accounting exec default start-stop group tacacs+\n");
 		break;
 	}
 	switch (discover_pam_current_acct_command_mode(FILE_PAM_GENERIC)) {
 	case AAA_ACCT_TACACS_CMD_NONE:
 		break;
 	case AAA_ACCT_TACACS_CMD_1:
-		fprintf(f,
-		                "aaa accounting commands 1 default start-stop group tacacs+\n");
+		fprintf(f, "aaa accounting commands 1 default start-stop group tacacs+\n");
 		break;
 	case AAA_ACCT_TACACS_CMD_15:
-		fprintf(f,
-		                "aaa accounting commands 15 default start-stop group tacacs+\n");
+		fprintf(f, "aaa accounting commands 15 default start-stop group tacacs+\n");
 		break;
 	case AAA_ACCT_TACACS_CMD_ALL:
-		fprintf(f,
-		                "aaa accounting commands 1 default start-stop group tacacs+\n");
-		fprintf(f,
-		                "aaa accounting commands 15 default start-stop group tacacs+\n");
+		fprintf(f, "aaa accounting commands 1 default start-stop group tacacs+\n");
+		fprintf(f, "aaa accounting commands 15 default start-stop group tacacs+\n");
 		break;
 	}
 
@@ -203,12 +195,9 @@ void lconfig_dump_aaa(FILE *f, cish_config *cish_cfg)
 		struct passwd *pw;
 
 		while ((pw = fgetpwent(passwd))) {
-			if (pw->pw_uid > 500 && !strncmp(pw->pw_gecos, "Local",
-			                5)) {
-				fprintf(
-				                f,
-				                "aaa username %s password hash %s\n",
-				                pw->pw_name, pw->pw_passwd);
+			if (pw->pw_uid > 500 && !strncmp(pw->pw_gecos, "Local", 5)) {
+				fprintf(f, "aaa username %s password hash %s\n", pw->pw_name,
+				                pw->pw_passwd);
 			}
 		}
 		fclose(passwd);
@@ -230,7 +219,7 @@ void lconfig_dump_log(FILE *f)
 {
 	char buf[16];
 
-	if( init_program_get_option_value(PROG_SYSLOGD, "-R", buf, 16) >= 0 )
+	if (init_program_get_option_value(PROG_SYSLOGD, "-R", buf, 16) >= 0)
 		fprintf(f, "logging remote %s\n!\n", buf);
 }
 
@@ -267,8 +256,8 @@ void lconfig_dump_ip(FILE *f, int conf_format)
 	fprintf(f, val ? "ip routing\n" : "no ip routing\n");
 
 #ifdef OPTION_PIMD
-	val = get_procip_val ("conf/all/mc_forwarding");
-	fprintf (f, val ? "ip multicast-routing\n" : "no ip multicast-routing\n");
+	val = get_procip_val("conf/all/mc_forwarding");
+	fprintf(f, val ? "ip multicast-routing\n" : "no ip multicast-routing\n");
 #endif
 
 	val = get_procip_val("ip_no_pmtu_disc");
@@ -284,9 +273,7 @@ void lconfig_dump_ip(FILE *f, int conf_format)
 	fprintf(f, val ? "ip icmp ignore all\n" : "no ip icmp ignore all\n");
 
 	val = get_procip_val("icmp_echo_ignore_broadcasts");
-	fprintf(
-	                f,
-	                val ? "ip icmp ignore broadcasts\n" : "no ip icmp ignore broadcasts\n");
+	fprintf(f, val ? "ip icmp ignore broadcasts\n" : "no ip icmp ignore broadcasts\n");
 
 	val = get_procip_val("icmp_ignore_bogus_error_responses");
 	fprintf(f, val ? "ip icmp ignore bogus\n" : "no ip icmp ignore bogus\n");
@@ -345,8 +332,7 @@ void lconfig_dump_snmp(FILE *f, int conf_format)
 			for (i = 0; i < len; i++) {
 				if (sinks[i]) {
 					print = 1;
-					fprintf(f, "snmp-server trapsink %s\n",
-					                sinks[i]);
+					fprintf(f, "snmp-server trapsink %s\n", sinks[i]);
 					free(sinks[i]);
 				}
 			}
@@ -375,25 +361,16 @@ void lconfig_dump_rmon(FILE *f)
 	if (get_access_rmon_config(&shm_rmon_p) == 1) {
 		for (i = 0; i < NUM_EVENTS; i++) {
 			if (shm_rmon_p->events[i].index > 0) {
-				fprintf(f, "rmon event %d",
-						shm_rmon_p->events[i].index);
+				fprintf(f, "rmon event %d", shm_rmon_p->events[i].index);
 				if (shm_rmon_p->events[i].do_log)
-				fprintf(f, " log");
+					fprintf(f, " log");
 				if (shm_rmon_p->events[i].community[0] != 0)
-				fprintf(
-						f,
-						" trap %s",
-						shm_rmon_p->events[i].community);
+					fprintf(f, " trap %s", shm_rmon_p->events[i].community);
 				if (shm_rmon_p->events[i].description[0] != 0)
-				fprintf(
-						f,
-						" description %s",
-						shm_rmon_p->events[i].description);
+					fprintf(f, " description %s",
+					                shm_rmon_p->events[i].description);
 				if (shm_rmon_p->events[i].owner[0] != 0)
-				fprintf(
-						f,
-						" owner %s",
-						shm_rmon_p->events[i].owner);
+					fprintf(f, " owner %s", shm_rmon_p->events[i].owner);
 				fprintf(f, "\n");
 			}
 		}
@@ -401,63 +378,51 @@ void lconfig_dump_rmon(FILE *f)
 			if (shm_rmon_p->alarms[i].index > 0) {
 				result[0] = '\0';
 				for (k = 0; k < shm_rmon_p->alarms[i].oid_len; k++) {
-					sprintf(
-							tp,
-							"%lu.",
-							shm_rmon_p->alarms[i].oid[k]);
+					sprintf(tp, "%lu.", shm_rmon_p->alarms[i].oid[k]);
 					strcat(result, tp);
 				}
 				*(result + strlen(result) - 1) = '\0';
 
-				fprintf(f, "rmon alarm %d %s %d",
-						shm_rmon_p->alarms[i].index,
-						result,
-						shm_rmon_p->alarms[i].interval);
+				fprintf(f, "rmon alarm %d %s %d", shm_rmon_p->alarms[i].index,
+				                result, shm_rmon_p->alarms[i].interval);
 				switch (shm_rmon_p->alarms[i].sample_type) {
-					case SAMPLE_ABSOLUTE:
+				case SAMPLE_ABSOLUTE:
 					fprintf(f, " absolute");
 					break;
 
-					case SAMPLE_DELTA:
+				case SAMPLE_DELTA:
 					fprintf(f, " delta");
 					break;
 				}
 				if (shm_rmon_p->alarms[i].rising_threshold) {
-					fprintf(
-							f,
-							" rising-threshold %d",
-							shm_rmon_p->alarms[i].rising_threshold);
+					fprintf(f, " rising-threshold %d",
+					                shm_rmon_p->alarms[i].rising_threshold);
 					if (shm_rmon_p->alarms[i].rising_event_index)
-					fprintf(
-							f,
-							" %d",
-							shm_rmon_p->alarms[i].rising_event_index);
+						fprintf(
+						                f,
+						                " %d",
+						                shm_rmon_p->alarms[i].rising_event_index);
 				}
 				if (shm_rmon_p->alarms[i].falling_threshold) {
-					fprintf(
-							f,
-							" falling-threshold %d",
-							shm_rmon_p->alarms[i].falling_threshold);
+					fprintf(f, " falling-threshold %d",
+					                shm_rmon_p->alarms[i].falling_threshold);
 					if (shm_rmon_p->alarms[i].falling_event_index)
-					fprintf(
-							f,
-							" %d",
-							shm_rmon_p->alarms[i].falling_event_index);
+						fprintf(
+						                f,
+						                " %d",
+						                shm_rmon_p->alarms[i].falling_event_index);
 				}
 				if (shm_rmon_p->alarms[i].owner[0] != 0)
-				fprintf(
-						f,
-						" owner %s",
-						shm_rmon_p->alarms[i].owner);
+					fprintf(f, " owner %s", shm_rmon_p->alarms[i].owner);
 				fprintf(f, "\n");
 			}
 		}
 		loose_access_rmon_config(&shm_rmon_p);
 	}
 	if (is_daemon_running(RMON_DAEMON))
-	fprintf(f, "rmon agent\n");
+		fprintf(f, "rmon agent\n");
 	else
-	fprintf(f, "no rmon agent\n");
+		fprintf(f, "no rmon agent\n");
 	fprintf(f, "!\n");
 }
 #endif
@@ -480,14 +445,12 @@ void lconfig_dump_chatscripts(FILE *f)
 
 	while (n--) {
 		if (namelist[n]->d_name[0] != '.') {
-			sprintf(filename, "%s%s", PPP_CHAT_DIR,
-			                namelist[n]->d_name);
+			sprintf(filename, "%s%s", PPP_CHAT_DIR, namelist[n]->d_name);
 			fd = fopen(filename, "r");
 			if (fd) {
 				memset(buf, 0, sizeof(buf));
 				fgets(buf, sizeof(buf) - 1, fd);
-				fprintf(f, "chatscript %s %s\n",
-				                namelist[n]->d_name, buf);
+				fprintf(f, "chatscript %s %s\n", namelist[n]->d_name, buf);
 				fclose(fd);
 				printed_something = 1;
 			}
@@ -531,15 +494,17 @@ void dump_ospf_interface(FILE *out, char *intf)
 	FILE *f;
 	char buf[1024];
 
-	if (!get_ospfd()) return;
+	if (!get_ospfd())
+		return;
 
 	f = ospf_get_conf(0, intf);
-	if (!f) return;
+	if (!f)
+		return;
 	fgets(buf, 1024, f); /* skip line */
-	while (!feof(f))
-	{
+	while (!feof(f)) {
 		fgets(buf, 1024, f);
-		if (buf[0] == '!') break;
+		if (buf[0] == '!')
+			break;
 		striplf(buf);
 		fprintf(out, "%s\n", linux_to_cish_dev_cmdline(zebra_to_linux_network_cmdline(buf)));
 	}
@@ -579,8 +544,7 @@ void lconfig_rip_dump_router(FILE *out)
 		end = 0;
 		while (!feof(f)) {
 			fgets(buf, 1024, f);
-			if (end && (strncmp(buf, keychain, sizeof(keychain)
-			                != 0)))
+			if (end && (strncmp(buf, keychain, sizeof(keychain) != 0)))
 				break;
 			else
 				end = 0;
@@ -610,8 +574,7 @@ void dump_rip_interface(FILE *out, char *intf)
 		if (buf[0] == '!')
 			break;
 		striplf(buf);
-		fprintf(out, "%s\n", linux_to_cish_dev_cmdline(
-		                zebra_to_linux_network_cmdline(buf)));
+		fprintf(out, "%s\n", linux_to_cish_dev_cmdline(zebra_to_linux_network_cmdline(buf)));
 	}
 	fclose(f);
 }
@@ -772,7 +735,7 @@ static void __dump_intf_secondary_ipaddr_config(FILE *out, struct interface_conf
 	/* Go through IP configuration */
 	for (i = 0; i < MAX_NUM_IPS; i++, ip++) {
 
-		if(ip->ipaddr[0] == 0)
+		if (ip->ipaddr[0] == 0)
 			break;
 
 		fprintf(out, " ip address %s %s secondary\n", ip->ipaddr, ip->ipmask);
@@ -905,17 +868,16 @@ static void __dump_tunnel_config(FILE *out, struct interface_conf *conf)
 	__dump_intf_secondary_ipaddr_config(out, conf);
 
 	if (conf->mtu)
-		fprintf(out, " mtu %d\n", conf->mtu);
+	fprintf(out, " mtu %d\n", conf->mtu);
 
 	if (conf->txqueue)
-		fprintf(out, " txqueuelen %d\n", conf->txqueue);
+	fprintf(out, " txqueuelen %d\n", conf->txqueue);
 
 	dump_tunnel_interface(out, 1, osdev);
 
 	fprintf(out, " %sshutdown\n", conf->up ? "no " : "");
 }
 #endif
-
 
 #ifdef OPTION_PPP
 static void __dump_ppp_config(FILE *out, struct interface_conf *conf)
@@ -942,8 +904,6 @@ static void __dump_ppp_config(FILE *out, struct interface_conf *conf)
 
 }
 #endif
-
-
 
 /**
  * dump_interface_config : Show interface configuration
@@ -977,7 +937,7 @@ static void dump_interface_config(FILE *out, struct interface_conf *conf)
 	switch (conf->linktype) {
 #ifdef OPTION_PPP
 	case ARPHRD_PPP:
-		__dump_ppp_config (out, conf);
+	__dump_ppp_config (out, conf);
 	break;
 #endif
 	case ARPHRD_ETHER:
@@ -988,8 +948,8 @@ static void dump_interface_config(FILE *out, struct interface_conf *conf)
 		__dump_loopback_config(out, conf);
 		break;
 #ifdef OPTION_TUNNEL
-	case ARPHRD_TUNNEL:
-	case ARPHRD_IPGRE:
+		case ARPHRD_TUNNEL:
+		case ARPHRD_IPGRE:
 		__dump_tunnel_config (out, conf);
 		break;
 #endif
@@ -1018,7 +978,8 @@ void lconfig_interfaces_dump(FILE *out)
 
 	struct interface_conf conf;
 
-	char intf_list[32][16] = { "ethernet0", "ethernet1", "loopback0", "ppp0", "ppp1", "ppp2", "\0"};
+	char intf_list[32][16] = { "ethernet0", "ethernet1", "loopback0", "ppp0", "ppp1", "ppp2",
+	                "\0" };
 
 #if 0
 	int vlan_cos=NONE_TO_COS;
@@ -1038,7 +999,7 @@ void lconfig_interfaces_dump(FILE *out)
 		if (strncmp(conf.name, "ipsec", 5) == 0)
 			conf.linktype = ARPHRD_TUNNEL6; /* !!! change crypto-? linktype (temp!) */
 
-	/* TODO Check PHY/Switch status for ethernet interfaces */
+		/* TODO Check PHY/Switch status for ethernet interfaces */
 #if 0
 		switch (conf.linktype) {
 
@@ -1064,10 +1025,10 @@ void lconfig_interfaces_dump(FILE *out)
 
 		/* Start dumping information */
 		dump_interface_config(out, &conf);
+
+		lconfig_free_iface_config(&conf);
 	}
 }
-
-
 
 /********************************/
 /* End of Interface information */
@@ -1076,15 +1037,21 @@ void lconfig_interfaces_dump(FILE *out)
 /**
  * lconfig_write_config 	Write all configuration to file
  *
- * All router configuration is written to open file descriptor f
+ * All router configuration is written to filename
  *
  * @param f: Open file descriptor
  * @param cish_cfg: Cish configuration struct
  *
  * @ret void
  */
-void lconfig_write_config(FILE *f, cish_config *cish_cfg)
+int lconfig_write_config(char *filename, cish_config *cish_cfg)
 {
+	FILE * f;
+
+	f = fopen(filename, "wt");
+	if (!f)
+		return -1;
+
 	fprintf(f, "!\n");
 	lconfig_dump_version(f, cish_cfg);
 	lconfig_dump_terminal(f, cish_cfg);
@@ -1136,4 +1103,59 @@ void lconfig_write_config(FILE *f, cish_config *cish_cfg)
 #ifdef OPTION_IPSEC
 	lconfig_crypto_dump(f);
 #endif
+
+	fclose(f);
+}
+
+static int set_default_cfg(void)
+{
+	FILE *f;
+	cish_config cfg;
+
+	memset(&cfg, 0, sizeof(cfg));
+	f = fopen(CISH_CFG_FILE, "wb");
+	if (!f) {
+		pr_error(1, "Can't write configuration");
+		return (-1);
+	}
+	fwrite(&cfg, sizeof(cish_config), 1, f);
+	fclose(f);
+	return 0;
+}
+
+static int check_cfg(void)
+{
+	struct stat st;
+
+	if (stat(CISH_CFG_FILE, &st))
+		return set_default_cfg();
+	return 0;
+}
+
+cish_config* lconfig_mmap_cfg(void)
+{
+	int fd;
+	cish_config *cish_cfg = NULL;
+
+	check_cfg();
+
+	if ((fd = open(CISH_CFG_FILE, O_RDWR)) < 0) {
+		pr_error(1, "Could not open configuration");
+		return NULL;
+	}
+	cish_cfg = mmap(NULL, sizeof(cish_config), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+
+	if (cish_cfg == ((void *) -1)) {
+		pr_error(1, "Could not open configuration");
+		return NULL;
+	}
+	close(fd);
+
+	recover_debug_all(); /* debug persistent */
+	return cish_cfg;
+}
+
+int lconfig_munmap_cfg(cish_config *cish_cfg)
+{
+	return (munmap(cish_cfg, sizeof(cish_config)) < 0);
 }

@@ -27,11 +27,19 @@
 #define TFTP_CFG_FILE			"/var/run/tmp-tftp-cfg"
 #define TMP_TFTP_OUTPUT_FILE		"/var/run/tmp-tftp-output"
 #define FILE_TMP_QOS_DOWN		"/var/run/tmp.qos.down"
+
+/* QoS Files */
 #define FILE_QOS_SCRIPT			"/var/run/qos.%s.up"
 #define FILE_QOS_CFG			"/var/run/qos.%s.cfg"
 #define FILE_FRTS_CFG			"/var/run/frts.%s.cfg"
+
+/* PAM Files */
 #define FILE_PAM_GENERIC		"/etc/pam.d/generic_daemon"
 #define FILE_PAM_SPPP			"/etc/pam.d/spppd"
+#define FILE_PAM_WEB			"/etc/pam.d/web"
+#define FILE_PAM_PPP			"/etc/pam.d/ppp"
+
+
 #define FT_TMP_CFG_FILE			"/var/run/ft-tmp-cfg"
 #define FILE_PHY_0_CFG			"/var/run/phy_0_cfg"
 #define FILE_PHY_1_CFG			"/var/run/phy_1_cfg"
@@ -41,6 +49,7 @@
 #define FILE_PAM_ENABLE			"/etc/pam.d/enable"
 #define	FILE_ARG_LIST			"/var/run/file_arg_list"
 #define FILE_SSH_KNOWN_HOSTS		"/var/run/.ssh/known_hosts"
+
 /* CRYPTO defines */
 #define IPSEC_OPTION	/* enable IPSEC */
 #define CMDS_BEF_LIST	1
@@ -116,8 +125,6 @@
 #define MOTHERBOARDINFO_TMP		"/var/run/motherinfo_tmp"
 #define MOTHERBOARD_INFO_FILE		"/var/run/motherboard_info"
 #define VAR_RUN_FILE_TMP		"/var/run/temp_XXXXXX"
-
-#define FILE_PAM_PPP			"/etc/pam.d/ppp"
 
 /* New QoS */
 #define POLICY_CONFIG_FILE "/var/run/%s.policy"
