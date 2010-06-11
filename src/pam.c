@@ -69,6 +69,11 @@ static int pam_null_conv(int n,
  * This function is called by the PAM module responsible
  * for the authentication.
  *
+ * @param num_msg
+ * @param msgm
+ * @param response
+ * @param appdata_ptr
+ * @return
  */
 static int web_conv(int num_msg, const struct pam_message **msgm,
 	      struct pam_response **response, void *appdata_ptr)
@@ -117,14 +122,13 @@ static int web_conv(int num_msg, const struct pam_message **msgm,
 	return PAM_SUCCESS;
 }
 
-/**  pam_web_authenticate
+/**  	pam_web_authenticate
  *
- *  Authenticate a user via PAM methods
+ * 	Authenticate a user via PAM methods
  *
- *  @login: String with user's name
- *  @program: String with the program's name.
- *
- *  @ret AUTH_OK if success, AUTH_NOK if fail to authenticate
+ * 	@param user String with user's name
+ * 	@param pass String with the user's password
+ * 	@return AUTH_OK if success, AUTH_NOK if fail to authenticate
  */
 int pam_web_authenticate(char *user, char *pass)
 {
