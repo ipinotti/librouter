@@ -1037,15 +1037,21 @@ void lconfig_interfaces_dump(FILE *out)
 /**
  * lconfig_write_config 	Write all configuration to file
  *
- * All router configuration is written to open file descriptor f
+ * All router configuration is written to filename
  *
  * @param f: Open file descriptor
  * @param cish_cfg: Cish configuration struct
  *
  * @ret void
  */
-void lconfig_write_config(FILE *f, cish_config *cish_cfg)
+int lconfig_write_config(char *filename, cish_config *cish_cfg)
 {
+	FILE * f;
+
+	f = fopen(filename, "wt");
+	if (!f)
+		return -1;
+
 	fprintf(f, "!\n");
 	lconfig_dump_version(f, cish_cfg);
 	lconfig_dump_terminal(f, cish_cfg);
@@ -1097,6 +1103,8 @@ void lconfig_write_config(FILE *f, cish_config *cish_cfg)
 #ifdef OPTION_IPSEC
 	lconfig_crypto_dump(f);
 #endif
+
+	fclose(f);
 }
 
 static int set_default_cfg(void)
@@ -1135,8 +1143,7 @@ cish_config* lconfig_mmap_cfg(void)
 		pr_error(1, "Could not open configuration");
 		return NULL;
 	}
-	cish_cfg = mmap(NULL, sizeof(cish_config), PROT_READ | PROT_WRITE,
-	                MAP_SHARED, fd, 0);
+	cish_cfg = mmap(NULL, sizeof(cish_config), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
 	if (cish_cfg == ((void *) -1)) {
 		pr_error(1, "Could not open configuration");

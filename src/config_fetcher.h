@@ -30,5 +30,5 @@ void dump_rip_interface(FILE *out, char *intf);
 
 void lconfig_dump_routing(FILE *f);
 
-void lconfig_write_config(FILE *f, cish_config *cish_cfg);
+int lconfig_write_config(char *filename, cish_config *cish_cfg);
 #endif
