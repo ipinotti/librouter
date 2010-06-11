@@ -8,6 +8,9 @@
 #ifndef CONFIG_FETCHER_H_
 #define CONFIG_FETCHER_H_
 
+cish_config *lconfig_mmap_cfg(void);
+int lconfig_munmap_cfg(cish_config *cish_cfg);
+
 void lconfig_dump_version(FILE *f, cish_config *cish_cfg);
 void lconfig_dump_terminal(FILE *f, cish_config *cish_cfg);
 void lconfig_dump_secret(FILE *f, cish_config *cish_cfg);
