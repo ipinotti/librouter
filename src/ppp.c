@@ -164,7 +164,6 @@ void ppp_set_defaults (int serial_no, ppp_config *cfg)
 	modem3g_get_username(cfg->auth_user, serial_no);
 	modem3g_get_password(cfg->auth_pass, serial_no);
 
-	//printf("pppd running number %d\n\n", ppp_is_pppd_running(serial_no));
 	cfg->up = ppp_is_pppd_running(serial_no);
 	cfg->ip_unnumbered = -1;
 

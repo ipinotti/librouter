@@ -95,7 +95,9 @@ int lusb_get_descriptor (lusb_dev * usb){
 				fprintf(stderr, "Failed to get device descriptor\n");
 				return;
 		}
-		if ((lusb_check_usb_connected(usb->port)) && (desc.idVendor != IDVENDOR_LINUX_HUB)){
+		//printf("\nlusb check usb %d on port %d\n\n", lusb_check_usb_connected(usb->port), usb->port); //FIXME
+
+		if ((lusb_check_usb_connected(usb->port) == 1) && (desc.idVendor != IDVENDOR_LINUX_HUB)){
 			err = libusb_open(dev,&handle);
 
 			if (err < 0) {

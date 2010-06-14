@@ -10,7 +10,7 @@
 
 #define MAX_BRIDGE  1 /* Se alterar este valor alterar tambem as strings "1-1" nos comandos relacionados a bridge */
 /* Teste do modelo... */
-#define MAX_WAN_INTF 2 /* Numero de interfaces WAN (UCC HDLC Fast Mode) */
+#define MAX_WAN_INTF 2 /* Numero de interfaces WAN (UCC HDLC Fast Mode)  */
 #define MAX_AUX_INTF 2 /* Numero de interfaces AUX (UART) */
 #define MAX_LAN_INTF 2 /* Numero de interfaces LAN (UCC Fast Ethernet Mode) */
 
