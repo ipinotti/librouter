@@ -29,14 +29,16 @@
 #define OPTION_SMCROUTE
 #undef OPTION_VRRP
 #define OPTION_HTTP
+#define OPTION_HTTPS
 
 /* HTTP Server */
 #define HTTP_DAEMON		"wnsd"
+#define HTTPS_DAEMON		"wnsslsd"
 #define SSH_DAEMON		"sshd"
-#define TELNET_DAEMON	"telnetd"
+#define TELNET_DAEMON		"telnetd"
 #define FTP_DAEMON		"ftpd"
-#define PIMS_DAEMON 	"pimsd"
-#define PIMD_DAEMON 	"pimdd"
+#define PIMS_DAEMON 		"pimsd"
+#define PIMD_DAEMON 		"pimdd"
 #define SMC_DAEMON 		"smcroute"
 
 #endif

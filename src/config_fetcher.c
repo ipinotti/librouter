@@ -628,6 +628,9 @@ void lconfig_ip_dump_servers(FILE *out)
 #ifdef OPTION_HTTP
 	fprintf(out, "%sip http server\n", is_daemon_running(HTTP_DAEMON) ? "" : "no ");
 #endif
+#ifdef OPTION_HTTPS
+	fprintf(out, "%sip https server\n", is_daemon_running(HTTPS_DAEMON) ? "" : "no ");
+#endif
 #ifdef OPTION_PIMD
 	lconfig_pim_dump(out);
 #endif
