@@ -20,5 +20,7 @@ typedef struct {
 
 int lusb_check_usb_connected (int port);
 int lusb_get_descriptor (lusb_dev * usb);
+int lusb_check_usb_ttyUSB (int port);
+
 
 #endif /* USB_H_ */

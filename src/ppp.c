@@ -168,8 +168,9 @@ void ppp_set_defaults (int serial_no, ppp_config *cfg)
 	cfg->ip_unnumbered = -1;
 
 
-//	cfg->backup = -1;
-//	cfg->novj = 1;
+/*	cfg->backup = -1;
+	cfg->novj = 1;
+*/
 }
 /*
  ABORT "NO CARRIER"
