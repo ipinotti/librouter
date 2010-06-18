@@ -32,9 +32,11 @@ libconfig_la_SOURCES = \
 	ppcio.c \
 	ppp.c \
 	process.c \
+	ps.c \
 	qos.c \
 	quagga.c \
 	config_fetcher.c \
+	sha1.c \
 	smcroute.c \
 	snmp.c \
 	ssh.c \
@@ -92,9 +94,11 @@ libconfig_la_HEADERS = \
 	ppcio.h \
 	ppp.h \
 	process.h \
+	ps.h \
 	qos.h \
 	quagga.h \
 	config_fetcher.h \
+	sha1.h \
 	shm.h \
 	smcroute.h \
 	snmp.h \
