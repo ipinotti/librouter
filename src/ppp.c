@@ -111,10 +111,12 @@ int ppp_get_config (int serial_no, ppp_config *cfg)
 	f = fopen (file, "rb");
 	if (!f) {
 		ppp_set_defaults (serial_no, cfg);
-	} else {
+	}
+	else {
 		fread (cfg, sizeof(ppp_config), 1, f);
 		fclose (f);
 	}
+
 	return 0;
 }
 
@@ -142,7 +144,7 @@ int ppp_set_config (int serial_no, ppp_config *cfg)
 	if (!f)
 		return -1;
 
-	snprintf (cfg->osdevice, 16, "ttyS%d", serial_no);
+	snprintf (cfg->osdevice, 16, "ttyU%d", serial_no);
 
 	fwrite (cfg, sizeof(ppp_config), 1, f);
 	fclose (f);
@@ -151,7 +153,9 @@ int ppp_set_config (int serial_no, ppp_config *cfg)
 
 void ppp_set_defaults (int serial_no, ppp_config *cfg)
 {
-	int i=0, length=0;
+	int cfg_back=0;
+
+	cfg_back = cfg->up; //FIXME
 
 	/* Clean memory! */
 	memset (cfg, 0, sizeof(ppp_config));
@@ -164,11 +168,12 @@ void ppp_set_defaults (int serial_no, ppp_config *cfg)
 	modem3g_get_username(cfg->auth_user, serial_no);
 	modem3g_get_password(cfg->auth_pass, serial_no);
 
-	cfg->up = ppp_is_pppd_running(serial_no);
 	cfg->ip_unnumbered = -1;
 
+	cfg->up = cfg_back; //FIXME
 
-/*	cfg->backup = -1;
+/*	cfg->up = ppp_is_pppd_running(serial_no);  //FIXME
+	cfg->backup = -1;
 	cfg->novj = 1;
 */
 }
