@@ -45,9 +45,9 @@ int lusb_check_usb_connected (int port){
 	char port_usb_num[2];
 	int result=0;
 	char buff_addr[sizeof(ADDR_USB)];
-
 	sprintf (buff_addr, ADDR_USB, HUB_PORT, port);
-	target = opendir(buff_addr);
+
+	target = (struct DIR *)opendir(buff_addr);
 
 	if (target == NULL)
 		result = -1;
@@ -84,7 +84,7 @@ int lusb_check_usb_ttyUSB (int port){
 	for (i=0;i<15;i++){
 		sprintf (buff_addr, ADDR_PORT_USB, HUB_PORT, port, HUB_PORT, port, i);
 
-		target = opendir(buff_addr);
+		target = (struct DIR *)opendir(buff_addr);
 
 		if (target != NULL){
 			result = 1;
