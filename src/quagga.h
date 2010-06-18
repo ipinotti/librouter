@@ -1,3 +1,13 @@
+/*
+ * quagga.h
+ *
+ *  Created on: Jun 16, 2010
+ *      Author: Thomás Alimena Del Grande (tgrande@pd3.com.br)
+ */
+
+#ifndef QUAGGA_H_
+#define QUAGGA_H_
+
 /* UNIX domain socket path. */
 #define ZEBRA_PID "/var/quagga/zebra.pid"
 #define ZEBRA_PATH "/var/quagga/zebra.vty"
@@ -50,4 +60,23 @@ void zebra_dump_static_routes_conf(FILE *out);
 FILE *rip_get_conf(int main_ninterf, char *intf);
 FILE *ospf_get_conf(int main_ninterf, char *intf);
 
+/* Higher level of route abstration */
 
+struct routes_t {
+	char *network;
+	char *mask;
+	char *interface;
+	char *gateway;
+	int metric;
+	char *hash;
+	struct routes_t *next;
+};
+
+#define CGI_TMP_FILE 	"/tmp/cgi_tmp"
+
+int lconfig_add_route(struct routes_t *route);
+void lconfig_free_routes(struct routes_t *route);
+int lconfig_del_route(char *hash);
+struct routes_t * lconfig_get_routes(void);
+
+#endif /* QUAGGA_H_ */

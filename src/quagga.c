@@ -13,7 +13,7 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 #include <signal.h>
-
+#include <syslog.h>
 #include <linux/config.h>
 
 #include "options.h"
@@ -23,6 +23,8 @@
 #include "process.h"
 #include "quagga.h"
 #include "str.h"
+#include "args.h"
+#include "sha1.h"
 
 static int fd_daemon;
 
@@ -776,4 +778,207 @@ FILE *ospf_get_conf(int main_ninterf, char *intf)
 }
 
 
+/* Higher level of abstraction functions - 18/06/2010 */
 
+/**
+ * lconfig_get_routes
+ *
+ * Get routes from system and return a linked
+ * list of struct routes_t
+ *
+ * @return
+ */
+struct routes_t * lconfig_get_routes(void)
+{
+	FILE *f;
+	char buf[256];
+	struct routes_t *route = NULL;
+	struct routes_t *cur = NULL, *next = NULL;
+	char sha1[20];
+	sha_ctx hashctx;
+	int first = 1;
+
+	f = fopen(CGI_TMP_FILE, "wt");
+	if (f == NULL)
+		return NULL;
+
+	lconfig_dump_routing(f);
+	fclose(f);
+
+	f = fopen(CGI_TMP_FILE, "r");
+	if (f == NULL)
+		return NULL;
+
+	while (fgets(buf, sizeof(buf), f)) {
+		arglist *args = make_args(buf);
+
+		/* At least 5 arguments */
+		if (args->argc < 5)
+			break;
+
+		next = malloc(sizeof(struct routes_t));
+
+		if (next == NULL) {
+			syslog(LOG_ERR, " Not enough space to store route information\n");
+			return NULL;
+		}
+
+		memset(next, 0, sizeof(struct routes_t));
+
+		if (first) {
+			route = cur = next;
+			first = 0;
+		} else {
+			cur->next = next;
+			cur = next;
+		}
+
+		cur->network = strdup(args->argv[2]);
+		cur->mask = strdup(args->argv[3]);
+		if (isdigit(args->argv[4][0])) {
+			cur->gateway = strdup(args->argv[4]);
+		} else {
+			cur->interface = malloc(32);
+			sprintf(cur->interface, "%s %s", args->argv[4], args->argv[5]);
+		}
+
+		if (cur->gateway && args->argc == 6)
+			cur->metric = atoi(args->argv[5]);
+		else if (cur->interface && args->argc == 7)
+			cur->metric = atoi(args->argv[6]);
+
+		/* Unique route identifier */
+		sha1_init(&hashctx);
+		sha1_update(&hashctx, (unsigned char *) cur->network, strlen(cur->network));
+		sha1_update(&hashctx, (unsigned char *) cur->mask, strlen(cur->mask));
+		if (cur->gateway)
+			sha1_update(&hashctx, (unsigned char *) cur->gateway, strlen(cur->gateway));
+		if (cur->interface)
+			sha1_update(&hashctx, (unsigned char *) cur->interface, strlen(
+			                cur->interface));
+		sha1_final((unsigned char *) sha1, &hashctx);
+
+		cur->hash = strdup(sha1_to_hex((unsigned char *) sha1));
+
+	}
+
+	fclose(f);
+
+	return route;
+}
+
+/**
+ * lconfig_free_routes
+ *
+ * Free a linked list of struct routes_t
+ *
+ * @param route
+ */
+void lconfig_free_routes(struct routes_t *route)
+{
+	struct routes_t *next;
+
+	while (route != NULL) {
+		if (route->network)
+			free(route->network);
+
+		if (route->mask)
+			free(route->mask);
+
+		if (route->interface)
+			free(route->interface);
+
+		if (route->gateway)
+			free(route->gateway);
+
+		if (route->hash)
+			free(route->hash);
+
+		next = route->next;
+		free(route);
+		route = next;
+	}
+}
+
+/**
+ * lconfig_add_route
+ *
+ * Apply route to system from received structure
+ *
+ * @param route
+ * @return 0 if success, -1 otherwise
+ */
+int lconfig_add_route(struct routes_t *route)
+{
+	char buf_daemon[256];
+	char zebra_cmd[256];
+
+	if (daemon_connect(ZEBRA_PATH) < 0)
+		return -1;
+
+	sprintf(zebra_cmd, "ip route %s %s %s", route->network, route->mask, route->gateway);
+
+	daemon_client_execute("enable", stdout, buf_daemon, 0);
+	daemon_client_execute("configure terminal", stdout, buf_daemon, 0);
+	daemon_client_execute(zebra_cmd, stdout, buf_daemon, 0);
+	daemon_client_execute("write file", stdout, buf_daemon, 0);
+
+	fd_daemon_close();
+
+	return 0;
+}
+
+/**
+ * __del_route
+ *
+ * Delete route from system
+ *
+ * @param route
+ */
+static void __del_route(struct routes_t *route)
+{
+	char buf_daemon[256];
+	char zebra_cmd[256];
+
+	if (daemon_connect(ZEBRA_PATH) < 0)
+		return;
+
+	sprintf(zebra_cmd, "no ip route %s %s %s", route->network, route->mask, route->gateway);
+
+	daemon_client_execute("enable", stdout, buf_daemon, 0);
+	daemon_client_execute("configure terminal", stdout, buf_daemon, 0);
+	daemon_client_execute(zebra_cmd, stdout, buf_daemon, 0);
+	daemon_client_execute("write file", stdout, buf_daemon, 0);
+
+	fd_daemon_close();
+}
+
+/**
+ * lconfig_del_route
+ *
+ * Exported function to deleted a route from system.
+ * Receives the hash as a function, used by the web
+ * configurator for now.
+ *
+ * @param hash
+ * @return
+ */
+int lconfig_del_route(char *hash)
+{
+	struct routes_t *route, *next;
+
+	next = route = lconfig_get_routes();
+	if (route == NULL)
+		return 0;
+
+	while(next) {
+		if (!strcmp(hash, next->hash)) {
+			__del_route(next);
+			break;
+		}
+		next = next->next;
+	}
+
+	lconfig_free_routes(route);
+	return 0;
+}
