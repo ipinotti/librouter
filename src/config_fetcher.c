@@ -74,7 +74,7 @@ static int get_procip_val(const char *parm)
 /***********************/
 void lconfig_dump_version(FILE *f, cish_config *cish_cfg)
 {
-	fprintf(f, "version %s\n", get_system_version());
+	fprintf(f, "version %s\n", libconfig_get_system_version());
 	fprintf(f, "!\n");
 }
 
