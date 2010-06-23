@@ -627,7 +627,7 @@ void set_ethernet_ip_addr (char *ifname, char *addr, char *mask) /* main etherne
 	ip_addr_add (dev, addr, NULL, mask); /* new address */
 
 	if (strcmp (dev, "ethernet0") == 0)
-		reload_udhcpd (0); /* udhcpd integration! */
+		libconfig_udhcpd_reload (0); /* udhcpd integration! */
 }
 
 void set_ethernet_ip_addr_secondary (char *ifname, char *addr, char *mask)

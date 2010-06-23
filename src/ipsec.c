@@ -1194,8 +1194,8 @@ void lconfig_crypto_dump(FILE *out)
 		}
 	}
 	/* l2tp settings! */
-	if (get_dhcp_local() == DHCP_SERVER) {
-		if (get_dhcp_server_local(buf) == 0) {
+	if (libconfig_dhcp_get_local() == DHCP_SERVER) {
+		if (libconfig_dhcp_get_server_local(buf) == 0) {
 			fprintf(out, " %s\n", buf);
 		}
 	} else

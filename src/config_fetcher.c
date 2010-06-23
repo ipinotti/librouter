@@ -604,14 +604,14 @@ void lconfig_ip_dump_servers(FILE *out)
 	char buf[2048];
 	int dhcp;
 
-	dhcp = get_dhcp();
+	dhcp = libconfig_dhcp_get_status();
 	if (dhcp == DHCP_SERVER) {
-		if (get_dhcp_server(buf) == 0) {
+		if (libconfig_dhcp_get_server(buf) == 0) {
 			fprintf(out, "%s\n", buf);
 			fprintf(out, "no ip dhcp relay\n");
 		}
 	} else if (dhcp == DHCP_RELAY) {
-		if (get_dhcp_relay(buf) == 0) {
+		if (libconfig_dhcp_get_relay(buf) == 0) {
 			fprintf(out, "no ip dhcp server\n");
 			fprintf(out, "ip dhcp relay %s\n", buf);
 		}
