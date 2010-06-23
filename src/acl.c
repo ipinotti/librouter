@@ -15,7 +15,7 @@
 //#define DEBUG_CMD(x) syslog(LOG_DEBUG, "%s\n", x)
 #define DEBUG_CMD(x)
 
-void acl_create_new(char *name)
+void libconfig_acl_create_new(char *name)
 {
 	char cmd[64];
 
@@ -28,7 +28,7 @@ void acl_create_new(char *name)
  * \param acl: structure with acl configuration
  * \return void
  */
-void acl_apply(struct acl_config *acl)
+void libconfig_acl_apply(struct acl_config *acl)
 {
 	char cmd[256];
 	FILE *f;
@@ -154,7 +154,7 @@ void acl_apply(struct acl_config *acl)
 
 	/* Check if we already have this rule */
 	if ((f = fopen (TMP_CFG_FILE, "w+"))) {
-		lconfig_acl_dump (0, f, 1);
+		libconfig_acl_dump (0, f, 1);
 		fseek (f, 0, SEEK_SET);
 
 		/* Parse through all existing rules */
@@ -175,7 +175,7 @@ void acl_apply(struct acl_config *acl)
 	}
 }
 
-void acl_set_ports (const char *ports, char *str)
+void libconfig_acl_set_ports (const char *ports, char *str)
 {
 	char *p;
 
@@ -202,7 +202,7 @@ void acl_set_ports (const char *ports, char *str)
 	}
 }
 
-void acl_print_flags (FILE *out, char *flags)
+void libconfig_acl_print_flags (FILE *out, char *flags)
 {
 	char flags_ascii[6][4] = { "FIN", "SYN", "RST", "PSH", "ACK", "URG" };
 	int i, print;
@@ -222,7 +222,7 @@ void acl_print_flags (FILE *out, char *flags)
 	}
 }
 
-static void acl_print_rule (const char *action,
+static void _libconfig_acl_print_rule (const char *action,
                         const char *proto,
                         const char *src,
                         const char *dst,
@@ -253,8 +253,8 @@ static void acl_print_rule (const char *action,
 	dst_ports[0] = 0;
 	src_netmask = extract_mask (_src);
 	dst_netmask = extract_mask (_dst);
-	acl_set_ports (sports, src_ports);
-	acl_set_ports (dports, dst_ports);
+	libconfig_acl_set_ports (sports, src_ports);
+	libconfig_acl_set_ports (dports, dst_ports);
 
 	if (conf_format)
 		fprintf (out, "access-list ");
@@ -317,10 +317,10 @@ static void acl_print_rule (const char *action,
 			t = strtok (flags, "/");
 			if (t != NULL) {
 				fprintf (out, "flags ");
-				acl_print_flags (out, t);
+				libconfig_acl_print_flags (out, t);
 				fprintf (out, "/");
 				t = strtok (NULL, "/");
-				acl_print_flags (out, t);
+				libconfig_acl_print_flags (out, t);
 				fprintf (out, " ");
 			}
 		} else
@@ -341,7 +341,7 @@ static void acl_print_rule (const char *action,
 	fprintf (out, "\n");
 }
 
-void lconfig_acl_dump (char *xacl, FILE *F, int conf_format)
+void libconfig_acl_dump (char *xacl, FILE *F, int conf_format)
 {
 	FILE *ipc;
 	char buf[512];
@@ -497,7 +497,7 @@ void lconfig_acl_dump (char *xacl, FILE *F, int conf_format)
 							while (*mcount == ' ')
 								++mcount;
 						}
-						acl_print_rule (type, prot, source,
+						_libconfig_acl_print_rule (type, prot, source,
 						                dest, sports,
 						                dports, acl, F,
 						                conf_format,
@@ -540,7 +540,7 @@ void lconfig_acl_dump (char *xacl, FILE *F, int conf_format)
 	pclose (ipc);
 }
 
-void lconfig_acl_dump_policy (FILE *F)
+void libconfig_acl_dump_policy (FILE *F)
 {
 	FILE *ipc;
 	char buf[512];
@@ -578,7 +578,7 @@ void lconfig_acl_dump_policy (FILE *F)
 	pclose (ipc);
 }
 
-int acl_exists (char *acl)
+int libconfig_acl_exists (char *acl)
 {
 	FILE *f;
 	char *tmp, buf[256];
@@ -611,7 +611,7 @@ int acl_exists (char *acl)
 	return acl_exists;
 }
 
-int acl_matched_exists (char *acl, char *iface_in, char *iface_out, char *chain)
+int libconfig_acl_matched_exists (char *acl, char *iface_in, char *iface_out, char *chain)
 {
 	FILE *F;
 	char *tmp, buf[256];
@@ -676,7 +676,7 @@ int acl_matched_exists (char *acl, char *iface_in, char *iface_out, char *chain)
 	return acl_exists;
 }
 
-int lconfig_acl_get_iface_rules (char *iface, char *in_acl, char *out_acl)
+int libconfig_acl_get_iface_rules (char *iface, char *in_acl, char *out_acl)
 {
 	typedef enum {
 		chain_fwd, chain_in, chain_out, chain_other
@@ -751,7 +751,7 @@ int lconfig_acl_get_iface_rules (char *iface, char *in_acl, char *out_acl)
 	return 0;
 }
 
-int acl_get_refcount (char *acl)
+int libconfig_acl_get_refcount (char *acl)
 {
 	FILE *F;
 	char *tmp;
@@ -787,7 +787,7 @@ int acl_get_refcount (char *acl)
 	return 0;
 }
 
-int acl_clean_iface_acls (char *iface)
+int libconfig_acl_clean_iface_acls (char *iface)
 {
 	FILE *F;
 	char buf[256];
@@ -866,7 +866,7 @@ int acl_clean_iface_acls (char *iface)
 }
 
 /* #ifdef OPTION_IPSEC Starter deve fazer uso de #ifdef */
-int acl_copy_iface_acls (char *src, char *trg) /* starter/interfaces.c */
+int libconfig_acl_copy_iface_acls (char *src, char *trg) /* starter/interfaces.c */
 {
 	FILE *F;
 	char buf[256];
@@ -947,7 +947,7 @@ int acl_copy_iface_acls (char *src, char *trg) /* starter/interfaces.c */
 }
 
 #ifdef OPTION_IPSEC
-int acl_interface_ipsec(int add_del, int chain, char *dev, char *listno)
+int libconfig_acl_interface_ipsec(int add_del, int chain, char *dev, char *listno)
 {
 	int i;
 	char filename[32], ipsec[16], iface[16], buf[256];
@@ -992,13 +992,13 @@ int acl_interface_ipsec(int add_del, int chain, char *dev, char *listno)
 				{
 					if ((chain == chain_in) || (chain == chain_both))
 					{
-						if (acl_matched_exists(listno, ipsec, 0, "INPUT"))
+						if (libconfig_acl_matched_exists(listno, ipsec, 0, "INPUT"))
 						{
 							snprintf(buf, 256, "/bin/iptables -D INPUT -i %s -j %s", ipsec, listno);
 							DEBUG_CMD(buf);
 							system(buf);
 						}
-						if (acl_matched_exists(listno, ipsec, 0, "FORWARD"))
+						if (libconfig_acl_matched_exists(listno, ipsec, 0, "FORWARD"))
 						{
 							snprintf(buf, 256, "/bin/iptables -D FORWARD -i %s -j %s", ipsec, listno);
 							DEBUG_CMD(buf);
@@ -1007,13 +1007,13 @@ int acl_interface_ipsec(int add_del, int chain, char *dev, char *listno)
 					}
 					if ((chain == chain_out) || (chain == chain_both))
 					{
-						if (acl_matched_exists(listno, 0, ipsec, "OUTPUT"))
+						if (libconfig_acl_matched_exists(listno, 0, ipsec, "OUTPUT"))
 						{
 							snprintf(buf, 256, "/bin/iptables -D OUTPUT -o %s -j %s", ipsec, listno);
 							DEBUG_CMD(buf);
 							system(buf);
 						}
-						if (acl_matched_exists(listno, 0, ipsec, "FORWARD"))
+						if (libconfig_acl_matched_exists(listno, 0, ipsec, "FORWARD"))
 						{
 							snprintf(buf, 256, "/bin/iptables -D FORWARD -o %s -j %s", ipsec, listno);
 							DEBUG_CMD(buf);
@@ -1032,7 +1032,7 @@ int acl_interface_ipsec(int add_del, int chain, char *dev, char *listno)
 
 int delete_module (const char *name); /* libbb ? */
 
-void acl_cleanup_modules (void)
+void libconfig_acl_cleanup_modules (void)
 {
 	delete_module (NULL); /* clean unused modules! */
 }

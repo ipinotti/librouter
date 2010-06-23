@@ -922,7 +922,7 @@ static void dump_interface_config(FILE *out, struct interface_conf *conf)
 
 	/* Get iptables config */
 	memset(&ipt, 0, sizeof(struct iptables_t));
-	lconfig_acl_get_iface_rules(conf->name, ipt.in_acl, ipt.out_acl);
+	libconfig_acl_get_iface_rules(conf->name, ipt.in_acl, ipt.out_acl);
 	lconfig_mangle_get_iface_rules(conf->name, ipt.in_mangle, ipt.out_mangle);
 	lconfig_nat_get_iface_rules(conf->name, ipt.in_nat, ipt.out_nat);
 
@@ -1076,8 +1076,8 @@ int lconfig_write_config(char *filename, cish_config *cish_cfg)
 	lconfig_dump_chatscripts(f);
 
 	/* iptables */
-	lconfig_acl_dump_policy(f);
-	lconfig_acl_dump(0, f, 1);
+	libconfig_acl_dump_policy(f);
+	libconfig_acl_dump(0, f, 1);
 	lconfig_nat_dump(0, f, 1);
 	lconfig_mangle_dump(0, f, 1);
 

@@ -47,8 +47,8 @@ static void print_nat_rule(const char *action,
 	dst_ports[0] = 0;
 	src_netmask = extract_mask(_src);
 	dst_netmask = extract_mask(_dst);
-	acl_set_ports(sports, src_ports);
-	acl_set_ports(dports, dst_ports);
+	libconfig_acl_set_ports(sports, src_ports);
+	libconfig_acl_set_ports(dports, dst_ports);
 	if (conf_format)
 		fprintf(out, "nat-rule ");
 	if (conf_format)
