@@ -626,7 +626,7 @@ FILE * lconfig_quagga_get_conf(char *filename, char *key)
 	while (!feof(f)) {
 		fgets(buf, 1024, f);
 		len = strlen(buf);
-		striplf(buf);
+		libconfig_str_striplf(buf);
 		if (strncmp(buf, key, strlen(key)) == 0) {
 			found = 1;
 			fseek(f, -len, SEEK_CUR);
@@ -727,7 +727,7 @@ void zebra_dump_static_routes_conf(FILE *out)
 		fgets(buf, 1024, f);
 		if (buf[0] == '!')
 			break;
-		striplf(buf);
+		libconfig_str_striplf(buf);
 		fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(
 		                libconfig_zebra_to_linux_cmdline(buf)));
 	}

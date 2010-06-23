@@ -929,6 +929,6 @@ int libconfig_exec_change_init_option(int add_del, char *prog, char *option)
 	libconfig_destroy_args_din(&argl2);
 	new_line[strlen(new_line) - 1] = (strchr(buf, '\n') != NULL) ? '\n' : 0;
 
-	return replace_exact_string(FILE_INITTAB, buf, new_line);
+	return libconfig_str_replace_exact_string(FILE_INITTAB, buf, new_line);
 }
 

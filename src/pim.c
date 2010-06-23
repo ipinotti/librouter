@@ -55,7 +55,7 @@ int pimdd_phyint(int add, char *dev)
 
 	if ((f = fopen(PIMD_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f) && lines < MAX_LINES) {
-			striplf(line);
+			libconfig_str_striplf(line);
 			if (strlen(line))
 				args[lines++] = libconfig_make_args(line);
 		}
@@ -104,7 +104,7 @@ int pimsd_phyint(int add, char *dev)
 
 	if ((f = fopen(PIMS_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f) && lines < MAX_LINES) {
-			striplf(line);
+			libconfig_str_striplf(line);
 			if (strlen(line))
 				args[lines++] = libconfig_make_args(line);
 		}
@@ -153,7 +153,7 @@ void pimsd_bsr_candidate(int add, char *dev, char *major, char *priority)
 
 	if ((f = fopen(PIMS_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f) && lines < MAX_LINES) {
-			striplf(line);
+			libconfig_str_striplf(line);
 			if (strlen(line)) {
 				args[lines] = libconfig_make_args(line);
 				if (!strcmp(args[lines]->argv[0], "cand_bootstrap_router"))
@@ -215,7 +215,7 @@ void pimsd_rp_address(int add, char *rp)
 
 	if ((f = fopen(PIMS_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f) && lines < MAX_LINES) {
-			striplf(line);
+			libconfig_str_striplf(line);
 			if (strlen(line)) {
 				args[lines] = libconfig_make_args(line);
 				if (!strcmp(args[lines]->argv[0], "rp_address"))
@@ -263,7 +263,7 @@ void pimsd_rp_candidate(int add, char *dev, char *major, char *priority, char *i
 
 	if ((f = fopen(PIMS_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f) && lines < MAX_LINES) {
-			striplf(line);
+			libconfig_str_striplf(line);
 			if (strlen(line)) {
 				args[lines] = libconfig_make_args(line);
 				if (!strcmp(args[lines]->argv[0], "cand_rp"))
@@ -328,7 +328,7 @@ void dump_pim_interface(FILE *out, char *ifname)
 
 	if ((f = fopen(PIMD_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f) && !found) {
-			striplf(line);
+			libconfig_str_striplf(line);
 			if (strlen(line)) {
 				args = libconfig_make_args(line);
 				if (!strcmp(args->argv[0], "phyint") && !strcmp(args->argv[1],
@@ -343,7 +343,7 @@ void dump_pim_interface(FILE *out, char *ifname)
 	}
 	if ((f = fopen(PIMS_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f) && !found) {
-			striplf(line);
+			libconfig_str_striplf(line);
 			if (strlen(line)) {
 				args = libconfig_make_args(line);
 				if (!strcmp(args->argv[0], "phyint") && !strcmp(args->argv[1],
@@ -366,7 +366,7 @@ void lconfig_pim_dump(FILE *out)
 
 	if ((f = fopen(PIMS_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f)) {
-			striplf(line);
+			libconfig_str_striplf(line);
 			if (strlen(line)) {
 				args = libconfig_make_args(line);
 				if (!strcmp(args->argv[0], "cand_bootstrap_router")) {
@@ -386,7 +386,7 @@ void lconfig_pim_dump(FILE *out)
 		}
 		rewind(f); /* Returns to beggining of file */
 		while (fgets(line, 200, f)) {
-			striplf(line);
+			libconfig_str_striplf(line);
 			if (strlen(line)) {
 				args = libconfig_make_args(line);
 				if (!strcmp(args->argv[0], "rp_address")) {
@@ -400,7 +400,7 @@ void lconfig_pim_dump(FILE *out)
 		}
 		rewind(f);
 		while (fgets(line, 200, f)) {
-			striplf(line);
+			libconfig_str_striplf(line);
 			if (strlen(line)) {
 				args = libconfig_make_args(line);
 				if (!strcmp(args->argv[0], "cand_rp")) {

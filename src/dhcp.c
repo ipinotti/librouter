@@ -485,7 +485,7 @@ int libconfig_dhcp_set_relay(char *servers)
 	if (libconfig_dhcp_set_none() < 0)
 		return (-1);
 
-	replace_string_in_file_nl("/etc/inittab", "/bin/dhcrelay -q -d", servers);
+	libconfig_str_replace_string_in_file("/etc/inittab", "/bin/dhcrelay -q -d", servers);
 
 	/* poe o dhcrelay para rodar */
 	return libconfig_exec_init_program(1, DHCRELAY_DAEMON);

@@ -363,7 +363,7 @@ int lconfig_mangle_get_iface_rules (char *iface, char *in_mangle, char *out_mang
 		buf[0] = 0;
 		fgets (buf, 255, F);
 		buf[255] = 0;
-		striplf (buf);
+		libconfig_str_striplf (buf);
 		if (strncmp (buf, "Chain ", 6) == 0) {
 			if (strncmp (buf + 6, "INPUT", 5) == 0)
 				chain = chain_in;

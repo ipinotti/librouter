@@ -33,24 +33,24 @@ oid objid_snmptrap[] = { 1, 3, 6, 1, 6, 3, 1, 1, 4, 1, 0 };
 
 int snmp_get_contact(char *buffer, int max_len)
 {
-	return find_string_in_file_nl(FILE_SNMPD_CONF, "syscontact", buffer,
+	return libconfig_str_find_string_in_file(FILE_SNMPD_CONF, "syscontact", buffer,
 	                max_len);
 }
 
 int snmp_get_location(char *buffer, int max_len)
 {
-	return find_string_in_file_nl(FILE_SNMPD_CONF, "syslocation", buffer,
+	return libconfig_str_find_string_in_file(FILE_SNMPD_CONF, "syslocation", buffer,
 	                max_len);
 }
 
 int snmp_set_contact(char *contact)
 {
-	return replace_string_in_file_nl(FILE_SNMPD_CONF, "syscontact", contact);
+	return libconfig_str_replace_string_in_file(FILE_SNMPD_CONF, "syscontact", contact);
 }
 
 int snmp_set_location(char *location)
 {
-	return replace_string_in_file_nl(FILE_SNMPD_CONF, "syslocation",
+	return libconfig_str_replace_string_in_file(FILE_SNMPD_CONF, "syslocation",
 	                location);
 }
 
@@ -130,7 +130,7 @@ int snmp_set_community(const char *community_name, int add_del, int ro)
 		if (fgets(buf, 1023, F) == NULL)
 			break;
 		buf[1023] = 0;
-		striplf(buf);
+		libconfig_str_striplf(buf);
 		if (strncmp(buf, ro ? "rocommunity" : "rwcommunity", 11) == 0) {
 			if (!strcmp(buf + 12, community_name)) /* don't copy ours */
 			{
@@ -167,7 +167,7 @@ int snmp_dump_communities(FILE *out)
 		if (fgets(buf, 1023, F) == NULL)
 			break;
 		buf[1023] = 0;
-		striplf(buf);
+		libconfig_str_striplf(buf);
 		if ((strncmp(buf, "rocommunity", 11) == 0) || (strncmp(buf,
 		                "rwcommunity", 11) == 0)) {
 			fprintf(out, "snmp-server community %s r%c\n",

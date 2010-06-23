@@ -608,7 +608,7 @@ int libconfig_acl_exists(char *acl)
 		buf[0] = 0;
 		fgets(buf, 255, f);
 		buf[255] = 0;
-		striplf(buf);
+		libconfig_str_striplf(buf);
 		if (strncmp(buf, "Chain ", 6) == 0) {
 			tmp = strchr(buf + 6, ' ');
 			if (tmp) {
@@ -650,7 +650,7 @@ int libconfig_acl_matched_exists(char *acl,
 		buf[0] = 0;
 		fgets(buf, 255, F);
 		buf[255] = 0;
-		striplf(buf);
+		libconfig_str_striplf(buf);
 
 		if (strncmp(buf, "Chain ", 6) == 0) {
 
@@ -734,7 +734,7 @@ int libconfig_acl_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 		buf[0] = 0;
 		fgets(buf, 255, F);
 		buf[255] = 0;
-		striplf(buf);
+		libconfig_str_striplf(buf);
 		if (strncmp(buf, "Chain ", 6) == 0) {
 			if (strncmp(buf + 6, "FORWARD", 7) == 0)
 				chain = chain_fwd;
@@ -805,7 +805,7 @@ int libconfig_acl_get_refcount(char *acl)
 		buf[0] = 0;
 		fgets(buf, 255, F);
 		buf[255] = 0;
-		striplf(buf);
+		libconfig_str_striplf(buf);
 		if (strncmp(buf, "Chain ", 6) == 0) {
 			tmp = strchr(buf + 6, ' ');
 			if (tmp) {
@@ -853,7 +853,7 @@ int libconfig_acl_clean_iface_acls(char *iface)
 		buf[0] = 0;
 		fgets(buf, 255, F);
 		buf[255] = 0;
-		striplf(buf);
+		libconfig_str_striplf(buf);
 		if (strncmp(buf, "Chain ", 6) == 0) {
 			p = strchr(buf + 6, ' ');
 
@@ -937,7 +937,7 @@ int libconfig_acl_copy_iface_acls(char *src, char *trg) /* starter/interfaces.c 
 		buf[0] = 0;
 		fgets(buf, 255, F);
 		buf[255] = 0;
-		striplf(buf);
+		libconfig_str_striplf(buf);
 		if (strncmp(buf, "Chain ", 6) == 0) {
 			p = strchr(buf + 6, ' ');
 
@@ -1009,7 +1009,7 @@ int libconfig_acl_interface_ipsec(int add_del,
 		if ((f = fopen(filename, "r")) != NULL) {
 			fgets(iface, 16, f);
 			fclose(f);
-			striplf(iface);
+			libconfig_str_striplf(iface);
 			if (strcmp(iface, dev) == 0) /* found ipsec attach to dev */
 			{
 				if (add_del) {

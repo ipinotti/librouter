@@ -221,7 +221,7 @@ static unsigned int _libconfig_dns_change_state(struct _entry_info *new_info)
 	}
 
 	strcat(line, "\n");
-	return ((replace_exact_string(FILE_RESOLVRELAYCONF, buf, line) < 0) ? 0 : 1);
+	return ((libconfig_str_replace_exact_string(FILE_RESOLVRELAYCONF, buf, line) < 0) ? 0 : 1);
 }
 
 /***************************************************************
@@ -292,7 +292,7 @@ static unsigned int _libconfig_dns_del_nameserver(char *nameserver)
 	if (!found)
 		return 0;
 
-	return ((replace_exact_string(FILE_RESOLVRELAYCONF, buf, "") < 0) ? 0 : 1);
+	return ((libconfig_str_replace_exact_string(FILE_RESOLVRELAYCONF, buf, "") < 0) ? 0 : 1);
 }
 
 /***************************************************************

@@ -49,7 +49,7 @@ int modem3g_get_apn (char * apn, int devcish)
 	snprintf(device,10,"%d",devcish);
 	strcat(file,device);
 
-	check = find_string_in_file_nl (file, key, apn, 100);
+	check = libconfig_str_find_string_in_file (file, key, apn, 100);
 	length = strlen(apn);
 
 	for (i = 1; i < (length-1); ++i)
@@ -88,7 +88,7 @@ int modem3g_set_apn (char * apn, int devcish)
 	snprintf(device,10,"%d",devcish);
 	strcat(file,device);
 
-	check = replace_string_in_file_nl (file, key, apn);
+	check = libconfig_str_replace_string_in_file (file, key, apn);
 
 	if (check == 0)
 		return 1;
@@ -118,7 +118,7 @@ int modem3g_get_username (char * username, int devcish)
 	snprintf(device,10,"%d",devcish);
 	strcat(file,device);
 
-	check = find_string_in_file_nl (file, key, username, 100);
+	check = libconfig_str_find_string_in_file (file, key, username, 100);
 
 	if (check == 0)
 		return 1;
@@ -150,7 +150,7 @@ int modem3g_set_username (char * username, int devcish)
 	snprintf(device,10,"%d",devcish);
 	strcat(file,device);
 
-	check = replace_string_in_file_nl (file, key, username);
+	check = libconfig_str_replace_string_in_file (file, key, username);
 
 	if (check == 0)
 		return 1;
@@ -180,7 +180,7 @@ int modem3g_get_password (char * password, int devcish)
 	snprintf(device,10,"%d",devcish);
 	strcat(file,device);
 
-	check = find_string_in_file_nl (file, key, password, 100);
+	check = libconfig_str_find_string_in_file (file, key, password, 100);
 
 	if (check == 0)
 		return 1;
@@ -211,7 +211,7 @@ int modem3g_set_password (char * password, int devcish)
 	snprintf(device,10,"%d",devcish);
 	strcat(file,device);
 
-	check = replace_string_in_file_nl (file, key, password);
+	check = libconfig_str_replace_string_in_file (file, key, password);
 
 	if (check == 0)
 		return 1;

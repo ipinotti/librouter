@@ -237,7 +237,7 @@ int get_ipsec_auth(char *ipsec_conn, char *buf)
 	char *p, filename[60];
 
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-	ret=find_string_in_file_nl(filename, STRING_IPSEC_AUTHBY, buf, MAX_CMD_LINE);
+	ret=libconfig_str_find_string_in_file(filename, STRING_IPSEC_AUTHBY, buf, MAX_CMD_LINE);
 	if (ret < 0) return ret;
 	if ((p=strstr(buf, "rsasig"))) return RSA;
 	else
@@ -321,7 +321,7 @@ int set_ipsec_rsakey(char *ipsec_conn, char *token, char *rsakey)
 	char filename[60];
 
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-	return replace_string_in_file_nl(filename, token, rsakey);
+	return libconfig_str_replace_string_in_file(filename, token, rsakey);
 }
 
 /*
@@ -358,7 +358,7 @@ int create_secrets_conn_file(char *name, int type, char *shared)
 		close(fd);
 		free(rsa);
 		/* copia a chave publica para o arquivo de configuracao da conexao */
-		if (find_string_in_file_nl(filename, "#pubkey", buf, MAX_KEY_SIZE) < 0) return -1;
+		if (libconfig_str_find_string_in_file(filename, "#pubkey", buf, MAX_KEY_SIZE) < 0) return -1;
 		if (set_ipsec_rsakey(name, STRING_IPSEC_L_RSAKEY, buf) < 0) return -1;
 	}
 	else
@@ -382,7 +382,7 @@ int set_ipsec_auth(char *ipsec_conn, int opt)
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
 	if (opt == RSA)	sprintf(buf, "rsasig");
 		else sprintf(buf, "secret");
-	return replace_string_in_file_nl(filename, STRING_IPSEC_AUTHBY, buf);
+	return libconfig_str_replace_string_in_file(filename, STRING_IPSEC_AUTHBY, buf);
 }
 
 int get_ipsec_link(char *ipsec_conn)
@@ -397,7 +397,7 @@ int get_ipsec_link(char *ipsec_conn)
 		libconfig_pr_error(0, "Could not get ipsec link");
 		return -1;
 	}
-	if ((ret=find_string_in_file_nl(filename, STRING_IPSEC_LINK, opt, 5)) < 0) return ret;
+	if ((ret=libconfig_str_find_string_in_file(filename, STRING_IPSEC_LINK, opt, 5)) < 0) return ret;
 	if (strstr(opt, "yes")) return 1;
 		else return 0;
 }
@@ -409,7 +409,7 @@ int set_ipsec_ike_authproto(char *ipsec_conn, int opt)
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
 	if (opt == AH)	sprintf(buf, "ah");
 		else sprintf(buf, "esp");
-	return replace_string_in_file_nl(filename, STRING_IPSEC_AUTHPROTO, buf);
+	return libconfig_str_replace_string_in_file(filename, STRING_IPSEC_AUTHPROTO, buf);
 }
 
 int set_ipsec_esp(char *ipsec_conn, char *cypher, char *hash)
@@ -423,7 +423,7 @@ int set_ipsec_esp(char *ipsec_conn, char *cypher, char *hash)
 		if (hash) sprintf(buf, "%s-%s", cypher, hash);
 			else sprintf(buf, "%s", cypher);
 	}
-	return replace_string_in_file_nl(filename, STRING_IPSEC_ESP, buf);
+	return libconfig_str_replace_string_in_file(filename, STRING_IPSEC_ESP, buf);
 }
 
 int set_ipsec_local_id(char *ipsec_conn, char *id)
@@ -431,7 +431,7 @@ int set_ipsec_local_id(char *ipsec_conn, char *id)
 	char filename[60];
 	
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-	return replace_string_in_file_nl(filename, STRING_IPSEC_L_ID, id);
+	return libconfig_str_replace_string_in_file(filename, STRING_IPSEC_L_ID, id);
 }
 
 int set_ipsec_remote_id(char *ipsec_conn, char *id)
@@ -439,7 +439,7 @@ int set_ipsec_remote_id(char *ipsec_conn, char *id)
 	char filename[60];
 	
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-	return replace_string_in_file_nl(filename, STRING_IPSEC_R_ID, id);
+	return libconfig_str_replace_string_in_file(filename, STRING_IPSEC_R_ID, id);
 }
 
 int set_ipsec_local_addr(char *ipsec_conn, char *addr)
@@ -447,7 +447,7 @@ int set_ipsec_local_addr(char *ipsec_conn, char *addr)
 	char filename[60];
 
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-	return replace_string_in_file_nl(filename, STRING_IPSEC_L_ADDR, addr);
+	return libconfig_str_replace_string_in_file(filename, STRING_IPSEC_L_ADDR, addr);
 }
 
 int set_ipsec_remote_addr(char *ipsec_conn, char *addr)
@@ -455,7 +455,7 @@ int set_ipsec_remote_addr(char *ipsec_conn, char *addr)
 	char filename[60];
 
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-	return replace_string_in_file_nl(filename, STRING_IPSEC_R_ADDR, addr);
+	return libconfig_str_replace_string_in_file(filename, STRING_IPSEC_R_ADDR, addr);
 }
 
 int set_ipsec_nexthop_inf(int position, char *ipsec_conn, char *nexthop)
@@ -466,9 +466,9 @@ int set_ipsec_nexthop_inf(int position, char *ipsec_conn, char *nexthop)
 	switch(position)
 	{
 		case LOCAL:
-			return replace_string_in_file_nl(filename, STRING_IPSEC_L_NEXTHOP, nexthop);
+			return libconfig_str_replace_string_in_file(filename, STRING_IPSEC_L_NEXTHOP, nexthop);
 		case REMOTE:
-			return replace_string_in_file_nl(filename, STRING_IPSEC_R_NEXTHOP, nexthop);
+			return libconfig_str_replace_string_in_file(filename, STRING_IPSEC_R_NEXTHOP, nexthop);
 	}
 	return -1;
 }
@@ -486,9 +486,9 @@ int set_ipsec_subnet_inf(int position, char *ipsec_conn, char *addr, char *mask)
 	switch(position)
 	{
 		case LOCAL:
-			return replace_string_in_file_nl(filename, STRING_IPSEC_L_SUBNET, subnet);
+			return libconfig_str_replace_string_in_file(filename, STRING_IPSEC_L_SUBNET, subnet);
 		case REMOTE:
-			return replace_string_in_file_nl(filename, STRING_IPSEC_R_SUBNET, subnet);
+			return libconfig_str_replace_string_in_file(filename, STRING_IPSEC_R_SUBNET, subnet);
 	}
 	return -1;
 }
@@ -500,18 +500,18 @@ int set_ipsec_protoport(char *ipsec_conn, char *protoport)
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
 	if (protoport == NULL)
 	{
-		replace_string_in_file_nl(filename, STRING_IPSEC_L_PROTOPORT, "");
-		replace_string_in_file_nl(filename, STRING_IPSEC_R_PROTOPORT, "");
+		libconfig_str_replace_string_in_file(filename, STRING_IPSEC_L_PROTOPORT, "");
+		libconfig_str_replace_string_in_file(filename, STRING_IPSEC_R_PROTOPORT, "");
 	}
 	else if (!strcmp(protoport, "SP1"))
 	{
-		replace_string_in_file_nl(filename, STRING_IPSEC_L_PROTOPORT, protoport_sp1);
-		replace_string_in_file_nl(filename, STRING_IPSEC_R_PROTOPORT, protoport_sp2);
+		libconfig_str_replace_string_in_file(filename, STRING_IPSEC_L_PROTOPORT, protoport_sp1);
+		libconfig_str_replace_string_in_file(filename, STRING_IPSEC_R_PROTOPORT, protoport_sp2);
 	}
 	else if (!strcmp(protoport, "SP2"))
 	{
-		replace_string_in_file_nl(filename, STRING_IPSEC_L_PROTOPORT, protoport_sp2);
-		replace_string_in_file_nl(filename, STRING_IPSEC_R_PROTOPORT, protoport_sp2);
+		libconfig_str_replace_string_in_file(filename, STRING_IPSEC_L_PROTOPORT, protoport_sp2);
+		libconfig_str_replace_string_in_file(filename, STRING_IPSEC_R_PROTOPORT, protoport_sp2);
 	}
 	return 0;
 }
@@ -523,7 +523,7 @@ int set_ipsec_pfs(char *ipsec_conn, int on)
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
 	if (on) sprintf(buf, "yes");
 		else sprintf(buf, "no");
-	return replace_string_in_file_nl(filename, STRING_IPSEC_PFS, buf);
+	return libconfig_str_replace_string_in_file(filename, STRING_IPSEC_PFS, buf);
 }
 
 #if 0 /* local address interface [aux|ethernet|serial] */
@@ -531,7 +531,7 @@ int get_ipsec_interface(char *iface, int max_len)
 {
 	char *p, *cish_dev, buf[MAX_LINE];
 
-	if (find_string_in_file_nl(FILE_IPSEC_CONF, "ipsec0", buf, MAX_LINE) < 0) return -1;
+	if (libconfig_str_find_string_in_file(FILE_IPSEC_CONF, "ipsec0", buf, MAX_LINE) < 0) return -1;
 	// retira as aspas
 	if ((p=strstr(buf, "\""))) memmove(p,"\0", 1);
 	cish_dev=libconfig_device_convert_os(buf, 0);
@@ -549,7 +549,7 @@ int get_ipsec_autoreload(void)
 	int ret;
 	char buf[MAX_LINE];
 
-	if ((ret=find_string_in_file_nl(FILE_IPSEC_CONF, STRING_IPSEC_AUTORELOAD, buf, MAX_LINE)) < 0) return ret;
+	if ((ret=libconfig_str_find_string_in_file(FILE_IPSEC_CONF, STRING_IPSEC_AUTORELOAD, buf, MAX_LINE)) < 0) return ret;
 	if (!strlen(buf)) return -1;
 	return atoi(buf);
 }
@@ -559,7 +559,7 @@ int get_ipsec_nat_traversal(void)
 	int ret;
 	char buf[MAX_LINE];
 
-	if ((ret=find_string_in_file_nl(FILE_IPSEC_CONF, STRING_IPSEC_NAT, buf, MAX_LINE)) < 0) return ret;
+	if ((ret=libconfig_str_find_string_in_file(FILE_IPSEC_CONF, STRING_IPSEC_NAT, buf, MAX_LINE)) < 0) return ret;
 	if (!strlen(buf)) return -1;
 	if (strcmp(buf, "yes") == 0) return 1;
 	return 0;
@@ -570,7 +570,7 @@ int get_ipsec_overridemtu(void)
 	int ret;
 	char buf[MAX_LINE];
 
-	if ((ret=find_string_in_file_nl(FILE_IPSEC_CONF, STRING_IPSEC_OMTU, buf, MAX_LINE)) < 0) return ret;
+	if ((ret=libconfig_str_find_string_in_file(FILE_IPSEC_CONF, STRING_IPSEC_OMTU, buf, MAX_LINE)) < 0) return ret;
 	if (!strlen(buf)) return -1;
 	return atoi(buf);
 }
@@ -638,11 +638,11 @@ int get_ipsec_id(int position, char *ipsec_conn, char *buf)
 	if(stat(filename, &st)!=0)	return -1;
 	if(position==LOCAL)
 	{
-		if((ret=find_string_in_file_nl(filename, STRING_IPSEC_L_ID, buf, MAX_LINE)) < 0) return ret;
+		if((ret=libconfig_str_find_string_in_file(filename, STRING_IPSEC_L_ID, buf, MAX_LINE)) < 0) return ret;
 	}
 	else
 	{
-		if((ret=find_string_in_file_nl(filename, STRING_IPSEC_R_ID, buf, MAX_LINE)) < 0) return ret;
+		if((ret=libconfig_str_find_string_in_file(filename, STRING_IPSEC_R_ID, buf, MAX_LINE)) < 0) return ret;
 	}
 	if (strlen(buf)>0) return 1;
 		else return 0;
@@ -658,11 +658,11 @@ int get_ipsec_subnet(int position, char *ipsec_conn, char *buf)
 	if (stat(filename, &st)!=0)	return -1;
 	if (position==LOCAL)
 	{
-		if ((ret=find_string_in_file_nl(filename, STRING_IPSEC_L_SUBNET, subnet, MAX_LINE)) < 0) return ret;
+		if ((ret=libconfig_str_find_string_in_file(filename, STRING_IPSEC_L_SUBNET, subnet, MAX_LINE)) < 0) return ret;
 	}
 	else
 	{
-		if ((ret=find_string_in_file_nl(filename, STRING_IPSEC_R_SUBNET, subnet, MAX_LINE)) < 0) return ret;
+		if ((ret=libconfig_str_find_string_in_file(filename, STRING_IPSEC_R_SUBNET, subnet, MAX_LINE)) < 0) return ret;
 	}
 	if (strlen(subnet)>0)
 	{
@@ -685,7 +685,7 @@ int get_ipsec_local_addr(char *ipsec_conn, char *buf)
 	char filename[60];
 
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-	if ((ret=find_string_in_file_nl(filename, STRING_IPSEC_L_ADDR, buf, MAX_LINE)) < 0)
+	if ((ret=libconfig_str_find_string_in_file(filename, STRING_IPSEC_L_ADDR, buf, MAX_LINE)) < 0)
 	{
 		*buf=0;
 		return ret;
@@ -707,7 +707,7 @@ int get_ipsec_remote_addr(char *ipsec_conn, char *buf)
 	char filename[60];
 
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-	if ((ret=find_string_in_file_nl(filename, STRING_IPSEC_R_ADDR, buf, MAX_LINE)) < 0)
+	if ((ret=libconfig_str_find_string_in_file(filename, STRING_IPSEC_R_ADDR, buf, MAX_LINE)) < 0)
 	{
 		*buf=0;
 		return ret;
@@ -736,11 +736,11 @@ int get_ipsec_nexthop(int position, char *ipsec_conn, char *buf)
 	if(stat(filename, &st)!=0)	return -1;
 	if(position==LOCAL)
 	{
-		if((ret=find_string_in_file_nl(filename, STRING_IPSEC_L_NEXTHOP, buf, MAX_LINE))<0)	return ret;
+		if((ret=libconfig_str_find_string_in_file(filename, STRING_IPSEC_L_NEXTHOP, buf, MAX_LINE))<0)	return ret;
 	}
 	else
 	{
-		if((ret=find_string_in_file_nl(filename, STRING_IPSEC_R_NEXTHOP, buf, MAX_LINE))<0)	return ret;
+		if((ret=libconfig_str_find_string_in_file(filename, STRING_IPSEC_R_NEXTHOP, buf, MAX_LINE))<0)	return ret;
 	}
 	if(ret < 0)
 	{
@@ -757,7 +757,7 @@ int get_ipsec_ike_authproto(char *ipsec_conn)
 	char *p, filename[60], buf[MAX_LINE];
 	
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-	ret = find_string_in_file_nl(filename, STRING_IPSEC_AUTHPROTO, buf, MAX_LINE);
+	ret = libconfig_str_find_string_in_file(filename, STRING_IPSEC_AUTHPROTO, buf, MAX_LINE);
 	if(ret<0)	return ret;
 	if((p=strstr(buf, "ah")))		return AH;
 	else	if((p=strstr(buf, "esp")))	return ESP;
@@ -771,7 +771,7 @@ int get_ipsec_esp(char *ipsec_conn, char *buf)
 	
 	*buf = '\0';
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-	ret = find_string_in_file_nl(filename, STRING_IPSEC_ESP, buf, MAX_LINE);
+	ret = libconfig_str_find_string_in_file(filename, STRING_IPSEC_ESP, buf, MAX_LINE);
 	if (ret < 0) return ret;
 	if (strlen(buf) > 0)
 	{
@@ -787,7 +787,7 @@ int get_ipsec_pfs(char *ipsec_conn)
 	char *p, filename[60], buf[MAX_LINE]="";
 
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-	if ((ret=find_string_in_file_nl(filename, STRING_IPSEC_PFS, buf, MAX_LINE))<0)	return ret;
+	if ((ret=libconfig_str_find_string_in_file(filename, STRING_IPSEC_PFS, buf, MAX_LINE))<0)	return ret;
 	if (strlen(buf)>0)
 	{
 		if ((p=strstr(buf, "yes"))) return 1;
@@ -812,14 +812,14 @@ int set_ipsec_link(char *ipsec_conn, int on_off)
 			sprintf(opt, "start");
 	}
 		else sprintf(opt, "ignore");
-	replace_string_in_file_nl(filename, STRING_IPSEC_AUTO, opt); /* auto= start/ignore/add */
+	libconfig_str_replace_string_in_file(filename, STRING_IPSEC_AUTO, opt); /* auto= start/ignore/add */
 	//if (!strcmp(opt, "add") && (get_ipsec_auth(ipsec_conn, buf) == SECRET)) sprintf(opt, "yes"); /* PSK with %any uses aggresive mode */
 	//	else 
 	sprintf(opt, "no");
-	replace_string_in_file_nl(filename, STRING_IPSEC_AGGRMODE, opt); /* aggrmode= yes/no */
+	libconfig_str_replace_string_in_file(filename, STRING_IPSEC_AGGRMODE, opt); /* aggrmode= yes/no */
 	if (on_off) sprintf(opt, "yes");
 		else sprintf(opt, "no");
-	return replace_string_in_file_nl(filename, STRING_IPSEC_LINK, opt);
+	return libconfig_str_replace_string_in_file(filename, STRING_IPSEC_LINK, opt);
 }
 
 int get_ipsec_sharedkey(char *ipsec_conn, char **buf)
@@ -879,7 +879,7 @@ int get_ipsec_rsakey(char *ipsec_conn, char *token, char **buf)
 		fprintf(stderr, "could not alloc memory");
 		return -1;
 	}
-	if ((ret=find_string_in_file_nl(filename, token, *buf, MAX_KEY_SIZE)) < 0)
+	if ((ret=libconfig_str_find_string_in_file(filename, token, *buf, MAX_KEY_SIZE)) < 0)
 	{
 		free(*buf);
 		*buf = NULL;
@@ -902,7 +902,7 @@ char *get_ipsec_protoport(char *ipsec_conn)
 		fprintf(stderr, "could not get ipsec protoport");
 		return NULL;
 	}
-	if (find_string_in_file_nl(filename, STRING_IPSEC_L_PROTOPORT, tmp, 60) < 0)
+	if (libconfig_str_find_string_in_file(filename, STRING_IPSEC_L_PROTOPORT, tmp, 60) < 0)
 	{
 		return NULL;
 	}
@@ -917,7 +917,7 @@ int get_ipsec_auto(char *ipsec_conn)
 	char filename[60], buf[MAX_LINE]="";
 
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-	if ((ret=find_string_in_file_nl(filename, STRING_IPSEC_AUTO, buf, MAX_LINE))<0)	return ret;
+	if ((ret=libconfig_str_find_string_in_file(filename, STRING_IPSEC_AUTO, buf, MAX_LINE))<0)	return ret;
 	if (strlen(buf)>0)
 	{
 		if (strncmp(buf, "ignore", 6)==0) return AUTO_IGNORE;

@@ -338,7 +338,7 @@ int lconfig_nat_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 		buf[0] = 0;
 		fgets(buf, 255, F);
 		buf[255] = 0;
-		striplf(buf);
+		libconfig_str_striplf(buf);
 		if (strncmp(buf, "Chain ", 6) == 0) {
 			if (strncmp(buf + 6, "PREROUTING", 10) == 0)
 				chain = chain_in;

@@ -134,7 +134,7 @@ char *libconfig_device_convert_os(const char *osdev, int mode)
 		if ((f = fopen(filename, "r")) != NULL) {
 			fgets(iface, 16, f);
 			fclose(f);
-			striplf(iface);
+			libconfig_str_striplf(iface);
 			crsr = 0;
 			while ((crsr < 8) && (iface[crsr] > 32) && (!isdigit(
 			                iface[crsr])))
@@ -205,7 +205,7 @@ char *libconfig_device_from_linux_cmdline(char *cmdline)
 	char *dev;
 
 	new_cmdline[0] = 0;
-	if (is_empty(cmdline))
+	if (libconfig_str_is_empty(cmdline))
 		return new_cmdline;
 	args = libconfig_make_args(cmdline);
 	for (i = 0; i < args->argc; i++) {
@@ -237,7 +237,7 @@ char *libconfig_zebra_to_linux_cmdline(char *cmdline)
 	char addr_net[64];
 
 	new_cmdline[0] = 0;
-	if (is_empty(cmdline))
+	if (libconfig_str_is_empty(cmdline))
 		return new_cmdline;
 
 	args = libconfig_make_args(cmdline);
@@ -270,7 +270,7 @@ char *libconfig_zebra_from_linux_cmdline(char *cmdline)
 	char buf[64];
 
 	new_cmdline[0] = 0;
-	if (is_empty(cmdline))
+	if (libconfig_str_is_empty(cmdline))
 		return new_cmdline;
 
 	args = libconfig_make_args(cmdline);

@@ -239,7 +239,7 @@ void lconfig_bgp_dump_router(FILE *f, int main_nip)
 			fgets(buf, 1024, fd);
 			if (buf[0] == '!')
 				break;
-			striplf(buf);
+			libconfig_str_striplf(buf);
 			fprintf(f, "%s\n", libconfig_device_from_linux_cmdline(
 			                libconfig_zebra_to_linux_cmdline(buf)));
 		}
@@ -479,7 +479,7 @@ void lconfig_ospf_dump_router(FILE *out)
 			fgets(buf, 1024, f);
 			if (buf[0] == '!')
 				break;
-			striplf(buf);
+			libconfig_str_striplf(buf);
 			fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(
 			                libconfig_zebra_to_linux_cmdline(buf)));
 		}
@@ -505,7 +505,7 @@ void dump_ospf_interface(FILE *out, char *intf)
 		fgets(buf, 1024, f);
 		if (buf[0] == '!')
 			break;
-		striplf(buf);
+		libconfig_str_striplf(buf);
 		fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(libconfig_zebra_to_linux_cmdline(buf)));
 	}
 	fclose(f);
@@ -530,7 +530,7 @@ void lconfig_rip_dump_router(FILE *out)
 			fgets(buf, 1024, f);
 			if (buf[0] == '!')
 				break;
-			striplf(buf);
+			libconfig_str_striplf(buf);
 			fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(
 			                libconfig_zebra_to_linux_cmdline(buf)));
 		}
@@ -550,7 +550,7 @@ void lconfig_rip_dump_router(FILE *out)
 				end = 0;
 			if (buf[0] == '!')
 				end = 1;
-			striplf(buf);
+			libconfig_str_striplf(buf);
 			fprintf(out, "%s\n", buf);
 		}
 		fclose(f);
@@ -573,7 +573,7 @@ void dump_rip_interface(FILE *out, char *intf)
 		fgets(buf, 1024, f);
 		if (buf[0] == '!')
 			break;
-		striplf(buf);
+		libconfig_str_striplf(buf);
 		fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(libconfig_zebra_to_linux_cmdline(buf)));
 	}
 	fclose(f);
@@ -665,7 +665,7 @@ void lconfig_arp_dump(FILE *out)
 		tbuf[0] = 0;
 		fgets(tbuf, 127, F);
 		tbuf[127] = 0;
-		striplf(tbuf);
+		libconfig_str_striplf(tbuf);
 		args = libconfig_make_args(tbuf);
 		if (args->argc >= 6) {
 			ipaddr = args->argv[0];
