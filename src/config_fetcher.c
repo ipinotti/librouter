@@ -1154,7 +1154,7 @@ cish_config* lconfig_mmap_cfg(void)
 	}
 	close(fd);
 
-	recover_debug_all(); /* debug persistent */
+	libconfig_debug_recover_all(); /* debug persistent */
 	return cish_cfg;
 }
 
