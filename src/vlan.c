@@ -29,7 +29,7 @@ int libconfig_vlan_exists(int ethernet_no, int vid)
 	char ifname[IFNAMSIZ];
 
 	sprintf(ifname, "ethernet%d.%d", ethernet_no, vid);
-	return (dev_exists(ifname));
+	return (libconfig_dev_exists(ifname));
 }
 
 int libconfig_vlan_vid(int ethernet_no, int vid, int add_del, int bridge)

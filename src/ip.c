@@ -587,7 +587,7 @@ int netmask2cidr (const char *netmask)
 
 int get_mac (char *ifname, char *mac)
 {
-	return dev_get_hwaddr (ifname, (unsigned char *) mac);
+	return libconfig_dev_get_hwaddr (ifname, (unsigned char *) mac);
 }
 
 /* !!! Caso especial para ethernet, em funcao do modo bridge */

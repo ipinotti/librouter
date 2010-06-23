@@ -932,7 +932,7 @@ static void dump_interface_config(FILE *out, struct interface_conf *conf)
 		return; /* skip ipsec ones... */
 
 	fprintf(out, "interface %s\n", cish_dev);
-	description = dev_get_description(conf->name);
+	description = libconfig_dev_get_description(conf->name);
 
 	if (description)
 		fprintf(out, " description %s\n", description);

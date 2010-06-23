@@ -295,7 +295,7 @@ int add_tunnel (char *name) /* interface tunnel <0-9> */
 {
 	struct ip_tunnel_parm p;
 
-	if (!dev_exists (name)) {
+	if (!libconfig_dev_exists (name)) {
 		memset (&p, 0, sizeof(p));
 		p.iph.version = 4;
 		p.iph.ihl = 5;
@@ -315,7 +315,7 @@ int del_tunnel (char *name) /* no interface tunnel <0-9> */
 	int err;
 	struct ip_tunnel_parm p;
 
-	if (dev_exists (name)) {
+	if (libconfig_dev_exists (name)) {
 		if ((err = do_get_ioctl (name, &p)))
 			return -1;
 		return do_del_ioctl (p.name, &p);
@@ -332,7 +332,7 @@ int change_tunnel (char *name, tunnel_param_type type, void *param)
 	struct in_addr address;
 	struct ip_tunnel_parm p;
 
-	if (dev_exists (name)) {
+	if (libconfig_dev_exists (name)) {
 		if ((err = do_get_ioctl (name, &p))) {
 			fprintf (stderr, "%% %s not found.\n", name);
 			return -1;
@@ -457,7 +457,7 @@ int mode_tunnel (char *name, int mode)
 	int err;
 	struct ip_tunnel_parm p;
 
-	if (dev_exists (name)) {
+	if (libconfig_dev_exists (name)) {
 		if ((err = do_get_ioctl (name, &p)))
 			return -1;
 		if (p.iph.protocol != mode) {
@@ -479,7 +479,7 @@ void dump_tunnel_interface (FILE *out, int conf_format, char *name)
 	struct in_addr address;
 	struct ip_tunnel_parm p;
 
-	if (dev_exists (name)) {
+	if (libconfig_dev_exists (name)) {
 		if ((err = do_get_ioctl (name, &p)))
 			return;
 		if (conf_format) {

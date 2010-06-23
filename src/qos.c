@@ -384,7 +384,7 @@ int tc_insert_all(char *dev_name)
 		if (ppp_get_state(major)) 
 			run_tc_now = 1; /* wait for ppp */
 	} else if (fam->type == eth) {
-		if (dev_get_link(dev_name)) run_tc_now = 1;
+		if (libconfig_dev_get_link(dev_name)) run_tc_now = 1;
 	}
 
 	/* Check if qos config exists */
