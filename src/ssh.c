@@ -1,14 +1,21 @@
+/*
+ * str.h
+ *
+ *  Created on: Jun 23, 2010
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
 #include "defines.h"
 #include "args.h"
 #include "error.h"
 #include "nv.h"
 #include "ssh.h"
 
-int ssh_create_rsakey(int keysize)
+int libconfig_ssh_create_rsakey(int keysize)
 {
 	int ret;
 	char line[128];
