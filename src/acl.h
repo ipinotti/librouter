@@ -47,12 +47,18 @@ struct acl_config {
 void libconfig_acl_create_new(char *);
 void libconfig_acl_apply(struct acl_config *);
 int libconfig_acl_exists(char *);
-int libconfig_acl_matched_exists(char *acl, char *iface_in, char *iface_out, char *chain);
-int libconfig_acl_get_iface_rules (char *iface, char *in_acl, char *out_acl);
+int libconfig_acl_matched_exists(char *acl,
+                                 char *iface_in,
+                                 char *iface_out,
+                                 char *chain);
+int libconfig_acl_get_iface_rules(char *iface, char *in_acl, char *out_acl);
 int libconfig_acl_get_refcount(char *acl);
 int libconfig_acl_clean_iface_acls(char *iface);
 int libconfig_acl_copy_iface_acls(char *src, char *trg);
-int libconfig_acl_interface_ipsec(int add_del, int chain, char *dev, char *listno);
+int libconfig_acl_interface_ipsec(int add_del,
+                                  int chain,
+                                  char *dev,
+                                  char *listno);
 void libconfig_acl_cleanup_modules(void);
 void libconfig_acl_set_ports(const char *ports, char *str);
 void libconfig_acl_print_flags(FILE *out, char *flags);
