@@ -666,7 +666,7 @@ void lconfig_arp_dump(FILE *out)
 		fgets(tbuf, 127, F);
 		tbuf[127] = 0;
 		striplf(tbuf);
-		args = make_args(tbuf);
+		args = libconfig_make_args(tbuf);
 		if (args->argc >= 6) {
 			ipaddr = args->argv[0];
 			hwaddr = args->argv[3];
@@ -679,7 +679,7 @@ void lconfig_arp_dump(FILE *out)
 				print_something = 1;
 			}
 		}
-		destroy_args(args);
+		libconfig_destroy_args(args);
 	}
 	if (print_something)
 		fprintf(out, "!\n");

@@ -203,9 +203,9 @@ void lconfig_mangle_dump(char *xmangle, FILE *F, int conf_format)
 				p = buf;
 				while ((*p) && (*p == ' '))
 					p++;
-				args = make_args (p);
+				args = libconfig_make_args (p);
 				if (args->argc < 9) {
-					destroy_args (args);
+					libconfig_destroy_args (args);
 					continue;
 				}
 				type = args->argv[2];
@@ -326,7 +326,7 @@ void lconfig_mangle_dump(char *xmangle, FILE *F, int conf_format)
 						}
 					}
 				}
-				destroy_args (args);
+				libconfig_destroy_args (args);
 			}
 		}
 	}
@@ -379,9 +379,9 @@ int lconfig_mangle_get_iface_rules (char *iface, char *in_mangle, char *out_mang
 			p = buf;
 			while ((*p) && (*p == ' '))
 				p++;
-			args = make_args (p);
+			args = libconfig_make_args (p);
 			if (args->argc < 7) {
-				destroy_args (args);
+				libconfig_destroy_args (args);
 				continue;
 			}
 			iface_in_ = args->argv[5];
@@ -401,7 +401,7 @@ int lconfig_mangle_get_iface_rules (char *iface, char *in_mangle, char *out_mang
 			}
 			if (mangle_in && mangle_out)
 				break;
-			destroy_args (args);
+			libconfig_destroy_args (args);
 		}
 	}
 	pclose (F);

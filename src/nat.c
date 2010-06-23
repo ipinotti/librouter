@@ -187,9 +187,9 @@ void lconfig_nat_dump(char *xacl, FILE *F, int conf_format)
 				p = buf;
 				while ((*p) && (*p == ' '))
 					p++;
-				args = make_args(p);
+				args = libconfig_make_args(p);
 				if (args->argc < 9) {
-					destroy_args(args);
+					libconfig_destroy_args(args);
 					continue;
 				}
 				type = args->argv[2];
@@ -282,7 +282,7 @@ void lconfig_nat_dump(char *xacl, FILE *F, int conf_format)
 						}
 					}
 				}
-				destroy_args(args);
+				libconfig_destroy_args(args);
 			}
 		}
 	}
@@ -353,10 +353,10 @@ int lconfig_nat_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 			p = buf;
 			while ((*p) && (*p == ' '))
 				p++;
-			args = make_args(p);
+			args = libconfig_make_args(p);
 
 			if (args->argc < 7) {
-				destroy_args(args);
+				libconfig_destroy_args(args);
 				continue;
 			}
 
@@ -380,7 +380,7 @@ int lconfig_nat_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 			if (acl_in && acl_out)
 				break;
 
-			destroy_args(args);
+			libconfig_destroy_args(args);
 		}
 	}
 	pclose(F);

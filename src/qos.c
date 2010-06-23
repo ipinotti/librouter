@@ -12,6 +12,10 @@
 #include <syslog.h>
 #include <linux/hdlc.h>
 #include <linux/mii.h>
+
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include "args.h"
 #include "defines.h"
 #include "device.h"
@@ -223,19 +227,19 @@ static void qos_dump_interface(char *dev_name)
 			if ((strncmp(buf, " Sent", 5) == 0))
 			{
 				p=buf; while ((*p)&&(*p==' ')) p++;
-				args=make_args(p);
+				args=libconfig_make_args(p);
 				if (args->argc >= 7)
 				{
 					strncpy(pkts, args->argv[3], 32); pkts[31]=0;
 					strncpy(bytes, args->argv[1], 32); bytes[31]=0;
 					sprintf(dropped, "%d", atoi(args->argv[6]));
 				}
-				destroy_args(args);
+				libconfig_destroy_args(args);
 			}
 			else if ((strncmp(buf, " rate", 5)==0))
 			{
 				p=buf; while ((*p)&&(*p==' ')) p++;
-				args=make_args(p);
+				args=libconfig_make_args(p);
 				if (args->argc >= 2) 
 				{
 					unsigned int rate_per_sec = atoi(args->argv[1]);
@@ -246,7 +250,7 @@ static void qos_dump_interface(char *dev_name)
 					else
 						sprintf(rate, "%dbit", rate_per_sec);
 				}
-				destroy_args(args);
+				libconfig_destroy_args(args);
 			}
 			else
 			{
@@ -1142,14 +1146,14 @@ int get_qos_stats_by_devmark(char *dev_name, int mark)
 			buf[255] = 0;
 			if( feof(f) )
 				break;
-			if( parse_args_din(buf, &argl) >= 3 ) {
+			if( libconfig_parse_args_din(buf, &argl) >= 3 ) {
 
 				if( (strcasecmp(argl[0], "class") == 0) && (strcasecmp(argl[1], "hfsc") == 0) ) {
 
 					if( (p = strchr(argl[2], ':')) ) {
 						*p = 0;
 						n1 = atoi(p+1);
-						free_args_din(&argl);
+						libconfig_destroy_args_din(&argl);
 						if( (n1 - 10) == mark ) {
 							fgets(buf, 256, f); /* Skip Sent 0 bytes 0 pkts (dropped 0, overlimits 0)*/
 							fgets(buf, 256, f);	
@@ -1164,7 +1168,7 @@ int get_qos_stats_by_devmark(char *dev_name, int mark)
 					}
 				}
 			}
-			free_args_din(&argl);
+			libconfig_destroy_args_din(&argl);
 		}
 		pclose(f);
 		return ret;

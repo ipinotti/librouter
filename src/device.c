@@ -140,7 +140,7 @@ char *cish_to_linux_dev_cmdline(char *cmdline)
 	device_family *fam;
 
 	new_cmdline[0] = 0;
-	args = make_args (cmdline);
+	args = libconfig_make_args (cmdline);
 	for (i=0; i < args->argc; i++)
 	{
 		fam=getfamily(args->argv[i]);
@@ -154,7 +154,7 @@ char *cish_to_linux_dev_cmdline(char *cmdline)
 		strcat(new_cmdline, args->argv[i]);
 		strcat(new_cmdline, " ");
 	}
-	destroy_args (args);
+	libconfig_destroy_args (args);
 	return new_cmdline;
 }
 
@@ -170,7 +170,7 @@ char *linux_to_cish_dev_cmdline(char *cmdline)
 
 	new_cmdline[0]=0;
 	if (is_empty(cmdline)) return new_cmdline;
-	args=make_args(cmdline);
+	args=libconfig_make_args(cmdline);
 	for (i=0; i < args->argc; i++)
 	{
 		dev=convert_os_device(args->argv[i], 0);
@@ -178,7 +178,7 @@ char *linux_to_cish_dev_cmdline(char *cmdline)
 			else strcat(new_cmdline, args->argv[i]);
 		strcat(new_cmdline, " ");
 	}
-	destroy_args(args);
+	libconfig_destroy_args(args);
 	return new_cmdline;
 }
 
@@ -196,7 +196,7 @@ char *zebra_to_linux_network_cmdline(char *cmdline)
 	new_cmdline[0]=0;
 	if (is_empty(cmdline)) return new_cmdline;
 
-	args=make_args(cmdline);
+	args=libconfig_make_args(cmdline);
 
 	for (i=0; i < args->argc; i++)
 	{
@@ -207,7 +207,7 @@ char *zebra_to_linux_network_cmdline(char *cmdline)
 		strcat(new_cmdline, " ");
 	}
 
-	destroy_args(args);
+	libconfig_destroy_args(args);
 	return new_cmdline;
 }
 
@@ -224,7 +224,7 @@ char *linux_to_zebra_network_cmdline(char *cmdline)
 	new_cmdline[0] = 0;
 	if (is_empty(cmdline)) return new_cmdline;
 
-	args=make_args(cmdline);
+	args=libconfig_make_args(cmdline);
 
 	for (i=0; i<(args->argc-1); i++)
 	{
@@ -242,6 +242,6 @@ char *linux_to_zebra_network_cmdline(char *cmdline)
 	}
 	if (i<args->argc) strcat(new_cmdline, args->argv[i]);
 
-	destroy_args(args);
+	libconfig_destroy_args(args);
 	return new_cmdline;
 }

@@ -57,7 +57,7 @@ int pimdd_phyint(int add, char *dev)
 		while (fgets(line, 200, f) && lines < MAX_LINES) {
 			striplf(line);
 			if (strlen(line))
-				args[lines++] = make_args(line);
+				args[lines++] = libconfig_make_args(line);
 		}
 		fclose(f);
 	}
@@ -67,7 +67,7 @@ int pimdd_phyint(int add, char *dev)
 				if (!strcmp(args[i]->argv[1], dev)) {
 					found = 1;
 					if (!add) {
-						destroy_args(args[i]);
+						libconfig_destroy_args(args[i]);
 						continue; /* skip line (delete) */
 					}
 				}
@@ -87,7 +87,7 @@ int pimdd_phyint(int add, char *dev)
 				else
 					fprintf(f, "%s\n", args[i]->argv[j]);
 			}
-			destroy_args(args[i]);
+			libconfig_destroy_args(args[i]);
 		}
 		fclose(f);
 	}
@@ -106,7 +106,7 @@ int pimsd_phyint(int add, char *dev)
 		while (fgets(line, 200, f) && lines < MAX_LINES) {
 			striplf(line);
 			if (strlen(line))
-				args[lines++] = make_args(line);
+				args[lines++] = libconfig_make_args(line);
 		}
 		fclose(f);
 	}
@@ -116,7 +116,7 @@ int pimsd_phyint(int add, char *dev)
 				if (!strcmp(args[i]->argv[1], dev)) {
 					found = 1;
 					if (!add) {
-						destroy_args(args[i]);
+						libconfig_destroy_args(args[i]);
 						continue; /* skip line (delete) */
 					}
 				}
@@ -136,7 +136,7 @@ int pimsd_phyint(int add, char *dev)
 				else
 					fprintf(f, "%s\n", args[i]->argv[j]);
 			}
-			destroy_args(args[i]);
+			libconfig_destroy_args(args[i]);
 		}
 		fclose(f);
 	}
@@ -155,7 +155,7 @@ void pimsd_bsr_candidate(int add, char *dev, char *major, char *priority)
 		while (fgets(line, 200, f) && lines < MAX_LINES) {
 			striplf(line);
 			if (strlen(line)) {
-				args[lines] = make_args(line);
+				args[lines] = libconfig_make_args(line);
 				if (!strcmp(args[lines]->argv[0], "cand_bootstrap_router"))
 					found = 1;
 				lines++;
@@ -189,7 +189,7 @@ void pimsd_bsr_candidate(int add, char *dev, char *major, char *priority)
 							                dev, major, priority);
 					}
 					found = 1;
-					destroy_args(args[i]);
+					libconfig_destroy_args(args[i]);
 					continue; /* skip line (delete) */
 				}
 			}
@@ -199,7 +199,7 @@ void pimsd_bsr_candidate(int add, char *dev, char *major, char *priority)
 				else
 					fprintf(f, "%s\n", args[i]->argv[j]);
 			}
-			destroy_args(args[i]);
+			libconfig_destroy_args(args[i]);
 		}
 		fclose(f);
 	}
@@ -217,7 +217,7 @@ void pimsd_rp_address(int add, char *rp)
 		while (fgets(line, 200, f) && lines < MAX_LINES) {
 			striplf(line);
 			if (strlen(line)) {
-				args[lines] = make_args(line);
+				args[lines] = libconfig_make_args(line);
 				if (!strcmp(args[lines]->argv[0], "rp_address"))
 					found = 1;
 				lines++;
@@ -237,7 +237,7 @@ void pimsd_rp_address(int add, char *rp)
 						fprintf(f, "rp_address %s\n", rp);
 					}
 					found = 1;
-					destroy_args(args[i]);
+					libconfig_destroy_args(args[i]);
 					continue; /* skip line (delete) */
 				}
 			}
@@ -247,7 +247,7 @@ void pimsd_rp_address(int add, char *rp)
 				else
 					fprintf(f, "%s\n", args[i]->argv[j]);
 			}
-			destroy_args(args[i]);
+			libconfig_destroy_args(args[i]);
 		}
 		fclose(f);
 	}
@@ -265,7 +265,7 @@ void pimsd_rp_candidate(int add, char *dev, char *major, char *priority, char *i
 		while (fgets(line, 200, f) && lines < MAX_LINES) {
 			striplf(line);
 			if (strlen(line)) {
-				args[lines] = make_args(line);
+				args[lines] = libconfig_make_args(line);
 				if (!strcmp(args[lines]->argv[0], "cand_rp"))
 					found = 1;
 				lines++;
@@ -302,7 +302,7 @@ void pimsd_rp_candidate(int add, char *dev, char *major, char *priority, char *i
 							                interval);
 					}
 					found = 1;
-					destroy_args(args[i]);
+					libconfig_destroy_args(args[i]);
 					continue; /* skip line (delete) */
 				}
 			}
@@ -312,7 +312,7 @@ void pimsd_rp_candidate(int add, char *dev, char *major, char *priority, char *i
 				else
 					fprintf(f, "%s\n", args[i]->argv[j]);
 			}
-			destroy_args(args[i]);
+			libconfig_destroy_args(args[i]);
 		}
 		fclose(f);
 	}
@@ -330,13 +330,13 @@ void dump_pim_interface(FILE *out, char *ifname)
 		while (fgets(line, 200, f) && !found) {
 			striplf(line);
 			if (strlen(line)) {
-				args = make_args(line);
+				args = libconfig_make_args(line);
 				if (!strcmp(args->argv[0], "phyint") && !strcmp(args->argv[1],
 				                ifname)) {
 					found = 1;
 					fprintf(out, " ip pim dense-mode\n");
 				}
-				destroy_args(args);
+				libconfig_destroy_args(args);
 			}
 		}
 		fclose(f);
@@ -345,13 +345,13 @@ void dump_pim_interface(FILE *out, char *ifname)
 		while (fgets(line, 200, f) && !found) {
 			striplf(line);
 			if (strlen(line)) {
-				args = make_args(line);
+				args = libconfig_make_args(line);
 				if (!strcmp(args->argv[0], "phyint") && !strcmp(args->argv[1],
 				                ifname)) {
 					found = 1;
 					fprintf(out, " ip pim sparse-mode\n");
 				}
-				destroy_args(args);
+				libconfig_destroy_args(args);
 			}
 		}
 		fclose(f);
@@ -368,7 +368,7 @@ void lconfig_pim_dump(FILE *out)
 		while (fgets(line, 200, f)) {
 			striplf(line);
 			if (strlen(line)) {
-				args = make_args(line);
+				args = libconfig_make_args(line);
 				if (!strcmp(args->argv[0], "cand_bootstrap_router")) {
 					if (args->argc == 2)
 						fprintf(out, "ip pim bsr-candidate %s\n",
@@ -381,28 +381,28 @@ void lconfig_pim_dump(FILE *out)
 						                args->argv[3]);
 					break; /* while */
 				}
-				destroy_args(args);
+				libconfig_destroy_args(args);
 			}
 		}
 		rewind(f); /* Returns to beggining of file */
 		while (fgets(line, 200, f)) {
 			striplf(line);
 			if (strlen(line)) {
-				args = make_args(line);
+				args = libconfig_make_args(line);
 				if (!strcmp(args->argv[0], "rp_address")) {
 					if (args->argc == 2)
 						fprintf(out, "ip pim rp-address %s\n",
 						                args->argv[1]);
 					break;
 				}
-				destroy_args(args);
+				libconfig_destroy_args(args);
 			}
 		}
 		rewind(f);
 		while (fgets(line, 200, f)) {
 			striplf(line);
 			if (strlen(line)) {
-				args = make_args(line);
+				args = libconfig_make_args(line);
 				if (!strcmp(args->argv[0], "cand_rp")) {
 					if (args->argc == 2)
 						fprintf(out, "ip pim rp-candidate %s\n",
@@ -421,7 +421,7 @@ void lconfig_pim_dump(FILE *out)
 						                args->argv[3], args->argv[5]);
 					break;
 				}
-				destroy_args(args);
+				libconfig_destroy_args(args);
 			}
 		}
 		fclose(f);

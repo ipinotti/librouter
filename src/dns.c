@@ -7,6 +7,8 @@
 #include <unistd.h>
 //#include <resolv.h>
 
+#include "typedefs.h"
+#include "ip.h"
 #include "args.h"
 #include "dns.h"
 #include "error.h"
@@ -30,8 +32,8 @@ static unsigned int get_entry_info(char *line, struct _entry_info *info)
 	unsigned int idx = 0;
 	arg_list argl = NULL;
 
-	if ((n_args = parse_args_din(line, &argl)) < 2) {
-		free_args_din(&argl);
+	if ((n_args = libconfig_parse_args_din(line, &argl)) < 2) {
+		libconfig_destroy_args_din(&argl);
 		return 0;
 	}
 	memset(info, 0, sizeof(struct _entry_info));
@@ -42,13 +44,13 @@ static unsigned int get_entry_info(char *line, struct _entry_info *info)
 			idx = 1;
 		}
 		if (((idx+1) >= n_args) || (strcmp(p, "nameserver") != 0) || (inet_aton(argl[idx+1], &addr) == 0)) {
-			free_args_din(&argl);
+			libconfig_destroy_args_din(&argl);
 			return 0;
 		}
 	}
 	else {
 		if ((strcmp(argl[0], "nameserver") != 0) || (inet_aton(argl[1], &addr) == 0)) {
-			free_args_din(&argl);
+			libconfig_destroy_args_din(&argl);
 			return 0;
 		}
 		info->active = 1;
@@ -58,12 +60,12 @@ static unsigned int get_entry_info(char *line, struct _entry_info *info)
 	idx++;
 	if (idx >= n_args) {
 		info->type = DNS_STATIC_NAMESERVER;
-		free_args_din(&argl);
+		libconfig_destroy_args_din(&argl);
 		return 1;
 	}
 	p = argl[idx];
 	if (*p != '#') {
-		free_args_din(&argl);
+		libconfig_destroy_args_din(&argl);
 		return 0;
 	}
 	for (; *p == '#'; p++);
@@ -71,7 +73,7 @@ static unsigned int get_entry_info(char *line, struct _entry_info *info)
 		idx++;
 		if (idx >= n_args) {
 			info->type = DNS_STATIC_NAMESERVER;
-			free_args_din(&argl);
+			libconfig_destroy_args_din(&argl);
 			return 1;
 		}
 		p = argl[idx];
@@ -82,7 +84,7 @@ static unsigned int get_entry_info(char *line, struct _entry_info *info)
 		info->type = DNS_DYNAMIC_NAMESERVER;
 	else
 		info->type = DNS_STATIC_NAMESERVER;
-	free_args_din(&argl);
+	libconfig_destroy_args_din(&argl);
 	return 1;
 }
 

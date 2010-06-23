@@ -44,7 +44,7 @@ int is_ntp_auth_used(void)
 	for(go_out=0; !go_out && fgets(line, 200, f); )
 	{
 		if((p = strchr(line, '\n')))	*p = '\0';
-		args = make_args(line);
+		args = libconfig_make_args(line);
 		if(args->argc > 1)
 		{
 			if(!strcmp(args->argv[0], "#authenticate"))
@@ -53,7 +53,7 @@ int is_ntp_auth_used(void)
 				go_out++;
 			}
 		}
-		destroy_args(args);
+		libconfig_destroy_args(args);
 	}
 	fclose(f);
 	return used;
@@ -99,7 +99,7 @@ int do_ntp_authenticate(int used)
 		if((p = strchr(line, '\n')))	*p = '\0';
 		if(strlen(line))
 		{
-			args = make_args(line);
+			args = libconfig_make_args(line);
 			if(args->argc >= 4)
 			{
 				if(!strcmp(args->argv[0], "server"))
@@ -143,7 +143,7 @@ int do_ntp_authenticate(int used)
 					strcat(local, "\n");
 				}
 			}
-			destroy_args(args);
+			libconfig_destroy_args(args);
 		}
 	}
 	fclose(f);
@@ -199,7 +199,7 @@ int do_ntp_restrict(char *server, char *mask)
 		if((p = strchr(line, '\n')))	*p = '\0';
 		if(strlen(line))
 		{
-			args = make_args(line);
+			args = libconfig_make_args(line);
 			if(args->argc >= 4) /* restrict <ipaddr> mask <netmask> nomodify noserve (noquery) */
 			{
 				if(!found && !strcmp(args->argv[0], "restrict") && !strcmp(args->argv[1], server))
@@ -219,7 +219,7 @@ int do_ntp_restrict(char *server, char *mask)
 				strcat(local, line);
 				strcat(local, "\n");
 			}			
-			destroy_args(args);
+			libconfig_destroy_args(args);
 		}
 	}
 	fclose(f);
@@ -282,7 +282,7 @@ int do_ntp_server(char *server, char *key_num)
 		if((p = strchr(line, '\n')))	*p = '\0';
 		if(strlen(line))
 		{
-			args=make_args(line);
+			args=libconfig_make_args(line);
 			if(!found && args->argc >= 2 && !strcmp(args->argv[0], "server") && !strcmp(args->argv[1], server))
 			{	/* server <ipaddr> iburst key 1-16 */
 				found=1;
@@ -297,7 +297,7 @@ int do_ntp_server(char *server, char *key_num)
 			}
 				else strcat(local, line);
 			strcat(local, "\n");
-			destroy_args(args);
+			libconfig_destroy_args(args);
 		}
 	}
 	fclose(f);
@@ -368,7 +368,7 @@ int do_ntp_trust_on_key(char *num)
 		if((p = strchr(line, '\n')))	*p = '\0';
 		if(strlen(line))
 		{
-			args = make_args(line);
+			args = libconfig_make_args(line);
 			if(args->argc > 0)
 			{
 				if(!found && !strcmp(args->argv[0], "trustedkey"))
@@ -395,7 +395,7 @@ int do_ntp_trust_on_key(char *num)
 				strcat(local, line);
 				strcat(local, "\n");
 			}
-			destroy_args(args);
+			libconfig_destroy_args(args);
 		}
 	}
 	if (!found)
@@ -458,7 +458,7 @@ int do_exclude_ntp_restrict(char *addr)
 		if((p = strchr(line, '\n')))	*p = '\0';
 		if(strlen(line))
 		{
-			args = make_args(line);
+			args = libconfig_make_args(line);
 			if(args->argc >= 4) /* restrict <ipaddr> mask <netmask> nomodify noserve (noquery) */
 			{
 				if(!strcmp(args->argv[0], "restrict"))
@@ -485,7 +485,7 @@ int do_exclude_ntp_restrict(char *addr)
 				strcat(local, line);
 				strcat(local, "\n");
 			}
-			destroy_args(args);
+			libconfig_destroy_args(args);
 		}
 	}
 	fclose(f);
@@ -541,7 +541,7 @@ int do_exclude_ntp_server(char *addr)
 		if((p = strchr(line, '\n')))	*p = '\0';
 		if(strlen(line))
 		{
-			args = make_args(line);
+			args = libconfig_make_args(line);
 			if(args->argc >= 3) /* server <ipaddress> iburst [key <1-16>] */
 			{
 				if(!strcmp(args->argv[0], "server"))
@@ -569,7 +569,7 @@ int do_exclude_ntp_server(char *addr)
 				strcat(local, line);
 				strcat(local, "\n");
 			}
-			destroy_args(args);
+			libconfig_destroy_args(args);
 		}
 	}
 	fclose(f);
@@ -626,7 +626,7 @@ int do_exclude_ntp_trustedkeys(char *num)
 		if((p = strchr(line, '\n')))	*p = '\0';
 		if(strlen(line))
 		{
-			args = make_args(line);
+			args = libconfig_make_args(line);
 			if(args->argc > 1)
 			{
 				if(!strcmp(args->argv[0], "trustedkey"))
@@ -656,7 +656,7 @@ int do_exclude_ntp_trustedkeys(char *num)
 				strcat(local, line);
 				strcat(local, "\n");
 			}
-			destroy_args(args);
+			libconfig_destroy_args(args);
 		}
 	}
 	fclose(f);
@@ -711,7 +711,7 @@ int do_ntp_key_set(char *key_num, char *value)
 		if((p = strchr(line, '\n')))	*p = '\0';
 		if(strlen(line))
 		{
-			args = make_args(line);
+			args = libconfig_make_args(line);
 			if(args->argc > 2)
 			{
 				if(!found && !strcmp(args->argv[0], key_num) && !strcmp(args->argv[1], "MD5"))
@@ -733,7 +733,7 @@ int do_ntp_key_set(char *key_num, char *value)
 				strcat(local, line);
 				strcat(local, "\n");
 			}
-			destroy_args(args);
+			libconfig_destroy_args(args);
 		}
 	}
 	if (!found)
@@ -786,15 +786,15 @@ int ntp_get(int *timeout, char *ip)
 	fgets(buf, 32, f);
 	buf[31]=0;
 	fclose(f);
-	args=make_args(buf);
+	args=libconfig_make_args(buf);
 	if (args->argc < 2)
 	{
-		destroy_args(args);
+		libconfig_destroy_args(args);
 		return -1;
 	}
 	*timeout=atoi(args->argv[0]);
 	strncpy(ip, args->argv[1], 16); ip[15]=0;
-	destroy_args(args);
+	libconfig_destroy_args(args);
 	return 0;
 }
 #endif
@@ -816,7 +816,7 @@ void lconfig_ntp_dump(FILE *out)
 			if ((p = strchr(line, '\n')))
 				*p = '\0';
 			if (strlen(line)) {
-				args = make_args(line);
+				args = libconfig_make_args(line);
 				if (!strcmp(args->argv[0], "restrict")) /* restrict <ipaddr> mask <mask> */
 				{
 					if (args->argc >= 4) {
@@ -828,7 +828,7 @@ void lconfig_ntp_dump(FILE *out)
 						                args->argv[3]);
 					}
 				}
-				destroy_args(args);
+				libconfig_destroy_args(args);
 			}
 		}
 		fseek(f, 0, SEEK_SET);
@@ -836,7 +836,7 @@ void lconfig_ntp_dump(FILE *out)
 			if ((p = strchr(line, '\n')))
 				*p = '\0';
 			if (strlen(line)) {
-				args = make_args(line);
+				args = libconfig_make_args(line);
 				if (!strcmp(args->argv[0], "trustedkey")) {
 					printed_something = 1;
 					if (args->argc > 1) {
@@ -849,7 +849,7 @@ void lconfig_ntp_dump(FILE *out)
 						fprintf(out,
 						                "no ntp trusted-key\n");
 				}
-				destroy_args(args);
+				libconfig_destroy_args(args);
 			}
 		}
 
@@ -858,7 +858,7 @@ void lconfig_ntp_dump(FILE *out)
 			if ((p = strchr(line, '\n')))
 				*p = '\0';
 			if (strlen(line)) {
-				args = make_args(line);
+				args = libconfig_make_args(line);
 				if (args->argc >= 2 && !strcmp(args->argv[0],
 				                "server")) /* server <ipaddr> iburst [key 1-16] */
 				{
@@ -872,7 +872,7 @@ void lconfig_ntp_dump(FILE *out)
 					else
 						fprintf(out, "\n");
 				}
-				destroy_args(args);
+				libconfig_destroy_args(args);
 			}
 		}
 		fclose(f);

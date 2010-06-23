@@ -3,6 +3,8 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include <linux/if.h>
 #include <linux/netdevice.h>
@@ -10,6 +12,8 @@
 
 #include "defines.h"
 #include "typedefs.h"
+
+typedef struct in_addr IP;
 
 //#define DEBUG
 #ifdef DEBUG

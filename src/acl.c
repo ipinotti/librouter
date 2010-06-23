@@ -407,9 +407,9 @@ void libconfig_acl_dump(char *xacl, FILE *F, int conf_format)
 					p++;
 
 				/* 0 0 DROP tcp -- * * 0.0.0.0/0 0.0.0.0/0 tcp flags:0x16/0x02 */
-				args = make_args(p);
+				args = libconfig_make_args(p);
 				if (args->argc < 9) {
-					destroy_args(args);
+					libconfig_destroy_args(args);
 					continue;
 				}
 
@@ -544,7 +544,7 @@ void libconfig_acl_dump(char *xacl, FILE *F, int conf_format)
 						}
 					}
 				}
-				destroy_args(args);
+				libconfig_destroy_args(args);
 			}
 		}
 	}
@@ -675,9 +675,9 @@ int libconfig_acl_matched_exists(char *acl,
 			while ((*p) && (*p == ' '))
 				p++;
 
-			args = make_args(p);
+			args = libconfig_make_args(p);
 			if (args->argc < 7) {
-				destroy_args(args);
+				libconfig_destroy_args(args);
 				continue;
 			}
 
@@ -690,11 +690,11 @@ int libconfig_acl_matched_exists(char *acl,
 				&& ((acl == NULL) || (strcmp(target, acl) == 0))) {
 
 				acl_exists = 1;
-				destroy_args(args);
+				libconfig_destroy_args(args);
 				break;
 			}
 
-			destroy_args(args);
+			libconfig_destroy_args(args);
 		}
 	}
 
@@ -752,9 +752,9 @@ int libconfig_acl_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 			while ((*p) && (*p == ' '))
 				p++;
 
-			args = make_args(p);
+			args = libconfig_make_args(p);
 			if (args->argc < 7) {
-				destroy_args(args);
+				libconfig_destroy_args(args);
 				continue;
 			}
 
@@ -779,7 +779,7 @@ int libconfig_acl_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 			if (acl_in && acl_out)
 				break;
 
-			destroy_args(args);
+			libconfig_destroy_args(args);
 		}
 	}
 
@@ -870,9 +870,9 @@ int libconfig_acl_clean_iface_acls(char *iface)
 			while ((*p) && (*p == ' '))
 				p++;
 
-			args = make_args(p);
+			args = libconfig_make_args(p);
 			if (args->argc < 7) {
-				destroy_args(args);
+				libconfig_destroy_args(args);
 				continue;
 			}
 
@@ -897,7 +897,7 @@ int libconfig_acl_clean_iface_acls(char *iface)
 
 				system(cmd);
 			}
-			destroy_args(args);
+			libconfig_destroy_args(args);
 		}
 	}
 
@@ -955,9 +955,9 @@ int libconfig_acl_copy_iface_acls(char *src, char *trg) /* starter/interfaces.c 
 			while ((*p) && (*p == ' '))
 				p++;
 
-			args = make_args(p);
+			args = libconfig_make_args(p);
 			if (args->argc < 7) {
-				destroy_args(args);
+				libconfig_destroy_args(args);
 				continue;
 			}
 
@@ -983,7 +983,7 @@ int libconfig_acl_copy_iface_acls(char *src, char *trg) /* starter/interfaces.c 
 				system(cmd);
 			}
 
-			destroy_args(args);
+			libconfig_destroy_args(args);
 		}
 	}
 

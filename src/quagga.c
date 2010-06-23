@@ -810,7 +810,7 @@ struct routes_t * lconfig_get_routes(void)
 		return NULL;
 
 	while (fgets(buf, sizeof(buf), f)) {
-		arglist *args = make_args(buf);
+		arglist *args = libconfig_make_args(buf);
 
 		/* At least 5 arguments */
 		if (args->argc < 5)

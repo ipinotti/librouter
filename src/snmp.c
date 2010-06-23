@@ -780,36 +780,36 @@ void show_event_info(struct rmon_config *shm_rmon_p, int i, int idx)
 		if (shm_rmon_p->events[i].do_log) {
 			if ((f = fopen(FILE_RMON_LOG_EVENTS, "r"))) {
 				while (fgets(line, 300, f)) {
-					if (parse_args_din(line, &argl) > 1) {
+					if (libconfig_parse_args_din(line, &argl) > 1) {
 						if (atoi(argl[0]) == idx)
 							strcpy(last, line);
 					}
-					free_args_din(&argl);
+					libconfig_destroy_args_din(&argl);
 				}
 				fclose(f);
 			}
 		}
 		if (last[0]) {
-			if (parse_args_din(last, &argl) > 1)
+			if (libconfig_parse_args_din(last, &argl) > 1)
 				printf(", last fired %s", argl[1]);
-			free_args_din(&argl);
+			libconfig_destroy_args_din(&argl);
 		}
 		printf("\n");
 	}
 	if ((f = fopen(FILE_RMON_LOG_EVENTS, "r"))) {
 		for (exist = 0; (exist == 0) && fgets(line, 300, f);) {
-			if (parse_args_din(line, &argl) > 1) {
+			if (libconfig_parse_args_din(line, &argl) > 1) {
 				if (atoi(argl[0]) == idx)
 					exist++;
 			}
-			free_args_din(&argl);
+			libconfig_destroy_args_din(&argl);
 		}
 		if (exist) {
 			fseek(f, 0, SEEK_SET);
 			printf("  Current log entries:\n");
 			printf("     Index     Time      Description\n");
 			for (count = 1; fgets(line, 300, f);) {
-				if ((args = parse_args_din(line, &argl)) > 1) {
+				if ((args = libconfig_parse_args_din(line, &argl)) > 1) {
 					if (atoi(argl[0]) == idx) {
 						sprintf(tmp, "%d", count);
 						printf("\033[%dC%s   %s   ", 10
@@ -821,7 +821,7 @@ void show_event_info(struct rmon_config *shm_rmon_p, int i, int idx)
 						count++;
 					}
 				}
-				free_args_din(&argl);
+				libconfig_destroy_args_din(&argl);
 			}
 		} else
 			printf("  No log entries\n");
@@ -1045,11 +1045,11 @@ int sendtrap(char *snmp_trap_version,
 	if ((f = fopen(FILE_SNMPD_CONF, "r")) == NULL)
 		return -1;
 	while (fgets(buf, 300, f)) {
-		if (parse_args_din(buf, &argl) > 1) {
+		if (libconfig_parse_args_din(buf, &argl) > 1) {
 			if (strcmp(argl[0], "trapsink") == 0)
 				len++;
 		}
-		free_args_din(&argl);
+		libconfig_destroy_args_din(&argl);
 	}
 	if ((sinks = malloc(len * sizeof(struct trap_sink))) == NULL) {
 		fclose(f);
@@ -1062,7 +1062,7 @@ int sendtrap(char *snmp_trap_version,
 	}
 	fseek(f, 0, SEEK_SET);
 	for (k = 0; fgets(buf, 300, f);) {
-		if ((args = parse_args_din(buf, &argl)) > 1) {
+		if ((args = libconfig_parse_args_din(buf, &argl)) > 1) {
 			if (strcmp(argl[0], "trapsink") == 0) {
 				if ((sinks[k].ip_addr = malloc(strlen(argl[1])
 				                + 1))) {
@@ -1092,7 +1092,7 @@ int sendtrap(char *snmp_trap_version,
 				}
 			}
 		}
-		free_args_din(&argl);
+		libconfig_destroy_args_din(&argl);
 	}
 	fclose(f);
 	for (idx = 0; idx < len; idx++) {
@@ -1237,7 +1237,7 @@ static int add_user_snmpd_conf(char *user, int rw, char *seclevel)
 		while ((feof(f) == 0) && (found == 0)) {
 			if (fgets(buf, 255, f) != NULL) {
 				buf[255] = 0;
-				if (parse_args_din(buf, &argl) == 3) {
+				if (libconfig_parse_args_din(buf, &argl) == 3) {
 					if (((strcmp(argl[0], "rwuser") == 0)
 					                || (strcmp(argl[0],
 					                                "rouser")
@@ -1247,7 +1247,7 @@ static int add_user_snmpd_conf(char *user, int rw, char *seclevel)
 					                                == 0))
 						found = 1;
 				}
-				free_args_din(&argl);
+				libconfig_destroy_args_din(&argl);
 			}
 		}
 		fclose(f);
@@ -1286,14 +1286,14 @@ static int remove_user_snmpd_conf(char *user)
 	while ((feof(f) == 0) && (found == 0)) {
 		if (fgets(buf, 255, f) != NULL) {
 			buf[255] = 0;
-			if (parse_args_din(buf, &argl) == 3) {
+			if (libconfig_parse_args_din(buf, &argl) == 3) {
 				if (((strcmp(argl[0], "rwuser") == 0)
 				                || (strcmp(argl[0], "rouser")
 				                                == 0))
 				                && (strcmp(argl[1], user) == 0))
 					found = 1;
 			}
-			free_args_din(&argl);
+			libconfig_destroy_args_din(&argl);
 		}
 	}
 	fclose(f);
@@ -1322,7 +1322,7 @@ static int adjust_snmp_fdb(unsigned int add, char *line, int rw)
 			while ((feof(f) == 0) && (found == 0)) {
 				if (fgets(buf, 255, f) != NULL) {
 					buf[255] = 0;
-					if (parse_args_din(buf, &argl) >= 2) {
+					if (libconfig_parse_args_din(buf, &argl) >= 2) {
 						if ((strcmp(argl[0],
 						                "createUser")
 						                == 0)
@@ -1335,7 +1335,7 @@ static int adjust_snmp_fdb(unsigned int add, char *line, int rw)
 						                                != NULL))
 							found = 1;
 					}
-					free_args_din(&argl);
+					libconfig_destroy_args_din(&argl);
 				}
 			}
 			fclose(f);
@@ -1373,7 +1373,7 @@ static int adjust_snmp_fdb(unsigned int add, char *line, int rw)
 
 		/* Ajusta arquivo FILE_SNMPD_DATA_CONF */
 		found = 0;
-		if ((n = parse_args_din(line, &argl)) >= 2) {
+		if ((n = libconfig_parse_args_din(line, &argl)) >= 2) {
 			if ((strcmp(argl[0], "createUser") == 0) && (strchr(
 			                line, '\n') != NULL)) {
 				if (add_user_snmpd_conf(
@@ -1384,7 +1384,7 @@ static int adjust_snmp_fdb(unsigned int add, char *line, int rw)
 					found = 1;
 			}
 		}
-		free_args_din(&argl);
+		libconfig_destroy_args_din(&argl);
 		if (found == 0)
 			break;
 
@@ -1448,14 +1448,14 @@ int add_snmp_user(char *user,
 		while ((feof(f) == 0) && (found == 0)) {
 			if (fgets(buf, 255, f) != NULL) {
 				buf[255] = 0;
-				if (parse_args_din(buf, &argl) >= 2) {
+				if (libconfig_parse_args_din(buf, &argl) >= 2) {
 					if ((strcmp(argl[0], "createUser") == 0)
 					                && (strcmp(argl[1],
 					                                user)
 					                                == 0))
 						found = 1;
 				}
-				free_args_din(&argl);
+				libconfig_destroy_args_din(&argl);
 			}
 		}
 		fclose(f);
@@ -1527,11 +1527,11 @@ unsigned int list_snmp_users(char ***store)
 	while (feof(f) == 0) {
 		if (fgets(buf, 255, f) != NULL) {
 			buf[255] = 0;
-			if (parse_args_din(buf, &argl) >= 2) {
+			if (libconfig_parse_args_din(buf, &argl) >= 2) {
 				if (strcmp(argl[0], "createUser") == 0)
 					count++;
 			}
-			free_args_din(&argl);
+			libconfig_destroy_args_din(&argl);
 		}
 	}
 	fclose(f);
@@ -1551,14 +1551,14 @@ unsigned int list_snmp_users(char ***store)
 	for (i = 0; (i < count) && (feof(f) == 0);) {
 		if (fgets(buf, 255, f) != NULL) {
 			buf[255] = 0;
-			if (parse_args_din(buf, &argl) >= 2) {
+			if (libconfig_parse_args_din(buf, &argl) >= 2) {
 				if (strcmp(argl[0], "createUser") == 0) {
 					if ((list[i] = malloc(strlen(argl[1])
 					                + 1)) != NULL)
 						strcpy(list[i++], argl[1]);
 				}
 			}
-			free_args_din(&argl);
+			libconfig_destroy_args_din(&argl);
 		}
 	}
 	fclose(f);
@@ -1579,7 +1579,7 @@ void load_prepare_snmp_users(void)
 			while (feof(f) == 0) {
 				if (fgets(buf, 255, f) != NULL) {
 					buf[255] = 0;
-					if ((n = parse_args_din(buf, &argl))
+					if ((n = libconfig_parse_args_din(buf, &argl))
 					                >= 2) {
 						if ((strcmp(argl[0],
 						                "createUser")
@@ -1600,7 +1600,7 @@ void load_prepare_snmp_users(void)
 							                                == 5) ? "auth" : "priv")));
 						}
 					}
-					free_args_din(&argl);
+					libconfig_destroy_args_din(&argl);
 				}
 			}
 			fclose(f);
@@ -1630,14 +1630,14 @@ void dev_add_snmptrap(char *itf)
 	{
 		while(!found && fgets(line, 100, f))
 		{
-			if(parse_args_din(line, &argl) > 0)
+			if(libconfig_parse_args_din(line, &argl) > 0)
 			{
 				if((p = strchr(argl[0], '#')))	*p = '\0';
 				if(strlen(argl[0]))
 				{
 					if(!strcmp(itf, argl[0]))	found++;
 				}
-				free_args_din(&argl);
+				libconfig_destroy_args_din(&argl);
 			}
 		}
 		if(!found)

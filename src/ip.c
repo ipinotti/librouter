@@ -786,10 +786,10 @@ unsigned int is_valid_netmask (char *mask)
 	}
 	if (n != 3)
 		return 0;
-	if (!(n = parse_args_din (data, &argl)))
+	if (!(n = libconfig_parse_args_din (data, &argl)))
 		return 0;
 	if (n != 4) {
-		free_args_din (&argl);
+		libconfig_destroy_args_din (&argl);
 		return 0;
 	}
 	for (i = 0, ok = 1, bit = 1; i < n; i++) {
@@ -819,7 +819,7 @@ unsigned int is_valid_netmask (char *mask)
 		if (!ok)
 			break;
 	}
-	free_args_din (&argl);
+	libconfig_destroy_args_din (&argl);
 	return ok;
 }
 

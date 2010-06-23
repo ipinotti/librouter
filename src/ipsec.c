@@ -6,6 +6,8 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "options.h"
 #include "defines.h"

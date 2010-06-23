@@ -210,10 +210,10 @@ int set_dhcp_server(int save_dns, char *cmdline)
 	IP dhcp_network, dhcp_mask;
 #endif
 
-	args=make_args(cmdline);
+	args=libconfig_make_args(cmdline);
 	if (args->argc < 7)
 	{
-		destroy_args(args);
+		libconfig_destroy_args(args);
 		return (-1);
 	}
 
@@ -231,7 +231,7 @@ int set_dhcp_server(int save_dns, char *cmdline)
 	if ((dhcp_network.s_addr!=eth_network.s_addr)||(dhcp_mask.s_addr!=eth_mask.s_addr))
 	{
 		libconfig_pr_error(0, "network segment not in ethernet segment address");
-		destroy_args(args);
+		libconfig_destroy_args(args);
 		return (-1);
 	}
 	else eth=0;
@@ -287,7 +287,7 @@ int set_dhcp_server(int save_dns, char *cmdline)
 		}
 		else
 		{
-			destroy_args(args);
+			libconfig_destroy_args(args);
 			return (-1);
 		}
 		i++;
@@ -298,7 +298,7 @@ int set_dhcp_server(int save_dns, char *cmdline)
 	if ((file=fopen(filename, "w")) == NULL)
 	{
 		libconfig_pr_error(1, "could not create %s", filename);
-		destroy_args(args);
+		libconfig_destroy_args(args);
 		return (-1);
 	}
 
@@ -349,7 +349,7 @@ int set_dhcp_server(int save_dns, char *cmdline)
 	fprintf(file, "}\n");
 #endif
 	fclose(file);
-	destroy_args(args);
+	libconfig_destroy_args(args);
 
 	sprintf(filename, FILE_DHCPDLEASES, eth);
 	file=fopen(filename, "r");
@@ -407,15 +407,15 @@ int check_dhcp_server(char *ifname)
 		fseek(file, 1, SEEK_SET); /* pula o '#' */
 		fgets(buf, 255, file); /* ip dhcp server 192.168.1.0 255.255.255.0 192.168.1.2 192.168.1.10 */
 		fclose(file);
-		args=make_args(buf);
+		args=libconfig_make_args(buf);
 		if (args->argc < 7)
 		{
-			destroy_args(args);
+			libconfig_destroy_args(args);
 			return (-1);
 		}
 		inet_aton(args->argv[3], &dhcp_network);
 		inet_aton(args->argv[4], &dhcp_mask);
-		destroy_args(args);
+		libconfig_destroy_args(args);
 		get_interface_address(get_ethernet_dev(ifname), &eth_addr, &eth_mask, 0, 0);
 		eth_network.s_addr = eth_addr.s_addr&eth_mask.s_addr;
 		if ((dhcp_network.s_addr!=eth_network.s_addr)||(dhcp_mask.s_addr!=eth_mask.s_addr))
@@ -529,7 +529,7 @@ int set_dhcp_server_local(int save_dns, char *cmdline)
 	arglist *args;
 	FILE *file;
 
-	args=make_args(cmdline);
+	args=libconfig_make_args(cmdline);
 	if (strcmp(args->argv[2], "ethernet") == 0)	{
 		int eth_number = atoi(args->argv[3]);
 		FILE *fd;
@@ -539,12 +539,12 @@ int set_dhcp_server_local(int save_dns, char *cmdline)
 		fclose(fd);
 
 		set_dhcpd_local(0); /* turn off udhcpd local! */
-		destroy_args(args);
+		libconfig_destroy_args(args);
 		return 0;
 	}
 
 	if (args->argc < 5) { /* l2tp pool local POOL-START POOL-END */
-		destroy_args(args);
+		libconfig_destroy_args(args);
 		return -1;
 	}
 
@@ -584,7 +584,7 @@ int set_dhcp_server_local(int save_dns, char *cmdline)
 				case 'H': netbios_node_type=8; break;
 			}
 		} else {
-			destroy_args(args);
+			libconfig_destroy_args(args);
 			return (-1);
 		}
 		i++;
@@ -594,7 +594,7 @@ int set_dhcp_server_local(int save_dns, char *cmdline)
 	if ((file=fopen(FILE_DHCPDCONF_LOCAL, "w")) == NULL)
 	{
 		libconfig_pr_error(1, "could not create %s", FILE_DHCPDCONF_LOCAL);
-		destroy_args(args);
+		libconfig_destroy_args(args);
 		return (-1);
 	}
 
@@ -626,7 +626,7 @@ int set_dhcp_server_local(int save_dns, char *cmdline)
 	if (netbios_dd_server) fprintf(file, "opt winsdd %s\n", netbios_dd_server);
 	if (netbios_node_type) fprintf(file, "opt winsnode %d\n", netbios_node_type);
 	fclose(file);
-	destroy_args(args);
+	libconfig_destroy_args(args);
 
 	file=fopen(FILE_DHCPDLEASES_LOCAL, "r");
 	/* cria o arquivo de leases em branco */

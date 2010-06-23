@@ -713,13 +713,13 @@ int init_program_get_option_value(char *prog, char *option, char *store, unsigne
 		buf[127] = 0;
 		if( strstr(buf, prog) != NULL ) {
 			ok = 1;
-			if( ((n_args = parse_args_din(buf, &argl)) > 0) && (parse_args_din(prog, &argl2) > 0) ) {
+			if( ((n_args = libconfig_parse_args_din(buf, &argl)) > 0) && (libconfig_parse_args_din(prog, &argl2) > 0) ) {
 				if( strstr(argl[0], argl2[0]) == NULL )
 					ok = 0;
 			}
-			free_args_din(&argl2);
+			libconfig_destroy_args_din(&argl2);
 			if( ok == 1 ) {
-				if( (n_args < 3) || (parse_args_din(option, &argl2) != 1) )
+				if( (n_args < 3) || (libconfig_parse_args_din(option, &argl2) != 1) )
 					goto error;
 				for( i=0; i < n_args; i++ ) {
 					if( strcmp(argl[i], argl2[0]) == 0 )
@@ -731,12 +731,12 @@ int init_program_get_option_value(char *prog, char *option, char *store, unsigne
 					ret = 0;
 				}
 error:
-				free_args_din(&argl);
-				free_args_din(&argl2);
+				libconfig_destroy_args_din(&argl);
+				libconfig_destroy_args_din(&argl2);
 				fclose(f);
 				return ret;
 			}
-			free_args_din(&argl);
+			libconfig_destroy_args_din(&argl);
 		}
 	}
 	fclose(f);
@@ -764,12 +764,12 @@ int init_program_change_option(int add_del, char *prog, char *option)
 		buf[127] = 0;
 		if( strstr(buf, prog) != NULL ) {
 			ok = 1;
-			if( (parse_args_din(buf, &argl) > 0) && (parse_args_din(prog, &argl2) > 0) ) {
+			if( (libconfig_parse_args_din(buf, &argl) > 0) && (libconfig_parse_args_din(prog, &argl2) > 0) ) {
 				if( strstr(argl[0], argl2[0]) == NULL )
 					ok = 0;
 			}
-			free_args_din(&argl);
-			free_args_din(&argl2);
+			libconfig_destroy_args_din(&argl);
+			libconfig_destroy_args_din(&argl2);
 			if( ok == 1 ) {
 				found = 1;
 				break;
@@ -780,13 +780,13 @@ int init_program_change_option(int add_del, char *prog, char *option)
 	if( found == 0 )
 		return -1;
 
-	if( (n_args = parse_args_din(buf, &argl)) == 0 ) {
-		free_args_din(&argl);
+	if( (n_args = libconfig_parse_args_din(buf, &argl)) == 0 ) {
+		libconfig_destroy_args_din(&argl);
 		return -1;
 	}
-	if( (opt_args = parse_args_din(option, &argl2)) == 0 ) {
-		free_args_din(&argl);
-		free_args_din(&argl2);
+	if( (opt_args = libconfig_parse_args_din(option, &argl2)) == 0 ) {
+		libconfig_destroy_args_din(&argl);
+		libconfig_destroy_args_din(&argl2);
 		return -1;
 	}
 	for( i=0, found=0; i <= (n_args - opt_args); i++ ) {
@@ -803,8 +803,8 @@ int init_program_change_option(int add_del, char *prog, char *option)
 	}
 	if( add_del ) {
 		if( found == 1 ) {
-			free_args_din(&argl);
-			free_args_din(&argl2);
+			libconfig_destroy_args_din(&argl);
+			libconfig_destroy_args_din(&argl2);
 			return 0;
 		}
 		new_line[0] = 0;
@@ -819,8 +819,8 @@ int init_program_change_option(int add_del, char *prog, char *option)
 	}
 	else {
 		if( found == 0 ) {
-			free_args_din(&argl);
-			free_args_din(&argl2);
+			libconfig_destroy_args_din(&argl);
+			libconfig_destroy_args_din(&argl2);
 			return 0;
 		}
 		new_line[0] = 0;
@@ -839,8 +839,8 @@ int init_program_change_option(int add_del, char *prog, char *option)
 				i += opt_args;
 		}
 	}
-	free_args_din(&argl);
-	free_args_din(&argl2);
+	libconfig_destroy_args_din(&argl);
+	libconfig_destroy_args_din(&argl2);
 	new_line[strlen(new_line) - 1] = (strchr(buf, '\n') != NULL) ? '\n' : 0;
 	return replace_exact_string(FILE_INITTAB, buf, new_line);
 }

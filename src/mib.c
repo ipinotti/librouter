@@ -131,7 +131,7 @@ int snmp_translate_oid(char *oid_str, oid *name, size_t *namelen)
 	if((local = strdup(oid_str)))
 	{
 		while((p=strchr(local, '.')))	*p = ' ';
-		if((n = parse_args_din(local, &argl)) > 0)
+		if((n = libconfig_parse_args_din(local, &argl)) > 0)
 		{
 			for(i=0,load_mib=0; !load_mib && i<n; i++)
 			{
@@ -183,7 +183,7 @@ int snmp_translate_oid(char *oid_str, oid *name, size_t *namelen)
 				*namelen = used_len;
 				ret = 1;
 			}
-			free_args_din(&argl);
+			libconfig_destroy_args_din(&argl);
 		}
 		free(local);
 	}
@@ -275,7 +275,7 @@ int convert_oid_to_object_name(char *oid_str, char *buf, int max_len)
 	if((local = strdup(oid_str)))
 	{
 		while((p=strchr(local, '.')))	*p = ' ';
-		if((n = parse_args_din(local, &argl)) > 0)
+		if((n = libconfig_parse_args_din(local, &argl)) > 0)
 		{
 			for(i=0,all_decimal=1; all_decimal && i<n; i++)
 			{
@@ -333,7 +333,7 @@ int convert_oid_to_object_name(char *oid_str, char *buf, int max_len)
 					unlock_snmp_tree_access();
 				}
 			}
-			free_args_din(&argl);
+			libconfig_destroy_args_din(&argl);
 		}
 		free(local);
 	}
