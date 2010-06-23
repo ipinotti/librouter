@@ -1,3 +1,9 @@
+/*
+ * typedefs.h
+ *
+ *  Created on: Jun 23, 2010
+ */
+
 #ifndef TYPEDEFS_H_
 #define TYPEDEFS_H_
 
@@ -19,5 +25,5 @@ typedef unsigned char u8;
 
 #define is_ip_zero(ip) ( ((ip).s_addr)==((unsigned int)0) )
 
-#endif
+#endif /* TYPEDEFS_H_ */
 
