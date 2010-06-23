@@ -10,6 +10,8 @@
 
 #include <zlib/zlib.h>
 
+#include "crc32.h"
+
 #define local static
 #define ZEXPORT	/* empty */
 
@@ -152,9 +154,9 @@ const uLongf * ZEXPORT get_crc_table()
 
 /* ========================================================================= */
 #if 0
-uLong ZEXPORT crc32(uLong crc, const Bytef *buf, uInt len)
+uLong ZEXPORT libconfig_crc32(uLong crc, const Bytef *buf, uInt len)
 #else
-unsigned long crc32 (unsigned long crc, const unsigned char *buf, unsigned int len)
+unsigned long libconfig_crc32 (unsigned long crc, const unsigned char *buf, unsigned int len)
 #endif
 {
     if (buf == Z_NULL) return 0L;

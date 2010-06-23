@@ -161,7 +161,7 @@ static char *read_nv(int fd, cfg_pack *pack)
 	lseek(fd, pack->offset, SEEK_SET);
 	read(fd, buf, pack->hdr.size);
 	buf[pack->hdr.size] = 0;
-	if (pack->hdr.crc != CalculateCRC32Checksum(buf, pack->hdr.size)) {
+	if (pack->hdr.crc != libconfig_calculate_crc32_checksum(buf, pack->hdr.size)) {
 		libconfig_pr_error(0, "bad CRC on startup configuration");
 		free(buf);
 		return NULL;
@@ -501,7 +501,7 @@ int save_configuration(char *filename)
 	else
 		header.id = nv.config.hdr.id + 1;
 	header.size = size;
-	header.crc = CalculateCRC32Checksum(config, size);
+	header.crc = libconfig_calculate_crc32_checksum(config, size);
 	write(fd, &header, sizeof(cfg_header)); /* allow empty config with size == 0 */
 	if (size > 0)
 		write(fd, config, size);
@@ -551,7 +551,7 @@ int save_ssh_secret(char *filename)
 	else
 		header.id = nv.ssh.hdr.id + 1;
 	header.size = size;
-	header.crc = CalculateCRC32Checksum(secret, size);
+	header.crc = libconfig_calculate_crc32_checksum(secret, size);
 	write(fd, &header, sizeof(cfg_header)); /* allow empty config with size == 0 */
 	if (size > 0)
 		write(fd, secret, size);
@@ -603,7 +603,7 @@ int save_ntp_secret(char *filename)
 	else
 		header.id = nv.ntp.hdr.id + 1;
 	header.size = size;
-	header.crc = CalculateCRC32Checksum(secret, size);
+	header.crc = libconfig_calculate_crc32_checksum(secret, size);
 	write(fd, &header, sizeof(cfg_header)); /* allow empty config with size == 0 */
 	if (size > 0)
 		write(fd, secret, size);
@@ -638,7 +638,7 @@ int set_stored_secret(char *secret)
 	else
 		header.id = nv.secret.hdr.id + 1;
 	header.size = size;
-	header.crc = CalculateCRC32Checksum((unsigned char *) secret, size);
+	header.crc = libconfig_calculate_crc32_checksum((unsigned char *) secret, size);
 	if (header.size > 0) {
 		write(fd, &header, sizeof(cfg_header));
 		write(fd, secret, size);
@@ -742,7 +742,7 @@ int save_snmp_secret(char *filename)
 	else
 		header.id = nv.snmp.hdr.id + 1;
 	header.size = size;
-	header.crc = CalculateCRC32Checksum(secret, size);
+	header.crc = libconfig_calculate_crc32_checksum(secret, size);
 	write(fd, &header, sizeof(cfg_header)); /* allow empty config with size == 0 */
 	if (size > 0)
 		write(fd, secret, size);
