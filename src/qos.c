@@ -478,7 +478,7 @@ int tc_insert_all(char *dev_name)
 		release_qos_config(intf_cfg);
 	}
 	fclose(f);
-	if (run_tc_now) return exec_prog(1, "/bin/tc", "-batch", filename, NULL);
+	if (run_tc_now) return libconfig_exec_prog(1, "/bin/tc", "-batch", filename, NULL);
 	return 0;
 }
 
@@ -493,7 +493,7 @@ int tc_remove_all(char *dev_name)
 	fprintf(f, "qdisc del dev %s ingress\n", dev_name);	
 #endif
 	fclose(f);
-	return exec_prog(1, "/bin/tc", "-batch", FILE_TMP_QOS_DOWN, NULL);
+	return libconfig_exec_prog(1, "/bin/tc", "-batch", FILE_TMP_QOS_DOWN, NULL);
 }
 /**************************************************************************/
 /* Policy-map functions */

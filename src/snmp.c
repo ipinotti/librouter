@@ -71,7 +71,7 @@ int snmp_reload_config(void)
 
 int snmp_is_running(void)
 {
-	return is_daemon_running(SNMP_DAEMON);
+	return libconfig_exec_check_daemon(SNMP_DAEMON);
 }
 
 int snmp_start(void)
@@ -184,7 +184,7 @@ int snmp_dump_versions(FILE *out)
 	int count = 0;
 	char *p1, *p2, *p3, buf[8];
 
-	if (get_inittab_lineoptions(PROG_SNMPD, "-J", buf, 8) > 0) {
+	if (libconfig_exec_get_inittab_lineoptions(PROG_SNMPD, "-J", buf, 8) > 0) {
 		p1 = strstr(buf, "1");
 		p2 = strstr(buf, "2c");
 		p3 = strstr(buf, "3");
@@ -410,7 +410,7 @@ int do_rmon_event_log(int index, char *description)
 	tm_ptr = gmtime(&the_time);
 	sprintf(buf, "%d %02d:%02d:%02d %s\n", index, tm_ptr->tm_hour,
 	                tm_ptr->tm_min, tm_ptr->tm_sec, description);
-	if (test_file_write_size(FILE_RMON_LOG_EVENTS,
+	if (libconfig_exec_test_write_len(FILE_RMON_LOG_EVENTS,
 	                FILE_RMON_LOG_EVENTS_MAX_SIZE, buf, strlen(buf)) < 0) {
 		free(buf);
 		return -1;
@@ -1252,7 +1252,7 @@ static int add_user_snmpd_conf(char *user, int rw, char *seclevel)
 		}
 		fclose(f);
 		if (found == 1) {
-			if (replace_string_file(FILE_SNMPD_DATA_CONF, buf, "")
+			if (libconfig_exec_replace_string_file(FILE_SNMPD_DATA_CONF, buf, "")
 			                < 0)
 				return -1;
 		}
@@ -1299,7 +1299,7 @@ static int remove_user_snmpd_conf(char *user)
 	fclose(f);
 
 	if (found == 1) {
-		if (replace_string_file(FILE_SNMPD_DATA_CONF, buf, "") < 0)
+		if (libconfig_exec_replace_string_file(FILE_SNMPD_DATA_CONF, buf, "") < 0)
 			return -1;
 	}
 
@@ -1343,10 +1343,10 @@ static int adjust_snmp_fdb(unsigned int add, char *line, int rw)
 
 		if (found == 1) {
 			/* Ajusta arquivo SNMP_USERKEY_FILE */
-			replace_string_file(SNMP_USERKEY_FILE, buf, "");
+			libconfig_exec_replace_string_file(SNMP_USERKEY_FILE, buf, "");
 
 			/* Ajusta arquivo FILE_SNMPD_STORE_CONF */
-			copy_file_to_file(SNMP_USERKEY_FILE,
+			libconfig_exec_copy_file(SNMP_USERKEY_FILE,
 			                FILE_SNMPD_STORE_CONF);
 		}
 
@@ -1367,7 +1367,7 @@ static int adjust_snmp_fdb(unsigned int add, char *line, int rw)
 		fclose(f);
 
 		/* Ajusta arquivo FILE_SNMPD_STORE_CONF */
-		if (copy_file_to_file(SNMP_USERKEY_FILE, FILE_SNMPD_STORE_CONF)
+		if (libconfig_exec_copy_file(SNMP_USERKEY_FILE, FILE_SNMPD_STORE_CONF)
 		                < 0)
 			break;
 
@@ -1607,7 +1607,7 @@ void load_prepare_snmp_users(void)
 		}
 
 		/* Ajusta arquivo FILE_SNMPD_STORE_CONF */
-		copy_file_to_file(SNMP_USERKEY_FILE, FILE_SNMPD_STORE_CONF);
+		libconfig_exec_copy_file(SNMP_USERKEY_FILE, FILE_SNMPD_STORE_CONF);
 	}
 }
 

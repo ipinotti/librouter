@@ -440,14 +440,14 @@ int validateip(char *ip)
 
 int get_ripd(void)
 {
-	return is_daemon_running(PROG_RIPD);
+	return libconfig_exec_check_daemon(PROG_RIPD);
 }
 
 int set_ripd(int on_noff)
 {
 	int ret;
 
-	ret = init_program(on_noff, PROG_RIPD);
+	ret = libconfig_exec_init_program(on_noff, PROG_RIPD);
 	if (on_noff) {
 		int i;
 		struct stat s_stat;
@@ -475,14 +475,14 @@ int set_ripd(int on_noff)
 
 int get_bgpd(void)
 {
-	return is_daemon_running(PROG_BGPD);
+	return libconfig_exec_check_daemon(PROG_BGPD);
 }
 
 int set_bgpd(int on_noff)
 {
 	int ret;
 
-	ret = init_program(on_noff, PROG_BGPD);
+	ret = libconfig_exec_init_program(on_noff, PROG_BGPD);
 	if (on_noff) {
 		int i;
 		struct stat s_stat;
@@ -510,14 +510,14 @@ int set_bgpd(int on_noff)
 
 int get_ospfd(void)
 {
-	return is_daemon_running(PROG_OSPFD);
+	return libconfig_exec_check_daemon(PROG_OSPFD);
 }
 
 int set_ospfd(int on_noff)
 {
 	int ret;
 
-	ret = init_program(on_noff, PROG_OSPFD);
+	ret = libconfig_exec_init_program(on_noff, PROG_OSPFD);
 	if (on_noff) {
 		int i;
 		struct stat s_stat;

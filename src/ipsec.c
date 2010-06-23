@@ -53,10 +53,10 @@ int set_ipsec(int opt)
 	switch(opt)
 	{
 		case START:
-			ret=init_program(1, PROG_STARTER);
+			ret=libconfig_exec_init_program(1, PROG_STARTER);
 			break;
 		case STOP:
-			ret=init_program(0, PROG_STARTER);
+			ret=libconfig_exec_init_program(0, PROG_STARTER);
 			for (i=0; i < 5; i++)
 			{
 				if (!get_ipsec()) break;
@@ -104,10 +104,10 @@ int set_l2tp(int opt)
 	switch(opt)
 	{
 		case START:
-			if (!pid) ret=init_program(1, PROG_L2TPD);
+			if (!pid) ret=libconfig_exec_init_program(1, PROG_L2TPD);
 			break;
 		case STOP:
-			if (pid) ret=init_program(0, PROG_L2TPD);
+			if (pid) ret=libconfig_exec_init_program(0, PROG_L2TPD);
 			break;
 		case RESTART:
 			if (pid) ret=kill(pid, SIGHUP);

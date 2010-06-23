@@ -219,7 +219,7 @@ void lconfig_dump_log(FILE *f)
 {
 	char buf[16];
 
-	if (init_program_get_option_value(PROG_SYSLOGD, "-R", buf, 16) >= 0)
+	if (libconfig_exec_get_init_option_value(PROG_SYSLOGD, "-R", buf, 16) >= 0)
 		fprintf(f, "logging remote %s\n!\n", buf);
 }
 
@@ -419,7 +419,7 @@ void lconfig_dump_rmon(FILE *f)
 		}
 		loose_access_rmon_config(&shm_rmon_p);
 	}
-	if (is_daemon_running(RMON_DAEMON))
+	if (libconfig_exec_check_daemon(RMON_DAEMON))
 		fprintf(f, "rmon agent\n");
 	else
 		fprintf(f, "no rmon agent\n");
@@ -620,26 +620,26 @@ void lconfig_ip_dump_servers(FILE *out)
 		fprintf(out, "no ip dhcp relay\n");
 	}
 
-	fprintf(out, "%sip dns relay\n", is_daemon_running(DNS_DAEMON) ? "" : "no ");
+	fprintf(out, "%sip dns relay\n", libconfig_exec_check_daemon(DNS_DAEMON) ? "" : "no ");
 	fprintf(out, "%sip domain lookup\n", libconfig_dns_domain_lookup_enabled() ? "" : "no ");
 
 	libconfig_dns_dump_nameservers(out);
 
 #ifdef OPTION_HTTP
-	fprintf(out, "%sip http server\n", is_daemon_running(HTTP_DAEMON) ? "" : "no ");
+	fprintf(out, "%sip http server\n", libconfig_exec_check_daemon(HTTP_DAEMON) ? "" : "no ");
 #endif
 #ifdef OPTION_HTTPS
-	fprintf(out, "%sip https server\n", is_daemon_running(HTTPS_DAEMON) ? "" : "no ");
+	fprintf(out, "%sip https server\n", libconfig_exec_check_daemon(HTTPS_DAEMON) ? "" : "no ");
 #endif
 #ifdef OPTION_PIMD
 	lconfig_pim_dump(out);
 #endif
 #ifdef OPTION_OPENSSH
-	fprintf(out, "%sip ssh server\n", is_daemon_running(SSH_DAEMON) ? "" : "no ");
+	fprintf(out, "%sip ssh server\n", libconfig_exec_check_daemon(SSH_DAEMON) ? "" : "no ");
 #else
-	fprintf (out, "%sip ssh server\n", get_inetd_program(SSH_DAEMON) ? "" : "no ");
+	fprintf (out, "%sip ssh server\n", libconfig_exec_get_inetd_program(SSH_DAEMON) ? "" : "no ");
 #endif
-	fprintf(out, "%sip telnet server\n", get_inetd_program(TELNET_DAEMON) ? "" : "no ");
+	fprintf(out, "%sip telnet server\n", libconfig_exec_get_inetd_program(TELNET_DAEMON) ? "" : "no ");
 	fprintf(out, "!\n");
 }
 
@@ -790,7 +790,7 @@ static void __dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	dump_ospf_interface(out, osdev);
 
 	/* Print main IP address */
-	if (strlen(daemon_dhcpc) && is_daemon_running(daemon_dhcpc))
+	if (strlen(daemon_dhcpc) && libconfig_exec_check_daemon(daemon_dhcpc))
 		fprintf(out, " ip address dhcp\n");
 	else
 		__dump_intf_ipaddr_config(out, conf);

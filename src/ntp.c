@@ -324,7 +324,7 @@ int do_ntp_server(char *server, char *key_num)
 		fwrite(line, 1, strlen(line), f);
 	}
 	fclose(f);
-	if (!is_daemon_running(NTP_DAEMON)) exec_daemon(NTP_DAEMON);
+	if (!libconfig_exec_check_daemon(NTP_DAEMON)) exec_daemon(NTP_DAEMON);
 		else ntp_hup();
 	return 0;
 }
@@ -582,7 +582,7 @@ int do_exclude_ntp_server(char *addr)
 	fwrite(local, 1, strlen(local), f);
 	fclose(f);
 	free(local);
-	if (!servers && is_daemon_running(NTP_DAEMON)) kill_daemon(NTP_DAEMON);
+	if (!servers && libconfig_exec_check_daemon(NTP_DAEMON)) kill_daemon(NTP_DAEMON);
 		else ntp_hup();
 	return 0;
 }

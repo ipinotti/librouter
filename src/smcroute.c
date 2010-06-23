@@ -104,10 +104,10 @@ int lconfig_smc_route(int add, char *origin, char *group, char *in, char *out)
 		if (database[i].valid == 1)
 			break;
 	if (i == SMC_ROUTE_MAX) {
-		init_program(0, SMC_DAEMON);
+		libconfig_exec_init_program(0, SMC_DAEMON);
 	} else {
-		if (!is_daemon_running(SMC_DAEMON)) {
-			init_program(1, SMC_DAEMON);
+		if (!libconfig_exec_check_daemon(SMC_DAEMON)) {
+			libconfig_exec_init_program(1, SMC_DAEMON);
 			sleep(1);
 		}
 		if (add)

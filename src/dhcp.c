@@ -116,10 +116,10 @@ int libconfig_dhcp_get_status(void)
 
 	sprintf(daemon0, DHCPD_DAEMON, 0);
 
-	if (is_daemon_running(daemon0))
+	if (libconfig_exec_check_daemon(daemon0))
 		return DHCP_SERVER;
 
-	if (is_daemon_running(DHCRELAY_DAEMON))
+	if (libconfig_exec_check_daemon(DHCRELAY_DAEMON))
 		return DHCP_RELAY;
 
 	return DHCP_NONE;
@@ -134,10 +134,10 @@ int libconfig_dhcpd_set_status(int on_off, int eth)
 		if ((ret = libconfig_udhcpd_reload(eth)) != -1)
 			return ret;
 		sprintf(daemon, DHCPD_DAEMON, eth);
-		return init_program(1, daemon);
+		return libconfig_exec_init_program(1, daemon);
 	}
 	sprintf(daemon, DHCPD_DAEMON, 0);
-	ret = init_program(0, daemon);
+	ret = libconfig_exec_init_program(0, daemon);
 
 	return ret;
 }
@@ -156,7 +156,7 @@ int libconfig_dhcp_set_none(void)
 #endif
 	}
 	if (ret == DHCP_RELAY) {
-		if (init_program(0, DHCRELAY_DAEMON) < 0)
+		if (libconfig_exec_init_program(0, DHCRELAY_DAEMON) < 0)
 			return (-1);
 		pid = get_pid(DHCRELAY_DAEMON);
 		if ((pid) && (wait_for_process(pid, 6) == 0))
@@ -184,7 +184,7 @@ int libconfig_dhcp_set_no_relay(void)
 {
 	int pid;
 
-	if (init_program(0, DHCRELAY_DAEMON) < 0)
+	if (libconfig_exec_init_program(0, DHCRELAY_DAEMON) < 0)
 		return (-1);
 	pid = get_pid(DHCRELAY_DAEMON);
 	if ((pid) && (wait_for_process(pid, 6) == 0))
@@ -472,7 +472,7 @@ int libconfig_dhcp_check_server(char *ifname)
 			unlink(filename);
 			sprintf(filename, DHCPD_DAEMON, eth);
 
-			return init_program(0, filename);
+			return libconfig_exec_init_program(0, filename);
 		}
 	}
 
@@ -488,7 +488,7 @@ int libconfig_dhcp_set_relay(char *servers)
 	replace_string_in_file_nl("/etc/inittab", "/bin/dhcrelay -q -d", servers);
 
 	/* poe o dhcrelay para rodar */
-	return init_program(1, DHCRELAY_DAEMON);
+	return libconfig_exec_init_program(1, DHCRELAY_DAEMON);
 }
 
 int libconfig_dhcp_get_relay(char *buf)
@@ -546,7 +546,7 @@ int libconfig_udhcpd_reload_local(void)
 
 int libconfig_dhcp_get_local(void)
 {
-	if (is_daemon_running(DHCPD_DAEMON_LOCAL))
+	if (libconfig_exec_check_daemon(DHCPD_DAEMON_LOCAL))
 		return DHCP_SERVER;
 	else
 		return DHCP_NONE;
@@ -559,7 +559,7 @@ int libconfig_dhcpd_set_local(int on_off)
 	if (on_off && libconfig_dhcp_get_local() == DHCP_SERVER)
 		return libconfig_udhcpd_reload_local();
 
-	ret = init_program(on_off, DHCPD_DAEMON_LOCAL);
+	ret = libconfig_exec_init_program(on_off, DHCPD_DAEMON_LOCAL);
 
 	set_l2tp(RESTART); /* L2TPd integration! */
 
