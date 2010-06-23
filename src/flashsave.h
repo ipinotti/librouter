@@ -1,9 +1,18 @@
-#define CFG_PRODUCT 		"3GRouter"
+/*
+ * flashsave.h
+ *
+ *  Created on: Jun 23, 2010
+ */
 
-#define CFG_BOOT_MTD "/dev/mtd0"
-#define CFG_SYS_MTD "/dev/mtd1"
+#ifndef FLASHSAVE_H_
+#define FLASHSAVE_H_
 
-#define IMAGE_FILE "/mnt/image"
+#define CFG_PRODUCT	"3GRouter"
+
+#define CFG_BOOT_MTD	"/dev/mtd0"
+#define CFG_SYS_MTD	"/dev/mtd1"
+
+#define IMAGE_FILE	"/mnt/image"
 
 #define FEBRUARY		2
 #define	STARTOFTIME		1970
@@ -12,8 +21,6 @@
 #define	leapyear(year)		((year) % 4 == 0)
 #define	days_in_year(a) 	(leapyear(a) ? 366 : 365)
 #define	days_in_month(a) 	(month_days[(a) - 1])
-
-void write_image(int burn);
 
 /**
  * Image check errors
@@ -38,3 +45,6 @@ enum write_error {
 
 int libconfig_flash_write_image(char *img);
 int libconfig_flash_check_image(char *img);
+void libconfig_write_image(int burn);
+
+#endif /* FLASHSAVE_H_ */
