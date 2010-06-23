@@ -159,7 +159,7 @@ FILE *zebra_show_cmd(const char *cmdline)
 		fd_daemon_close();
 		return NULL;
 	}
-	new_cmdline = cish_to_linux_dev_cmdline((char*) cmdline);
+	new_cmdline = libconfig_device_to_linux_cmdline((char*) cmdline);
 	daemon_client_execute("enable", stdout, NULL, 0);
 	daemon_client_execute(new_cmdline, f, NULL, 1);
 	fclose(f);
@@ -182,7 +182,7 @@ FILE *ospf_show_cmd(const char *cmdline)
 		fd_daemon_close();
 		return NULL;
 	}
-	new_cmdline = cish_to_linux_dev_cmdline((char*) cmdline);
+	new_cmdline = libconfig_device_to_linux_cmdline((char*) cmdline);
 	daemon_client_execute("enable", stdout, NULL, 0);
 	daemon_client_execute(new_cmdline, f, NULL, 1);
 	fclose(f);
@@ -205,7 +205,7 @@ FILE *rip_show_cmd(const char *cmdline)
 		fd_daemon_close();
 		return NULL;
 	}
-	new_cmdline = cish_to_linux_dev_cmdline((char*) cmdline);
+	new_cmdline = libconfig_device_to_linux_cmdline((char*) cmdline);
 	daemon_client_execute("enable", stdout, NULL, 0);
 	daemon_client_execute(new_cmdline, f, NULL, 1);
 	fclose(f);
@@ -228,7 +228,7 @@ FILE *bgp_show_cmd(const char *cmdline)
 		fd_daemon_close();
 		return NULL;
 	}
-	new_cmdline = cish_to_linux_dev_cmdline((char*) cmdline);
+	new_cmdline = libconfig_device_to_linux_cmdline((char*) cmdline);
 	daemon_client_execute("enable", stdout, NULL, 0);
 	daemon_client_execute(new_cmdline, f, NULL, 1);
 	fclose(f);
@@ -728,8 +728,8 @@ void zebra_dump_static_routes_conf(FILE *out)
 		if (buf[0] == '!')
 			break;
 		striplf(buf);
-		fprintf(out, "%s\n", linux_to_cish_dev_cmdline(
-		                zebra_to_linux_network_cmdline(buf)));
+		fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(
+		                libconfig_zebra_to_linux_cmdline(buf)));
 	}
 	fprintf(out, "!\n");
 

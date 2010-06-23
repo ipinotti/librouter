@@ -372,12 +372,12 @@ void lconfig_pim_dump(FILE *out)
 				if (!strcmp(args->argv[0], "cand_bootstrap_router")) {
 					if (args->argc == 2)
 						fprintf(out, "ip pim bsr-candidate %s\n",
-						                convert_os_device(args->argv[1], 0));
+						                libconfig_device_convert_os(args->argv[1], 0));
 					else if (args->argc == 4)
 						fprintf(
 						                out,
 						                "ip pim bsr-candidate %s priority %s\n",
-						                convert_os_device(args->argv[1], 0),
+						                libconfig_device_convert_os(args->argv[1], 0),
 						                args->argv[3]);
 					break; /* while */
 				}
@@ -406,18 +406,18 @@ void lconfig_pim_dump(FILE *out)
 				if (!strcmp(args->argv[0], "cand_rp")) {
 					if (args->argc == 2)
 						fprintf(out, "ip pim rp-candidate %s\n",
-						                convert_os_device(args->argv[1], 0));
+						                libconfig_device_convert_os(args->argv[1], 0));
 					else if (args->argc == 4)
 						fprintf(
 						                out,
 						                "ip pim rp-candidate %s priority %s\n",
-						                convert_os_device(args->argv[1], 0),
+						                libconfig_device_convert_os(args->argv[1], 0),
 						                args->argv[3]);
 					else if (args->argc == 6)
 						fprintf(
 						                out,
 						                "ip pim rp-candidate %s priority %s interval %s\n",
-						                convert_os_device(args->argv[1], 0),
+						                libconfig_device_convert_os(args->argv[1], 0),
 						                args->argv[3], args->argv[5]);
 					break;
 				}

@@ -144,7 +144,7 @@ void lconfig_mroute_dump(FILE *out)
 			sprintf(buf, "ip mroute %s %s in %s out %s",
 			                database[i].origin, database[i].group,
 			                database[i].in, database[i].out);
-			fprintf(out, "%s\n", linux_to_cish_dev_cmdline(buf));
+			fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(buf));
 			print = 1;
 		}
 	}

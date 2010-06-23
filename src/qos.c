@@ -363,7 +363,7 @@ int tc_insert_all(char *dev_name)
 	pmark_cfg_t *cfg;
 	pmap_cfg_t *pmap;
 	int n, i;
-	device_family *fam;
+	dev_family *fam;
 	int major;
 	int run_tc_now=0;
 	int raw_bw=0, available_bw=0, remain_bw=0;
@@ -374,7 +374,7 @@ int tc_insert_all(char *dev_name)
 	if (!f) return -1;
 
 	/* Get status from interfaces */
-	if ((fam = getfamily(dev_name)) == NULL) 
+	if ((fam = libconfig_device_get_family(dev_name)) == NULL) 
 		return -1;
 
 	major = atoi(dev_name+strlen(fam->cish_string));

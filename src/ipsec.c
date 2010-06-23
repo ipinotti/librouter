@@ -534,7 +534,7 @@ int get_ipsec_interface(char *iface, int max_len)
 	if (find_string_in_file_nl(FILE_IPSEC_CONF, "ipsec0", buf, MAX_LINE) < 0) return -1;
 	// retira as aspas
 	if ((p=strstr(buf, "\""))) memmove(p,"\0", 1);
-	cish_dev=convert_os_device(buf, 0);
+	cish_dev=libconfig_device_convert_os(buf, 0);
 	if (strlen(cish_dev) < max_len)
 	{
 		strncpy(iface, cish_dev, max_len);
@@ -1021,7 +1021,7 @@ void lconfig_crypto_dump(FILE *out)
 							fprintf(
 							                out,
 							                "  local address interface %s\n",
-							                convert_os_device(buf + 1,
+							                libconfig_device_convert_os(buf + 1,
 							                                0)); /* skip % */
 						break;
 					case ADDR_IP:

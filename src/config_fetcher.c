@@ -240,8 +240,8 @@ void lconfig_bgp_dump_router(FILE *f, int main_nip)
 			if (buf[0] == '!')
 				break;
 			striplf(buf);
-			fprintf(f, "%s\n", linux_to_cish_dev_cmdline(
-			                zebra_to_linux_network_cmdline(buf)));
+			fprintf(f, "%s\n", libconfig_device_from_linux_cmdline(
+			                libconfig_zebra_to_linux_cmdline(buf)));
 		}
 		fclose(fd);
 	}
@@ -480,8 +480,8 @@ void lconfig_ospf_dump_router(FILE *out)
 			if (buf[0] == '!')
 				break;
 			striplf(buf);
-			fprintf(out, "%s\n", linux_to_cish_dev_cmdline(
-			                zebra_to_linux_network_cmdline(buf)));
+			fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(
+			                libconfig_zebra_to_linux_cmdline(buf)));
 		}
 		fclose(f);
 	}
@@ -506,7 +506,7 @@ void dump_ospf_interface(FILE *out, char *intf)
 		if (buf[0] == '!')
 			break;
 		striplf(buf);
-		fprintf(out, "%s\n", linux_to_cish_dev_cmdline(zebra_to_linux_network_cmdline(buf)));
+		fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(libconfig_zebra_to_linux_cmdline(buf)));
 	}
 	fclose(f);
 }
@@ -531,8 +531,8 @@ void lconfig_rip_dump_router(FILE *out)
 			if (buf[0] == '!')
 				break;
 			striplf(buf);
-			fprintf(out, "%s\n", linux_to_cish_dev_cmdline(
-			                zebra_to_linux_network_cmdline(buf)));
+			fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(
+			                libconfig_zebra_to_linux_cmdline(buf)));
 		}
 		fclose(f);
 	}
@@ -574,7 +574,7 @@ void dump_rip_interface(FILE *out, char *intf)
 		if (buf[0] == '!')
 			break;
 		striplf(buf);
-		fprintf(out, "%s\n", linux_to_cish_dev_cmdline(zebra_to_linux_network_cmdline(buf)));
+		fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(libconfig_zebra_to_linux_cmdline(buf)));
 	}
 	fclose(f);
 }
@@ -926,7 +926,7 @@ static void dump_interface_config(FILE *out, struct interface_conf *conf)
 	lconfig_mangle_get_iface_rules(conf->name, ipt.in_mangle, ipt.out_mangle);
 	lconfig_nat_get_iface_rules(conf->name, ipt.in_nat, ipt.out_nat);
 
-	cish_dev = convert_os_device(conf->name, 0);
+	cish_dev = libconfig_device_convert_os(conf->name, 0);
 
 	if (conf->linktype == ARPHRD_TUNNEL6)
 		return; /* skip ipsec ones... */
@@ -995,7 +995,7 @@ void lconfig_interfaces_dump(FILE *out)
 
 		st = conf.stats;
 
-		cish_dev = convert_os_device(conf.name, 1);
+		cish_dev = libconfig_device_convert_os(conf.name, 1);
 		if (cish_dev == NULL)
 			continue; /* Ignore if device is not recognized by CISH */
 
