@@ -621,9 +621,9 @@ void lconfig_ip_dump_servers(FILE *out)
 	}
 
 	fprintf(out, "%sip dns relay\n", is_daemon_running(DNS_DAEMON) ? "" : "no ");
-	fprintf(out, "%sip domain lookup\n", is_domain_lookup_enabled() ? "" : "no ");
+	fprintf(out, "%sip domain lookup\n", libconfig_dns_domain_lookup_enabled() ? "" : "no ");
 
-	lconfig_dns_dump_nameservers(out);
+	libconfig_dns_dump_nameservers(out);
 
 #ifdef OPTION_HTTP
 	fprintf(out, "%sip http server\n", is_daemon_running(HTTP_DAEMON) ? "" : "no ");
