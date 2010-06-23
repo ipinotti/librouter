@@ -1,3 +1,11 @@
+/*
+ * cish_defines.h
+ *
+ *  Created on: Jun 23, 2010
+ */
+
+#ifndef CISH_DEFINES_H_
+#define CISH_DEFINES_H_
 
 #define MAX_SERVERS 3
 #define MAX_SERVER_AUTH_KEY 256
@@ -27,3 +35,4 @@ typedef struct
 	char nat_helper_tftp_ports[48]; /* !!! find new location! */
 } cish_config;
 
+#endif /* CISH_DEFINES_H_ */
