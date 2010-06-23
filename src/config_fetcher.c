@@ -876,7 +876,7 @@ static void __dump_tunnel_config(FILE *out, struct interface_conf *conf)
 	if (conf->txqueue)
 	fprintf(out, " txqueuelen %d\n", conf->txqueue);
 
-	dump_tunnel_interface(out, 1, osdev);
+	libconfig_tunnel_dump_interface(out, 1, osdev);
 
 	fprintf(out, " %sshutdown\n", conf->up ? "no " : "");
 }
