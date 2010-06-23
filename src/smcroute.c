@@ -82,7 +82,7 @@ int lconfig_smc_route(int add, char *origin, char *group, char *in, char *out)
 			strcpy(database[t].in, in);
 			strcpy(database[t].out, out);
 		} else {
-			pr_error(0, "mroute table full");
+			libconfig_pr_error(0, "mroute table full");
 			return (-1);
 		}
 	} else {
@@ -90,7 +90,7 @@ int lconfig_smc_route(int add, char *origin, char *group, char *in, char *out)
 			memset(&database[n], 0,
 			                sizeof(struct smc_route_database)); /* del */
 		} else {
-			pr_error(0, "mroute not found");
+			libconfig_pr_error(0, "mroute not found");
 			return (-1);
 		}
 	}

@@ -43,7 +43,7 @@ static int search_nv(struct _nv *nv, char *startup_config_path)
 	int i;
 
 	if ((f = fopen(DEV_STARTUP_CONFIG, "r")) == NULL) {
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG);
+		libconfig_pr_error(1, "could not open "DEV_STARTUP_CONFIG);
 		return -1;
 	}
 	memset(nv, 0, sizeof(struct _nv));
@@ -115,7 +115,7 @@ static int search_nv(struct _nv *nv, char *startup_config_path)
 			nv->snmp.offset = ftell(f);
 			break;
 		default:
-			pr_error(0, "bad magic number on startup configuration");
+			libconfig_pr_error(0, "bad magic number on startup configuration");
 #ifdef DEBUG
 			printf("bad magic:0x%x at 0x%lx\n", header.magic_number, ftell(f) - sizeof(cfg_header));
 #endif
@@ -154,7 +154,7 @@ static char *read_nv(int fd, cfg_pack *pack)
 	unsigned char *buf;
 
 	if ((buf = malloc(pack->hdr.size + 1)) == NULL) {
-		pr_error(1,
+		libconfig_pr_error(1,
 		                "unable to allocate memory for startup configuration");
 		return NULL;
 	}
@@ -162,7 +162,7 @@ static char *read_nv(int fd, cfg_pack *pack)
 	read(fd, buf, pack->hdr.size);
 	buf[pack->hdr.size] = 0;
 	if (pack->hdr.crc != CalculateCRC32Checksum(buf, pack->hdr.size)) {
-		pr_error(0, "bad CRC on startup configuration");
+		libconfig_pr_error(0, "bad CRC on startup configuration");
 		free(buf);
 		return NULL;
 	}
@@ -191,7 +191,7 @@ static int clean_nv(int fd, long size, struct _nv *nv)
 		slot[i] = NULL;
 #endif
 	if (ioctl(fd, MEMGETINFO, &meminfo) != 0) {
-		pr_error(1, "unable to get MTD device info");
+		libconfig_pr_error(1, "unable to get MTD device info");
 		return -1;
 	}
 	if (nv->next_header >= 0) {
@@ -243,7 +243,7 @@ static int clean_nv(int fd, long size, struct _nv *nv)
 				erase.length = r->erasesize;
 				if (ioctl(fd, MEMERASE, &erase) != 0) {
 					free(reginfo);
-					pr_error(1, "MTD Erase failure");
+					libconfig_pr_error(1, "MTD Erase failure");
 					goto error;
 				}
 				start += erase.length;
@@ -260,7 +260,7 @@ static int clean_nv(int fd, long size, struct _nv *nv)
 			for (erase.start = 0; erase.start < meminfo.size; erase.start
 			                += meminfo.erasesize) {
 				if (ioctl(fd, MEMERASE, &erase) != 0) {
-					pr_error(1, "MTD Erase failure");
+					libconfig_pr_error(1, "MTD Erase failure");
 					goto error;
 				}
 			}
@@ -338,7 +338,7 @@ int load_configuration(char *filename)
 		return 0;
 
 	if ((fd = open(DEV_STARTUP_CONFIG, O_RDONLY)) < 0) {
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG);
+		libconfig_pr_error(1, "could not open "DEV_STARTUP_CONFIG);
 		return -1;
 	}
 	config = read_nv(fd, &nv.config);
@@ -348,7 +348,7 @@ int load_configuration(char *filename)
 
 	if ((fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR
 	                | S_IWUSR)) < 0) {
-		pr_error(1, "could not open %s", filename);
+		libconfig_pr_error(1, "could not open %s", filename);
 		free(config);
 		return -1;
 	}
@@ -370,7 +370,7 @@ int load_previous_configuration(char *filename)
 		return 0;
 
 	if ((fd = open(DEV_STARTUP_CONFIG, O_RDONLY)) < 0) {
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG);
+		libconfig_pr_error(1, "could not open "DEV_STARTUP_CONFIG);
 		return -1;
 	}
 	config = read_nv(fd, &nv.previousconfig);
@@ -380,7 +380,7 @@ int load_previous_configuration(char *filename)
 
 	if ((fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR
 	                | S_IWUSR)) < 0) {
-		pr_error(1, "could not open %s", filename);
+		libconfig_pr_error(1, "could not open %s", filename);
 		free(config);
 		return -1;
 	}
@@ -402,7 +402,7 @@ int load_ssh_secret(char *filename)
 		return -1;
 
 	if ((fd = open(DEV_STARTUP_CONFIG, O_RDONLY)) < 0) {
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG);
+		libconfig_pr_error(1, "could not open "DEV_STARTUP_CONFIG);
 		return -1;
 	}
 	secret = read_nv(fd, &nv.ssh);
@@ -412,7 +412,7 @@ int load_ssh_secret(char *filename)
 
 	if ((fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR
 	                | S_IWUSR)) < 0) {
-		pr_error(1, "could not open %s", filename);
+		libconfig_pr_error(1, "could not open %s", filename);
 		free(secret);
 		return -1;
 	}
@@ -435,7 +435,7 @@ int load_ntp_secret(char *filename)
 		return -1;
 
 	if ((fd = open(DEV_STARTUP_CONFIG, O_RDONLY)) < 0) {
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG);
+		libconfig_pr_error(1, "could not open "DEV_STARTUP_CONFIG);
 		return -1;
 	}
 	secret = read_nv(fd, &nv.ntp);
@@ -445,7 +445,7 @@ int load_ntp_secret(char *filename)
 
 	if ((fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR
 	                | S_IWUSR)) < 0) {
-		pr_error(1, "could not open %s", filename);
+		libconfig_pr_error(1, "could not open %s", filename);
 		free(secret);
 		return -1;
 	}
@@ -467,13 +467,13 @@ int save_configuration(char *filename)
 	struct _nv nv;
 
 	if ((fd = open(filename, O_RDONLY)) < 0) {
-		pr_error(1, "could not open %s", filename);
+		libconfig_pr_error(1, "could not open %s", filename);
 		return -1;
 	}
 	fstat(fd, &st);
 	size = st.st_size;
 	if ((config = malloc(size + 1)) == NULL) {
-		pr_error(1,
+		libconfig_pr_error(1,
 		                "unable to allocate memory for startup configuration");
 		close(fd);
 		return -1;
@@ -486,7 +486,7 @@ int save_configuration(char *filename)
 		return -1;
 
 	if ((fd = open(DEV_STARTUP_CONFIG, O_RDWR)) < 0) {
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG);
+		libconfig_pr_error(1, "could not open "DEV_STARTUP_CONFIG);
 		free(config);
 		return -1;
 	}
@@ -520,13 +520,13 @@ int save_ssh_secret(char *filename)
 	unsigned char *secret;
 
 	if ((fd = open(filename, O_RDONLY)) < 0) {
-		pr_error(1, "could not open %s", filename);
+		libconfig_pr_error(1, "could not open %s", filename);
 		return -1;
 	}
 	fstat(fd, &st);
 	size = st.st_size;
 	if ((secret = malloc(size + 1)) == NULL) {
-		pr_error(1, "unable to allocate memory for ssh secret");
+		libconfig_pr_error(1, "unable to allocate memory for ssh secret");
 		close(fd);
 		return -1;
 	}
@@ -536,7 +536,7 @@ int save_ssh_secret(char *filename)
 
 	search_nv(&nv, NULL);
 	if ((fd = open(DEV_STARTUP_CONFIG, O_RDWR)) < 0) {
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG);
+		libconfig_pr_error(1, "could not open "DEV_STARTUP_CONFIG);
 		free(secret);
 		return -1;
 	}
@@ -572,13 +572,13 @@ int save_ntp_secret(char *filename)
 	unsigned char *secret;
 
 	if ((fd = open(filename, O_RDONLY)) < 0) {
-		pr_error(1, "could not open %s", filename);
+		libconfig_pr_error(1, "could not open %s", filename);
 		return -1;
 	}
 	fstat(fd, &st);
 	size = st.st_size;
 	if ((secret = malloc(size + 1)) == NULL) {
-		pr_error(1, "unable to allocate memory for ntp secret");
+		libconfig_pr_error(1, "unable to allocate memory for ntp secret");
 		close(fd);
 		return -1;
 	}
@@ -588,7 +588,7 @@ int save_ntp_secret(char *filename)
 
 	search_nv(&nv, NULL);
 	if ((fd = open(DEV_STARTUP_CONFIG, O_RDWR)) < 0) {
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG);
+		libconfig_pr_error(1, "could not open "DEV_STARTUP_CONFIG);
 		free(secret);
 		return -1;
 	}
@@ -624,7 +624,7 @@ int set_stored_secret(char *secret)
 
 	search_nv(&nv, NULL);
 	if ((fd = open(DEV_STARTUP_CONFIG, O_RDWR)) < 0) {
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG);
+		libconfig_pr_error(1, "could not open "DEV_STARTUP_CONFIG);
 		return -1;
 	}
 	size = strlen(secret);
@@ -660,7 +660,7 @@ char *get_rsakeys_from_nv(void)
 		return NULL;
 
 	if ((fd = open(DEV_STARTUP_CONFIG, O_RDONLY)) < 0) {
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG);
+		libconfig_pr_error(1, "could not open "DEV_STARTUP_CONFIG);
 		return NULL;
 	}
 	secret = read_nv(fd, &nv.secret);
@@ -681,7 +681,7 @@ int load_snmp_secret(char *filename)
 		return -1;
 
 	if ((fd = open(DEV_STARTUP_CONFIG, O_RDONLY)) < 0) {
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG);
+		libconfig_pr_error(1, "could not open "DEV_STARTUP_CONFIG);
 		return -1;
 	}
 	secret = read_nv(fd, &nv.snmp);
@@ -691,7 +691,7 @@ int load_snmp_secret(char *filename)
 
 	if ((fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR
 	                | S_IWUSR)) < 0) {
-		pr_error(1, "could not open %s", filename);
+		libconfig_pr_error(1, "could not open %s", filename);
 		free(secret);
 		return -1;
 	}
@@ -711,13 +711,13 @@ int save_snmp_secret(char *filename)
 	cfg_header header;
 
 	if ((fd = open(filename, O_RDONLY)) < 0) {
-		pr_error(1, "could not open %s", filename);
+		libconfig_pr_error(1, "could not open %s", filename);
 		return -1;
 	}
 	fstat(fd, &st);
 	size = st.st_size;
 	if ((secret = malloc(size + 1)) == NULL) {
-		pr_error(1, "unable to allocate memory for snmp secret");
+		libconfig_pr_error(1, "unable to allocate memory for snmp secret");
 		close(fd);
 		return -1;
 	}
@@ -727,7 +727,7 @@ int save_snmp_secret(char *filename)
 
 	search_nv(&nv, NULL);
 	if ((fd = open(DEV_STARTUP_CONFIG, O_RDWR)) < 0) {
-		pr_error(1, "could not open "DEV_STARTUP_CONFIG);
+		libconfig_pr_error(1, "could not open "DEV_STARTUP_CONFIG);
 		free(secret);
 		return -1;
 	}

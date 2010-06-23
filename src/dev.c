@@ -61,7 +61,7 @@ static int do_chflags(char *dev, __u32 flags, __u32 mask)
 	err = ioctl(fd, SIOCGIFFLAGS, &ifr);
 	if (err)
 	{
-		pr_error(1, "do_chflags %s SIOCGIFFLAGS", ifr.ifr_name);
+		libconfig_pr_error(1, "do_chflags %s SIOCGIFFLAGS", ifr.ifr_name);
 		close(fd);
 		return -1;
 	}
@@ -209,7 +209,7 @@ int dev_get_hwaddr(char *dev, unsigned char *hwaddr)
 	/* Create a socket to the INET kernel. */
 	if ((skfd=socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 	{
-		pr_error(1, "socket");
+		libconfig_pr_error(1, "socket");
 		return (-1);
 	}
 	strcpy(ifr.ifr_name, dev);
@@ -230,13 +230,13 @@ int dev_change_name(char *ifname, char *new_ifname)
 	/* Create a socket to the INET kernel. */
 	if ((fd=socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 	{
-		pr_error(1, "socket");
+		libconfig_pr_error(1, "socket");
 		return (-1);
 	}
 	strcpy(ifr.ifr_name, ifname);
 	strcpy(ifr.ifr_newname, new_ifname);
 	if (ioctl(fd, SIOCSIFNAME, &ifr)) {
-		pr_error(1, "%s: SIOCSIFNAME", ifname);
+		libconfig_pr_error(1, "%s: SIOCSIFNAME", ifname);
 		close(fd);
 		return (-1);
 	}
@@ -252,7 +252,7 @@ int dev_exists(char *dev)
 	/* Create a socket to the INET kernel. */
 	if ((fd=socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 	{
-		pr_error(1, "socket");
+		libconfig_pr_error(1, "socket");
 		return (0);
 	}
 	strcpy(ifr.ifr_name, dev);
@@ -269,14 +269,14 @@ int clear_interface_counters(char *dev)
 
 	if ((fd=socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 	{
-		pr_error(1, "socket");
+		libconfig_pr_error(1, "socket");
 		return (0);
 	}
 	strcpy(ifr.ifr_name, dev);
 	err=ioctl(fd, SIOCCLRIFSTATS, &ifr);
 	if ((err < 0) && (errno != ENODEV))
 	{
-		pr_error(1, "SIOCCLRIFSTATS");
+		libconfig_pr_error(1, "SIOCCLRIFSTATS");
 	}
 	close(fd);
 	return err;
@@ -515,12 +515,12 @@ int notify_driver_about_shutdown(char *dev)
 	strcpy(ifr.ifr_name, dev);
 	/* Create a channel to the NET kernel. */
 	if( (sock=socket(PF_INET, SOCK_DGRAM, IPPROTO_IP)) < 0 ) {
-		pr_error(1, "if_shutdown_alert: socket");
+		libconfig_pr_error(1, "if_shutdown_alert: socket");
 		return (-1);
 	}
 	ifr.ifr_settings.type = IF_SHUTDOWN_ALERT; /* use linux/drivers/net/wan/hdlc_sppp.c */
 	if( ioctl(sock, SIOCWANDEV, &ifr) ) {
-		pr_error(1, "if_shutdown_alert: ioctl");
+		libconfig_pr_error(1, "if_shutdown_alert: ioctl");
 		return (-1);
 	}
 	close(sock);

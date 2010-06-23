@@ -146,12 +146,12 @@ int set_ipsec_connection(int add_del, char *key, int fd)
 
 	if (fstat(fd, &st) < 0)
 	{
-		pr_error(1, "fstat");
+		libconfig_pr_error(1, "fstat");
 		return -1;
 	}
 	if (!(buf=malloc(st.st_size+1)))
 	{
-		pr_error(1, "malloc");
+		libconfig_pr_error(1, "malloc");
 		return -1;
 	}
 	read(fd, buf, st.st_size); /* read all data */
@@ -165,7 +165,7 @@ int set_ipsec_connection(int add_del, char *key, int fd)
 			write(fd, p+strlen(key), st.st_size-(p+strlen(key)-buf)); /* remove key */
 			if (ftruncate(fd, lseek(fd, 0, SEEK_CUR)) < 0) /* clean file */
 			{
-				pr_error(1, "ftruncate");
+				libconfig_pr_error(1, "ftruncate");
 				ret=-1;
 			}
 		}
@@ -211,7 +211,7 @@ int create_rsakey(int keysize)
 	fseek(f, 0, SEEK_SET); 
 	if ((buf=malloc(size+1)) == NULL)
 	{
-		pr_error(1, "unable to allocate memory");
+		libconfig_pr_error(1, "unable to allocate memory");
 		fclose(f);
 		return -1;
 	}
@@ -222,7 +222,7 @@ int create_rsakey(int keysize)
 	if (set_stored_secret(buf) < 0)
 	{
 		ret=-1;
-		pr_error(1, "unable to save key");
+		libconfig_pr_error(1, "unable to save key");
 	}
 		else ret=0;
 	free(buf);
@@ -392,7 +392,7 @@ int get_ipsec_link(char *ipsec_conn)
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
 	if (stat(filename, &st) != 0)
 	{
-		pr_error(0, "Could not get ipsec link");
+		libconfig_pr_error(0, "Could not get ipsec link");
 		return -1;
 	}
 	if ((ret=find_string_in_file_nl(filename, STRING_IPSEC_LINK, opt, 5)) < 0) return ret;
@@ -592,7 +592,7 @@ int list_all_ipsec_names(char ***rcv_p)
 	n=scandir("/etc/", &namelist, ipsec_file_filter, alphasort);
 	if (n < 0)
 	{
-		pr_error(0, "scandir failed");
+		libconfig_pr_error(0, "scandir failed");
 		return -1;
 	}
 	else

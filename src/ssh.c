@@ -23,7 +23,7 @@ int ssh_create_rsakey(int keysize)
 
 	if (save_ssh_secret(SSH_KEY_FILE) < 0) {
 		ret = -1;
-		pr_error(1, "unable to save key");
+		libconfig_pr_error(1, "unable to save key");
 	}
 	else
 		ret = 0;

@@ -70,19 +70,19 @@ int do_ntp_authenticate(int used)
 	if(used == is_ntp_auth_used())	return 0;
 	if((fd = open(FILE_NTP_CONF, O_RDONLY)) < 0)
 	{
-		pr_error(0, "Could not read NTP configuration (open)");
+		libconfig_pr_error(0, "Could not read NTP configuration (open)");
 		return -1;
 	}
 	if(fstat(fd, &st) < 0)
 	{
 		close(fd);
-		pr_error(0, "Could not read NTP configuration (fstat)");
+		libconfig_pr_error(0, "Could not read NTP configuration (fstat)");
 		return -1;
 	}
 	if(!(local=malloc(st.st_size+128)))
 	{
 		close(fd);
-		pr_error(0, "Could not read NTP configuration (malloc)");
+		libconfig_pr_error(0, "Could not read NTP configuration (malloc)");
 		return -1;
 	}
 	local[0]='\0';
@@ -90,7 +90,7 @@ int do_ntp_authenticate(int used)
 
 	if(!(f = fopen(FILE_NTP_CONF, "r")))
 	{
-		pr_error(0, "Could not read NTP configuration (fopen)");
+		libconfig_pr_error(0, "Could not read NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -149,7 +149,7 @@ int do_ntp_authenticate(int used)
 	fclose(f);
 	if(!(f = fopen(FILE_NTP_CONF, "w")))
 	{
-		pr_error(0, "Could not write NTP configuration (fopen)");
+		libconfig_pr_error(0, "Could not write NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -171,19 +171,19 @@ int do_ntp_restrict(char *server, char *mask)
 
 	if((fd = open(FILE_NTP_CONF, O_RDONLY)) < 0)
 	{
-		pr_error(0, "Could not read NTP configuration (open)");
+		libconfig_pr_error(0, "Could not read NTP configuration (open)");
 		return -1;
 	}
 	if(fstat(fd, &st) < 0)
 	{
 		close(fd);
-		pr_error(0, "Could not read NTP configuration (fstat)");
+		libconfig_pr_error(0, "Could not read NTP configuration (fstat)");
 		return -1;
 	}
 	if(!(local=malloc(st.st_size+128)))
 	{
 		close(fd);
-		pr_error(0, "Could not read NTP configuration (malloc)");
+		libconfig_pr_error(0, "Could not read NTP configuration (malloc)");
 		return -1;
 	}
 	local[0]='\0';
@@ -191,7 +191,7 @@ int do_ntp_restrict(char *server, char *mask)
 
 	if(!(f=fopen(FILE_NTP_CONF, "r+")))
 	{
-		pr_error(0, "Could not read NTP configuration (fopen)");
+		libconfig_pr_error(0, "Could not read NTP configuration (fopen)");
 		return -1;
 	}
 	while(fgets(line, 200, f))
@@ -225,7 +225,7 @@ int do_ntp_restrict(char *server, char *mask)
 	fclose(f);
 	if(!(f = fopen(FILE_NTP_CONF, "w")))
 	{
-		pr_error(0, "Could not write NTP configuration (fopen)");
+		libconfig_pr_error(0, "Could not write NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -254,19 +254,19 @@ int do_ntp_server(char *server, char *key_num)
 
 	if((fd=open(FILE_NTP_CONF, O_RDONLY)) < 0)
 	{
-		pr_error(0, "Could not read NTP configuration (open)");
+		libconfig_pr_error(0, "Could not read NTP configuration (open)");
 		return -1;
 	}
 	if(fstat(fd, &st) < 0)
 	{
 		close(fd);
-		pr_error(0, "Could not read NTP configuration (fstat)");
+		libconfig_pr_error(0, "Could not read NTP configuration (fstat)");
 		return -1;
 	}
 	if(!(local=malloc(st.st_size+128)))
 	{
 		close(fd);
-		pr_error(0, "Could not read NTP configuration (malloc)");
+		libconfig_pr_error(0, "Could not read NTP configuration (malloc)");
 		return -1;
 	}
 	local[0] = '\0';
@@ -274,7 +274,7 @@ int do_ntp_server(char *server, char *key_num)
 
 	if(!(f = fopen(FILE_NTP_CONF, "r+")))
 	{
-		pr_error(0, "Could not read NTP configuration (fopen)");
+		libconfig_pr_error(0, "Could not read NTP configuration (fopen)");
 		return -1;
 	}
 	while(fgets(line, 200, f))
@@ -303,7 +303,7 @@ int do_ntp_server(char *server, char *key_num)
 	fclose(f);
 	if(!(f = fopen(FILE_NTP_CONF, "w")))
 	{
-		pr_error(0, "Could not write NTP configuration (fopen)");
+		libconfig_pr_error(0, "Could not write NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -339,19 +339,19 @@ int do_ntp_trust_on_key(char *num)
 
 	if((fd = open(FILE_NTP_CONF, O_RDONLY)) < 0)
 	{
-		pr_error(0, "Could not read NTP configuration (open)");
+		libconfig_pr_error(0, "Could not read NTP configuration (open)");
 		return -1;
 	}
 	if(fstat(fd, &st) < 0)
 	{
 		close(fd);
-		pr_error(0, "Could not read NTP configuration (fstat)");
+		libconfig_pr_error(0, "Could not read NTP configuration (fstat)");
 		return -1;
 	}
 	if(!(local=malloc(st.st_size+128)))
 	{
 		close(fd);
-		pr_error(0, "Could not read NTP configuration (malloc)");
+		libconfig_pr_error(0, "Could not read NTP configuration (malloc)");
 		return -1;
 	}
 	local[0]='\0';
@@ -359,7 +359,7 @@ int do_ntp_trust_on_key(char *num)
 
 	if(!(f = fopen(FILE_NTP_CONF, "r")))
 	{
-		pr_error(0, "Could not read NTP configuration (fopen)");
+		libconfig_pr_error(0, "Could not read NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -408,7 +408,7 @@ int do_ntp_trust_on_key(char *num)
 	fclose(f);
 	if(!(f = fopen(FILE_NTP_CONF, "w")))
 	{
-		pr_error(0, "Could not write NTP configuration (fopen)");
+		libconfig_pr_error(0, "Could not write NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -429,19 +429,19 @@ int do_exclude_ntp_restrict(char *addr)
 
 	if((fd = open(FILE_NTP_CONF, O_RDONLY)) < 0)
 	{
-		pr_error(0, "Could not read NTP configuration (open)");
+		libconfig_pr_error(0, "Could not read NTP configuration (open)");
 		return -1;
 	}
 	if(fstat(fd, &st) < 0)
 	{
 		close(fd);
-		pr_error(0, "Could not read NTP configuration (fstat)");
+		libconfig_pr_error(0, "Could not read NTP configuration (fstat)");
 		return -1;
 	}
 	if(!(local=malloc(st.st_size+128)))
 	{
 		close(fd);
-		pr_error(0, "Could not read NTP configuration (malloc)");
+		libconfig_pr_error(0, "Could not read NTP configuration (malloc)");
 		return -1;
 	}
 	local[0] = '\0';
@@ -449,7 +449,7 @@ int do_exclude_ntp_restrict(char *addr)
 
 	if(!(f = fopen(FILE_NTP_CONF, "r")))
 	{
-		pr_error(0, "Could not read NTP configuration (fopen)");
+		libconfig_pr_error(0, "Could not read NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -491,7 +491,7 @@ int do_exclude_ntp_restrict(char *addr)
 	fclose(f);
 	if(!(f=fopen(FILE_NTP_CONF, "w")))
 	{
-		pr_error(0, "Could not write NTP configuration (fopen)");
+		libconfig_pr_error(0, "Could not write NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -512,19 +512,19 @@ int do_exclude_ntp_server(char *addr)
 
 	if((fd = open(FILE_NTP_CONF, O_RDONLY)) < 0)
 	{
-		pr_error(0, "Could not read NTP configuration (open)");
+		libconfig_pr_error(0, "Could not read NTP configuration (open)");
 		return -1;
 	}
 	if(fstat(fd, &st) < 0)
 	{
 		close(fd);
-		pr_error(0, "Could not read NTP configuration (fstat)");
+		libconfig_pr_error(0, "Could not read NTP configuration (fstat)");
 		return -1;
 	}
 	if(!(local=malloc(st.st_size+128)))
 	{
 		close(fd);
-		pr_error(0, "Could not read NTP configuration (malloc)");
+		libconfig_pr_error(0, "Could not read NTP configuration (malloc)");
 		return -1;
 	}
 	local[0] = '\0';
@@ -532,7 +532,7 @@ int do_exclude_ntp_server(char *addr)
 
 	if(!(f = fopen(FILE_NTP_CONF, "r")))
 	{
-		pr_error(0, "Could not read NTP configuration (fopen)");
+		libconfig_pr_error(0, "Could not read NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -575,7 +575,7 @@ int do_exclude_ntp_server(char *addr)
 	fclose(f);
 	if(!(f = fopen(FILE_NTP_CONF, "w")))
 	{
-		pr_error(0, "Could not write NTP configuration (fopen)");
+		libconfig_pr_error(0, "Could not write NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -597,19 +597,19 @@ int do_exclude_ntp_trustedkeys(char *num)
 
 	if((fd = open(FILE_NTP_CONF, O_RDONLY)) < 0)
 	{
-		pr_error(0, "Could not read NTP configuration (open)");
+		libconfig_pr_error(0, "Could not read NTP configuration (open)");
 		return -1;
 	}
 	if(fstat(fd, &st) < 0)
 	{
 		close(fd);
-		pr_error(0, "Could not read NTP configuration (fstat)");
+		libconfig_pr_error(0, "Could not read NTP configuration (fstat)");
 		return -1;
 	}
 	if(!(local=malloc(st.st_size+128)))
 	{
 		close(fd);
-		pr_error(0, "Could not read NTP configuration (malloc)");
+		libconfig_pr_error(0, "Could not read NTP configuration (malloc)");
 		return -1;
 	}
 	local[0] = '\0';
@@ -617,7 +617,7 @@ int do_exclude_ntp_trustedkeys(char *num)
 
 	if(!(f = fopen(FILE_NTP_CONF, "r")))
 	{
-		pr_error(0, "Could not read NTP configuration (fopen)");
+		libconfig_pr_error(0, "Could not read NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -662,7 +662,7 @@ int do_exclude_ntp_trustedkeys(char *num)
 	fclose(f);
 	if(!(f = fopen(FILE_NTP_CONF, "w")))
 	{
-		pr_error(0, "Could not write NTP configuration (fopen)");
+		libconfig_pr_error(0, "Could not write NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -683,18 +683,18 @@ int do_ntp_key_set(char *key_num, char *value)
 
 	if((fd=open(FILE_NTPD_KEYS, O_RDONLY)) < 0)
 	{
-		pr_error(0, "Could not read NTP configuration (open)");
+		libconfig_pr_error(0, "Could not read NTP configuration (open)");
 		return -1;
 	}
 	if(fstat(fd, &st) < 0)
 	{
 		close(fd);
-		pr_error(0, "Could not read NTP configuration (fstat)");
+		libconfig_pr_error(0, "Could not read NTP configuration (fstat)");
 		return -1;
 	}
 	if(!(local=malloc(st.st_size+128+strlen(value))))
 	{
-		pr_error(0, "Could not read NTP configuration (malloc)");
+		libconfig_pr_error(0, "Could not read NTP configuration (malloc)");
 		return -1;
 	}
 	local[0]='\0';
@@ -702,7 +702,7 @@ int do_ntp_key_set(char *key_num, char *value)
 
 	if(!(f=fopen(FILE_NTPD_KEYS, "r")))
 	{
-		pr_error(0, "Could not read NTP configuration (fopen)");
+		libconfig_pr_error(0, "Could not read NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -746,7 +746,7 @@ int do_ntp_key_set(char *key_num, char *value)
 	fclose(f);
 	if(!(f = fopen(FILE_NTPD_KEYS, "w")))
 	{
-		pr_error(0, "Could not write NTP configuration (fopen)");
+		libconfig_pr_error(0, "Could not write NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}

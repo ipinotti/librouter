@@ -117,11 +117,11 @@ int snmp_set_community(const char *community_name, int add_del, int ro)
 
 	F = fopen(FILE_SNMPD_CONF, "r");
 	if (!F) {
-		pr_error(0, "Could not configure SNMP server");
+		libconfig_pr_error(0, "Could not configure SNMP server");
 		return (-1);
 	} O=fopen(FILE_SNMPD_CONF".new", "w");
 	if (!O) {
-		pr_error(0, "Could not reconfigure SNMP server");
+		libconfig_pr_error(0, "Could not reconfigure SNMP server");
 		fclose(F);
 		return (-1);
 	}
@@ -159,7 +159,7 @@ int snmp_dump_communities(FILE *out)
 
 	F = fopen(FILE_SNMPD_CONF, "r");
 	if (!F) {
-		pr_error(0, "Could not read SNMP server configuration");
+		libconfig_pr_error(0, "Could not read SNMP server configuration");
 		return (-1);
 	}
 	while (!feof(F)) {
@@ -216,18 +216,18 @@ int snmp_add_trapsink(char *addr, char *community)
 	char *p, *local, line[201];
 
 	if ((fd = open(FILE_SNMPD_CONF, O_RDONLY)) < 0) {
-		pr_error(0, "Could not read SNMP configuration");
+		libconfig_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 	if (fstat(fd, &st) < 0) {
 		close(fd);
-		pr_error(0, "Could not read SNMP configuration");
+		libconfig_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 	st.st_size += 200; /* space for new line! */
 	if (!(local = malloc(st.st_size))) {
 		close(fd);
-		pr_error(0, "Could not read SNMP configuration");
+		libconfig_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 	local[0] = '\0';
@@ -235,7 +235,7 @@ int snmp_add_trapsink(char *addr, char *community)
 
 	if (!(f = fopen(FILE_SNMPD_CONF, "r"))) {
 		free(local);
-		pr_error(0, "Could not read SNMP configuration");
+		libconfig_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 	while (fgets(line, 200, f)) { /* read with \n */
@@ -254,7 +254,7 @@ int snmp_add_trapsink(char *addr, char *community)
 	remove(FILE_SNMPD_CONF);
 	if ((fd = open(FILE_SNMPD_CONF, O_WRONLY | O_CREAT, st.st_mode)) < 0) {
 		free(local);
-		pr_error(0, "Could not read SNMP configuration");
+		libconfig_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 	write(fd, local, strlen(local));
@@ -271,17 +271,17 @@ int snmp_del_trapsink(char *addr)
 	char *p, *local, line[201];
 
 	if ((fd = open(FILE_SNMPD_CONF, O_RDONLY)) < 0) {
-		pr_error(0, "Could not read SNMP configuration");
+		libconfig_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 	if (fstat(fd, &st) < 0) {
 		close(fd);
-		pr_error(0, "Could not read SNMP configuration");
+		libconfig_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 	if (!(local = malloc(st.st_size))) {
 		close(fd);
-		pr_error(0, "Could not read SNMP configuration");
+		libconfig_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 	local[0] = '\0';
@@ -289,7 +289,7 @@ int snmp_del_trapsink(char *addr)
 
 	if (!(f = fopen(FILE_SNMPD_CONF, "r"))) {
 		free(local);
-		pr_error(0, "Could not read SNMP configuration");
+		libconfig_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 	while (fgets(line, 200, f)) { /* read with \n */
@@ -305,7 +305,7 @@ int snmp_del_trapsink(char *addr)
 	remove(FILE_SNMPD_CONF);
 	if ((fd = open(FILE_SNMPD_CONF, O_WRONLY | O_CREAT, st.st_mode)) < 0) {
 		free(local);
-		pr_error(0, "Could not read SNMP configuration");
+		libconfig_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 	write(fd, local, strlen(local));

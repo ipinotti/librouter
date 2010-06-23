@@ -38,13 +38,13 @@ int libconfig_vlan_vid(int ethernet_no, int vid, int add_del, int bridge)
 	int sock;
 
 	if ((vid < 2) || (vid > 4094)) {
-		pr_error(0, "vlan: invalid vid: %d", vid);
+		libconfig_pr_error(0, "vlan: invalid vid: %d", vid);
 		return (-1);
 	}
 
 	/* Create a channel to the NET kernel. */
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-		pr_error(1, "vlan: socket");
+		libconfig_pr_error(1, "vlan: socket");
 		return (-1);
 	}
 
@@ -59,7 +59,7 @@ int libconfig_vlan_vid(int ethernet_no, int vid, int add_del, int bridge)
 	}
 
 	if (ioctl(sock, SIOCSIFVLAN, &if_request) < 0) {
-		pr_error(1, "vlan: unable to %s vlan",
+		libconfig_pr_error(1, "vlan: unable to %s vlan",
 		                add_del ? "create" : "delete");
 		close(sock);
 		return (-1);
@@ -78,13 +78,13 @@ int libconfig_vlan_set_cos(int ethernet_no, int vid, int cos)
 	int sock;
 
 	if ((vid < 2) || (vid > 4094)) {
-		pr_error(0, "vlan: invalid vid: %d", vid);
+		libconfig_pr_error(0, "vlan: invalid vid: %d", vid);
 		return (-1);
 	}
 
 	/* Create a channel to the NET kernel. */
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-		pr_error(1, "vlan: socket");
+		libconfig_pr_error(1, "vlan: socket");
 		return (-1);
 	}
 
@@ -93,7 +93,7 @@ int libconfig_vlan_set_cos(int ethernet_no, int vid, int cos)
 	sprintf(if_request.device1, "ethernet%d.%d", ethernet_no, vid);
 
 	if (ioctl(sock, SIOCSIFVLAN, &if_request) < 0) {
-		pr_error(1, "vlan: ioctl");
+		libconfig_pr_error(1, "vlan: ioctl");
 		close(sock);
 		return (-1);
 	}
@@ -109,7 +109,7 @@ int libconfig_vlan_get_cos(char *dev_name)
 
 	/* Create a channel to the NET kernel. */
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-		pr_error(1, "vlan: socket");
+		libconfig_pr_error(1, "vlan: socket");
 		return (-1);
 	}
 
@@ -118,7 +118,7 @@ int libconfig_vlan_get_cos(char *dev_name)
 	                sizeof(if_request.device1));
 
 	if (ioctl(sock, SIOCSIFVLAN, &if_request) < 0) {
-		pr_error(1, "vlan: ioctl");
+		libconfig_pr_error(1, "vlan: ioctl");
 		close(sock);
 		return (-1);
 	}

@@ -295,7 +295,7 @@ static int search_nsswitch(int add_del, char *key)
 	char *p, buf[128];
 
 	if ((f = fopen(FILE_NSSWITCHCONF, "r+")) == NULL) {
-		pr_error(1, "could not open %s", FILE_NSSWITCHCONF);
+		libconfig_pr_error(1, "could not open %s", FILE_NSSWITCHCONF);
 		return -1;
 	}
 	while (!feof(f)) {

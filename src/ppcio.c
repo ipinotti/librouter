@@ -23,7 +23,7 @@ int read_ppcio(ppcio_data *pd)
 	fd=open(DEV_PPCIO, O_RDONLY);
 	if (fd < 0)
 	{
-		pr_error(1, "can't open %s", DEV_PPCIO);
+		libconfig_pr_error(1, "can't open %s", DEV_PPCIO);
 		return (-1);
 	}
 #if 0
@@ -40,7 +40,7 @@ int write_ppcio(ppcio_data *pd)
 	fd=open(DEV_PPCIO, O_RDONLY);
 	if (fd < 0)
 	{
-		pr_error(1, "can't open %s", DEV_PPCIO);
+		libconfig_pr_error(1, "can't open %s", DEV_PPCIO);
 		return (-1);
 	}
 #if 0

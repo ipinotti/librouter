@@ -1118,7 +1118,7 @@ static int set_default_cfg(void)
 	memset(&cfg, 0, sizeof(cfg));
 	f = fopen(CISH_CFG_FILE, "wb");
 	if (!f) {
-		pr_error(1, "Can't write configuration");
+		libconfig_pr_error(1, "Can't write configuration");
 		return (-1);
 	}
 	fwrite(&cfg, sizeof(cish_config), 1, f);
@@ -1143,13 +1143,13 @@ cish_config* lconfig_mmap_cfg(void)
 	check_cfg();
 
 	if ((fd = open(CISH_CFG_FILE, O_RDWR)) < 0) {
-		pr_error(1, "Could not open configuration");
+		libconfig_pr_error(1, "Could not open configuration");
 		return NULL;
 	}
 	cish_cfg = mmap(NULL, sizeof(cish_config), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
 	if (cish_cfg == ((void *) -1)) {
-		pr_error(1, "Could not open configuration");
+		libconfig_pr_error(1, "Could not open configuration");
 		return NULL;
 	}
 	close(fd);

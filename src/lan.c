@@ -36,7 +36,7 @@ int lan_get_status(char *ifname)
 
 	/* Create a socket to the INET kernel. */
 	if ((fd=socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		pr_error(1, "lan_get_status: socket");
+		libconfig_pr_error(1, "lan_get_status: socket");
 		return(-1);
 	}
 
@@ -50,7 +50,7 @@ int lan_get_status(char *ifname)
 
 	if (err < 0) {
  		if (errno != ENODEV) return 0;
-		pr_error(1, "SIOCGPHYSTATUS");
+		libconfig_pr_error(1, "SIOCGPHYSTATUS");
 		return(-1);
 	}
 #endif
@@ -66,7 +66,7 @@ int lan_get_phy_reg(char *ifname, u16 regnum)
 
 	/* Create a socket to the INET kernel. */
 	if((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		pr_error(1, "lan_get_phy_reg: socket");
+		libconfig_pr_error(1, "lan_get_phy_reg: socket");
 		return -1;
 	}
 	memset(&ifr, 0, sizeof(ifr));
@@ -77,7 +77,7 @@ int lan_get_phy_reg(char *ifname, u16 regnum)
 	mii.reg_num = regnum;
 	if(ioctl(fd, SIOCGMIIPHY, &ifr) < 0) {
 		close(fd);
-		pr_error(1, "lan_get_phy_reg: SIOCGMIIPHY");
+		libconfig_pr_error(1, "lan_get_phy_reg: SIOCGMIIPHY");
 		return -1;
 	}
 #if 0
@@ -96,7 +96,7 @@ int lan_set_phy_reg(char *ifname, u16 regnum, u16 data)
 
 	/* Create a socket to the INET kernel. */
 	if((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		pr_error(1, "lan_set_phy_reg: socket");
+		libconfig_pr_error(1, "lan_set_phy_reg: socket");
 		return -1;
 	}
 	memset(&ifr, 0, sizeof(ifr));
@@ -108,13 +108,13 @@ int lan_set_phy_reg(char *ifname, u16 regnum, u16 data)
 	mii.reg_num = regnum;
 	if(ioctl(fd, SIOCGMIIPHY, &ifr) < 0) {
 		close(fd);
-		pr_error(1, "lan_set_phy_reg: SIOCGMIIPHY");
+		libconfig_pr_error(1, "lan_set_phy_reg: SIOCGMIIPHY");
 		return -1;
 	}
 	mii.val_in = data;
 	if(ioctl(fd, SIOCSMIIREG, &ifr) < 0) {
 		close(fd);
-		pr_error(1, "lan_set_phy_reg: SIOCSMIIREG");
+		libconfig_pr_error(1, "lan_set_phy_reg: SIOCSMIIREG");
 		return -1;
 	}
 	close(fd);

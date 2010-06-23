@@ -37,7 +37,7 @@ pid_t get_process_info(char *progname, char *arg, char *proc_cmdline)
 	/* Open the /proc directory. */
 	if ((dir = opendir("/proc")) == NULL)
 	{
-		pr_error(1, "cannot opendir(/proc)");
+		libconfig_pr_error(1, "cannot opendir(/proc)");
 		return (0);
 	}
 

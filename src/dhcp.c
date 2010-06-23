@@ -230,7 +230,7 @@ int set_dhcp_server(int save_dns, char *cmdline)
 	inet_aton(mask, &dhcp_mask);
 	if ((dhcp_network.s_addr!=eth_network.s_addr)||(dhcp_mask.s_addr!=eth_mask.s_addr))
 	{
-		pr_error(0, "network segment not in ethernet segment address");
+		libconfig_pr_error(0, "network segment not in ethernet segment address");
 		destroy_args(args);
 		return (-1);
 	}
@@ -297,7 +297,7 @@ int set_dhcp_server(int save_dns, char *cmdline)
 	sprintf(filename, FILE_DHCPDCONF, eth);
 	if ((file=fopen(filename, "w")) == NULL)
 	{
-		pr_error(1, "could not create %s", filename);
+		libconfig_pr_error(1, "could not create %s", filename);
 		destroy_args(args);
 		return (-1);
 	}
@@ -593,7 +593,7 @@ int set_dhcp_server_local(int save_dns, char *cmdline)
 	/* cria o arquivo de configuracao */	
 	if ((file=fopen(FILE_DHCPDCONF_LOCAL, "w")) == NULL)
 	{
-		pr_error(1, "could not create %s", FILE_DHCPDCONF_LOCAL);
+		libconfig_pr_error(1, "could not create %s", FILE_DHCPDCONF_LOCAL);
 		destroy_args(args);
 		return (-1);
 	}
@@ -645,7 +645,7 @@ int get_dhcp_server_local(char *buf)
 
 	if (!(file=fopen(FILE_DHCPDCONF_LOCAL, "r"))) 
 	{
-		pr_error(1, "could not open %s", FILE_DHCPDCONF_LOCAL);
+		libconfig_pr_error(1, "could not open %s", FILE_DHCPDCONF_LOCAL);
 		return (-1);
 	}
 	fseek(file, 1, SEEK_SET); // pula o '#'

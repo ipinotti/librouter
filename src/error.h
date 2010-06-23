@@ -1,6 +1,12 @@
-#ifndef _ERROR_H
-#define _ERROR_H
+/*
+ * error.h
+ *
+ *  Created on: Jun 23, 2010
+ */
 
-void pr_error(int output_strerror, char *fmt, ...);
+#ifndef ERROR_H_
+#define ERROR_H_
 
-#endif
+void libconfig_pr_error(int output_strerror, char *fmt, ...);
+
+#endif /* ERROR_H_ */

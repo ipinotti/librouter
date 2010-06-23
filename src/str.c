@@ -56,17 +56,17 @@ int replace_string_in_file_nl(char *filename, char *key, char *value)
 
 	if ((fd=open(filename, O_RDONLY)) < 0)
 	{
-		pr_error(1, "could not open %s", filename);
+		libconfig_pr_error(1, "could not open %s", filename);
 		goto error;
 	}
 	if (fstat(fd, &st) < 0)
 	{
-		pr_error(1, "fstat");
+		libconfig_pr_error(1, "fstat");
 		goto error;
 	}
 	if ((buf=malloc(st.st_size)) == NULL)
 	{
-		pr_error(1, "could not alloc memory");
+		libconfig_pr_error(1, "could not alloc memory");
 		goto error;
 	}
 	read(fd, buf, st.st_size);
@@ -82,7 +82,7 @@ int replace_string_in_file_nl(char *filename, char *key, char *value)
 	strcat(filename_new, ".new");
 	if ((fd=open(filename_new, O_WRONLY|O_CREAT|O_TRUNC, 0600)) < 0) 
 	{
-		pr_error(1, "could not create %s", filename_new);
+		libconfig_pr_error(1, "could not create %s", filename_new);
 		goto error;
 	}
 	i=p-buf;
@@ -136,17 +136,17 @@ int find_string_in_file_nl(char *filename, char *key, char *buffer, int len)
 
 	if ((fd=open(filename, O_RDONLY))<0)
 	{
-		pr_error(1, "could not open %s", filename);
+		libconfig_pr_error(1, "could not open %s", filename);
 		goto error;
 	}
 	if (fstat(fd, &st)<0)
 	{
-		pr_error(1, "fstat");
+		libconfig_pr_error(1, "fstat");
 		goto error;
 	}
 	if ((buf=malloc(st.st_size)) == NULL)
 	{
-		pr_error(1, "could not alloc memory");
+		libconfig_pr_error(1, "could not alloc memory");
 		goto error;
 	}
 	read(fd, buf, st.st_size);
@@ -201,15 +201,15 @@ int replace_exact_string(char *filename, char *key, char *value)
 		return ret;
 	len = strlen(key);
 	if( (fd = open(filename, O_RDONLY)) < 0 ) {
-		pr_error(0, "could not open file %s", filename);
+		libconfig_pr_error(0, "could not open file %s", filename);
 		goto error;
 	}
 	if( fstat(fd, &st) < 0 ) {
-		pr_error(0, "fstat");
+		libconfig_pr_error(0, "fstat");
 		goto error;
 	}
 	if( (buf = malloc(st.st_size + 1)) == NULL ) {
-		pr_error(0, "malloc");
+		libconfig_pr_error(0, "malloc");
 		goto error;
 	}
 	read(fd, buf, st.st_size);
@@ -219,7 +219,7 @@ int replace_exact_string(char *filename, char *key, char *value)
 	if( (p = strstr(buf, key)) == NULL )
 		goto end;
 	if( (fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC, st.st_mode)) < 0 ) {
-		pr_error(0, "could not create %s", filename);
+		libconfig_pr_error(0, "could not create %s", filename);
 		goto end;
 	}
 	write(fd, buf, p-buf);

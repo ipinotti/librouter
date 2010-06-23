@@ -35,7 +35,7 @@ int telinit(char c, int sleeptime)
 	fd = open(INIT_FIFO, O_WRONLY);
 	if (fd<0) 
 	{
-		pr_error(1, "telinit");
+		libconfig_pr_error(1, "telinit");
 		return (-1);
 	}
 
@@ -56,7 +56,7 @@ int init_program(int add_del, char *prog)
 
 	if ((f=fopen(FILE_INITTAB, "r+")) == NULL)
 	{
-		pr_error(1, "could not open %s", FILE_INITTAB);
+		libconfig_pr_error(1, "could not open %s", FILE_INITTAB);
 		return (-1);
 	}
 	while ((!feof(f))&&(!found))
@@ -72,7 +72,7 @@ int init_program(int add_del, char *prog)
 	fclose(f);
 	if (!found)
 	{
-		pr_error(0, "%s not found in %s", prog, FILE_INITTAB);
+		libconfig_pr_error(0, "%s not found in %s", prog, FILE_INITTAB);
 		return (-1);
 	}
 	return telinit('q', 5);
@@ -88,7 +88,7 @@ int is_daemon_running(char *prog)
 	f=fopen(FILE_INITTAB, "r+");
 	if (!f)
 	{
-		pr_error(1, "could not open %s", FILE_INITTAB);
+		libconfig_pr_error(1, "could not open %s", FILE_INITTAB);
 		return (0);
 	}
 	while ((!feof(f))&&(!found))
@@ -104,7 +104,7 @@ int is_daemon_running(char *prog)
 	fclose(f);
 	if (!found)
 	{
-		pr_error(0, "%s not found in %s", prog, FILE_INITTAB);
+		libconfig_pr_error(0, "%s not found in %s", prog, FILE_INITTAB);
 		return (0);
 	}
 	return (c=='u');
@@ -145,12 +145,12 @@ int exec_prog(int no_out, char *path, ...)
 				close(2); // close stderr
 			}
 			ret=execv(path, argv);
-			pr_error(1, "unable to execute %s", path);
+			libconfig_pr_error(1, "unable to execute %s", path);
 			return (-1);
 		break;
 
 		case -1:
-			pr_error(1, "could not fork");
+			libconfig_pr_error(1, "could not fork");
 			return (-1);
 		break;
 
@@ -159,17 +159,17 @@ int exec_prog(int no_out, char *path, ...)
 			int status;
 			if (waitpid(pid, &status, 0)<0)
 			{
-				pr_error(1, "waitpid");
+				libconfig_pr_error(1, "waitpid");
 				return (-1);
 			}
 			if (!WIFEXITED(status))
 			{
-				pr_error(0, "child did not exited normally");
+				libconfig_pr_error(0, "child did not exited normally");
 				return (-1);
 			}
 			if (WEXITSTATUS(status)<0)
 			{
-				pr_error(0, "child exit status = %d %s", WEXITSTATUS(status), path);
+				libconfig_pr_error(0, "child exit status = %d %s", WEXITSTATUS(status), path);
 				return (-1);
 			}
 			return 0;
@@ -191,7 +191,7 @@ int set_inetd_program(int add_del, char *prog)
 	f = fopen(FILE_INETD, "r+");
 	if (!f)
 	{
-		pr_error(1, "could not open %s", FILE_INETD);
+		libconfig_pr_error(1, "could not open %s", FILE_INETD);
 		return (-1);
 	}
 	
@@ -210,14 +210,14 @@ int set_inetd_program(int add_del, char *prog)
 	
 	if (!found)
 	{
-		pr_error(0, "%s not found in %s", prog, FILE_INETD);
+		libconfig_pr_error(0, "%s not found in %s", prog, FILE_INETD);
 		return (-1);
 	}
 	
 	pid = get_pid("inetd");
 	if (!pid)
 	{
-		pr_error(0, "inetd is not running");
+		libconfig_pr_error(0, "inetd is not running");
 		return (-1);
 	}
 	kill(pid, SIGHUP);
@@ -236,7 +236,7 @@ int get_inetd_program(char *prog)
 	f = fopen(FILE_INETD, "r+");
 	if (!f)
 	{
-		pr_error(1, "could not open %s", FILE_INETD);
+		libconfig_pr_error(1, "could not open %s", FILE_INETD);
 		return (-1);
 	}
   
@@ -287,11 +287,11 @@ int exec_prog_capture(char *buffer, int len, char *path, ...)
 			dup(fd[1]);
 			//invalidate_plist(); // para forcar a releitura da lista de processos
 			ret = execv(path, argv);
-			pr_error(1, "could not exec %s %s", path, argv);
+			libconfig_pr_error(1, "could not exec %s %s", path, argv);
 			return -1;
 			break;
 		case -1:
-			pr_error(1, "fork");
+			libconfig_pr_error(1, "fork");
 			return -1;
 			break;
 		default: // parent
@@ -704,7 +704,7 @@ int init_program_get_option_value(char *prog, char *option, char *store, unsigne
 		return -1;
 	store[0] = 0;
 	if( (f = fopen(FILE_INITTAB, "r+")) == NULL ) {
-		pr_error(1, "could not open %s", FILE_INITTAB);
+		libconfig_pr_error(1, "could not open %s", FILE_INITTAB);
 		return -1;
 	}
 	while( !feof(f) ) {
@@ -755,7 +755,7 @@ int init_program_change_option(int add_del, char *prog, char *option)
 	if( (prog == NULL) || (option == NULL) )
 		return -1;
 	if( (f = fopen(FILE_INITTAB, "r+")) == NULL ) {
-		pr_error(1, "could not open %s", FILE_INITTAB);
+		libconfig_pr_error(1, "could not open %s", FILE_INITTAB);
 		return -1;
 	}
 	while( !feof(f) ) {
