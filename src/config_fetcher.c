@@ -821,7 +821,7 @@ static void __dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	if (strchr(osdev, '.') == NULL) {
 		int bmcr;
 
-		bmcr = lan_get_phy_reg(osdev, MII_BMCR);
+		bmcr = libconfig_lan_get_phy_reg(osdev, MII_BMCR);
 		if (bmcr & BMCR_ANENABLE)
 			fprintf(out, " speed auto\n");
 		else {
@@ -1007,7 +1007,7 @@ void lconfig_interfaces_dump(FILE *out)
 		switch (conf.linktype) {
 
 			case ARPHRD_ETHER:
-			phy_status=lan_get_status(conf.name);
+			phy_status=libconfig_lan_get_status(conf.name);
 			running=(up && (phy_status & PHY_STAT_LINK) ? 1 : 0); /* vlan: interface must be up */
 			if (!strncmp(conf.name,"ethernet",8) && strstr(conf.name,".")) /* VLAN */
 			vlan_cos = libconfig_vlan_get_cos(conf.name);

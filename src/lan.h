@@ -1,3 +1,12 @@
+/*
+ * lan.h
+ *
+ *  Created on: Jun 24, 2010
+ */
+
+#ifndef LAN_H_
+#define LAN_H_
+
 /* Defines para os registros do PHY ethernet */
 #define MII_ADM7001_GPCR 0x10 /* Generic PHY Control/Configuration Register */
 #define MII_ADM7001_GPCR_XOVEN 0x0010 /* Cross Over Auto Detect Enable */
@@ -9,13 +18,17 @@
 #define MII_ADM7001_PSSR 0x17 /* PHY Specific Status Register */
 #define MII_ADM7001_PSSR_SPD 0x0020 /* Operating speed */
 
-// prototipos de funcoes
-int lan_get_status(char *ifname);
-int lan_get_phy_reg(char *ifname, unsigned short regnum);
-int lan_set_phy_reg(char *ifname, unsigned short regnum, unsigned short data);
-int fec_autonegotiate_link(char *dev);
-int fec_config_link(char *dev, int speed100, int duplex);
+/* prototipos de funcoes */
+int libconfig_lan_get_status(char *ifname);
+int libconfig_lan_get_phy_reg(char *ifname, unsigned short regnum);
+int libconfig_lan_set_phy_reg(char *ifname, unsigned short regnum, unsigned short data);
+int libconfig_fec_autonegotiate_link(char *dev);
+int libconfig_fec_config_link(char *dev, int speed100, int duplex);
+
+#if 0
 int eth_switch_port_get_status(char *ifname, int *status);
 int eth_switch_ports_set(char *ifname, int conf);
 int eth_switch_extport_powerdown(char *ifname, int pwd);
+#endif
 
+#endif /* LAN_H_ */
