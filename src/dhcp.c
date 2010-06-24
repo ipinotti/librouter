@@ -561,7 +561,7 @@ int libconfig_dhcpd_set_local(int on_off)
 
 	ret = libconfig_exec_init_program(on_off, DHCPD_DAEMON_LOCAL);
 
-	set_l2tp(RESTART); /* L2TPd integration! */
+	libconfig_l2tp_exec(RESTART); /* L2TPd integration! */
 
 	return ret;
 }

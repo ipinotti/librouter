@@ -1104,7 +1104,7 @@ int lconfig_write_config(char *filename, cish_config *cish_cfg)
 	lconfig_ip_dump_servers(f);
 	lconfig_arp_dump(f);
 #ifdef OPTION_IPSEC
-	lconfig_crypto_dump(f);
+	libconfig_ipsec_dump(f);
 #endif
 
 	fclose(f);

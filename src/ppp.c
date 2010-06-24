@@ -606,7 +606,7 @@ int l2tp_ppp_set_config(char *name, ppp_config *cfg)
 	if (!f) return -1;
 	fwrite(cfg, sizeof(ppp_config), 1, f);
 	fclose(f);
-	set_l2tp(RESTART);
+	libconfig_l2tp_exec(RESTART);
 	return 0;
 }
 
