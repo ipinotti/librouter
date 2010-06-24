@@ -875,7 +875,7 @@ void show_alarm_info(struct rmon_config *shm_rmon_p, int i, int idx)
 	                && shm_rmon_p->alarms[i].interval)
 		printf(
 		                "  Monitors %s every %d second(s)\n",
-		                convert_oid_to_object_name(
+		                libconfig_snmp_oid_to_obj_name(
 		                                shm_rmon_p->alarms[i].str_oid,
 		                                buf, 50) ? buf : shm_rmon_p->alarms[i].str_oid,
 		                shm_rmon_p->alarms[i].interval);
@@ -1155,7 +1155,7 @@ int sendtrap(char *snmp_trap_version,
 					name_length = MAX_OID_LEN;
 					memset(name, '\0', MAX_OID_LEN
 					                * sizeof(oid));
-					if (snmp_translate_oid(
+					if (libconfig_snmp_translate_oid(
 					                trap_data[k].oid, name,
 					                &name_length)) {
 						type = '\0';
