@@ -1096,7 +1096,7 @@ int lconfig_write_config(char *filename, cish_config *cish_cfg)
 
 	/* Multicast */
 #ifdef OPTION_SMCROUTE
-	lconfig_mroute_dump(f);
+	libconfig_smc_route_dump(f);
 #endif
 	lconfig_interfaces_dump(f);
 	lconfig_clock_dump(f);

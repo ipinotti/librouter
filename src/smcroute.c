@@ -31,7 +31,7 @@
 
 #ifdef OPTION_SMCROUTE
 
-void lconfig_smcroute_hup(void)
+void libconfig_smc_route_hup(void)
 {
 	FILE *F;
 	char buf[32];
@@ -44,7 +44,7 @@ void lconfig_smcroute_hup(void)
 	}
 }
 
-int lconfig_smc_route(int add, char *origin, char *group, char *in, char *out)
+int libconfig_smc_route(int add, char *origin, char *group, char *in, char *out)
 {
 	FILE *f;
 	int i, n, t;
@@ -54,10 +54,12 @@ int lconfig_smc_route(int add, char *origin, char *group, char *in, char *out)
 	/* database clean */
 	memset(&database[0], 0, sizeof(database));
 	f = fopen(SMC_ROUTE_CONF, "rb");
+
 	if (f) {
 		fread(&database[0], sizeof(database), 1, f);
 		fclose(f);
 	}
+
 	for (i = 0, n = -1, t = -1; i < SMC_ROUTE_MAX; i++) {
 		if (database[i].valid) {
 			if (!strcmp(origin, database[i].origin) && !strcmp(
@@ -70,11 +72,13 @@ int lconfig_smc_route(int add, char *origin, char *group, char *in, char *out)
 				t = i; /* empty space */
 		}
 	}
+
 	if (add) {
 		if (n != -1) {
 			//pr_error(0, "mroute allready added");
 			return (-1);
 		}
+
 		if (t != -1) {
 			database[t].valid = 1; /* add */
 			strcpy(database[t].origin, origin);
@@ -94,15 +98,18 @@ int lconfig_smc_route(int add, char *origin, char *group, char *in, char *out)
 			return (-1);
 		}
 	}
+
 	f = fopen(SMC_ROUTE_CONF, "wb");
 	if (f) {
 		fwrite(&database[0], sizeof(database), 1, f);
 		fclose(f);
 	}
+
 	/* add/del */
 	for (i = 0; i < SMC_ROUTE_MAX; i++)
 		if (database[i].valid == 1)
 			break;
+
 	if (i == SMC_ROUTE_MAX) {
 		libconfig_exec_init_program(0, SMC_DAEMON);
 	} else {
@@ -110,22 +117,19 @@ int lconfig_smc_route(int add, char *origin, char *group, char *in, char *out)
 			libconfig_exec_init_program(1, SMC_DAEMON);
 			sleep(1);
 		}
+
 		if (add)
-			sprintf(
-			                cmd,
-			                "/bin/smcroute -a %s %s %s %s >/dev/null 2>/dev/null",
-			                in, origin, group, out);
+			sprintf(cmd, "/bin/smcroute -a %s %s %s %s >/dev/null 2>/dev/null", in, origin, group, out);
 		else
-			sprintf(
-			                cmd,
-			                "/bin/smcroute -r %s %s %s >/dev/null 2>/dev/null",
-			                in, origin, group);
+			sprintf(cmd, "/bin/smcroute -r %s %s %s >/dev/null 2>/dev/null", in, origin, group);
+
 		system(cmd);
 	}
+
 	return 0;
 }
 
-void lconfig_mroute_dump(FILE *out)
+void libconfig_smc_route_dump(FILE *out)
 {
 	int i, print = 0;
 	struct smc_route_database database[SMC_ROUTE_MAX];
@@ -135,10 +139,12 @@ void lconfig_mroute_dump(FILE *out)
 	/* database clean */
 	memset(&database[0], 0, sizeof(database));
 	f = fopen(SMC_ROUTE_CONF, "rb");
+
 	if (f) {
 		fread(&database[0], sizeof(database), 1, f);
 		fclose(f);
 	}
+
 	for (i = 0; i < SMC_ROUTE_MAX; i++) {
 		if (database[i].valid) {
 			sprintf(buf, "ip mroute %s %s in %s out %s",
@@ -148,6 +154,7 @@ void lconfig_mroute_dump(FILE *out)
 			print = 1;
 		}
 	}
+
 	if (print)
 		fprintf(out, "!\n");
 }
