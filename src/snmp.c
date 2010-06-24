@@ -450,24 +450,24 @@ int get_access_rmon_config(struct rmon_config **shm_rmon_p)
 	int shm_confid;
 	void *shm_confid_l = (void *) 0;
 
-	if (lock_rmon_config_access()) {
+	if (libconfig_lock_rmon_config_access()) {
 		/* Point to shared memory */
 		if ((shm_confid = shmget((key_t) RMON_SHM_KEY,
 		                sizeof(struct rmon_config), 0666)) == -1) {
 			if (create_rmon_shm() < 0) {
-				unlock_rmon_config_access();
+				libconfig_unlock_rmon_config_access();
 				return 0;
 			}
 			if ((shm_confid = shmget((key_t) RMON_SHM_KEY,
 			                sizeof(struct rmon_config), 0666))
 			                == -1) {
-				unlock_rmon_config_access();
+				libconfig_unlock_rmon_config_access();
 				return 0;
 			}
 		}
 		if ((shm_confid_l = shmat(shm_confid, (void *) 0, 0))
 		                == (void *) -1) {
-			unlock_rmon_config_access();
+			libconfig_unlock_rmon_config_access();
 			return 0;
 		}
 		*shm_rmon_p = (struct rmon_config *) shm_confid_l;
@@ -482,7 +482,7 @@ int loose_access_rmon_config(struct rmon_config **shm_rmon_p)
 
 	if (shmdt((void *) *shm_rmon_p) == -1)
 		ret = 0;
-	if (unlock_rmon_config_access() == 0)
+	if (libconfig_unlock_rmon_config_access() == 0)
 		ret = 0;
 	*shm_rmon_p = NULL;
 	return ret;

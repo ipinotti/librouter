@@ -146,7 +146,7 @@ int snmp_translate_oid(char *oid_str, oid *name, size_t *namelen)
 			}
 			if(load_mib)
 			{
-				if(lock_snmp_tree_access())
+				if(libconfig_lock_snmp_tree_access())
 				{
 					if(get_tree_shm_addr(&shm_init))
 					{
@@ -166,7 +166,7 @@ int snmp_translate_oid(char *oid_str, oid *name, size_t *namelen)
 						/* Detach shared memory from this process */
 						shmdt(shm_init);
 					}
-					unlock_snmp_tree_access();
+					libconfig_unlock_snmp_tree_access();
 				}
 			}
 			else
@@ -290,7 +290,7 @@ int convert_oid_to_object_name(char *oid_str, char *buf, int max_len)
 			}
 			if(all_decimal)
 			{
-				if(lock_snmp_tree_access())
+				if(libconfig_lock_snmp_tree_access())
 				{
 					if(get_tree_shm_addr(&shm_init))
 					{
@@ -330,7 +330,7 @@ int convert_oid_to_object_name(char *oid_str, char *buf, int max_len)
 						/* Detach shared memory from this process */
 						shmdt(shm_init);
 					}
-					unlock_snmp_tree_access();
+					libconfig_unlock_snmp_tree_access();
 				}
 			}
 			libconfig_destroy_args_din(&argl);
@@ -386,7 +386,7 @@ int dump_snmp_mibtree(void)
 	struct obj_node *top;
 	void *shm_init = (void *) 0;
 
-	if( lock_snmp_tree_access() ) {
+	if( libconfig_lock_snmp_tree_access() ) {
 		if( get_tree_shm_addr(&shm_init) ) {
 			adjust_shm_to_static((struct obj_node *) (shm_init + sizeof(unsigned int)), shm_init);
 			top = (struct obj_node *) (shm_init + sizeof(unsigned int));
@@ -397,7 +397,7 @@ int dump_snmp_mibtree(void)
 			shmdt(shm_init);
 			ret = 0;
 		}
-		unlock_snmp_tree_access();
+		libconfig_unlock_snmp_tree_access();
 	}
 	return ret;
 }
