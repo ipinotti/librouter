@@ -18,8 +18,8 @@ int libconfig_exec_get_init_option_value(char *prog,
 int libconfig_exec_check_daemon(char *prog);
 int libconfig_exec_prog(int no_out, char *path, ...);
 
-#define exec_daemon(s) libconfig_exec_init_program(1, s)
-#define kill_daemon(s) libconfig_exec_init_program(0, s)
+#define libconfig_exec_daemon(s) libconfig_exec_init_program(1, s)
+#define libconfig_kill_daemon(s) libconfig_exec_init_program(0, s)
 
 int libconfig_exec_set_inetd_program(int add_del, char *prog);
 int libconfig_exec_get_inetd_program(char *prog);

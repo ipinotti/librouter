@@ -1100,7 +1100,7 @@ int lconfig_write_config(char *filename, cish_config *cish_cfg)
 #endif
 	lconfig_interfaces_dump(f);
 	lconfig_clock_dump(f);
-	lconfig_ntp_dump(f);
+	libconfig_ntp_dump(f);
 	lconfig_ip_dump_servers(f);
 	lconfig_arp_dump(f);
 #ifdef OPTION_IPSEC

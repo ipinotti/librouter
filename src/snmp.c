@@ -79,7 +79,7 @@ int snmp_start(void)
 	int ret;
 
 	if (!snmp_is_running()) {
-		ret = exec_daemon(SNMP_DAEMON);
+		ret = libconfig_exec_daemon(SNMP_DAEMON);
 		if (ret != -1)
 			send_rmond_signal(SIGUSR1);
 		return ret;
@@ -96,7 +96,7 @@ int snmp_stop(void)
 		time_t timeout;
 
 		pid = get_pid(SNMP_DAEMON);
-		if ((ret = kill_daemon(SNMP_DAEMON)) == 0) {
+		if ((ret = libconfig_kill_daemon(SNMP_DAEMON)) == 0) {
 			for (timeout = time(NULL) + 10; (get_pid(SNMP_DAEMON)
 			                == pid) && (time(NULL) < timeout);)
 				usleep(100000);
@@ -104,7 +104,7 @@ int snmp_stop(void)
 		send_rmond_signal(SIGUSR1);
 		return ret;
 #else
-		return kill_daemon(SNMP_DAEMON);
+		return libconfig_kill_daemon(SNMP_DAEMON);
 #endif
 	} else
 		return 0;
