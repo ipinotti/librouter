@@ -372,7 +372,7 @@ int libconfig_tunnel_change(char *name, tunnel_param_type type, void *param)
 				if (p.link) {
 					IP addr;
 
-					if (get_interface_address((char *)param, &addr, NULL, NULL, NULL) == 0)
+					if (libconfig_ip_interface_get_info((char *)param, &addr, NULL, NULL, NULL) == 0)
 						p.iph.saddr = addr.s_addr;
 				}
 			}

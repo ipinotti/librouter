@@ -251,8 +251,8 @@ static void _libconfig_acl_print_rule(const char *action,
 	_dst = strdup(dst);
 	src_ports[0] = 0;
 	dst_ports[0] = 0;
-	src_netmask = extract_mask(_src);
-	dst_netmask = extract_mask(_dst);
+	src_netmask = libconfig_ip_extract_mask(_src);
+	dst_netmask = libconfig_ip_extract_mask(_dst);
 	libconfig_acl_set_ports(sports, src_ports);
 	libconfig_acl_set_ports(dports, dst_ports);
 
@@ -299,7 +299,7 @@ static void _libconfig_acl_print_rule(const char *action,
 	else if (strcmp(src_netmask, "255.255.255.255") == 0)
 		fprintf(out, "host %s ", _src);
 	else
-		fprintf(out, "%s %s ", _src, ciscomask(src_netmask));
+		fprintf(out, "%s %s ", _src, libconfig_ip_ciscomask(src_netmask));
 	if (*src_ports)
 		fprintf(out, "%s ", src_ports);
 	if (strcasecmp(dst, "0.0.0.0/0") == 0)
@@ -307,7 +307,7 @@ static void _libconfig_acl_print_rule(const char *action,
 	else if (strcmp(dst_netmask, "255.255.255.255") == 0)
 		fprintf(out, "host %s ", _dst);
 	else
-		fprintf(out, "%s %s ", _dst, ciscomask(dst_netmask));
+		fprintf(out, "%s %s ", _dst, libconfig_ip_ciscomask(dst_netmask));
 	if (*dst_ports)
 		fprintf(out, "%s ", dst_ports);
 	if (flags) {

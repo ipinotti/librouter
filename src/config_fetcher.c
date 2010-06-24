@@ -990,7 +990,7 @@ void lconfig_interfaces_dump(FILE *out)
 
 	for (i = 0; intf_list[i][0] != '\0'; i++) {
 
-		if (lconfig_get_iface_config(intf_list[i], &conf) < 0)
+		if (libconfig_ip_iface_get_config(intf_list[i], &conf) < 0)
 			continue;
 
 		st = conf.stats;
@@ -1029,7 +1029,7 @@ void lconfig_interfaces_dump(FILE *out)
 		/* Start dumping information */
 		dump_interface_config(out, &conf);
 
-		lconfig_free_iface_config(&conf);
+		libconfig_ip_iface_free_config(&conf);
 	}
 }
 

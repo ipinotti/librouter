@@ -411,7 +411,7 @@ void ppp_pppd_arglist (char **arglist, ppp_config *cfg, int server)
 	if (cfg->ip_unnumbered != -1) { /* Teste para verificar se IP UNNUMBERED esta ativo */
 		char ethernetdev[16];
 		sprintf (ethernetdev, "ethernet%d", cfg->ip_unnumbered);
-		get_ethernet_ip_addr (ethernetdev, addr, mask); /* Captura o endere�o e mascara da interface Ethernet */
+		libconfig_ip_ethernet_ip_addr (ethernetdev, addr, mask); /* Captura o endere�o e mascara da interface Ethernet */
 		strncpy (cfg->ip_addr, addr, 16); /* Atualiza cfg com os dados da ethernet */
 		cfg->ip_addr[15] = 0;
 		strncpy (cfg->ip_mask, mask, 16);

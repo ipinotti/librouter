@@ -226,7 +226,7 @@ int libconfig_dhcp_set_server(int save_dns, char *cmdline)
 	pool_end = args->argv[i++];
 
 #ifdef NEED_ETHERNET_SUBNET
-	get_interface_address(get_ethernet_dev("ethernet0"), &eth_addr,
+	libconfig_ip_interface_get_info(libconfig_ip_ethernet_get_dev("ethernet0"), &eth_addr,
 	                &eth_mask, 0, 0);
 	eth_network.s_addr = eth_addr.s_addr & eth_mask.s_addr;
 	inet_aton(network, &dhcp_network);
@@ -461,7 +461,7 @@ int libconfig_dhcp_check_server(char *ifname)
 		inet_aton(args->argv[4], &dhcp_mask);
 		libconfig_destroy_args(args);
 
-		get_interface_address(get_ethernet_dev(ifname), &eth_addr, &eth_mask, 0, 0);
+		libconfig_ip_interface_get_info(libconfig_ip_ethernet_get_dev(ifname), &eth_addr, &eth_mask, 0, 0);
 		eth_network.s_addr = eth_addr.s_addr & eth_mask.s_addr;
 
 		if ((dhcp_network.s_addr != eth_network.s_addr) ||
