@@ -18,7 +18,6 @@ libconfig_la_SOURCES = \
 	ip.c \
 	ipsec.c \
 	lan.c \
-	list-lib.c \
 	lock.c \
 	mangle.c \
 	md5.c \
@@ -78,7 +77,6 @@ libconfig_la_HEADERS = \
 	ip.h \
 	ipsec.h \
 	lan.h \
-	list-lib.h \
 	lock.h \
 	mangle.h \
 	md5_config.h \
