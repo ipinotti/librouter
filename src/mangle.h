@@ -8,7 +8,9 @@
 #ifndef MANGLE_H_
 #define MANGLE_H_
 
-void lconfig_mangle_dump(char *xmangle, FILE *F, int conf_format);
-int lconfig_mangle_get_iface_rules (char *iface, char *in_mangle, char *out_mangle);
+void libconfig_mangle_dump(char *xmangle, FILE *F, int conf_format);
+int libconfig_mangle_get_iface_rules(char *iface,
+                                     char *in_mangle,
+                                     char *out_mangle);
 
 #endif /* MANGLE_H_ */

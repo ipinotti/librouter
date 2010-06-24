@@ -923,7 +923,7 @@ static void dump_interface_config(FILE *out, struct interface_conf *conf)
 	/* Get iptables config */
 	memset(&ipt, 0, sizeof(struct iptables_t));
 	libconfig_acl_get_iface_rules(conf->name, ipt.in_acl, ipt.out_acl);
-	lconfig_mangle_get_iface_rules(conf->name, ipt.in_mangle, ipt.out_mangle);
+	libconfig_mangle_get_iface_rules(conf->name, ipt.in_mangle, ipt.out_mangle);
 	lconfig_nat_get_iface_rules(conf->name, ipt.in_nat, ipt.out_nat);
 
 	cish_dev = libconfig_device_convert_os(conf->name, 0);
@@ -1079,7 +1079,7 @@ int lconfig_write_config(char *filename, cish_config *cish_cfg)
 	libconfig_acl_dump_policy(f);
 	libconfig_acl_dump(0, f, 1);
 	lconfig_nat_dump(0, f, 1);
-	lconfig_mangle_dump(0, f, 1);
+	libconfig_mangle_dump(0, f, 1);
 
 	/* qos */
 	lconfig_qos_dump_config(f);
