@@ -1,11 +1,8 @@
 /*
- ============================================================================
- Name        : modem3G.c
- Author      : Igor Pinotti
- Version     :
- Copyright   : Copyrighted
- Description : Procedures for modem 3G
- ============================================================================
+ * modem3G.c
+ *
+ *  Created on: Apr 12, 2010
+ *      Author: Igor Kramer Pinotti (ipinotti@pd3.com.br)
  */
 
 #include <stdio.h>
@@ -20,12 +17,13 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <termios.h>
+
 #include "str.h"
 #include "error.h"
 #include "modem3G.h"
 
-#define arq1 "/etc/ppp/chat-modem-3g-"
-#define arq2 "/etc/ppp/peers/modem-3g-"
+#define MODEM3G_CHAT_FILE "/etc/ppp/chat-modem-3g-"
+#define MODEM3G_PEERS_FILE "/etc/ppp/peers/modem-3g-"
 
 /**
  * Adquire o APN - Acess Point Name, no arquivo de script - ARQ1,
@@ -37,12 +35,10 @@
  * @param apn
  * @return
  */
-int modem3g_get_apn (char * apn, int devcish)
+int libconfig_modem3g_get_apn (char * apn, int devcish)
 {
-	//arq1 == "chat-modem-3g-";
-
 	int check=0,length=0,i=0;
-	char file[100] = arq1;
+	char file[100] = MODEM3G_CHAT_FILE;
 	char device[10];
 	char key[] = "\"IP\",";
 
@@ -76,12 +72,12 @@ int modem3g_get_apn (char * apn, int devcish)
  * @param apn
  * @return
  */
-int modem3g_set_apn (char * apn, int devcish)
+int libconfig_modem3g_set_apn (char * apn, int devcish)
 {
 	//arq1 == "chat-modem-3g-";
 
 	int check=0;
-	char file[100] = arq1;
+	char file[100] = MODEM3G_CHAT_FILE;
 	char device[10];
 	char key[] = "\"IP\",";
 
@@ -106,12 +102,12 @@ int modem3g_set_apn (char * apn, int devcish)
  * @param username
  * @return
  */
-int modem3g_get_username (char * username, int devcish)
+int libconfig_modem3g_get_username (char * username, int devcish)
 {
 	//arq2 == "modem-3g-";
 
 	int check=0;
-	char file[100] = arq2;
+	char file[100] = MODEM3G_PEERS_FILE;
 	char device[10];
 	char key[] = "user";
 
@@ -138,12 +134,12 @@ int modem3g_get_username (char * username, int devcish)
  * @param username
  * @return
  */
-int modem3g_set_username (char * username, int devcish)
+int libconfig_modem3g_set_username (char * username, int devcish)
 {
 	//arq2 == "modem-3g-";
 
 	int check=0;
-	char file [100] = arq2;
+	char file [100] = MODEM3G_PEERS_FILE;
 	char device[10];
 	char key[] = "user";
 
@@ -168,12 +164,12 @@ int modem3g_set_username (char * username, int devcish)
  * @param password
  * @return
  */
-int modem3g_get_password (char * password, int devcish)
+int libconfig_modem3g_get_password (char * password, int devcish)
 {
 	//arq2 == "modem-3g-";
 
 	int check=0;
-	char file [100] = arq2;
+	char file [100] = MODEM3G_PEERS_FILE;
 	char device[10];
 	char key[] = "password";
 
@@ -199,12 +195,12 @@ int modem3g_get_password (char * password, int devcish)
  * @param password
  * @return
  */
-int modem3g_set_password (char * password, int devcish)
+int libconfig_modem3g_set_password (char * password, int devcish)
 {
 	//arq2 == "modem-3g-";
 
 	int check=0;
-	char file [100] = arq2;
+	char file [100] = MODEM3G_PEERS_FILE;
 	char device[10];
 	char key[] = "password";
 

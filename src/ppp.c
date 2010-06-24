@@ -164,9 +164,9 @@ void ppp_set_defaults (int serial_no, ppp_config *cfg)
 
 	cfg->unit = serial_no;
 
-	modem3g_get_apn(cfg->apn, serial_no);
-	modem3g_get_username(cfg->auth_user, serial_no);
-	modem3g_get_password(cfg->auth_pass, serial_no);
+	libconfig_modem3g_get_apn(cfg->apn, serial_no);
+	libconfig_modem3g_get_username(cfg->auth_user, serial_no);
+	libconfig_modem3g_get_password(cfg->auth_pass, serial_no);
 
 	cfg->ip_unnumbered = -1;
 
