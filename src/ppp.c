@@ -285,7 +285,7 @@ int ppp_is_pppd_running (int serial_no)
 	fclose (f);
 	buf[31] = 0;
 	pid = atoi (buf);
-	if ((pid > 0) && (pid_exists (pid)))
+	if ((pid > 0) && (libconfig_process_pid_exists (pid)))
 		return pid;
 	return 0;
 }

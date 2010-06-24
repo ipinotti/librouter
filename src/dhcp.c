@@ -152,14 +152,14 @@ int libconfig_dhcp_set_none(void)
 			return (-1);
 #if 0 /* ifndef UDHCPD */
 		pid=libconfig_udhcpd_pid_by_eth(?);
-		if ((pid > 0) && (wait_for_process(pid, 6) == 0)) return (-1);
+		if ((pid > 0) && (libconfig_process_wait_for(pid, 6) == 0)) return (-1);
 #endif
 	}
 	if (ret == DHCP_RELAY) {
 		if (libconfig_exec_init_program(0, DHCRELAY_DAEMON) < 0)
 			return (-1);
 		pid = get_pid(DHCRELAY_DAEMON);
-		if ((pid) && (wait_for_process(pid, 6) == 0))
+		if ((pid) && (libconfig_process_wait_for(pid, 6) == 0))
 			return (-1);
 	}
 	return 0;
@@ -175,7 +175,7 @@ int libconfig_dhcp_set_no_server(void)
 		return (-1);
 #if 0 /* ifndef UDHCPD */
 	pid=get_pid(DHCPD_DAEMON);
-	if ((pid)&&(wait_for_process(pid, 6) == 0)) return (-1);
+	if ((pid)&&(libconfig_process_wait_for(pid, 6) == 0)) return (-1);
 #endif
 	return 0;
 }
@@ -187,7 +187,7 @@ int libconfig_dhcp_set_no_relay(void)
 	if (libconfig_exec_init_program(0, DHCRELAY_DAEMON) < 0)
 		return (-1);
 	pid = get_pid(DHCRELAY_DAEMON);
-	if ((pid) && (wait_for_process(pid, 6) == 0))
+	if ((pid) && (libconfig_process_wait_for(pid, 6) == 0))
 		return (-1);
 
 	return 0;
@@ -497,7 +497,7 @@ int libconfig_dhcp_get_relay(char *buf)
 	char cmdline[MAX_PROC_CMDLINE];
 	int len;
 
-	if (get_process_info(DHCRELAY_DAEMON, NULL, cmdline) == 0)
+	if (libconfig_process_get_info(DHCRELAY_DAEMON, NULL, cmdline) == 0)
 		return (-1);
 
 	p = strstr(cmdline, DHCRELAY_DAEMON" -q -d ");
