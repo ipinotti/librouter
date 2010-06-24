@@ -228,12 +228,12 @@ void lconfig_bgp_dump_router(FILE *f, int main_nip)
 	FILE *fd;
 	char buf[1024];
 
-	if (!get_bgpd())
+	if (!libconfig_quagga_bgpd_is_running())
 		return;
 
 	/* dump router bgp info */
 
-	fd = lconfig_bgp_get_conf(main_nip);
+	fd = libconfig_quagga_bgp_get_conf(main_nip);
 	if (fd) {
 		while (!feof(fd)) {
 			fgets(buf, 1024, fd);
@@ -468,11 +468,11 @@ void lconfig_ospf_dump_router(FILE *out)
 	FILE *f;
 	char buf[1024];
 
-	if (!get_ospfd())
+	if (!libconfig_quagga_ospfd_is_running())
 		return;
 
 	fprintf(out, "router ospf\n"); /* if config not written */
-	f = ospf_get_conf(1, NULL);
+	f = libconfig_quagga_ospf_get_conf(1, NULL);
 	if (f) {
 		fgets(buf, 1024, f); /* skip line */
 		while (!feof(f)) {
@@ -494,10 +494,10 @@ void dump_ospf_interface(FILE *out, char *intf)
 	FILE *f;
 	char buf[1024];
 
-	if (!get_ospfd())
+	if (!libconfig_quagga_ospfd_is_running())
 		return;
 
-	f = ospf_get_conf(0, intf);
+	f = libconfig_quagga_ospf_get_conf(0, intf);
 	if (!f)
 		return;
 	fgets(buf, 1024, f); /* skip line */
@@ -518,12 +518,12 @@ void lconfig_rip_dump_router(FILE *out)
 	char buf[1024];
 	char keychain[] = "key chain";
 
-	if (!get_ripd())
+	if (!libconfig_quagga_ripd_is_running())
 		return;
 
 	/* dump router rip info */
 	fprintf(out, "router rip\n"); /* if config not written */
-	f = rip_get_conf(1, NULL);
+	f = libconfig_quagga_rip_get_conf(1, NULL);
 	if (f) {
 		fgets(buf, 1024, f); /* skip line */
 		while (!feof(f)) {
@@ -539,7 +539,7 @@ void lconfig_rip_dump_router(FILE *out)
 	fprintf(out, "!\n");
 
 	/* dump key info (after router rip!) */
-	f = lconfig_quagga_get_conf(RIPD_CONF, keychain);
+	f = libconfig_quagga_get_conf(RIPD_CONF, keychain);
 	if (f) {
 		end = 0;
 		while (!feof(f)) {
@@ -562,10 +562,10 @@ void dump_rip_interface(FILE *out, char *intf)
 	FILE *f;
 	char buf[1024];
 
-	if (!get_ripd())
+	if (!libconfig_quagga_ripd_is_running())
 		return;
 
-	f = rip_get_conf(0, intf);
+	f = libconfig_quagga_rip_get_conf(0, intf);
 	if (!f)
 		return;
 	fgets(buf, 1024, f); /* skip line */
@@ -581,7 +581,7 @@ void dump_rip_interface(FILE *out, char *intf)
 
 void lconfig_dump_routing(FILE *f)
 {
-	zebra_dump_static_routes_conf(f);
+	libconfig_quagga_zebra_dump_static_routes(f);
 }
 
 void lconfig_clock_dump(FILE *out)

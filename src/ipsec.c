@@ -541,7 +541,7 @@ int libconfig_ipsec_set_subnet_inf(int position,
 	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
 
 	if (strlen(addr) && strlen(mask)) {
-		if ((ret = classic_to_cidr(addr, mask, subnet)) < 0)
+		if ((ret = libconfig_quagga_classic_to_cidr(addr, mask, subnet)) < 0)
 			return ret;
 	}
 
@@ -762,7 +762,7 @@ int libconfig_ipsec_get_subnet(int position, char *ipsec_conn, char *buf)
 	}
 
 	if (strlen(subnet) > 0) {
-		if ((ret = cidr_to_classic(subnet, buf)) >= 0)
+		if ((ret = libconfig_quagga_cidr_to_classic(subnet, buf)) >= 0)
 			return 1;
 		else
 			return ret;
@@ -1271,7 +1271,7 @@ void libconfig_ipsec_dump(FILE *out)
 						l2tp_ppp_get_config(*list, &cfg);
 
 						if (cfg.peer[0]) {
-							if (cidr_to_netmask(cfg.peer_mask, netmask) != -1)
+							if (libconfig_quagga_cidr_to_netmask(cfg.peer_mask, netmask) != -1)
 								fprintf(out, "  l2tp peer %s %s\n", cfg.peer, netmask);
 						}
 

@@ -243,7 +243,7 @@ char *libconfig_zebra_to_linux_cmdline(char *cmdline)
 	args = libconfig_make_args(cmdline);
 
 	for (i = 0; i < args->argc; i++) {
-		if (cidr_to_classic(args->argv[i], addr_net) == 0)
+		if (libconfig_quagga_cidr_to_classic(args->argv[i], addr_net) == 0)
 			strcat(new_cmdline, addr_net);
 		else
 			strcat(new_cmdline, args->argv[i]);
@@ -276,7 +276,7 @@ char *libconfig_zebra_from_linux_cmdline(char *cmdline)
 	args = libconfig_make_args(cmdline);
 
 	for (i = 0; i < (args->argc - 1); i++) {
-		if ((validateip(args->argv[i]) == 0) && (classic_to_cidr(
+		if ((libconfig_quagga_validate_ip(args->argv[i]) == 0) && (libconfig_quagga_classic_to_cidr(
 		                args->argv[i], args->argv[i + 1], buf) == 0)) {
 			strcat(new_cmdline, buf);
 			i++;
