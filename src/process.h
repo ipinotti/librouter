@@ -14,7 +14,7 @@ int libconfig_process_pid_exists(pid_t pid);
 int libconfig_process_wait_for(pid_t pid, int timeout);
 int libconfig_process_get_runlevel(void);
 
-#define get_pid(a) get_process_info(a, NULL, NULL)
-#define get_pid_with_arg(a, b) get_process_info(a, b, NULL)
+#define get_pid(a) libconfig_process_get_info(a, NULL, NULL)
+#define get_pid_with_arg(a, b) libconfig_process_get_info(a, b, NULL)
 
 #endif /* PROCESS_H_ */
