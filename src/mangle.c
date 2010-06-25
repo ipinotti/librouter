@@ -63,7 +63,7 @@ static void print_mangle (const char *action,
 		fprintf (out, "    ");
 
 	if (strcmp (action, "DSCP") == 0 && dscp) {
-		dscp_class = dscp_to_name (strtol (dscp, NULL, 16));
+		dscp_class = libconfig_qos_dscp_to_name (strtol (dscp, NULL, 16));
 
 		if (dscp_class)
 			fprintf (out, "dscp class %s ", dscp_class);
@@ -134,7 +134,7 @@ static void print_mangle (const char *action,
 		fprintf (out, "tos %ld ", strtol (tos, NULL, 16));
 
 	if (dscp_match) {
-		dscp_class = dscp_to_name (strtol (dscp_match, NULL, 16));
+		dscp_class = libconfig_qos_dscp_to_name (strtol (dscp_match, NULL, 16));
 
 		if (dscp_class)
 			fprintf (out, "dscp class %s ", dscp_class);

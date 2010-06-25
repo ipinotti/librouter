@@ -698,9 +698,9 @@ static void __dump_policy_interface(FILE *out, char *intf)
 		return;
 
 	/* If qos file does not exist, create one and show default values*/
-	if (get_interface_qos_config(intf, &cfg) <= 0) {
-		create_interface_qos_config(intf);
-		if (get_interface_qos_config(intf, &cfg) <= 0)
+	if (libconfig_qos_get_interface_config(intf, &cfg) <= 0) {
+		libconfig_qos_create_interface_config(intf);
+		if (libconfig_qos_get_interface_config(intf, &cfg) <= 0)
 			return;
 	}
 	if (cfg) {
@@ -708,7 +708,7 @@ static void __dump_policy_interface(FILE *out, char *intf)
 		fprintf(out, " max-reserved-bandwidth %d\n", cfg->max_reserved_bw);
 		if (cfg->pname[0] != 0)
 			fprintf(out, " service-policy %s\n", cfg->pname);
-		release_qos_config(cfg);
+		libconfig_qos_release_config(cfg);
 	}
 }
 
@@ -1082,7 +1082,7 @@ int lconfig_write_config(char *filename, cish_config *cish_cfg)
 	libconfig_mangle_dump(0, f, 1);
 
 	/* qos */
-	lconfig_qos_dump_config(f);
+	libconfig_qos_dump_config(f);
 
 	libconfig_nat_dump_helper(f, cish_cfg);
 
