@@ -52,8 +52,10 @@ static const aaa_config_t aaa_config[MAX_AAA_TYPES] = {
 	{AAA_ACCT_CMD, AAA_ACCT_TACACS_CMD_ALL}
 };
 
-static char *web_user = NULL;
-static char *web_pass = NULL;
+struct web_auth_data {
+	char *user;
+	char *pass;
+};
 
 static int pam_null_conv(int n,
                          const struct pam_message **msg,
@@ -80,6 +82,7 @@ static int web_conv(int num_msg, const struct pam_message **msgm,
 {
 	int count = 0;
 	struct pam_response *reply;
+	struct web_auth_data *web_data = (struct web_auth_data *)appdata_ptr;
 
 	if (num_msg <= 0)
 		return PAM_CONV_ERR;
@@ -96,10 +99,10 @@ static int web_conv(int num_msg, const struct pam_message **msgm,
 
 		switch (msgm[count]->msg_style) {
 		case PAM_PROMPT_ECHO_OFF: /* Password */
-			string = web_pass;
+			string = web_data->pass;
 			break;
 		case PAM_PROMPT_ECHO_ON: /* User */
-			string = web_user;
+			string = web_data->user;
 			break;
 
 		default:
@@ -137,12 +140,13 @@ int pam_web_authenticate(char *user, char *pass)
 	struct pam_conv fpam_conv;
 	static pam_handle_t *pam_handle = NULL;
 	static struct pam_conv null_conv = { pam_null_conv, NULL };
+	struct web_auth_data web_data;
 
-	web_user = strdup(user);
-	web_pass = strdup(pass);
+	web_data.user = strdup(user);
+	web_data.pass = strdup(pass);
 
 	fpam_conv.conv = web_conv;
-	fpam_conv.appdata_ptr = NULL;
+	fpam_conv.appdata_ptr = &web_data;
 
 	if ((pam_err = pam_start("web", NULL, &null_conv, &pam_handle))
 	                != PAM_SUCCESS)
@@ -151,8 +155,6 @@ int pam_web_authenticate(char *user, char *pass)
 	if ((pam_err = pam_set_item(pam_handle, PAM_CONV,
 	                (const void *) &fpam_conv)) != PAM_SUCCESS)
 		goto web_auth_err;
-
-	syslog(LOG_INFO, "%s : %d\n", __FUNCTION__, __LINE__);
 
 	if ((pam_err = pam_authenticate(pam_handle, 0)) != PAM_SUCCESS)
 		goto web_auth_err;
@@ -178,17 +180,12 @@ int pam_web_authenticate(char *user, char *pass)
 		goto web_auth_err;
 
 
-	//pam_end(pam_handle, PAM_SUCCESS);
 	ret = AUTH_OK;
 
 web_auth_err:
-
 	if (pam_handle != NULL)
 		pam_end(pam_handle, pam_err);
 	pam_handle = NULL;
-
-	web_user = NULL;
-	web_pass = NULL;
 
 	return ret;
 }
