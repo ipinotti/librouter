@@ -858,7 +858,7 @@ struct routes_t * libconfig_quagga_get_routes(void)
 	if (f == NULL)
 		return NULL;
 
-	lconfig_dump_routing(f);
+	libconfig_config_dump_routing(f);
 	fclose(f);
 
 	f = fopen(CGI_TMP_FILE, "r");

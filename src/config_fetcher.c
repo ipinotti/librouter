@@ -45,24 +45,25 @@
 /********************/
 /* Helper functions */
 /********************/
-
 /**
- * 	get_procip_val	Read network information from /proc
+ * Read network information from /proc
  *
- * 	@oaram parm: Proc name
- * 	@return : proc value if success, -1 if failure
+ * @param parm Proc name
+ * @return proc value if success, -1 if failure
  */
-static int get_procip_val(const char *parm)
+static int _get_procip_val(const char *parm)
 {
 	int fid;
 	char buf[128];
 
 	snprintf(buf, sizeof(buf), "/proc/sys/net/ipv4/%s", parm);
+
 	fid = open(buf, O_RDONLY);
 	if (fid < 0) {
 		printf("%% Error opening %s\n%% %s\n", buf, strerror(errno));
 		return -1;
 	}
+
 	read(fid, buf, 16);
 	close(fid);
 
@@ -72,20 +73,20 @@ static int get_procip_val(const char *parm)
 /***********************/
 /* Main dump functions */
 /***********************/
-void lconfig_dump_version(FILE *f, cish_config *cish_cfg)
+void libconfig_config_dump_version(FILE *f, cish_config *cish_cfg)
 {
 	fprintf(f, "version %s\n", libconfig_get_system_version());
 	fprintf(f, "!\n");
 }
 
-void lconfig_dump_terminal(FILE *f, cish_config *cish_cfg)
+void libconfig_config_dump_terminal(FILE *f, cish_config *cish_cfg)
 {
 	fprintf(f, "terminal length %d\n", cish_cfg->terminal_lines);
 	fprintf(f, "terminal timeout %d\n", cish_cfg->terminal_timeout);
 	fprintf(f, "!\n");
 }
 
-void lconfig_dump_secret(FILE *f, cish_config *cish_cfg)
+void libconfig_config_dump_secret(FILE *f, cish_config *cish_cfg)
 {
 	int printed_something = 0;
 
@@ -103,7 +104,7 @@ void lconfig_dump_secret(FILE *f, cish_config *cish_cfg)
 		fprintf(f, "!\n");
 }
 
-void lconfig_dump_aaa(FILE *f, cish_config *cish_cfg)
+void libconfig_config_dump_aaa(FILE *f, cish_config *cish_cfg)
 {
 	int i;
 	FILE *passwd;
@@ -111,24 +112,34 @@ void lconfig_dump_aaa(FILE *f, cish_config *cish_cfg)
 	/* Dump RADIUS & TACACS servers */
 	for (i = 0; i < MAX_SERVERS; i++) {
 		if (cish_cfg->radius[i].ip_addr[0]) {
+
 			fprintf(f, "radius-server host %s", cish_cfg->radius[i].ip_addr);
+
 			if (cish_cfg->radius[i].authkey[0])
 				fprintf(f, " key %s", cish_cfg->radius[i].authkey);
+
 			if (cish_cfg->radius[i].timeout)
 				fprintf(f, " timeout %d", cish_cfg->radius[i].timeout);
+
 			fprintf(f, "\n");
 		}
 	}
+
 	for (i = 0; i < MAX_SERVERS; i++) {
 		if (cish_cfg->tacacs[i].ip_addr[0]) {
+
 			fprintf(f, "tacacs-server host %s", cish_cfg->tacacs[i].ip_addr);
+
 			if (cish_cfg->tacacs[i].authkey[0])
 				fprintf(f, " key %s", cish_cfg->tacacs[i].authkey);
+
 			if (cish_cfg->tacacs[i].timeout)
 				fprintf(f, " timeout %d", cish_cfg->tacacs[i].timeout);
+
 			fprintf(f, "\n");
 		}
 	}
+
 	/* Dump aaa authentication login mode */
 	switch (libconfig_pam_get_current_mode(FILE_PAM_GENERIC)) {
 	case AAA_AUTH_NONE:
@@ -166,6 +177,7 @@ void lconfig_dump_aaa(FILE *f, cish_config *cish_cfg)
 		fprintf(f, "aaa authorization exec default group tacacs+ local\n");
 		break;
 	}
+
 	/* Dump aaa accounting mode */
 	switch (libconfig_pam_get_current_acct_mode(FILE_PAM_GENERIC)) {
 	case AAA_ACCT_NONE:
@@ -175,6 +187,7 @@ void lconfig_dump_aaa(FILE *f, cish_config *cish_cfg)
 		fprintf(f, "aaa accounting exec default start-stop group tacacs+\n");
 		break;
 	}
+
 	switch (libconfig_pam_get_current_acct_cmd_mode(FILE_PAM_GENERIC)) {
 	case AAA_ACCT_TACACS_CMD_NONE:
 		break;
@@ -196,26 +209,28 @@ void lconfig_dump_aaa(FILE *f, cish_config *cish_cfg)
 
 		while ((pw = fgetpwent(passwd))) {
 			if (pw->pw_uid > 500 && !strncmp(pw->pw_gecos, "Local", 5)) {
-				fprintf(f, "aaa username %s password hash %s\n", pw->pw_name,
-				                pw->pw_passwd);
+				fprintf(f, "aaa username %s password hash %s\n",
+				                pw->pw_name, pw->pw_passwd);
 			}
 		}
+
 		fclose(passwd);
 	}
 
 	fprintf(f, "!\n");
 }
 
-void lconfig_dump_hostname(FILE *f)
+void libconfig_config_dump_hostname(FILE *f)
 {
 	char buf[64];
 
 	gethostname(buf, sizeof(buf) - 1);
 	buf[sizeof(buf) - 1] = 0;
+
 	fprintf(f, "hostname %s\n!\n", buf);
 }
 
-void lconfig_dump_log(FILE *f)
+void libconfig_config_dump_log(FILE *f)
 {
 	char buf[16];
 
@@ -223,7 +238,7 @@ void lconfig_dump_log(FILE *f)
 		fprintf(f, "logging remote %s\n!\n", buf);
 }
 
-void lconfig_bgp_dump_router(FILE *f, int main_nip)
+void libconfig_config_bgp_dump_router(FILE *f, int main_nip)
 {
 	FILE *fd;
 	char buf[1024];
@@ -232,85 +247,87 @@ void lconfig_bgp_dump_router(FILE *f, int main_nip)
 		return;
 
 	/* dump router bgp info */
-
 	fd = libconfig_quagga_bgp_get_conf(main_nip);
 	if (fd) {
 		while (!feof(fd)) {
 			fgets(buf, 1024, fd);
+
 			if (buf[0] == '!')
 				break;
+
 			libconfig_str_striplf(buf);
-			fprintf(f, "%s\n", libconfig_device_from_linux_cmdline(
-			                libconfig_zebra_to_linux_cmdline(buf)));
+			fprintf(f, "%s\n", libconfig_device_from_linux_cmdline(libconfig_zebra_to_linux_cmdline(buf)));
 		}
+
 		fclose(fd);
 	}
+
 	fprintf(f, "!\n");
 }
 
-void lconfig_dump_ip(FILE *f, int conf_format)
+void libconfig_config_dump_ip(FILE *f, int conf_format)
 {
 	int val;
 
-	val = get_procip_val("ip_forward");
+	val = _get_procip_val("ip_forward");
 	fprintf(f, val ? "ip routing\n" : "no ip routing\n");
 
 #ifdef OPTION_PIMD
-	val = get_procip_val("conf/all/mc_forwarding");
+	val = _get_procip_val("conf/all/mc_forwarding");
 	fprintf(f, val ? "ip multicast-routing\n" : "no ip multicast-routing\n");
 #endif
 
-	val = get_procip_val("ip_no_pmtu_disc");
+	val = _get_procip_val("ip_no_pmtu_disc");
 	fprintf(f, val ? "no ip pmtu-discovery\n" : "ip pmtu-discovery\n");
 
-	val = get_procip_val("ip_default_ttl");
+	val = _get_procip_val("ip_default_ttl");
 	fprintf(f, "ip default-ttl %i\n", val);
 
-	val = get_procip_val("conf/all/rp_filter");
+	val = _get_procip_val("conf/all/rp_filter");
 	fprintf(f, val ? "ip rp-filter\n" : "no ip rp-filter\n");
 
-	val = get_procip_val("icmp_echo_ignore_all");
+	val = _get_procip_val("icmp_echo_ignore_all");
 	fprintf(f, val ? "ip icmp ignore all\n" : "no ip icmp ignore all\n");
 
-	val = get_procip_val("icmp_echo_ignore_broadcasts");
+	val = _get_procip_val("icmp_echo_ignore_broadcasts");
 	fprintf(f, val ? "ip icmp ignore broadcasts\n" : "no ip icmp ignore broadcasts\n");
 
-	val = get_procip_val("icmp_ignore_bogus_error_responses");
+	val = _get_procip_val("icmp_ignore_bogus_error_responses");
 	fprintf(f, val ? "ip icmp ignore bogus\n" : "no ip icmp ignore bogus\n");
 
 #if 0 /* This are not present in earlier kernel versions ... is this PD3 invention ? */
-	val = get_procip_val ("icmp_destunreach_rate");
+	val = _get_procip_val ("icmp_destunreach_rate");
 	fprintf (f, "ip icmp rate dest-unreachable %i\n", val);
 
-	val = get_procip_val ("icmp_echoreply_rate");
+	val = _get_procip_val ("icmp_echoreply_rate");
 	fprintf (f, "ip icmp rate echo-reply %i\n", val);
 
-	val = get_procip_val ("icmp_paramprob_rate");
+	val = _get_procip_val ("icmp_paramprob_rate");
 	fprintf (f, "ip icmp rate param-prob %i\n", val);
 
-	val = get_procip_val ("icmp_timeexceed_rate");
+	val = _get_procip_val ("icmp_timeexceed_rate");
 	fprintf (f, "ip icmp rate time-exceed %i\n", val);
 #endif
 
-	val = get_procip_val("ipfrag_high_thresh");
+	val = _get_procip_val("ipfrag_high_thresh");
 	fprintf(f, "ip fragment high %i\n", val);
 
-	val = get_procip_val("ipfrag_low_thresh");
+	val = _get_procip_val("ipfrag_low_thresh");
 	fprintf(f, "ip fragment low %i\n", val);
 
-	val = get_procip_val("ipfrag_time");
+	val = _get_procip_val("ipfrag_time");
 	fprintf(f, "ip fragment time %i\n", val);
 
-	val = get_procip_val("tcp_ecn");
+	val = _get_procip_val("tcp_ecn");
 	fprintf(f, val ? "ip tcp ecn\n" : "no ip tcp ecn\n");
 
-	val = get_procip_val("tcp_syncookies");
+	val = _get_procip_val("tcp_syncookies");
 	fprintf(f, val ? "ip tcp syncookies\n" : "no ip tcp syncookies\n");
 
 	fprintf(f, "!\n");
 }
 
-void lconfig_dump_snmp(FILE *f, int conf_format)
+void libconfig_config_dump_snmp(FILE *f, int conf_format)
 {
 	int print = 0;
 	int len;
@@ -321,10 +338,12 @@ void lconfig_dump_snmp(FILE *f, int conf_format)
 		print = 1;
 		fprintf(f, "snmp-server contact %s\n", buf);
 	}
+
 	if (snmp_get_location(buf, 511) == 0) {
 		print = 1;
 		fprintf(f, "snmp-server location %s\n", buf);
 	}
+
 	if ((len = snmp_get_trapsinks(&sinks)) > 0) {
 		if (sinks) {
 			int i;
@@ -342,6 +361,7 @@ void lconfig_dump_snmp(FILE *f, int conf_format)
 
 	if (snmp_dump_communities(f) > 0)
 		print = 1;
+
 	if (snmp_is_running()) {
 		print = 1;
 		snmp_dump_versions(f);
@@ -352,7 +372,7 @@ void lconfig_dump_snmp(FILE *f, int conf_format)
 }
 
 #ifdef OPTION_RMON
-void lconfig_dump_rmon(FILE *f)
+void libconfig_config_dump_rmon(FILE *f)
 {
 	int i, k;
 	struct rmon_config *shm_rmon_p;
@@ -361,73 +381,95 @@ void lconfig_dump_rmon(FILE *f)
 	if (get_access_rmon_config(&shm_rmon_p) == 1) {
 		for (i = 0; i < NUM_EVENTS; i++) {
 			if (shm_rmon_p->events[i].index > 0) {
-				fprintf(f, "rmon event %d", shm_rmon_p->events[i].index);
+				fprintf(f, "rmon event %d",shm_rmon_p->events[i].index);
+
 				if (shm_rmon_p->events[i].do_log)
 					fprintf(f, " log");
+
 				if (shm_rmon_p->events[i].community[0] != 0)
-					fprintf(f, " trap %s", shm_rmon_p->events[i].community);
+					fprintf(f, " trap %s",
+					                shm_rmon_p->events[i].community);
+
 				if (shm_rmon_p->events[i].description[0] != 0)
 					fprintf(f, " description %s",
 					                shm_rmon_p->events[i].description);
+
 				if (shm_rmon_p->events[i].owner[0] != 0)
-					fprintf(f, " owner %s", shm_rmon_p->events[i].owner);
+					fprintf(f, " owner %s",
+					                shm_rmon_p->events[i].owner);
+
 				fprintf(f, "\n");
 			}
 		}
+
 		for (i = 0; i < NUM_ALARMS; i++) {
 			if (shm_rmon_p->alarms[i].index > 0) {
+
 				result[0] = '\0';
+
 				for (k = 0; k < shm_rmon_p->alarms[i].oid_len; k++) {
-					sprintf(tp, "%lu.", shm_rmon_p->alarms[i].oid[k]);
+					sprintf(tp, "%lu.",
+					                shm_rmon_p->alarms[i].oid[k]);
 					strcat(result, tp);
 				}
+
 				*(result + strlen(result) - 1) = '\0';
 
-				fprintf(f, "rmon alarm %d %s %d", shm_rmon_p->alarms[i].index,
-				                result, shm_rmon_p->alarms[i].interval);
+				fprintf(f, "rmon alarm %d %s %d",
+				                shm_rmon_p->alarms[i].index,
+				                result,
+				                shm_rmon_p->alarms[i].interval);
+
 				switch (shm_rmon_p->alarms[i].sample_type) {
 				case SAMPLE_ABSOLUTE:
 					fprintf(f, " absolute");
 					break;
-
 				case SAMPLE_DELTA:
 					fprintf(f, " delta");
 					break;
 				}
+
 				if (shm_rmon_p->alarms[i].rising_threshold) {
+
 					fprintf(f, " rising-threshold %d",
 					                shm_rmon_p->alarms[i].rising_threshold);
+
 					if (shm_rmon_p->alarms[i].rising_event_index)
-						fprintf(
-						                f,
-						                " %d",
+						fprintf(f, " %d",
 						                shm_rmon_p->alarms[i].rising_event_index);
 				}
+
 				if (shm_rmon_p->alarms[i].falling_threshold) {
+
 					fprintf(f, " falling-threshold %d",
 					                shm_rmon_p->alarms[i].falling_threshold);
+
 					if (shm_rmon_p->alarms[i].falling_event_index)
-						fprintf(
-						                f,
-						                " %d",
+						fprintf(f, " %d",
 						                shm_rmon_p->alarms[i].falling_event_index);
 				}
+
 				if (shm_rmon_p->alarms[i].owner[0] != 0)
-					fprintf(f, " owner %s", shm_rmon_p->alarms[i].owner);
+					fprintf(f, " owner %s",
+					                shm_rmon_p->alarms[i].owner);
+
 				fprintf(f, "\n");
 			}
 		}
+
 		loose_access_rmon_config(&shm_rmon_p);
 	}
+
 	if (libconfig_exec_check_daemon(RMON_DAEMON))
 		fprintf(f, "rmon agent\n");
 	else
 		fprintf(f, "no rmon agent\n");
+
 	fprintf(f, "!\n");
 }
 #endif
 
-void lconfig_dump_chatscripts(FILE *f)
+void libconfig_config_dump_chatscripts(FILE *f)
 {
 	FILE *fd;
 	int printed_something = 0;
@@ -446,10 +488,13 @@ void lconfig_dump_chatscripts(FILE *f)
 	while (n--) {
 		if (namelist[n]->d_name[0] != '.') {
 			sprintf(filename, "%s%s", PPP_CHAT_DIR, namelist[n]->d_name);
+
 			fd = fopen(filename, "r");
 			if (fd) {
 				memset(buf, 0, sizeof(buf));
+
 				fgets(buf, sizeof(buf) - 1, fd);
+
 				fprintf(f, "chatscript %s %s\n", namelist[n]->d_name, buf);
 				fclose(fd);
 				printed_something = 1;
@@ -457,13 +502,14 @@ void lconfig_dump_chatscripts(FILE *f)
 		}
 		free(namelist[n]);
 	}
+
 	free(namelist);
 
 	if (printed_something)
 		fprintf(f, "!\n");
 }
 
-void lconfig_ospf_dump_router(FILE *out)
+void libconfig_config_ospf_dump_router(FILE *out)
 {
 	FILE *f;
 	char buf[1024];
@@ -471,25 +517,33 @@ void lconfig_ospf_dump_router(FILE *out)
 	if (!libconfig_quagga_ospfd_is_running())
 		return;
 
-	fprintf(out, "router ospf\n"); /* if config not written */
+	/* if config not written */
+	fprintf(out, "router ospf\n");
+
 	f = libconfig_quagga_ospf_get_conf(1, NULL);
+
 	if (f) {
-		fgets(buf, 1024, f); /* skip line */
+		/* skip line */
+		fgets(buf, 1024, f);
+
 		while (!feof(f)) {
 			fgets(buf, 1024, f);
+
 			if (buf[0] == '!')
 				break;
+
 			libconfig_str_striplf(buf);
-			fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(
-			                libconfig_zebra_to_linux_cmdline(buf)));
+			fprintf(out, "%s\n",
+			                libconfig_device_from_linux_cmdline(libconfig_zebra_to_linux_cmdline(buf)));
 		}
+
 		fclose(f);
 	}
 
 	fprintf(out, "!\n");
 }
 
-void dump_ospf_interface(FILE *out, char *intf)
+void libconfig_config_ospf_dump_interface(FILE *out, char *intf)
 {
 	FILE *f;
 	char buf[1024];
@@ -498,20 +552,27 @@ void dump_ospf_interface(FILE *out, char *intf)
 		return;
 
 	f = libconfig_quagga_ospf_get_conf(0, intf);
+
 	if (!f)
 		return;
-	fgets(buf, 1024, f); /* skip line */
+
+	/* skip line */
+	fgets(buf, 1024, f);
+
 	while (!feof(f)) {
 		fgets(buf, 1024, f);
 		if (buf[0] == '!')
 			break;
+
 		libconfig_str_striplf(buf);
+
 		fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(libconfig_zebra_to_linux_cmdline(buf)));
 	}
+
 	fclose(f);
 }
 
-void lconfig_rip_dump_router(FILE *out)
+void libconfig_config_rip_dump_router(FILE *out)
 {
 	FILE *f;
 	int end;
@@ -522,42 +583,59 @@ void lconfig_rip_dump_router(FILE *out)
 		return;
 
 	/* dump router rip info */
-	fprintf(out, "router rip\n"); /* if config not written */
+	/* if config not written */
+	fprintf(out, "router rip\n");
+
 	f = libconfig_quagga_rip_get_conf(1, NULL);
+
 	if (f) {
-		fgets(buf, 1024, f); /* skip line */
+		/* skip line */
+		fgets(buf, 1024, f);
+
 		while (!feof(f)) {
+
 			fgets(buf, 1024, f);
+
 			if (buf[0] == '!')
 				break;
+
 			libconfig_str_striplf(buf);
-			fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(
-			                libconfig_zebra_to_linux_cmdline(buf)));
+			fprintf(out," %s\n",
+			                libconfig_device_from_linux_cmdline(
+			                                libconfig_zebra_to_linux_cmdline(buf)));
 		}
+
 		fclose(f);
 	}
+
 	fprintf(out, "!\n");
 
 	/* dump key info (after router rip!) */
 	f = libconfig_quagga_get_conf(RIPD_CONF, keychain);
+
 	if (f) {
 		end = 0;
 		while (!feof(f)) {
+
 			fgets(buf, 1024, f);
+
 			if (end && (strncmp(buf, keychain, sizeof(keychain) != 0)))
 				break;
 			else
 				end = 0;
+
 			if (buf[0] == '!')
 				end = 1;
+
 			libconfig_str_striplf(buf);
+
 			fprintf(out, "%s\n", buf);
 		}
 		fclose(f);
 	}
 }
 
-void dump_rip_interface(FILE *out, char *intf)
+void libconfig_config_rip_dump_interface(FILE *out, char *intf)
 {
 	FILE *f;
 	char buf[1024];
@@ -566,45 +644,57 @@ void dump_rip_interface(FILE *out, char *intf)
 		return;
 
 	f = libconfig_quagga_rip_get_conf(0, intf);
+
 	if (!f)
 		return;
-	fgets(buf, 1024, f); /* skip line */
+
+	/* skip line */
+	fgets(buf, 1024, f);
+
 	while (!feof(f)) {
+
 		fgets(buf, 1024, f);
+
 		if (buf[0] == '!')
 			break;
+
 		libconfig_str_striplf(buf);
-		fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(libconfig_zebra_to_linux_cmdline(buf)));
+		fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(
+		                libconfig_zebra_to_linux_cmdline(buf)));
 	}
+
 	fclose(f);
 }
 
-void lconfig_dump_routing(FILE *f)
+void libconfig_config_dump_routing(FILE *f)
 {
 	libconfig_quagga_zebra_dump_static_routes(f);
 }
 
-void lconfig_clock_dump(FILE *out)
+void libconfig_config_clock_dump(FILE *out)
 {
 	int hours, mins;
 	char name[16];
 
 	if (get_timezone(name, &hours, &mins) == 0) {
 		fprintf(out, "clock timezone %s %d", name, hours);
+
 		if (mins > 0)
 			fprintf(out, " %d\n", mins);
 		else
 			fprintf(out, "\n");
+
 		fprintf(out, "!\n");
 	}
 }
 
-void lconfig_ip_dump_servers(FILE *out)
+void libconfig_config_ip_dump_servers(FILE *out)
 {
 	char buf[2048];
 	int dhcp;
 
 	dhcp = libconfig_dhcp_get_status();
+
 	if (dhcp == DHCP_SERVER) {
 		if (libconfig_dhcp_get_server(buf) == 0) {
 			fprintf(out, "%s\n", buf);
@@ -620,30 +710,37 @@ void lconfig_ip_dump_servers(FILE *out)
 		fprintf(out, "no ip dhcp relay\n");
 	}
 
-	fprintf(out, "%sip dns relay\n", libconfig_exec_check_daemon(DNS_DAEMON) ? "" : "no ");
-	fprintf(out, "%sip domain lookup\n", libconfig_dns_domain_lookup_enabled() ? "" : "no ");
+	fprintf(out, "%sip dns relay\n",
+	                libconfig_exec_check_daemon(DNS_DAEMON) ? "" : "no ");
+
+	fprintf(out, "%sip domain lookup\n",
+	                libconfig_dns_domain_lookup_enabled() ? "" : "no ");
 
 	libconfig_dns_dump_nameservers(out);
 
 #ifdef OPTION_HTTP
 	fprintf(out, "%sip http server\n", libconfig_exec_check_daemon(HTTP_DAEMON) ? "" : "no ");
 #endif
+
 #ifdef OPTION_HTTPS
 	fprintf(out, "%sip https server\n", libconfig_exec_check_daemon(HTTPS_DAEMON) ? "" : "no ");
 #endif
+
 #ifdef OPTION_PIMD
 	libconfig_pim_dump(out);
 #endif
+
 #ifdef OPTION_OPENSSH
 	fprintf(out, "%sip ssh server\n", libconfig_exec_check_daemon(SSH_DAEMON) ? "" : "no ");
 #else
 	fprintf (out, "%sip ssh server\n", libconfig_exec_get_inetd_program(SSH_DAEMON) ? "" : "no ");
 #endif
+
 	fprintf(out, "%sip telnet server\n", libconfig_exec_get_inetd_program(TELNET_DAEMON) ? "" : "no ");
 	fprintf(out, "!\n");
 }
 
-void lconfig_arp_dump(FILE *out)
+void libconfig_config_arp_dump(FILE *out)
 {
 	FILE *F;
 	char *ipaddr;
@@ -656,16 +753,24 @@ void lconfig_arp_dump(FILE *out)
 	char tbuf[128];
 
 	F = fopen("/proc/net/arp", "r");
+
 	if (!F) {
 		printf("%% Unable to read ARP table\n");
 		return;
 	}
+
 	fgets(tbuf, 127, F);
+
 	while (!feof(F)) {
+
 		tbuf[0] = 0;
+
 		fgets(tbuf, 127, F);
+
 		tbuf[127] = 0;
+
 		libconfig_str_striplf(tbuf);
+
 		args = libconfig_make_args(tbuf);
 		if (args->argc >= 6) {
 			ipaddr = args->argv[0];
@@ -673,14 +778,17 @@ void lconfig_arp_dump(FILE *out)
 			type = args->argv[1];
 			osdev = args->argv[5];
 			flags = strtoul(args->argv[2], 0, 16);
-			if (flags & ATF_PERM) // permanent entry
-			{
+
+			/* permanent entry */
+			if (flags & ATF_PERM) {
 				fprintf(out, "arp %s %s\n", ipaddr, hwaddr);
 				print_something = 1;
 			}
 		}
+
 		libconfig_destroy_args(args);
 	}
+
 	if (print_something)
 		fprintf(out, "!\n");
 }
@@ -689,7 +797,7 @@ void lconfig_arp_dump(FILE *out)
 /* Interface information */
 /*************************/
 
-static void __dump_policy_interface(FILE *out, char *intf)
+static void _dump_policy_interface(FILE *out, char *intf)
 {
 	intf_qos_cfg_t *cfg;
 
@@ -703,34 +811,43 @@ static void __dump_policy_interface(FILE *out, char *intf)
 		if (libconfig_qos_get_interface_config(intf, &cfg) <= 0)
 			return;
 	}
+
 	if (cfg) {
 		fprintf(out, " bandwidth %dkbps\n", cfg->bw / 1024);
 		fprintf(out, " max-reserved-bandwidth %d\n", cfg->max_reserved_bw);
+
 		if (cfg->pname[0] != 0)
 			fprintf(out, " service-policy %s\n", cfg->pname);
+
 		libconfig_qos_release_config(cfg);
 	}
 }
 
-static void __dump_intf_iptables_config(FILE *out, struct interface_conf *conf)
+static void _dump_intf_iptables_config(FILE *out, struct interface_conf *conf)
 {
 	struct iptables_t *ipt = &conf->ipt;
 
 	if (ipt->in_acl[0])
 		fprintf(out, " ip access-group %s in\n", ipt->in_acl);
+
 	if (ipt->out_acl[0])
 		fprintf(out, " ip access-group %s out\n", ipt->out_acl);
+
 	if (ipt->in_mangle[0])
 		fprintf(out, " ip mark %s in\n", ipt->in_mangle);
+
 	if (ipt->out_mangle[0])
 		fprintf(out, " ip mark %s out\n", ipt->out_mangle);
+
 	if (ipt->in_nat[0])
 		fprintf(out, " ip nat %s in\n", ipt->in_nat);
+
 	if (ipt->out_nat[0])
 		fprintf(out, " ip nat %s out\n", ipt->out_nat);
 }
 
-static void __dump_intf_secondary_ipaddr_config(FILE *out, struct interface_conf *conf)
+static void _dump_intf_secondary_ipaddr_config(FILE *out,
+                                               struct interface_conf *conf)
 {
 	int i;
 	struct ip_t *ip = &conf->sec_ip[0];
@@ -742,11 +859,10 @@ static void __dump_intf_secondary_ipaddr_config(FILE *out, struct interface_conf
 			break;
 
 		fprintf(out, " ip address %s %s secondary\n", ip->ipaddr, ip->ipmask);
-
 	}
 }
 
-static void __dump_intf_ipaddr_config(FILE *out, struct interface_conf *conf)
+static void _dump_intf_ipaddr_config(FILE *out, struct interface_conf *conf)
 {
 	struct ip_t *ip = &conf->main_ip;
 
@@ -756,19 +872,24 @@ static void __dump_intf_ipaddr_config(FILE *out, struct interface_conf *conf)
 		fprintf(out, " no ip address\n");
 }
 
-static void __dump_ethernet_config(FILE *out, struct interface_conf *conf)
+static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 {
-	char *osdev = conf->name; /* Interface name (linux name) */
-	int ether_no; /* Ethernet index */
-	int minor; /* Sub-interface index */
+	/* Interface name (linux name) */
+	char *osdev = conf->name;
+	/* Ethernet index */
+	int ether_no;
+	/* Sub-interface index */
+	int minor;
 	char daemon_dhcpc[32];
 	char devtmp[32];
 	int i;
 	char *p;
 
 	ether_no = atoi(osdev + strlen(ETHERNETDEV));
+
+	/* skip '.' */
 	if ((p = strchr(osdev, '.')) != NULL)
-		minor = atoi(p + 1); /* skip '.' */
+		minor = atoi(p + 1);
 
 	/* Don't allow DHCP for sub-interfaces */
 	if (minor)
@@ -777,26 +898,26 @@ static void __dump_ethernet_config(FILE *out, struct interface_conf *conf)
 		sprintf(daemon_dhcpc, DHCPC_DAEMON, osdev);
 
 	/* Dump iptables configuration */
-	__dump_intf_iptables_config(out, conf);
+	_dump_intf_iptables_config(out, conf);
 
 #ifdef OPTION_PIMD
 	libconfig_pim_dump_interface(out, osdev);
 #endif
 	/* Dump QoS */
-	__dump_policy_interface(out, osdev);
+	_dump_policy_interface(out, osdev);
 
 	/* Dump Quagga */
-	dump_rip_interface(out, osdev);
-	dump_ospf_interface(out, osdev);
+	libconfig_config_rip_dump_interface(out, osdev);
+	libconfig_config_ospf_dump_interface(out, osdev);
 
 	/* Print main IP address */
 	if (strlen(daemon_dhcpc) && libconfig_exec_check_daemon(daemon_dhcpc))
 		fprintf(out, " ip address dhcp\n");
 	else
-		__dump_intf_ipaddr_config(out, conf);
+		_dump_intf_ipaddr_config(out, conf);
 
 	/* Print secondary IP addresses */
-	__dump_intf_secondary_ipaddr_config(out, conf);
+	_dump_intf_secondary_ipaddr_config(out, conf);
 
 	if (conf->mtu)
 		fprintf(out, " mtu %d\n", conf->mtu);
@@ -809,8 +930,7 @@ static void __dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	strncpy(devtmp, osdev, 14);
 	strcat(devtmp, ".");
 	for (i = 0; i < MAX_NUM_LINKS; i++) {
-		if (strncmp(conf->info->link[i].ifname, devtmp, strlen(devtmp))
-				== 0) {
+		if (strncmp(conf->info->link[i].ifname, devtmp, strlen(devtmp)) == 0) {
 			fprintf(out, " vlan %s\n", conf->info->link[i].ifname
 					+ strlen(devtmp));
 		}
@@ -822,11 +942,13 @@ static void __dump_ethernet_config(FILE *out, struct interface_conf *conf)
 		int bmcr;
 
 		bmcr = libconfig_lan_get_phy_reg(osdev, MII_BMCR);
+
 		if (bmcr & BMCR_ANENABLE)
 			fprintf(out, " speed auto\n");
 		else {
-			fprintf(out, " speed %s %s\n", (bmcr & BMCR_SPEED100) ? "100" : "10", (bmcr
-			                & BMCR_FULLDPLX) ? "full" : "half");
+			fprintf(out, " speed %s %s\n",
+					(bmcr & BMCR_SPEED100) ? "100" : "10",
+			                (bmcr & BMCR_FULLDPLX) ? "full" : "half");
 		}
 	}
 
@@ -840,41 +962,41 @@ static void __dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	return;
 }
 
-static void __dump_loopback_config(FILE *out, struct interface_conf *conf)
+static void _dump_loopback_config(FILE *out, struct interface_conf *conf)
 {
 	char *osdev = conf->name; /* Interface name (linux name) */
 
-	__dump_intf_iptables_config(out, conf);
+	_dump_intf_iptables_config(out, conf);
 
-	__dump_intf_ipaddr_config(out, conf);
+	_dump_intf_ipaddr_config(out, conf);
 
 	/* Search for aliases */
-	__dump_intf_secondary_ipaddr_config(out, conf);
+	_dump_intf_secondary_ipaddr_config(out, conf);
 
 	fprintf(out, " %sshutdown\n", conf->up ? "no " : "");
 }
 
 #ifdef OPTION_TUNNEL
-static void __dump_tunnel_config(FILE *out, struct interface_conf *conf)
+static void _dump_tunnel_config(FILE *out, struct interface_conf *conf)
 {
 	char *osdev = conf->name;
 
 	/* Dump iptables configuration */
-	__dump_intf_iptables_config(out, conf);
+	_dump_intf_iptables_config(out, conf);
 
-	dump_rip_interface(out, osdev);
-	dump_ospf_interface(out, osdev);
+	libconfig_config_rip_dump_interface(out, osdev);
+	libconfig_config_ospf_dump_interface(out, osdev);
 
-	__dump_intf_ipaddr_config(out, conf);
+	_dump_intf_ipaddr_config(out, conf);
 
 	/* as */
-	__dump_intf_secondary_ipaddr_config(out, conf);
+	_dump_intf_secondary_ipaddr_config(out, conf);
 
 	if (conf->mtu)
-	fprintf(out, " mtu %d\n", conf->mtu);
+		fprintf(out, " mtu %d\n", conf->mtu);
 
 	if (conf->txqueue)
-	fprintf(out, " txqueuelen %d\n", conf->txqueue);
+		fprintf(out, " txqueuelen %d\n", conf->txqueue);
 
 	libconfig_tunnel_dump_interface(out, 1, osdev);
 
@@ -883,7 +1005,7 @@ static void __dump_tunnel_config(FILE *out, struct interface_conf *conf)
 #endif
 
 #ifdef OPTION_PPP
-static void __dump_ppp_config(FILE *out, struct interface_conf *conf)
+static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 {
 	ppp_config cfg;
 	char *osdev = conf->name;
@@ -895,10 +1017,12 @@ static void __dump_ppp_config(FILE *out, struct interface_conf *conf)
 	serial_no = atoi(osdev + strlen(PPPDEV));
 
 	libconfig_ppp_get_config(serial_no, &cfg);
-	__dump_intf_iptables_config(out, conf);
-	__dump_policy_interface(out, osdev);
-	dump_rip_interface(out, osdev);
-	dump_ospf_interface(out, osdev);
+
+	_dump_intf_iptables_config(out, conf);
+	_dump_policy_interface(out, osdev);
+
+	libconfig_config_rip_dump_interface(out, osdev);
+	libconfig_config_ospf_dump_interface(out, osdev);
 
 	fprintf(out, " apn set %s\n", cfg.apn);
 	fprintf(out, " username set %s\n", cfg.auth_user);
@@ -909,12 +1033,12 @@ static void __dump_ppp_config(FILE *out, struct interface_conf *conf)
 #endif
 
 /**
- * dump_interface_config : Show interface configuration
- * @param FILE *out : File descriptor to be writen
- * @param struct interface_conf *conf : Interface information
- * @return NONE
+ * Show interface configuration
+ *
+ * @param out File descriptor to be written
+ * @param conf Interface information
  */
-static void dump_interface_config(FILE *out, struct interface_conf *conf)
+static void libconfig_config_dump_interface(FILE *out, struct interface_conf *conf)
 {
 	struct iptables_t ipt;
 	char *description;
@@ -922,14 +1046,16 @@ static void dump_interface_config(FILE *out, struct interface_conf *conf)
 
 	/* Get iptables config */
 	memset(&ipt, 0, sizeof(struct iptables_t));
+
 	libconfig_acl_get_iface_rules(conf->name, ipt.in_acl, ipt.out_acl);
 	libconfig_mangle_get_iface_rules(conf->name, ipt.in_mangle, ipt.out_mangle);
 	libconfig_nat_get_iface_rules(conf->name, ipt.in_nat, ipt.out_nat);
 
 	cish_dev = libconfig_device_convert_os(conf->name, 0);
 
+	/* skip ipsec ones... */
 	if (conf->linktype == ARPHRD_TUNNEL6)
-		return; /* skip ipsec ones... */
+		return;
 
 	fprintf(out, "interface %s\n", cish_dev);
 	description = libconfig_dev_get_description(conf->name);
@@ -940,23 +1066,21 @@ static void dump_interface_config(FILE *out, struct interface_conf *conf)
 	switch (conf->linktype) {
 #ifdef OPTION_PPP
 	case ARPHRD_PPP:
-	__dump_ppp_config (out, conf);
-	break;
+		_dump_ppp_config(out, conf);
+		break;
 #endif
 	case ARPHRD_ETHER:
-		__dump_ethernet_config(out, conf);
+		_dump_ethernet_config(out, conf);
 		break;
-
 	case ARPHRD_LOOPBACK:
-		__dump_loopback_config(out, conf);
+		_dump_loopback_config(out, conf);
 		break;
 #ifdef OPTION_TUNNEL
-		case ARPHRD_TUNNEL:
-		case ARPHRD_IPGRE:
-		__dump_tunnel_config (out, conf);
+	case ARPHRD_TUNNEL:
+	case ARPHRD_IPGRE:
+		_dump_tunnel_config (out, conf);
 		break;
 #endif
-
 	default:
 		printf("%% unknown link type: %d\n", conf->linktype);
 		break;
@@ -970,7 +1094,7 @@ static void dump_interface_config(FILE *out, struct interface_conf *conf)
 	fprintf(out, "!\n");
 }
 
-void lconfig_interfaces_dump(FILE *out)
+void libconfig_config_interfaces_dump(FILE *out)
 {
 	int i, ret;
 	struct ip_t ip;
@@ -981,8 +1105,8 @@ void lconfig_interfaces_dump(FILE *out)
 
 	struct interface_conf conf;
 
-	char intf_list[32][16] = { "ethernet0", "ethernet1", "loopback0", "ppp0", "ppp1", "ppp2",
-	                "\0" };
+	char intf_list[32][16] = { "ethernet0", "ethernet1", "loopback0",
+	                "ppp0", "ppp1", "ppp2", "\0" };
 
 #if 0
 	int vlan_cos=NONE_TO_COS;
@@ -996,26 +1120,30 @@ void lconfig_interfaces_dump(FILE *out)
 		st = conf.stats;
 
 		cish_dev = libconfig_device_convert_os(conf.name, 1);
-		if (cish_dev == NULL)
-			continue; /* Ignore if device is not recognized by CISH */
 
+		/* Ignore if device is not recognized by CISH */
+		if (cish_dev == NULL)
+			continue;
+
+		/* !!! change crypto-? linktype (temp!) */
 		if (strncmp(conf.name, "ipsec", 5) == 0)
-			conf.linktype = ARPHRD_TUNNEL6; /* !!! change crypto-? linktype (temp!) */
+			conf.linktype = ARPHRD_TUNNEL6;
 
 		/* TODO Check PHY/Switch status for ethernet interfaces */
 #if 0
 		switch (conf.linktype) {
-
-			case ARPHRD_ETHER:
-			phy_status=libconfig_lan_get_status(conf.name);
-			running=(up && (phy_status & PHY_STAT_LINK) ? 1 : 0); /* vlan: interface must be up */
-			if (!strncmp(conf.name,"ethernet",8) && strstr(conf.name,".")) /* VLAN */
-			vlan_cos = libconfig_vlan_get_cos(conf.name);
+		case ARPHRD_ETHER:
+			phy_status = libconfig_lan_get_status(conf.name);
+			/* vlan: interface must be up */
+			running = (up && (phy_status & PHY_STAT_LINK) ? 1 : 0);
+			/* VLAN */
+			if (!strncmp(conf.name,"ethernet",8) && strstr(conf.name,"."))
+				vlan_cos = libconfig_vlan_get_cos(conf.name);
 			else
-			vlan_cos = NONE_TO_COS;
+				vlan_cos = NONE_TO_COS;
 			break;
-			default:
-			running=(link_table[i].flags & IFF_RUNNING) ? 1 : 0;
+		default:
+			running = (link_table[i].flags & IFF_RUNNING) ? 1 : 0;
 			break;
 		}
 #else
@@ -1027,7 +1155,7 @@ void lconfig_interfaces_dump(FILE *out)
 			continue;
 
 		/* Start dumping information */
-		dump_interface_config(out, &conf);
+		libconfig_config_dump_interface(out, &conf);
 
 		libconfig_ip_iface_free_config(&conf);
 	}
@@ -1038,16 +1166,15 @@ void lconfig_interfaces_dump(FILE *out)
 /********************************/
 
 /**
- * lconfig_write_config 	Write all configuration to file
+ * Write all configuration to file
  *
  * All router configuration is written to filename
  *
- * @param f: Open file descriptor
- * @param cish_cfg: Cish configuration struct
- *
- * @ret void
+ * @param filename Open file descriptor
+ * @param cish_cfg Cish configuration struct
+ * @return
  */
-int lconfig_write_config(char *filename, cish_config *cish_cfg)
+int libconfig_config_write(char *filename, cish_config *cish_cfg)
 {
 	FILE * f;
 
@@ -1056,24 +1183,24 @@ int lconfig_write_config(char *filename, cish_config *cish_cfg)
 		return -1;
 
 	fprintf(f, "!\n");
-	lconfig_dump_version(f, cish_cfg);
-	lconfig_dump_terminal(f, cish_cfg);
-	lconfig_dump_secret(f, cish_cfg);
-	lconfig_dump_aaa(f, cish_cfg);
-	lconfig_dump_hostname(f);
-	lconfig_dump_log(f);
+	libconfig_config_dump_version(f, cish_cfg);
+	libconfig_config_dump_terminal(f, cish_cfg);
+	libconfig_config_dump_secret(f, cish_cfg);
+	libconfig_config_dump_aaa(f, cish_cfg);
+	libconfig_config_dump_hostname(f);
+	libconfig_config_dump_log(f);
 #ifdef OPTION_BGP
-	lconfig_bgp_dump_router(f, 0);
+	libconfig_config_bgp_dump_router(f, 0);
 #endif
-	lconfig_dump_ip(f, 1);
+	libconfig_config_dump_ip(f, 1);
 
 	/* SNMP */
-	lconfig_dump_snmp(f, 1);
+	libconfig_config_dump_snmp(f, 1);
 #ifdef OPTION_RMON
-	lconfig_dump_rmon(f);
+	libconfig_config_dump_rmon(f);
 #endif
 
-	lconfig_dump_chatscripts(f);
+	libconfig_config_dump_chatscripts(f);
 
 	/* iptables */
 	libconfig_acl_dump_policy(f);
@@ -1087,22 +1214,22 @@ int lconfig_write_config(char *filename, cish_config *cish_cfg)
 	libconfig_nat_dump_helper(f, cish_cfg);
 
 	/* Quagga */
-	lconfig_rip_dump_router(f);
-	lconfig_ospf_dump_router(f);
+	libconfig_config_rip_dump_router(f);
+	libconfig_config_ospf_dump_router(f);
 #ifdef OPTION_BGP
-	lconfig_bgp_dump_router(f, 1);
+	libconfig_config_bgp_dump_router(f, 1);
 #endif
-	lconfig_dump_routing(f);
+	libconfig_config_dump_routing(f);
 
 	/* Multicast */
 #ifdef OPTION_SMCROUTE
 	libconfig_smc_route_dump(f);
 #endif
-	lconfig_interfaces_dump(f);
-	lconfig_clock_dump(f);
+	libconfig_config_interfaces_dump(f);
+	libconfig_config_clock_dump(f);
 	libconfig_ntp_dump(f);
-	lconfig_ip_dump_servers(f);
-	lconfig_arp_dump(f);
+	libconfig_config_ip_dump_servers(f);
+	libconfig_config_arp_dump(f);
 #ifdef OPTION_IPSEC
 	libconfig_ipsec_dump(f);
 #endif
@@ -1110,55 +1237,64 @@ int lconfig_write_config(char *filename, cish_config *cish_cfg)
 	fclose(f);
 }
 
-static int set_default_cfg(void)
+static int _set_default_cfg(void)
 {
 	FILE *f;
 	cish_config cfg;
 
 	memset(&cfg, 0, sizeof(cfg));
+
 	f = fopen(CISH_CFG_FILE, "wb");
+
 	if (!f) {
 		libconfig_pr_error(1, "Can't write configuration");
 		return (-1);
 	}
+
 	fwrite(&cfg, sizeof(cish_config), 1, f);
 	fclose(f);
+
 	return 0;
 }
 
-static int check_cfg(void)
+static int _check_cfg(void)
 {
 	struct stat st;
 
 	if (stat(CISH_CFG_FILE, &st))
-		return set_default_cfg();
+		return _set_default_cfg();
+
 	return 0;
 }
 
-cish_config* lconfig_mmap_cfg(void)
+cish_config* libconfig_config_mmap_cfg(void)
 {
 	int fd;
 	cish_config *cish_cfg = NULL;
 
-	check_cfg();
+	_check_cfg();
 
 	if ((fd = open(CISH_CFG_FILE, O_RDWR)) < 0) {
 		libconfig_pr_error(1, "Could not open configuration");
 		return NULL;
 	}
+
 	cish_cfg = mmap(NULL, sizeof(cish_config), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
 	if (cish_cfg == ((void *) -1)) {
 		libconfig_pr_error(1, "Could not open configuration");
 		return NULL;
 	}
+
 	close(fd);
 
-	libconfig_debug_recover_all(); /* debug persistent */
+	/* debug persistent */
+	libconfig_debug_recover_all();
+
 	return cish_cfg;
 }
 
-int lconfig_munmap_cfg(cish_config *cish_cfg)
+int libconfig_config_munmap_cfg(cish_config *cish_cfg)
 {
 	return (munmap(cish_cfg, sizeof(cish_config)) < 0);
 }
