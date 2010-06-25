@@ -149,13 +149,13 @@ int libconfig_pam_web_authenticate(char *user, char *pass)
 	int ret = AUTH_NOK;
 	struct pam_conv fpam_conv;
 	static pam_handle_t *pam_handle = NULL;
-	static struct pam_conv null_conv = { pam_null_conv, NULL };
+	static struct pam_conv null_conv = { _pam_null_conv, NULL };
 	struct web_auth_data web_data;
 
 	web_data.user = strdup(user);
 	web_data.pass = strdup(pass);
 
-	fpam_conv.conv = web_conv;
+	fpam_conv.conv = libconfig_pam_web_conv;
 	fpam_conv.appdata_ptr = &web_data;
 
 	if ((pam_err = pam_start("web", NULL, &null_conv, &pam_handle)) != PAM_SUCCESS)
