@@ -334,17 +334,17 @@ void libconfig_config_dump_snmp(FILE *f, int conf_format)
 	char **sinks;
 	char buf[512];
 
-	if (snmp_get_contact(buf, 511) == 0) {
+	if (libconfig_snmp_get_contact(buf, 511) == 0) {
 		print = 1;
 		fprintf(f, "snmp-server contact %s\n", buf);
 	}
 
-	if (snmp_get_location(buf, 511) == 0) {
+	if (libconfig_snmp_get_location(buf, 511) == 0) {
 		print = 1;
 		fprintf(f, "snmp-server location %s\n", buf);
 	}
 
-	if ((len = snmp_get_trapsinks(&sinks)) > 0) {
+	if ((len = libconfig_snmp_get_trapsinks(&sinks)) > 0) {
 		if (sinks) {
 			int i;
 
@@ -359,12 +359,12 @@ void libconfig_config_dump_snmp(FILE *f, int conf_format)
 		}
 	}
 
-	if (snmp_dump_communities(f) > 0)
+	if (libconfig_snmp_dump_communities(f) > 0)
 		print = 1;
 
-	if (snmp_is_running()) {
+	if (libconfig_snmp_is_running()) {
 		print = 1;
-		snmp_dump_versions(f);
+		libconfig_snmp_dump_versions(f);
 	}
 
 	if (print)
@@ -378,7 +378,7 @@ void libconfig_config_dump_rmon(FILE *f)
 	struct rmon_config *shm_rmon_p;
 	char tp[10], result[MAX_OID_LEN * 10];
 
-	if (get_access_rmon_config(&shm_rmon_p) == 1) {
+	if (libconfig_snmp_rmon_get_access_cfg(&shm_rmon_p) == 1) {
 		for (i = 0; i < NUM_EVENTS; i++) {
 			if (shm_rmon_p->events[i].index > 0) {
 				fprintf(f, "rmon event %d",shm_rmon_p->events[i].index);
@@ -457,7 +457,7 @@ void libconfig_config_dump_rmon(FILE *f)
 			}
 		}
 
-		loose_access_rmon_config(&shm_rmon_p);
+		libconfig_snmp_rmon_free_access_cfg(&shm_rmon_p);
 	}
 
 	if (libconfig_exec_check_daemon(RMON_DAEMON))
@@ -1087,7 +1087,7 @@ static void libconfig_config_dump_interface(FILE *out, struct interface_conf *co
 	}
 
 	/*  Generates configuration about the send of traps for every interface */
-	if (itf_should_sendtrap(conf->name))
+	if (libconfig_snmp_itf_should_sendtrap(conf->name))
 		fprintf(out, " snmp trap link-status\n");
 
 	/* End of interface configuration */
