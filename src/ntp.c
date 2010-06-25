@@ -822,7 +822,7 @@ int libconfig_ntp_set_key(char *key_num, char *value)
 
 	libconfig_ntp_hup();
 
-	save_ntp_secret(NTP_KEY_FILE); /* save keys on flash! */
+	libconfig_nv_save_ntp_secret(NTP_KEY_FILE); /* save keys on flash! */
 
 	return 0;
 }

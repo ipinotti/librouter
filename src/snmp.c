@@ -1547,7 +1547,7 @@ static int _snmp_adjust_fdb(unsigned int add, char *line, int rw)
 		break;
 	}
 
-	return ((ret == 0) ? save_snmp_secret(SNMP_USERKEY_FILE) : ret);
+	return ((ret == 0) ? libconfig_nv_save_snmp_secret(SNMP_USERKEY_FILE) : ret);
 }
 
 int libconfig_snmp_remove_user(char *user)
@@ -1751,7 +1751,7 @@ void libconfig_snmp_load_prepare_users(void)
 	char buf[256];
 	arg_list argl = NULL;
 
-	if (load_snmp_secret(SNMP_USERKEY_FILE) > 0) {
+	if (libconfig_nv_load_snmp_secret(SNMP_USERKEY_FILE) > 0) {
 		if ((f = fopen(SNMP_USERKEY_FILE, "r")) != NULL) {
 
 			while (feof(f) == 0) {

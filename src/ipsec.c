@@ -249,7 +249,7 @@ int libconfig_ipsec_create_rsakey(int keysize)
 	fclose(f);
 	unlink(FILE_TMP_RSAKEYS);
 
-	if (set_stored_secret(buf) < 0) {
+	if (libconfig_nv_save_ipsec_secret(buf) < 0) {
 		ret = -1;
 		libconfig_pr_error(1, "unable to save key");
 	} else {
@@ -373,7 +373,7 @@ int libconfig_ipsec_create_secrets_file(char *name, int type, char *shared)
 		char token1[] = ": RSA	{\n";
 		char token2[] = "	}\n";
 
-		if ((rsa = get_rsakeys_from_nv()) == NULL) {
+		if ((rsa = libconfig_nv_get_rsakeys()) == NULL) {
 			fprintf(stderr,
 			                "%% ERROR: You must create RSA keys first (key generate rsa 1024).\n");
 			close(fd);
