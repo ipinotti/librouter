@@ -130,7 +130,7 @@ void lconfig_dump_aaa(FILE *f, cish_config *cish_cfg)
 		}
 	}
 	/* Dump aaa authentication login mode */
-	switch (discover_pam_current_mode(FILE_PAM_GENERIC)) {
+	switch (libconfig_pam_get_current_mode(FILE_PAM_GENERIC)) {
 	case AAA_AUTH_NONE:
 		fprintf(f, "aaa authentication login default none\n");
 		break;
@@ -155,7 +155,7 @@ void lconfig_dump_aaa(FILE *f, cish_config *cish_cfg)
 	}
 
 	/* Dump aaa authorization mode */
-	switch (discover_pam_current_author_mode(FILE_PAM_GENERIC)) {
+	switch (libconfig_pam_get_current_author_mode(FILE_PAM_GENERIC)) {
 	case AAA_AUTHOR_NONE:
 		fprintf(f, "aaa authorization exec default none\n");
 		break;
@@ -167,7 +167,7 @@ void lconfig_dump_aaa(FILE *f, cish_config *cish_cfg)
 		break;
 	}
 	/* Dump aaa accounting mode */
-	switch (discover_pam_current_acct_mode(FILE_PAM_GENERIC)) {
+	switch (libconfig_pam_get_current_acct_mode(FILE_PAM_GENERIC)) {
 	case AAA_ACCT_NONE:
 		fprintf(f, "aaa accounting exec default none\n");
 		break;
@@ -175,7 +175,7 @@ void lconfig_dump_aaa(FILE *f, cish_config *cish_cfg)
 		fprintf(f, "aaa accounting exec default start-stop group tacacs+\n");
 		break;
 	}
-	switch (discover_pam_current_acct_command_mode(FILE_PAM_GENERIC)) {
+	switch (libconfig_pam_get_current_acct_cmd_mode(FILE_PAM_GENERIC)) {
 	case AAA_ACCT_TACACS_CMD_NONE:
 		break;
 	case AAA_ACCT_TACACS_CMD_1:

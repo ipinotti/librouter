@@ -1,3 +1,11 @@
+/*
+ * pam.h
+ *
+ *  Created on: Jun 24, 2010
+ */
+
+#ifndef PAM_H_
+#define PAM_H_
 
 #define FILE_PASSWD "/etc/passwd"
 #define FILE_RADDB_SERVER "/etc/raddb/server"
@@ -8,9 +16,7 @@
 #define	AUTH_FACTORY		2
 
 enum {
-	AUTH_TYPE_NONE = 0,
-	AUTH_TYPE_PAP,
-	AUTH_TYPE_CHAP
+	AUTH_TYPE_NONE = 0, AUTH_TYPE_PAP, AUTH_TYPE_CHAP
 };
 
 enum aaa_modes {
@@ -19,7 +25,7 @@ enum aaa_modes {
 	AAA_AUTH_LOCAL,
 	AAA_AUTH_RADIUS,
 	AAA_AUTH_RADIUS_LOCAL,
-	AAA_AUTH_TACACS	,
+	AAA_AUTH_TACACS,
 	AAA_AUTH_TACACS_LOCAL,
 	/* Authorization */
 	AAA_AUTHOR_NONE,
@@ -38,10 +44,7 @@ enum aaa_modes {
 };
 
 enum aaa_families {
-	AAA_AUTH = 1,
-	AAA_AUTHOR,
-	AAA_ACCT,
-	AAA_ACCT_CMD
+	AAA_AUTH = 1, AAA_AUTHOR, AAA_ACCT, AAA_ACCT_CMD
 };
 
 typedef struct {
@@ -50,10 +53,18 @@ typedef struct {
 } aaa_config_t;
 
 /* Prototypes */
-int discover_pam_current_mode(char *file_name);
-int pam_web_authenticate(char *user, char *pass);
-int discover_pam_current_author_mode(char *file_name);
-int discover_pam_current_acct_mode(char *file_name);
-int discover_pam_current_acct_command_mode(char *file_name);
-int conf_pam_mode(cish_config *cish_cfg, int mode, int change_active_mode, char *pam_file);
-int get_auth_type(char *Device);
+int libconfig_pam_web_authenticate(char *user, char *pass);
+
+int libconfig_pam_get_current_mode(char *file_name);
+int libconfig_pam_get_current_author_mode(char *file_name);
+int libconfig_pam_get_current_acct_mode(char *file_name);
+int libconfig_pam_get_current_acct_cmd_mode(char *file_name);
+
+int libconfig_pam_config_mode(cish_config *cish_cfg,
+                  int mode,
+                  int change_active_mode,
+                  char *pam_file);
+
+int libconfig_pam_get_auth_type(char *device);
+
+#endif /* PAM_H_ */
