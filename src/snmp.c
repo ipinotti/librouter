@@ -58,7 +58,7 @@ int snmp_reload_config(void)
 {
 	pid_t pid;
 
-	pid = get_pid(PROG_SNMPD);
+	pid = libconfig_process_get_pid(PROG_SNMPD);
 	if (pid) {
 		kill(pid, SIGHUP);
 		send_rmond_signal(SIGUSR1);
@@ -95,9 +95,9 @@ int snmp_stop(void)
 		pid_t pid;
 		time_t timeout;
 
-		pid = get_pid(SNMP_DAEMON);
+		pid = libconfig_process_get_pid(SNMP_DAEMON);
 		if ((ret = libconfig_kill_daemon(SNMP_DAEMON)) == 0) {
-			for (timeout = time(NULL) + 10; (get_pid(SNMP_DAEMON)
+			for (timeout = time(NULL) + 10; (libconfig_process_get_pid(SNMP_DAEMON)
 			                == pid) && (time(NULL) < timeout);)
 				usleep(100000);
 		}
@@ -944,7 +944,7 @@ int do_rmon_alarm_show(char *index)
 
 int send_rmond_signal(int sig)
 {
-	pid_t pid = get_pid(RMON_DAEMON);
+	pid_t pid = libconfig_process_get_pid(RMON_DAEMON);
 	if (pid > 1) {
 		if (kill(pid, sig) == 0)
 			return 1;

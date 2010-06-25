@@ -158,7 +158,7 @@ int libconfig_dhcp_set_none(void)
 	if (ret == DHCP_RELAY) {
 		if (libconfig_exec_init_program(0, DHCRELAY_DAEMON) < 0)
 			return (-1);
-		pid = get_pid(DHCRELAY_DAEMON);
+		pid = libconfig_process_get_pid(DHCRELAY_DAEMON);
 		if ((pid) && (libconfig_process_wait_for(pid, 6) == 0))
 			return (-1);
 	}
@@ -174,7 +174,7 @@ int libconfig_dhcp_set_no_server(void)
 	if (libconfig_dhcpd_set_status(0, 0) < 0)
 		return (-1);
 #if 0 /* ifndef UDHCPD */
-	pid=get_pid(DHCPD_DAEMON);
+	pid=libconfig_process_get_pid(DHCPD_DAEMON);
 	if ((pid)&&(libconfig_process_wait_for(pid, 6) == 0)) return (-1);
 #endif
 	return 0;
@@ -186,7 +186,7 @@ int libconfig_dhcp_set_no_relay(void)
 
 	if (libconfig_exec_init_program(0, DHCRELAY_DAEMON) < 0)
 		return (-1);
-	pid = get_pid(DHCRELAY_DAEMON);
+	pid = libconfig_process_get_pid(DHCRELAY_DAEMON);
 	if ((pid) && (libconfig_process_wait_for(pid, 6) == 0))
 		return (-1);
 

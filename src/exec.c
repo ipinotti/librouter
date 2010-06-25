@@ -206,7 +206,7 @@ int libconfig_exec_set_inetd_program(int add_del, char *prog)
 		return (-1);
 	}
 
-	pid = get_pid("inetd");
+	pid = libconfig_process_get_pid("inetd");
 	if (!pid) {
 		libconfig_pr_error(0, "inetd is not running");
 		return (-1);
