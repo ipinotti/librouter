@@ -643,8 +643,8 @@ int get_auth_type(char *Device)
 #endif
 	else return AUTH_TYPE_NONE;
 
-	if (ppp_has_config(serial_no)) {
-        	ppp_get_config(serial_no, &cfg);
+	if (libconfig_ppp_has_config(serial_no)) {
+        	libconfig_ppp_get_config(serial_no, &cfg);
         	if (cfg.server_flags & SERVER_FLAGS_CHAP) {
 			return AUTH_TYPE_CHAP;
 		} else if (cfg.server_flags & SERVER_FLAGS_PAP) {

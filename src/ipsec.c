@@ -1268,7 +1268,7 @@ void libconfig_ipsec_dump(FILE *out)
 					{
 						char netmask[16];
 
-						l2tp_ppp_get_config(*list, &cfg);
+						libconfig_ppp_l2tp_get_config(*list, &cfg);
 
 						if (cfg.peer[0]) {
 							if (libconfig_quagga_cidr_to_netmask(cfg.peer_mask, netmask) != -1)

@@ -844,7 +844,7 @@ int libconfig_ntp_set(int timeout, char *ip)
 	} else
 		unlink(NTP_CFG_FILE);
 
-	return notify_systtyd();
+	return libconfig_ppp_notify_systtyd();
 }
 
 int libconfig_ntp_get(int *timeout, char *ip)

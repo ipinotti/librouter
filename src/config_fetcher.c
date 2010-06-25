@@ -894,7 +894,7 @@ static void __dump_ppp_config(FILE *out, struct interface_conf *conf)
 	/* Get interface index */
 	serial_no = atoi(osdev + strlen(PPPDEV));
 
-	ppp_get_config(serial_no, &cfg);
+	libconfig_ppp_get_config(serial_no, &cfg);
 	__dump_intf_iptables_config(out, conf);
 	__dump_policy_interface(out, osdev);
 	dump_rip_interface(out, osdev);

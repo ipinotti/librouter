@@ -421,7 +421,7 @@ int libconfig_qos_tc_insert_all(char *dev_name)
 
 	//	if (fam->type == mobile ) {  --> situação anterior a implementação do 3G
 	if (fam->type == ppp) {
-		if (ppp_get_state(major))
+		if (libconfig_ppp_get_state(major))
 			run_tc_now = 1; /* wait for ppp */
 	} else if (fam->type == eth) {
 		if (libconfig_dev_get_link(dev_name))
