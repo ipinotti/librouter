@@ -1,3 +1,9 @@
+/*
+ * pim.h
+ *
+ *  Created on: Jun 24, 2010
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,6 +12,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include "options.h"
 #include "args.h"
 #include "defines.h"
@@ -16,37 +23,43 @@
 #include "str.h"
 
 #ifdef OPTION_PIMD
-static void pimdd_hup(void)
+static void libconfig_pim_dense_hup(void)
 {
 	FILE *f;
 	pid_t pid;
 	char buf[32];
 
-	if (!(f = fopen(PIMD_PID, "r")))
+	if (!(f = fopen(PIM_DENSE_PID, "r")))
 		return;
+
 	fgets(buf, 31, f);
 	fclose(f);
+
 	pid = (pid_t) atoi(buf);
+
 	if (pid > 1)
 		kill(pid, SIGHUP);
 }
 
-static void pimsd_hup(void)
+static void libconfig_pim_sparse_hup(void)
 {
 	FILE *f;
 	pid_t pid;
 	char buf[32];
 
-	if (!(f = fopen(PIMS_PID, "r")))
+	if (!(f = fopen(PIM_SPARSE_PID, "r")))
 		return;
+
 	fgets(buf, 31, f);
 	fclose(f);
+
 	pid = (pid_t) atoi(buf);
+
 	if (pid > 1)
 		kill(pid, SIGHUP);
 }
 
-int pimdd_phyint(int add, char *dev)
+int libconfig_pim_dense_phyint(int add, char *dev)
 {
 	FILE *f;
 	arglist *args[MAX_LINES];
@@ -61,41 +74,52 @@ int pimdd_phyint(int add, char *dev)
 		}
 		fclose(f);
 	}
+
 	if ((f = fopen(PIMD_CFG_FILE, "w")) != NULL) {
 		for (i = 0; i < lines; i++) {
 			if (!strcmp(args[i]->argv[0], "phyint")) {
+
 				if (!strcmp(args[i]->argv[1], dev)) {
+
 					found = 1;
+
 					if (!add) {
 						libconfig_destroy_args(args[i]);
-						continue; /* skip line (delete) */
+						/* skip line (delete) */
+						continue;
 					}
 				}
+
 				intf++;
+
 			} else {
-				if (add && !found) /* add after phyint declarations */
-				{
+				/* add after phyint declarations */
+				if (add && !found) {
 					found = 1;
-					fprintf(f, "phyint %s enable preference 101 metric 1024\n",
-					                dev);
+					fprintf(f, "phyint %s enable preference 101 metric 1024\n", dev);
 					intf++;
 				}
 			}
+
 			for (j = 0; j < args[i]->argc; j++) {
 				if (j < args[i]->argc - 1)
 					fprintf(f, "%s ", args[i]->argv[j]);
 				else
 					fprintf(f, "%s\n", args[i]->argv[j]);
 			}
+
 			libconfig_destroy_args(args[i]);
 		}
+
 		fclose(f);
 	}
-	pimdd_hup();
+
+	libconfig_pim_dense_hup();
+
 	return intf;
 }
 
-int pimsd_phyint(int add, char *dev)
+int libconfig_pim_sparse_phyint(int add, char *dev)
 {
 	FILE *f;
 	arglist *args[MAX_LINES];
@@ -110,41 +134,53 @@ int pimsd_phyint(int add, char *dev)
 		}
 		fclose(f);
 	}
+
 	if ((f = fopen(PIMS_CFG_FILE, "w")) != NULL) {
 		for (i = 0; i < lines; i++) {
 			if (!strcmp(args[i]->argv[0], "phyint")) {
+
 				if (!strcmp(args[i]->argv[1], dev)) {
+
 					found = 1;
+
 					if (!add) {
 						libconfig_destroy_args(args[i]);
-						continue; /* skip line (delete) */
+						/* skip line (delete) */
+						continue;
 					}
 				}
+
 				intf++;
+
 			} else {
-				if (add && !found) /* add after phyint declarations */
-				{
+				/* add after phyint declarations */
+				if (add && !found) {
 					found = 1;
-					fprintf(f, "phyint %s enable preference 101 metric 1024\n",
-					                dev);
+					fprintf(f, "phyint %s enable preference 101 metric 1024\n", dev);
 					intf++;
 				}
 			}
+
 			for (j = 0; j < args[i]->argc; j++) {
 				if (j < args[i]->argc - 1)
 					fprintf(f, "%s ", args[i]->argv[j]);
 				else
 					fprintf(f, "%s\n", args[i]->argv[j]);
 			}
+
 			libconfig_destroy_args(args[i]);
 		}
+
 		fclose(f);
 	}
-	pimsd_hup();
+	libconfig_pim_sparse_hup();
 	return intf;
 }
 
-void pimsd_bsr_candidate(int add, char *dev, char *major, char *priority)
+void libconfig_pim_sparse_bsr_candidate(int add,
+                                        char *dev,
+                                        char *major,
+                                        char *priority)
 {
 	FILE *f;
 	arglist *args[MAX_LINES];
@@ -163,50 +199,56 @@ void pimsd_bsr_candidate(int add, char *dev, char *major, char *priority)
 		}
 		fclose(f);
 	}
+
 	if ((f = fopen(PIMS_CFG_FILE, "w")) != NULL) {
 		for (i = 0; i < lines; i++) {
 			if (strcmp(args[i]->argv[0], "phyint")) {
+
 				if (add && !found) {
 					found = 1;
 					if (priority == NULL)
-						fprintf(f, "cand_bootstrap_router %s%s\n", dev,
-						                major);
+						fprintf(f, "cand_bootstrap_router %s%s\n", dev, major);
 					else
-						fprintf(
-						                f,
-						                "cand_bootstrap_router %s%s priority %s\n",
-						                dev, major, priority);
+						fprintf(f, "cand_bootstrap_router %s%s priority %s\n",
+								dev, major, priority);
 				}
+
 				if (!strcmp(args[i]->argv[0], "cand_bootstrap_router")) {
+
 					if (add) {
 						if (priority == NULL)
 							fprintf(f, "cand_bootstrap_router %s%s\n",
 							                dev, major);
 						else
-							fprintf(
-							                f,
-							                "cand_bootstrap_router %s%s priority %s\n",
+							fprintf(f, "cand_bootstrap_router %s%s priority %s\n",
 							                dev, major, priority);
 					}
+
 					found = 1;
+
 					libconfig_destroy_args(args[i]);
-					continue; /* skip line (delete) */
+					/* skip line (delete) */
+					continue;
 				}
 			}
+
 			for (j = 0; j < args[i]->argc; j++) {
 				if (j < args[i]->argc - 1)
 					fprintf(f, "%s ", args[i]->argv[j]);
 				else
 					fprintf(f, "%s\n", args[i]->argv[j]);
 			}
+
 			libconfig_destroy_args(args[i]);
 		}
+
 		fclose(f);
 	}
-	pimsd_hup();
+
+	libconfig_pim_sparse_hup();
 }
 
-void pimsd_rp_address(int add, char *rp)
+void libconfig_pim_sparse_rp_address(int add, char *rp)
 {
 	FILE *f;
 	arglist *args[MAX_LINES];
@@ -225,36 +267,49 @@ void pimsd_rp_address(int add, char *rp)
 		}
 		fclose(f);
 	}
+
 	if ((f = fopen(PIMS_CFG_FILE, "w")) != NULL) {
 		for (i = 0; i < lines; i++) {
 			if (strcmp(args[i]->argv[0], "phyint")) {
+
 				if (add && !found) {
 					found = 1;
 					fprintf(f, "rp_address %s\n", rp);
 				}
+
 				if (!strcmp(args[i]->argv[0], "rp_address")) {
 					if (add) {
 						fprintf(f, "rp_address %s\n", rp);
 					}
+
 					found = 1;
 					libconfig_destroy_args(args[i]);
-					continue; /* skip line (delete) */
+					/* skip line (delete) */
+					continue;
 				}
 			}
+
 			for (j = 0; j < args[i]->argc; j++) {
 				if (j < args[i]->argc - 1)
 					fprintf(f, "%s ", args[i]->argv[j]);
 				else
 					fprintf(f, "%s\n", args[i]->argv[j]);
 			}
+
 			libconfig_destroy_args(args[i]);
 		}
+
 		fclose(f);
 	}
-	pimsd_hup();
+
+	libconfig_pim_sparse_hup();
 }
 
-void pimsd_rp_candidate(int add, char *dev, char *major, char *priority, char *interval)
+void libconfig_pim_sparse_rp_candidate(int add,
+                        char *dev,
+                        char *major,
+                        char *priority,
+                        char *interval)
 {
 	FILE *f;
 	arglist *args[MAX_LINES];
@@ -273,21 +328,26 @@ void pimsd_rp_candidate(int add, char *dev, char *major, char *priority, char *i
 		}
 		fclose(f);
 	}
+
 	if ((f = fopen(PIMS_CFG_FILE, "w")) != NULL) {
 		for (i = 0; i < lines; i++) {
 			if (strcmp(args[i]->argv[0], "phyint")) {
+
 				if (add && !found) {
 					found = 1;
+
 					if (priority == NULL)
 						fprintf(f, "cand_rp %s%s\n", dev, major);
 					else if (interval == NULL)
-						fprintf(f, "cand_rp %s%s priority %s\n", dev,
-						                major, priority);
+						fprintf(f, "cand_rp %s%s priority %s\n",
+						                dev, major, priority);
 					else
 						fprintf(f, "cand_rp %s%s priority %s time %s\n",
-						                dev, major, priority, interval);
+								dev, major, priority, interval);
 				}
+
 				if (!strcmp(args[i]->argv[0], "cand_rp")) {
+
 					if (add) {
 						if (priority == NULL)
 							fprintf(f, "cand_rp %s%s\n", dev, major);
@@ -295,31 +355,35 @@ void pimsd_rp_candidate(int add, char *dev, char *major, char *priority, char *i
 							fprintf(f, "cand_rp %s%s priority %s\n",
 							                dev, major, priority);
 						else
-							fprintf(
-							                f,
-							                "cand_rp %s%s priority %s time %s\n",
-							                dev, major, priority,
-							                interval);
+							fprintf(f, "cand_rp %s%s priority %s time %s\n",
+							                dev, major, priority, interval);
 					}
+
 					found = 1;
 					libconfig_destroy_args(args[i]);
-					continue; /* skip line (delete) */
+
+					/* skip line (delete) */
+					continue;
 				}
 			}
+
 			for (j = 0; j < args[i]->argc; j++) {
 				if (j < args[i]->argc - 1)
 					fprintf(f, "%s ", args[i]->argv[j]);
 				else
 					fprintf(f, "%s\n", args[i]->argv[j]);
 			}
+
 			libconfig_destroy_args(args[i]);
 		}
+
 		fclose(f);
 	}
-	pimsd_hup();
+
+	libconfig_pim_sparse_hup();
 }
 
-void dump_pim_interface(FILE *out, char *ifname)
+void libconfig_pim_dump_interface(FILE *out, char *ifname)
 {
 	FILE *f;
 	arglist *args;
@@ -328,102 +392,129 @@ void dump_pim_interface(FILE *out, char *ifname)
 
 	if ((f = fopen(PIMD_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f) && !found) {
+
 			libconfig_str_striplf(line);
+
 			if (strlen(line)) {
+
 				args = libconfig_make_args(line);
-				if (!strcmp(args->argv[0], "phyint") && !strcmp(args->argv[1],
-				                ifname)) {
+
+				if (!strcmp(args->argv[0], "phyint") &&
+						!strcmp(args->argv[1], ifname)) {
 					found = 1;
 					fprintf(out, " ip pim dense-mode\n");
 				}
+
 				libconfig_destroy_args(args);
 			}
 		}
+
 		fclose(f);
 	}
+
 	if ((f = fopen(PIMS_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f) && !found) {
+
 			libconfig_str_striplf(line);
+
 			if (strlen(line)) {
+
 				args = libconfig_make_args(line);
-				if (!strcmp(args->argv[0], "phyint") && !strcmp(args->argv[1],
-				                ifname)) {
+
+				if (!strcmp(args->argv[0], "phyint") &&
+						!strcmp(args->argv[1], ifname)) {
 					found = 1;
 					fprintf(out, " ip pim sparse-mode\n");
 				}
+
 				libconfig_destroy_args(args);
 			}
 		}
+
 		fclose(f);
 	}
 }
 
-void lconfig_pim_dump(FILE *out)
+void libconfig_pim_dump(FILE *out)
 {
 	FILE *f;
 	arglist *args;
 	char line[200];
 
 	if ((f = fopen(PIMS_CFG_FILE, "r")) != NULL) {
+
 		while (fgets(line, 200, f)) {
 			libconfig_str_striplf(line);
+
 			if (strlen(line)) {
 				args = libconfig_make_args(line);
+
 				if (!strcmp(args->argv[0], "cand_bootstrap_router")) {
 					if (args->argc == 2)
 						fprintf(out, "ip pim bsr-candidate %s\n",
 						                libconfig_device_convert_os(args->argv[1], 0));
 					else if (args->argc == 4)
-						fprintf(
-						                out,
-						                "ip pim bsr-candidate %s priority %s\n",
-						                libconfig_device_convert_os(args->argv[1], 0),
-						                args->argv[3]);
-					break; /* while */
+						fprintf(out, "ip pim bsr-candidate %s priority %s\n",
+								libconfig_device_convert_os(args->argv[1], 0), args->argv[3]);
+
+					/* while */
+					break;
 				}
+
 				libconfig_destroy_args(args);
 			}
+
 		}
-		rewind(f); /* Returns to beggining of file */
+
+		/* Returns to beggining of file */
+		rewind(f);
+
 		while (fgets(line, 200, f)) {
+
 			libconfig_str_striplf(line);
+
 			if (strlen(line)) {
 				args = libconfig_make_args(line);
+
 				if (!strcmp(args->argv[0], "rp_address")) {
 					if (args->argc == 2)
-						fprintf(out, "ip pim rp-address %s\n",
-						                args->argv[1]);
+						fprintf(out, "ip pim rp-address %s\n", args->argv[1]);
+
 					break;
 				}
+
 				libconfig_destroy_args(args);
 			}
 		}
+
 		rewind(f);
+
 		while (fgets(line, 200, f)) {
 			libconfig_str_striplf(line);
+
 			if (strlen(line)) {
 				args = libconfig_make_args(line);
+
 				if (!strcmp(args->argv[0], "cand_rp")) {
 					if (args->argc == 2)
-						fprintf(out, "ip pim rp-candidate %s\n",
-						                libconfig_device_convert_os(args->argv[1], 0));
+						fprintf(out,"ip pim rp-candidate %s\n",
+								libconfig_device_convert_os(args->argv[1], 0));
 					else if (args->argc == 4)
-						fprintf(
-						                out,
-						                "ip pim rp-candidate %s priority %s\n",
-						                libconfig_device_convert_os(args->argv[1], 0),
-						                args->argv[3]);
+						fprintf(out, "ip pim rp-candidate %s priority %s\n",
+						                libconfig_device_convert_os(args->argv[1], 0), args->argv[3]);
 					else if (args->argc == 6)
-						fprintf(
-						                out,
-						                "ip pim rp-candidate %s priority %s interval %s\n",
+						fprintf(out, "ip pim rp-candidate %s priority %s interval %s\n",
 						                libconfig_device_convert_os(args->argv[1], 0),
-						                args->argv[3], args->argv[5]);
+						                args->argv[3],
+						                args->argv[5]);
+
 					break;
 				}
+
 				libconfig_destroy_args(args);
 			}
 		}
+
 		fclose(f);
 	}
 }

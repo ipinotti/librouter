@@ -632,7 +632,7 @@ void lconfig_ip_dump_servers(FILE *out)
 	fprintf(out, "%sip https server\n", libconfig_exec_check_daemon(HTTPS_DAEMON) ? "" : "no ");
 #endif
 #ifdef OPTION_PIMD
-	lconfig_pim_dump(out);
+	libconfig_pim_dump(out);
 #endif
 #ifdef OPTION_OPENSSH
 	fprintf(out, "%sip ssh server\n", libconfig_exec_check_daemon(SSH_DAEMON) ? "" : "no ");
@@ -780,7 +780,7 @@ static void __dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	__dump_intf_iptables_config(out, conf);
 
 #ifdef OPTION_PIMD
-	dump_pim_interface(out, osdev);
+	libconfig_pim_dump_interface(out, osdev);
 #endif
 	/* Dump QoS */
 	__dump_policy_interface(out, osdev);
