@@ -166,7 +166,7 @@ void libconfig_config_dump_aaa(FILE *f, cish_config *cish_cfg)
 	}
 
 	/* Dump aaa authentication web mode */
-	switch (discover_pam_current_mode(FILE_PAM_WEB)) {
+	switch (libconfig_pam_get_current_mode(FILE_PAM_WEB)) {
 	case AAA_AUTH_NONE:
 		fprintf(f, "aaa authentication web default none\n");
 		break;

@@ -943,7 +943,7 @@ int libconfig_ip_iface_get_config(char *interface, struct interface_conf *conf)
 	/* Check if IP was configured by DHCP */
 	if (conf->linktype == ARPHRD_ETHER) {
 		sprintf(daemon_dhcpc, DHCPC_DAEMON, interface);
-		if (is_daemon_running(daemon_dhcpc))
+		if (libconfig_exec_check_daemon(daemon_dhcpc))
 			conf->dhcpc = 1;
 	}
 
