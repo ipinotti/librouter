@@ -696,7 +696,7 @@ int libconfig_ppp_l2tp_has_config(char *name)
 	return 0;
 }
 
-int libconfig__ppp_l2tp_set_config(char *name, ppp_config *cfg)
+int libconfig_ppp_l2tp_set_config(char *name, ppp_config *cfg)
 {
 	FILE *f;
 	char file[50];

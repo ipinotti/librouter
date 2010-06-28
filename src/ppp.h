@@ -134,7 +134,7 @@ void libconfig_ppp_pppd_arglist(char **arglist, ppp_config *cfg, int server);
 
 int libconfig_ppp_l2tp_get_config(char *name, ppp_config *cfg);
 int libconfig_ppp_l2tp_has_config(char *name);
-int libconfig__ppp_l2tp_set_config(char *name, ppp_config *cfg);
+int libconfig_ppp_l2tp_set_config(char *name, ppp_config *cfg);
 void libconfig_ppp_l2tp_set_defaults(char *name, ppp_config *cfg);
 
 int libconfig_ppp_reload_backupd(void);
