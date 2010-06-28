@@ -16,7 +16,7 @@ struct process_t {
 	struct process_t *next;
 };
 
-struct process_t *lconfig_get_ps_info(void);
-void lconfig_free_ps_info(struct process_t *ps);
+struct process_t *libconfig_ps_get_info(void);
+void libconfig_ps_free_info(struct process_t *ps);
 
 #endif /* PS_H_ */

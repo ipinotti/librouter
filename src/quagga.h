@@ -24,44 +24,43 @@
 #define OSPFD_RO_CONF "/etc.ro/quagga/ospfd.conf"
 #define BGPD_RO_CONF "/etc.ro/quagga/bgpd.conf"
 
-int daemon_connect (char *);
-int daemon_client_execute (char *, FILE *, char *, int);
-void fd_daemon_close (void);
-FILE *zebra_show_cmd(const char *);
-FILE *ospf_show_cmd(const char *);
-FILE *rip_show_cmd(const char *);
-FILE *bgp_show_cmd(const char *);
-int cidr_to_classic(char *, char *);
-int classic_to_cidr(char *, char *, char *);
-int netmask_to_cidr(char *);
-int cidr_to_netmask( unsigned int, char *);
-char* u_int_to_octets( unsigned int, char*);
-int octets_to_u_int( unsigned int *, char *);
-unsigned int bitfill_from_left( unsigned int);
-int bitcount(unsigned int);
-int validatemask(unsigned int);
-int validateip(char *ip);
+int libconfig_quagga_connect_daemon(char *);
+int libconfig_quagga_execute_client(char *, FILE *, char *, int);
+void libconfig_quagga_close_daemon(void);
+FILE *libconfig_quagga_zebra_show_cmd(const char *);
+FILE *libconfig_quagga_ospf_show_cmd(const char *);
+FILE *libconfig_quagga_rip_show_cmd(const char *);
+FILE *libconfig_quagga_bgp_show_cmd(const char *);
+int libconfig_quagga_cidr_to_classic(char *, char *);
+int libconfig_quagga_classic_to_cidr(char *, char *, char *);
+int libconfig_quagga_netmask_to_cidr(char *);
+int libconfig_quagga_cidr_to_netmask(unsigned int, char *);
+char* libconfig_quagga_uint_to_octets(unsigned int, char*);
+int libconfig_quagga_octets_to_uint(unsigned int *, char *);
+unsigned int libconfig_quagga_bitfill_from_left(unsigned int);
+int libconfig_quagga_bitcount(unsigned int);
+int libconfig_quagga_validate_mask(unsigned int);
+int libconfig_quagga_validate_ip(char *ip);
 int add_route_dev(char *target, char *netmask, char *device);
-int get_ripd(void);
-int set_ripd(int on_noff);
-int get_ospfd(void);
-int set_ospfd(int on_noff);
-int get_bgpd(void);
-int set_bgpd(int on_noff);
-int zebra_hup(void);
-int rota_flutuante(void);
+int libconfig_quagga_ripd_is_running(void);
+int libconfig_quagga_ripd_exec(int on_noff);
+int libconfig_quagga_ospfd_is_running(void);
+int libconfig_quagga_ospfd_exec(int on_noff);
+int libconfig_quagga_bgpd_is_running(void);
+int libconfig_quagga_bgpd_exec(int on_noff);
+int libconfig_quagga_zebra_hup(void);
+int libconfig_quagga_floating_route(void);
 int is_network_up(void);
 
-FILE * lconfig_quagga_get_conf(char *filename, char *key);
-FILE * lconfig_bgp_get_conf(int main_nip);
-int lconfig_bgp_get_asn(void);
-FILE *zebra_get_conf(int main_ninterf, char *intf);
-void zebra_dump_static_routes_conf(FILE *out);
-FILE *rip_get_conf(int main_ninterf, char *intf);
-FILE *ospf_get_conf(int main_ninterf, char *intf);
+FILE * libconfig_quagga_get_conf(char *filename, char *key);
+FILE * libconfig_quagga_bgp_get_conf(int main_nip);
+int libconfig_quagga_bgp_get_asn(void);
+FILE *libconfig_quagga_zebra_get_conf(int main_ninterf, char *intf);
+void libconfig_quagga_zebra_dump_static_routes(FILE *out);
+FILE *libconfig_quagga_rip_get_conf(int main_ninterf, char *intf);
+FILE *libconfig_quagga_ospf_get_conf(int main_ninterf, char *intf);
 
 /* Higher level of route abstration */
-
 struct routes_t {
 	char *network;
 	char *mask;
@@ -74,9 +73,9 @@ struct routes_t {
 
 #define CGI_TMP_FILE 	"/tmp/cgi_tmp"
 
-int lconfig_add_route(struct routes_t *route);
-void lconfig_free_routes(struct routes_t *route);
-int lconfig_del_route(char *hash);
-struct routes_t * lconfig_get_routes(void);
+int libconfig_quagga_add_route(struct routes_t *route);
+void libconfig_quagga_free_routes(struct routes_t *route);
+int libconfig_quagga_del_route(char *hash);
+struct routes_t * libconfig_quagga_get_routes(void);
 
 #endif /* QUAGGA_H_ */

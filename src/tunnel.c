@@ -152,6 +152,7 @@
 #include <arpa/inet.h>
 #include <linux/byteorder/big_endian.h>
 #include <linux/if_tunnel.h>
+
 #include "dev.h"
 #include "device.h"
 #include "ip.h"
@@ -211,179 +212,198 @@ static int do_ioctl_get_ifaddr(char *dev)
 }
 #endif
 
-static int do_ioctl_get_ifindex (char *dev)
+static int _do_ioctl_get_ifindex(char *dev)
 {
 	struct ifreq ifr;
 	int fd;
 	int err;
 
-	strcpy (ifr.ifr_name, dev);
-	fd = socket (AF_INET, SOCK_DGRAM, 0);
-	err = ioctl (fd, SIOCGIFINDEX, &ifr);
+	strcpy(ifr.ifr_name, dev);
+	fd = socket(AF_INET, SOCK_DGRAM, 0);
+	err = ioctl(fd, SIOCGIFINDEX, &ifr);
 	if (err) {
-		perror ("do_ioctl_get_ifindex");
+		perror("do_ioctl_get_ifindex");
 		return 0;
 	}
-	close (fd);
+
+	close(fd);
 	return ifr.ifr_ifindex;
 }
 
-static int do_get_ioctl (char *basedev, struct ip_tunnel_parm *p)
+static int _do_get_ioctl(char *basedev, struct ip_tunnel_parm *p)
 {
 	struct ifreq ifr;
 	int fd;
 	int err;
 
-	strcpy (ifr.ifr_name, basedev);
+	strcpy(ifr.ifr_name, basedev);
 	ifr.ifr_ifru.ifru_data = (void*) p;
-	fd = socket (AF_INET, SOCK_DGRAM, 0);
-	err = ioctl (fd, SIOCGETTUNNEL, &ifr);
+	fd = socket(AF_INET, SOCK_DGRAM, 0);
+	err = ioctl(fd, SIOCGETTUNNEL, &ifr);
 	if (err)
-		perror ("do_get_ioctl");
-	close (fd);
+		perror("do_get_ioctl");
+
+	close(fd);
 	return err;
 }
 
-static int do_add_ioctl (int cmd, struct ip_tunnel_parm *p)
+static int _do_add_ioctl(int cmd, struct ip_tunnel_parm *p)
 {
 	struct ifreq ifr;
 	int fd;
 	int err;
 
 	if (cmd == SIOCCHGTUNNEL && p->name[0])
-		strcpy (ifr.ifr_name, p->name);
+		strcpy(ifr.ifr_name, p->name);
 	else {
 		switch (p->iph.protocol) {
 		case IPPROTO_IPIP:
-			strcpy (ifr.ifr_name, "tunl0");
+			strcpy(ifr.ifr_name, "tunl0");
 			break;
 		case IPPROTO_GRE:
 		default:
-			strcpy (ifr.ifr_name, "gre0");
+			strcpy(ifr.ifr_name, "gre0");
 			break;
 		}
 	}
+
 	ifr.ifr_ifru.ifru_data = (void*) p;
-	fd = socket (AF_INET, SOCK_DGRAM, 0);
-	err = ioctl (fd, cmd, &ifr);
+	fd = socket(AF_INET, SOCK_DGRAM, 0);
+	err = ioctl(fd, cmd, &ifr);
+
 	if (err)
-		perror ("do_add_ioctl");
-	close (fd);
+		perror("do_add_ioctl");
+
+	close(fd);
 	return err;
 }
 
-static int do_del_ioctl (char *basedev, struct ip_tunnel_parm *p)
+static int _do_del_ioctl(char *basedev, struct ip_tunnel_parm *p)
 {
 	struct ifreq ifr;
 	int fd;
 	int err;
 
 	if (p->name[0])
-		strcpy (ifr.ifr_name, p->name);
+		strcpy(ifr.ifr_name, p->name);
 	else
-		strcpy (ifr.ifr_name, basedev);
+		strcpy(ifr.ifr_name, basedev);
+
 	ifr.ifr_ifru.ifru_data = (void*) p;
-	fd = socket (AF_INET, SOCK_DGRAM, 0);
-	err = ioctl (fd, SIOCDELTUNNEL, &ifr);
+	fd = socket(AF_INET, SOCK_DGRAM, 0);
+	err = ioctl(fd, SIOCDELTUNNEL, &ifr);
+
 	if (err)
-		perror ("do_del_ioctl");
-	close (fd);
+		perror("do_del_ioctl");
+
+	close(fd);
 	return err;
 }
 
-int add_tunnel (char *name) /* interface tunnel <0-9> */
-{
-	struct ip_tunnel_parm p;
-
-	if (!dev_exists (name)) {
-		memset (&p, 0, sizeof(p));
-		p.iph.version = 4;
-		p.iph.ihl = 5;
 #ifndef IP_DF
 #define IP_DF		0x4000		/* Flag: "Don't Fragment"	*/
 #endif
-		p.iph.frag_off = htons (IP_DF);
+
+/* interface tunnel <0-9> */
+int libconfig_tunnel_add(char *name)
+{
+	struct ip_tunnel_parm p;
+
+	if (!libconfig_dev_exists(name)) {
+
+		memset(&p, 0, sizeof(p));
+
+		p.iph.version = 4;
+		p.iph.ihl = 5;
+		p.iph.frag_off = htons(IP_DF);
 		p.iph.protocol = IPPROTO_GRE; /* default is gre/ip */
-		strncpy (p.name, name, IFNAMSIZ);
-		return do_add_ioctl (SIOCADDTUNNEL, &p);
+		strncpy(p.name, name, IFNAMSIZ);
+
+		return _do_add_ioctl(SIOCADDTUNNEL, &p);
 	}
 	return 0;
 }
 
-int del_tunnel (char *name) /* no interface tunnel <0-9> */
+/* no interface tunnel <0-9> */
+int libconfig_tunnel_del(char *name)
 {
 	int err;
 	struct ip_tunnel_parm p;
 
-	if (dev_exists (name)) {
-		if ((err = do_get_ioctl (name, &p)))
+	if (libconfig_dev_exists(name)) {
+		if ((err = _do_get_ioctl(name, &p)))
 			return -1;
-		return do_del_ioctl (p.name, &p);
+		return _do_del_ioctl(p.name, &p);
 	}
+
 	return 0;
 }
 
 /*
  tos/dsfield p->iph.tos = uval;
  */
-int change_tunnel (char *name, tunnel_param_type type, void *param)
+int libconfig_tunnel_change(char *name, tunnel_param_type type, void *param)
 {
 	int err;
 	struct in_addr address;
 	struct ip_tunnel_parm p;
 
-	if (dev_exists (name)) {
-		if ((err = do_get_ioctl (name, &p))) {
-			fprintf (stderr, "%% %s not found.\n", name);
+	if (libconfig_dev_exists(name)) {
+		if ((err = _do_get_ioctl(name, &p))) {
+			fprintf(stderr, "%% %s not found.\n", name);
 			return -1;
 		}
 		switch (type) {
-		case source:
+		case TUNNEL_SOURCE:
 			if (param != NULL) {
-				if (inet_aton ((char *) param, &address) != 0)
+				if (inet_aton((char *) param, &address) != 0)
 					p.iph.saddr = address.s_addr;
 			} else {
 				p.iph.saddr = 0;
 			}
+
 			p.link = 0; /* Disable interface association! */
 			break;
 #if 0
-			case source_interface:
+		case TUNNEL_SOURCE_INTERFACE:
 			if (param != NULL) {
 				strncpy(p.linkname, (char *)param, IFNAMSIZ);
-				p.link = do_ioctl_get_ifindex((char *)param);
+				p.link = _do_ioctl_get_ifindex((char *)param);
 				if (p.link) {
 					IP addr;
 
-					if (get_interface_address((char *)param, &addr, NULL, NULL, NULL) == 0)
-					p.iph.saddr = addr.s_addr;
+					if (libconfig_ip_interface_get_info((char *)param, &addr, NULL, NULL, NULL) == 0)
+						p.iph.saddr = addr.s_addr;
 				}
 			}
 			break;
 #endif
-		case destination:
+		case TUNNEL_DESTINATION:
 			if (param != NULL) {
-				if (inet_aton ((char *) param, &address) != 0)
+				if (inet_aton((char *) param, &address) != 0)
 					p.iph.daddr = address.s_addr;
 			} else {
 				p.iph.daddr = 0;
 			}
+
 			if (p.i_key == 0 && IN_MULTICAST(ntohl(p.iph.daddr))) {
 				p.i_key = p.iph.daddr;
 				p.i_flags |= GRE_KEY;
 			}
+
 			if (p.o_key == 0 && IN_MULTICAST(ntohl(p.iph.daddr))) {
 				p.o_key = p.iph.daddr;
 				p.o_flags |= GRE_KEY;
 			}
-			if (IN_MULTICAST(ntohl(p.iph.daddr))
-			                && !p.iph.saddr) {
-				fprintf (stderr,
+
+			if (IN_MULTICAST(ntohl(p.iph.daddr)) && !p.iph.saddr) {
+				fprintf(stderr,
 				                "%% Broadcast tunnel requires a source address.\n");
 				return -1;
 			}
+
 			break;
-		case checksum:
+		case TUNNEL_CHECKSUM:
 			if (param != NULL) {
 				p.i_flags |= GRE_CSUM;
 				p.o_flags |= GRE_CSUM;
@@ -392,7 +412,7 @@ int change_tunnel (char *name, tunnel_param_type type, void *param)
 				p.o_flags &= ~GRE_CSUM;
 			}
 			break;
-		case sequence:
+		case TUNNEL_SEQUENCE:
 			if (param != NULL) {
 				p.i_flags |= GRE_SEQ;
 				p.o_flags |= GRE_SEQ;
@@ -401,9 +421,9 @@ int change_tunnel (char *name, tunnel_param_type type, void *param)
 				p.o_flags &= ~GRE_SEQ;
 			}
 			break;
-		case pmtu: /* CHANGE */
+		case TUNNEL_PMTU: /* CHANGE */
 			if (param != NULL) {
-				p.iph.frag_off = htons (IP_DF);
+				p.iph.frag_off = htons(IP_DF);
 			} else {
 #if 0
 				if (p.iph.ttl) {
@@ -415,28 +435,27 @@ int change_tunnel (char *name, tunnel_param_type type, void *param)
 #endif
 				p.iph.frag_off = 0;
 			}
-			return do_add_ioctl (SIOCCHGTUNNEL, &p);
-		case ttl: /* CHANGE */
+			return _do_add_ioctl(SIOCCHGTUNNEL, &p);
+		case TUNNEL_TTL: /* CHANGE */
 			if (param != NULL) {
-				p.iph.ttl = htonl (atoi ((char *) param));
+				p.iph.ttl = htonl(atoi((char *) param));
 #if 0
 				if (p.iph.ttl && p.iph.frag_off == 0) {
 					fprintf(stderr, "%% ttl != 0 and no pmtu discovery are incompatible\n");
 					return -1;
 				}
 #else
-				p.iph.frag_off = htons (IP_DF);
+				p.iph.frag_off = htons(IP_DF);
 #endif
 			} else {
 				p.iph.ttl = 0;
 			}
-			return do_add_ioctl (SIOCCHGTUNNEL, &p);
-		case key:
+			return _do_add_ioctl(SIOCCHGTUNNEL, &p);
+		case TUNNEL_KEY:
 			if (param != NULL) {
 				p.i_flags |= GRE_KEY;
 				p.o_flags |= GRE_KEY;
-				p.i_key = p.o_key = htonl (
-				                atoi ((char *) param));
+				p.i_key = p.o_key = htonl(atoi((char *) param));
 			} else {
 				p.i_flags &= ~GRE_KEY;
 				p.o_flags &= ~GRE_KEY;
@@ -446,142 +465,151 @@ int change_tunnel (char *name, tunnel_param_type type, void *param)
 		default:
 			break;
 		}
-		do_del_ioctl (p.name, &p); /* remove old tunnel param! */
-		return do_add_ioctl (SIOCADDTUNNEL, &p); /* add new tunnel param! */
+		_do_del_ioctl(p.name, &p); /* remove old tunnel param! */
+		return _do_add_ioctl(SIOCADDTUNNEL, &p); /* add new tunnel param! */
 	}
 	return 0;
 }
 
-int mode_tunnel (char *name, int mode)
+int libconfig_tunnel_mode(char *name, int mode)
 {
 	int err;
 	struct ip_tunnel_parm p;
 
-	if (dev_exists (name)) {
-		if ((err = do_get_ioctl (name, &p)))
+	if (libconfig_dev_exists(name)) {
+		if ((err = _do_get_ioctl(name, &p)))
 			return -1;
 		if (p.iph.protocol != mode) {
-			do_del_ioctl (p.name, &p); /* remove tunnel */
+			_do_del_ioctl(p.name, &p); /* remove tunnel */
 			p.iph.protocol = mode; /* new mode */
 			if (mode == IPPROTO_IPIP) { /* Keys are not allowed with ipip and sit. */
 				p.i_flags &= ~(GRE_KEY | GRE_CSUM | GRE_SEQ);
 				p.o_flags &= ~(GRE_KEY | GRE_CSUM | GRE_SEQ);
 			}
-			return do_add_ioctl (SIOCADDTUNNEL, &p); /* add new one! */
+			return _do_add_ioctl(SIOCADDTUNNEL, &p); /* add new one! */
 		}
 	}
 	return 0;
 }
 
-void dump_tunnel_interface (FILE *out, int conf_format, char *name)
+void libconfig_tunnel_dump_interface(FILE *out, int conf_format, char *name)
 {
 	int err;
 	struct in_addr address;
 	struct ip_tunnel_parm p;
 
-	if (dev_exists (name)) {
-		if ((err = do_get_ioctl (name, &p)))
+	if (libconfig_dev_exists(name)) {
+		if ((err = _do_get_ioctl(name, &p)))
 			return;
+
 		if (conf_format) {
 			switch (p.iph.protocol) {
 			case IPPROTO_IPIP:
-				fprintf (out, " tunnel mode ipip\n");
+				fprintf(out, " tunnel mode ipip\n");
 				break;
 			case IPPROTO_GRE:
 			default:
-				fprintf (out, " tunnel mode gre\n");
+				fprintf(out, " tunnel mode gre\n");
 				break;
 			}
+
 			//if (p.link) {
 			//		fprintf(out, " tunnel source %s\n", linux_to_cish_dev_cmdline(p.linkname));
 			//} else {
+
 			if (p.iph.saddr) {
 				address.s_addr = p.iph.saddr;
-				fprintf (out, " tunnel source %s\n", inet_ntoa (
-				                address));
+				fprintf(out, " tunnel source %s\n", inet_ntoa(address));
 			}
+
 			//}
+
 			if (p.iph.daddr) {
 				address.s_addr = p.iph.daddr;
-				fprintf (out, " tunnel destination %s\n",
-				                inet_ntoa (address));
+				fprintf(out, " tunnel destination %s\n", inet_ntoa(address));
 			}
+
 			if (p.iph.protocol == IPPROTO_GRE) {
-				if ((p.i_flags & GRE_CSUM) && (p.o_flags
-				                & GRE_CSUM))
-					fprintf (out, " tunnel checksum\n");
-				if ((p.i_flags & GRE_KEY) && (p.o_flags
-				                & GRE_KEY))
-					fprintf (out, " tunnel key %u\n",
-					                p.i_key);
-				if ((p.i_flags & GRE_SEQ) && (p.o_flags
-				                & GRE_SEQ))
-					fprintf (out,
-					                " tunnel sequence-datagrams\n");
+				if ((p.i_flags & GRE_CSUM) && (p.o_flags & GRE_CSUM))
+					fprintf(out, " tunnel checksum\n");
+				if ((p.i_flags & GRE_KEY) && (p.o_flags & GRE_KEY))
+					fprintf(out, " tunnel key %u\n", p.i_key);
+				if ((p.i_flags & GRE_SEQ) && (p.o_flags & GRE_SEQ))
+					fprintf(out, " tunnel sequence-datagrams\n");
 			}
-			if (p.iph.frag_off == htons (IP_DF))
-				fprintf (out, " tunnel path-mtu-discovery\n");
+
+			if (p.iph.frag_off == htons(IP_DF))
+				fprintf(out, " tunnel path-mtu-discovery\n");
+
 			if (p.iph.ttl)
-				fprintf (out, " tunnel ttl %u\n", p.iph.ttl);
+				fprintf(out, " tunnel ttl %u\n", p.iph.ttl);
+
 		} else {
-			fprintf (out, "  Encapsulation TUNNEL\n");
+			fprintf(out, "  Encapsulation TUNNEL\n");
+
 			if (p.iph.saddr || p.iph.daddr) {
-				fprintf (out, "  Tunnel ");
+				fprintf(out, "  Tunnel ");
 				if (p.iph.saddr) {
-					fprintf (out, "source ");
+					fprintf(out, "source ");
 					address.s_addr = p.iph.saddr;
 					//if (p.link) {
 					//	fprintf(out, "%s (%s)", inet_ntoa(address), p.linkname);
 					//} else {
-					fprintf (out, "%s", inet_ntoa (address));
+					fprintf(out, "%s", inet_ntoa(address));
 					//}
 					if (p.iph.daddr)
-						fprintf (out, ", ");
+						fprintf(out, ", ");
 				}
+
 				if (p.iph.daddr) {
 					address.s_addr = p.iph.daddr;
-					fprintf (out, "destination %s",
-					                inet_ntoa (address));
+					fprintf(out, "destination %s",
+					                inet_ntoa(address));
 				}
-				fprintf (out, "\n");
+
+				fprintf(out, "\n");
 			}
+
 			switch (p.iph.protocol) {
 			case IPPROTO_IPIP:
-				fprintf (out,
+				fprintf(out,
 				                "  Tunnel protocol/transport IP/IP\n");
 				break;
 			case IPPROTO_GRE:
 			default:
-				fprintf (out,
+				fprintf(out,
 				                "  Tunnel protocol/transport GRE/IP");
 				if (p.i_flags & GRE_KEY) {
-					fprintf (out, ", key %d", p.i_key);
+					fprintf(out, ", key %d", p.i_key);
 				} else {
-					fprintf (out, ", key disabled");
+					fprintf(out, ", key disabled");
 				}
+
 				if (p.i_flags & GRE_SEQ) {
-					fprintf (out, ", sequencing enabled");
+					fprintf(out, ", sequencing enabled");
 				} else {
-					fprintf (out, ", sequencing disabled");
+					fprintf(out, ", sequencing disabled");
 				}
+
 				if (p.i_flags & GRE_CSUM) {
-					fprintf (out,
+					fprintf(out,
 					                ", checksumming of packets enabled");
 				} else {
-					fprintf (out,
+					fprintf(out,
 					                ", checksumming of packets disabled");
 				}
-				fprintf (out, "\n");
+
+				fprintf(out, "\n");
 				break;
 			}
-			if (p.iph.frag_off == htons (IP_DF))
-				fprintf (out, "  Path MTU Discovery\n");
+			if (p.iph.frag_off == htons(IP_DF))
+				fprintf(out, "  Path MTU Discovery\n");
 		}
 	}
 }
 
 #if 0
-void print_tunnel(struct ip_tunnel_parm *p)
+void libconfig_tunnel_print(struct ip_tunnel_parm *p)
 {
 	char s1[256];
 	char s2[256];
@@ -593,50 +621,58 @@ void print_tunnel(struct ip_tunnel_parm *p)
 	inet_ntop(AF_INET, &p->i_key, s3, sizeof(s3));
 	inet_ntop(AF_INET, &p->o_key, s4, sizeof(s4));
 
-	printf("%s: %s/ip  remote %s  local %s ",
-			p->name,
-			p->iph.protocol == IPPROTO_IPIP ? "ip" :
-			(p->iph.protocol == IPPROTO_GRE ? "gre" :
-					(p->iph.protocol == IPPROTO_IPV6 ? "ipv6" : "unknown")),
-			p->iph.daddr ? s1 : "any", p->iph.saddr ? s2 : "any");
+	printf("%s: %s/ip  remote %s  local %s ", p->name, p->iph.protocol
+	                == IPPROTO_IPIP ? "ip" : (p->iph.protocol
+	                == IPPROTO_GRE ? "gre" : (p->iph.protocol
+	                == IPPROTO_IPV6 ? "ipv6" : "unknown")),
+	                p->iph.daddr ? s1 : "any", p->iph.saddr ? s2 : "any");
+
 	if (p->link) {
 		char *n = do_ioctl_get_ifname(p->link);
 		if (n)
-		printf(" dev %s ", n);
+			printf(" dev %s ", n);
 	}
-	if (p->iph.ttl)
-	printf(" ttl %d ", p->iph.ttl);
+
+	if (p->iph.TUNNEL_TTL)
+		printf(" ttl %d ", p->iph.TUNNEL_TTL);
 	else
-	printf(" ttl inherit ");
+		printf(" ttl inherit ");
+
 	if (p->iph.tos) {
 		SPRINT_BUF(b1);
 		printf(" tos");
-		if (p->iph.tos&1)
-		printf(" inherit");
-		if (p->iph.tos&~1)
-		printf("%c%s ", p->iph.tos&1 ? '/' : ' ',
-				rtnl_dsfield_n2a(p->iph.tos&~1, b1, sizeof(b1)));
-	}
-	if (!(p->iph.frag_off&htons(IP_DF)))
-	printf(" nopmtudisc");
-
-	if ((p->i_flags&GRE_KEY) && (p->o_flags&GRE_KEY) && p->o_key == p->i_key)
-	printf(" key %s", s3);
-	else if ((p->i_flags|p->o_flags)&GRE_KEY) {
-		if (p->i_flags&GRE_KEY)
-		printf(" ikey %s ", s3);
-		if (p->o_flags&GRE_KEY)
-		printf(" okey %s ", s4);
+		if (p->iph.tos & 1)
+			printf(" inherit");
+		if (p->iph.tos & ~1)
+			printf("%c%s ", p->iph.tos & 1 ? '/' : ' ',
+			                rtnl_dsfield_n2a(p->iph.tos & ~1, b1,
+			                                sizeof(b1)));
 	}
 
-	if (p->i_flags&GRE_SEQ)
-	printf("%s  Drop packets out of sequence.\n", _SL_);
-	if (p->i_flags&GRE_CSUM)
-	printf("%s  Checksum in received packet is required.", _SL_);
-	if (p->o_flags&GRE_SEQ)
-	printf("%s  Sequence packets on output.", _SL_);
-	if (p->o_flags&GRE_CSUM)
-	printf("%s  Checksum output packets.", _SL_);
+	if (!(p->iph.frag_off & htons(IP_DF)))
+		printf(" nopmtudisc");
+
+	if ((p->i_flags & GRE_KEY) && (p->o_flags & GRE_KEY) && p->o_key == p->i_key) {
+		printf(" key %s", s3);
+	} else if ((p->i_flags | p->o_flags) & GRE_KEY) {
+		if (p->i_flags & GRE_KEY)
+			printf(" ikey %s ", s3);
+
+		if (p->o_flags & GRE_KEY)
+			printf(" okey %s ", s4);
+	}
+
+	if (p->i_flags & GRE_SEQ)
+		printf("%s  Drop packets out of sequence.\n", _SL_);
+
+	if (p->i_flags & GRE_CSUM)
+		printf("%s  Checksum in received packet is required.", _SL_);
+
+	if (p->o_flags & GRE_SEQ)
+		printf("%s  Sequence packets on output.", _SL_);
+
+	if (p->o_flags & GRE_CSUM)
+		printf("%s  Checksum output packets.", _SL_);
 }
 #endif
 

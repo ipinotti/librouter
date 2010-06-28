@@ -1,14 +1,21 @@
+/*
+ * str.h
+ *
+ *  Created on: Jun 23, 2010
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
 #include "defines.h"
 #include "args.h"
 #include "error.h"
 #include "nv.h"
 #include "ssh.h"
 
-int ssh_create_rsakey(int keysize)
+int libconfig_ssh_create_rsakey(int keysize)
 {
 	int ret;
 	char line[128];
@@ -21,9 +28,9 @@ int ssh_create_rsakey(int keysize)
 #endif
 	system(line);
 
-	if (save_ssh_secret(SSH_KEY_FILE) < 0) {
+	if (libconfig_nv_save_ssh_secret(SSH_KEY_FILE) < 0) {
 		ret = -1;
-		pr_error(1, "unable to save key");
+		libconfig_pr_error(1, "unable to save key");
 	}
 	else
 		ret = 0;

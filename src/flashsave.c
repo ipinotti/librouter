@@ -1,3 +1,9 @@
+/*
+ * flashsave.c
+ *
+ *  Created on: Jun 23, 2010
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,7 +46,7 @@ image_header_t *hdr = &header;
  *
  * @param tm
  */
-static void gregorian_weekday(struct rtc_time *tm)
+static void _gregorian_weekday(struct rtc_time *tm)
 {
 	int leapsToDate;
 	int lastYear;
@@ -83,7 +89,7 @@ static void gregorian_weekday(struct rtc_time *tm)
  * @param ts timestamp
  * @param tm rtc_time structure pointer
  */
-static void timestamp_to_rtc_time(int ts, struct rtc_time *tm)
+static void _timestamp_to_rtc_time(int ts, struct rtc_time *tm)
 {
 	register int i;
 	register long hms, day;
@@ -118,21 +124,21 @@ static void timestamp_to_rtc_time(int ts, struct rtc_time *tm)
 	/*
 	 * Determine the day of week
 	 */
-	gregorian_weekday(tm);
+	_gregorian_weekday(tm);
 }
 
 /**
  * Print uboot image header information
  * @param hdr
  */
-static void print_image_hdr(image_header_t *hdr)
+static void _print_image_hdr(image_header_t *hdr)
 {
 	time_t timestamp = (time_t) hdr->ih_time;
 	struct rtc_time tm;
 
 	printf("  Image Name:   %.*s\n", IH_NMLEN, hdr->ih_name);
 
-	timestamp_to_rtc_time(timestamp, &tm);
+	_timestamp_to_rtc_time(timestamp, &tm);
 	printf("  Created:      %4d-%02d-%02d  %2d:%02d:%02d UTC\n",
 	                tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour,
 	                tm.tm_min, tm.tm_sec);
@@ -211,7 +217,7 @@ static int _flash_write_chunk (erase_info_t *erase, int fd, unsigned char *data,
  * @param len date length
  * @return 0 if successful
  */
-static int flash_save(char *mtd_dev, unsigned char *data, unsigned int len)
+static int _flash_save(char *mtd_dev, unsigned char *data, unsigned int len)
 {
 	int output;
 	mtd_info_t meminfo;
@@ -353,7 +359,7 @@ int libconfig_flash_check_image(char *img)
 	checksum = ntohl(header->ih_hcrc);
 	header->ih_hcrc = htonl(0); /* clear for re-calculation */
 
-	if (crc32(0, file_data, len) != checksum) {
+	if (libconfig_crc32(0, file_data, len) != checksum) {
 		fprintf(stderr,
 		        "*** Warning: \"%s\" has bad header checksum!\n",
 		        img);
@@ -367,13 +373,13 @@ int libconfig_flash_check_image(char *img)
 	}
 
 	/* for multi-file images we need the data part, too */
-	print_image_hdr((image_header_t *) file_ptr);
+	_print_image_hdr((image_header_t *) file_ptr);
 	printf("  Verifying Checksum ... ");
 	fflush(stdout);
 
 	file_data = (unsigned char *) (file_ptr + sizeof(image_header_t));
 	len = sbuf.st_size - sizeof(image_header_t);
-	if (crc32(0, file_data, len) != ntohl(header->ih_dcrc)) {
+	if (libconfig_crc32(0, file_data, len) != ntohl(header->ih_dcrc)) {
 		printf("  Bad Data CRC\n");
 		fprintf(stderr,
 		        "*** Warning: \"%s\" has corrupted data!\n",
@@ -474,7 +480,7 @@ int libconfig_flash_write_image(char *img)
 	}
 
 	/* Finally write to flash */
-	if (flash_save(mtddev, data, len) < 0) {
+	if (_flash_save(mtddev, data, len) < 0) {
 		printf("%% Could not save image\n");
 		goto err;
 	}
@@ -503,7 +509,7 @@ err:
  *
  * @param burn ???
  */
-void write_image(int burn)
+void libconfig_write_image(int burn)
 {
 	DIR *dir;
 	struct dirent *entry;
@@ -577,7 +583,7 @@ void write_image(int burn)
 		checksum = ntohl(hdr->ih_hcrc);
 		hdr->ih_hcrc = htonl(0); /* clear for re-calculation */
 
-		if (crc32(0, data, len) != checksum) {
+		if (libconfig_crc32(0, data, len) != checksum) {
 			fprintf(stderr, "*** Warning: \"%s\" has bad header checksum!\n", entry->d_name);
 			continue;
 		}
@@ -586,13 +592,13 @@ void write_image(int burn)
 			continue; /* Wait for upload... */
 
 		/* for multi-file images we need the data part, too */
-		print_image_hdr((image_header_t *) ptr);
+		_print_image_hdr((image_header_t *) ptr);
 		printf("  Verifying Checksum ... ");
 		fflush(stdout);
 
 		data = (unsigned char *) (ptr + sizeof(image_header_t));
 		len = sbuf.st_size - sizeof(image_header_t);
-		if (crc32(0, data, len) != ntohl(hdr->ih_dcrc)) {
+		if (libconfig_crc32(0, data, len) != ntohl(hdr->ih_dcrc)) {
 			printf("  Bad Data CRC\n");
 			fprintf(stderr, "*** Warning: \"%s\" has corrupted data!\n", entry->d_name);
 			continue;
@@ -633,7 +639,7 @@ void write_image(int burn)
 		len = sizeof(image_header_t) + hdr->ih_size;
 #if 0				/* Eh necessario um fd para a flash!!! */
 		if (!memcmp(data, (image_header_t *) addrflash, sizeof(image_header_t))) {
-			if (crc32
+			if (libconfig_crc32
 					(0, (char *)addrflash + sizeof(image_header_t),
 							((image_header_t *) addrflash)->ih_size) == ntohl(hdr->ih_dcrc)) {
 				printf("  Image already written!\n");
@@ -659,7 +665,7 @@ void write_image(int burn)
 	}
 
 	/* Finally write to flash */
-	if (flash_save(mtddev, data, len) < 0) {
+	if (_flash_save(mtddev, data, len) < 0) {
 		printf("%% Could not save image\n");
 		goto clean;
 	}

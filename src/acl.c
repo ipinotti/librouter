@@ -15,12 +15,12 @@
 //#define DEBUG_CMD(x) syslog(LOG_DEBUG, "%s\n", x)
 #define DEBUG_CMD(x)
 
-void acl_create_new(char *name)
+void libconfig_acl_create_new(char *name)
 {
 	char cmd[64];
 
-	sprintf (cmd, "/bin/iptables -N %s", name);
-	system (cmd);
+	sprintf(cmd, "/bin/iptables -N %s", name);
+	system(cmd);
 }
 
 /**
@@ -28,7 +28,7 @@ void acl_create_new(char *name)
  * \param acl: structure with acl configuration
  * \return void
  */
-void acl_apply(struct acl_config *acl)
+void libconfig_acl_apply(struct acl_config *acl)
 {
 	char cmd[256];
 	FILE *f;
@@ -37,208 +37,208 @@ void acl_apply(struct acl_config *acl)
 
 	memset(&cmd, 0, sizeof(cmd));
 
-	sprintf (cmd, "/bin/iptables ");
+	sprintf(cmd, "/bin/iptables ");
 
 	switch (acl->mode) {
 	case insert_acl:
-		strcat (cmd, "-I ");
+		strcat(cmd, "-I ");
 		break;
 	case remove_acl:
-		strcat (cmd, "-D ");
+		strcat(cmd, "-D ");
 		break;
 	default:
-		strcat (cmd, "-A ");
+		strcat(cmd, "-A ");
 		break;
 	}
 
-	strcat (cmd, acl->name);
-	strcat (cmd, " ");
+	strcat(cmd, acl->name);
+	strcat(cmd, " ");
 
 	switch (acl->protocol) {
 	case tcp:
-		strcat (cmd, "-p tcp ");
+		strcat(cmd, "-p tcp ");
 		break;
 	case udp:
-		strcat (cmd, "-p udp ");
+		strcat(cmd, "-p udp ");
 		break;
 	case icmp:
-		strcat (cmd, "-p icmp ");
+		strcat(cmd, "-p icmp ");
 		if (acl->icmp_type) {
 			if (acl->icmp_type_code)
-				sprintf (cmd + strlen (cmd), "--icmp-type %s ",
-						acl->icmp_type_code);
+				sprintf(cmd + strlen(cmd), "--icmp-type %s ",
+				                acl->icmp_type_code);
 			else
-				sprintf (cmd + strlen (cmd), "--icmp-type %s ",
-						acl->icmp_type);
+				sprintf(cmd + strlen(cmd), "--icmp-type %s ",
+				                acl->icmp_type);
 		}
 		break;
 	default:
-		sprintf (cmd + strlen (cmd), "-p %d ", acl->protocol);
+		sprintf(cmd + strlen(cmd), "-p %d ", acl->protocol);
 		break;
 	}
 	/* Go through addresses */
-	if (strcmp (acl->src_address, "0.0.0.0/0")) {
-		sprintf (cmd + strlen (cmd), "-s %s ", acl->src_address);
+	if (strcmp(acl->src_address, "0.0.0.0/0")) {
+		sprintf(cmd + strlen(cmd), "-s %s ", acl->src_address);
 	}
-	if (strlen (acl->src_portrange)) {
-		sprintf (cmd + strlen (cmd), "--sport %s ", acl->src_portrange);
+	if (strlen(acl->src_portrange)) {
+		sprintf(cmd + strlen(cmd), "--sport %s ", acl->src_portrange);
 	}
-	if (strcmp (acl->dst_address, "0.0.0.0/0")) {
-		sprintf (cmd + strlen (cmd), "-d %s ", acl->dst_address);
+	if (strcmp(acl->dst_address, "0.0.0.0/0")) {
+		sprintf(cmd + strlen(cmd), "-d %s ", acl->dst_address);
 	}
-	if (strlen (acl->dst_portrange)) {
-		sprintf (cmd + strlen (cmd), "--dport %s ", acl->dst_portrange);
+	if (strlen(acl->dst_portrange)) {
+		sprintf(cmd + strlen(cmd), "--dport %s ", acl->dst_portrange);
 	}
 
 	if (acl->flags) {
-		if (strcmp (acl->flags, "syn") == 0)
-			strcat (cmd, "--syn ");
+		if (strcmp(acl->flags, "syn") == 0)
+			strcat(cmd, "--syn ");
 		else {
 			char *tmp;
 
-			tmp = strchr (acl->flags, '/');
+			tmp = strchr(acl->flags, '/');
 			if (tmp != NULL)
 				*tmp = ' ';
-			sprintf (cmd + strlen (cmd), "--tcp-flags %s ", acl->flags);
+			sprintf(cmd + strlen(cmd), "--tcp-flags %s ",
+			                acl->flags);
 		}
 	}
 
 	if (acl->tos) {
-		sprintf (cmd + strlen (cmd), "-m tos --tos %s ", acl->tos);
+		sprintf(cmd + strlen(cmd), "-m tos --tos %s ", acl->tos);
 	}
 
 	if (acl->state) {
 		int comma = 0;
-		strcat (cmd, "-m state --state ");
+		strcat(cmd, "-m state --state ");
 		if (acl->state & st_established) {
-			strcat (cmd, "ESTABLISHED");
+			strcat(cmd, "ESTABLISHED");
 			comma = 1;
 		}
 
 		if (acl->state & st_new) {
 			if (comma)
-				strcat (cmd, ",");
+				strcat(cmd, ",");
 			else
 				comma = 1;
-			strcat (cmd, "NEW");
+			strcat(cmd, "NEW");
 		}
 		if (acl->state & st_related) {
 			if (comma)
-				strcat (cmd, ",");
-			strcat (cmd, "RELATED");
+				strcat(cmd, ",");
+			strcat(cmd, "RELATED");
 		}
-		strcat (cmd, " ");
+		strcat(cmd, " ");
 	}
 
 	switch (acl->action) {
 	case acl_accept:
-		strcat (cmd, "-j ACCEPT");
+		strcat(cmd, "-j ACCEPT");
 		break;
 	case acl_drop:
-		strcat (cmd, "-j DROP");
+		strcat(cmd, "-j DROP");
 		break;
 	case acl_reject:
-		strcat (cmd, "-j REJECT");
+		strcat(cmd, "-j REJECT");
 		break;
 	case acl_log:
-		strcat (cmd, "-j LOG");
+		strcat(cmd, "-j LOG");
 		break;
 	case acl_tcpmss:
-		strcat (cmd, "-j TCPMSS ");
-		if (strcmp (acl->tcpmss, "pmtu") == 0)
-			strcat (cmd, "--clamp-mss-to-pmtu");
+		strcat(cmd, "-j TCPMSS ");
+		if (strcmp(acl->tcpmss, "pmtu") == 0)
+			strcat(cmd, "--clamp-mss-to-pmtu");
 		else
-			sprintf (cmd + strlen (cmd), "--set-mss %s", acl->tcpmss);
+			sprintf(cmd + strlen(cmd), "--set-mss %s", acl->tcpmss);
 		break;
 	}
 
 	/* Check if we already have this rule */
-	if ((f = fopen (TMP_CFG_FILE, "w+"))) {
-		lconfig_acl_dump (0, f, 1);
-		fseek (f, 0, SEEK_SET);
+	if ((f = fopen(TMP_CFG_FILE, "w+"))) {
+		libconfig_acl_dump(0, f, 1);
+		fseek(f, 0, SEEK_SET);
 
 		/* Parse through all existing rules */
-		while (fgets ((char *) buf, 511, f)) {
-			if (!strcmp((const char *)buf, cmd)) {
+		while (fgets((char *) buf, 511, f)) {
+			if (!strcmp((const char *) buf, cmd)) {
 				ruleexists = 1;
 				break;
 			}
 		}
-		fclose (f);
+		fclose(f);
 	}
 
 	if (ruleexists)
-		printf ("%% Rule already exists\n");
+		printf("%% Rule already exists\n");
 	else {
 		DEBUG_CMD(cmd);
-		system (cmd); /* Do it ! */
+		system(cmd); /* Do it ! */
 	}
 }
 
-void acl_set_ports (const char *ports, char *str)
+void libconfig_acl_set_ports(const char *ports, char *str)
 {
 	char *p;
 
 	if (ports) {
-		p = strchr (ports, ':');
+		p = strchr(ports, ':');
 		if (!p) {
 			if (ports[0] == '!')
-				sprintf (str, "neq %s", ports + 1);
+				sprintf(str, "neq %s", ports + 1);
 			else
-				sprintf (str, "eq %s", ports);
+				sprintf(str, "eq %s", ports);
 		} else {
 			int from, to;
 
-			from = atoi (ports);
-			to = atoi (p + 1);
+			from = atoi(ports);
+			to = atoi(p + 1);
 
 			if (from == 0)
-				sprintf (str, "lt %d", to);
+				sprintf(str, "lt %d", to);
 			else if (to == 65535)
-				sprintf (str, "gt %d", from);
+				sprintf(str, "gt %d", from);
 			else
-				sprintf (str, "range %d %d", from, to);
+				sprintf(str, "range %d %d", from, to);
 		}
 	}
 }
 
-void acl_print_flags (FILE *out, char *flags)
+void libconfig_acl_print_flags(FILE *out, char *flags)
 {
 	char flags_ascii[6][4] = { "FIN", "SYN", "RST", "PSH", "ACK", "URG" };
 	int i, print;
 	long int flag, flag_bit;
 
-	flag = strtol (flags, NULL, 16);
+	flag = strtol(flags, NULL, 16);
 	if (flag == 0x3f)
-		fprintf (out, "ALL");
+		fprintf(out, "ALL");
 	else {
 		for (print = 0, i = 0, flag_bit = 0x01; i < 6; i++, flag_bit
 		                <<= 1)
 			if (flag & flag_bit) {
-				fprintf (out, "%s%s", print ? "," : "",
-				                flags_ascii[i]);
+				fprintf(out, "%s%s", print ? "," : "", flags_ascii[i]);
 				print = 1;
 			}
 	}
 }
 
-static void acl_print_rule (const char *action,
-                        const char *proto,
-                        const char *src,
-                        const char *dst,
-                        const char *sports,
-                        const char *dports,
-                        char *acl,
-                        FILE *out,
-                        int conf_format,
-                        int mc,
-                        char *flags,
-                        char *tos,
-                        char *state,
-                        char *icmp_type,
-                        char *icmp_type_code,
-                        char *tcpmss,
-                        char *mac)
+static void _libconfig_acl_print_rule(const char *action,
+                                      const char *proto,
+                                      const char *src,
+                                      const char *dst,
+                                      const char *sports,
+                                      const char *dports,
+                                      char *acl,
+                                      FILE *out,
+                                      int conf_format,
+                                      int mc,
+                                      char *flags,
+                                      char *tos,
+                                      char *state,
+                                      char *icmp_type,
+                                      char *icmp_type_code,
+                                      char *tcpmss,
+                                      char *mac)
 {
 	char src_ports[32];
 	char dst_ports[32];
@@ -247,101 +247,101 @@ static void acl_print_rule (const char *action,
 	const char *src_netmask;
 	const char *dst_netmask;
 
-	_src = strdup (src);
-	_dst = strdup (dst);
+	_src = strdup(src);
+	_dst = strdup(dst);
 	src_ports[0] = 0;
 	dst_ports[0] = 0;
-	src_netmask = extract_mask (_src);
-	dst_netmask = extract_mask (_dst);
-	acl_set_ports (sports, src_ports);
-	acl_set_ports (dports, dst_ports);
+	src_netmask = libconfig_ip_extract_mask(_src);
+	dst_netmask = libconfig_ip_extract_mask(_dst);
+	libconfig_acl_set_ports(sports, src_ports);
+	libconfig_acl_set_ports(dports, dst_ports);
 
 	if (conf_format)
-		fprintf (out, "access-list ");
+		fprintf(out, "access-list ");
 	if (conf_format)
-		fprintf (out, "%s ", acl);
+		fprintf(out, "%s ", acl);
 	else
-		fprintf (out, "    ");
-	if (strcmp (action, "ACCEPT") == 0)
-		fprintf (out, "accept ");
-	else if (strcmp (action, "DROP") == 0)
-		fprintf (out, "drop ");
-	else if (strcmp (action, "REJECT") == 0)
-		fprintf (out, "reject ");
-	else if (strcmp (action, "LOG") == 0)
-		fprintf (out, "log ");
-	else if (strcmp (action, "TCPMSS") == 0 && tcpmss) {
-		if (strcmp (tcpmss, "PMTU") == 0)
-			fprintf (out, "tcpmss pmtu ");
+		fprintf(out, "    ");
+	if (strcmp(action, "ACCEPT") == 0)
+		fprintf(out, "accept ");
+	else if (strcmp(action, "DROP") == 0)
+		fprintf(out, "drop ");
+	else if (strcmp(action, "REJECT") == 0)
+		fprintf(out, "reject ");
+	else if (strcmp(action, "LOG") == 0)
+		fprintf(out, "log ");
+	else if (strcmp(action, "TCPMSS") == 0 && tcpmss) {
+		if (strcmp(tcpmss, "PMTU") == 0)
+			fprintf(out, "tcpmss pmtu ");
 		else
-			fprintf (out, "tcpmss %s ", tcpmss);
+			fprintf(out, "tcpmss %s ", tcpmss);
 	} else
-		fprintf (out, "???? ");
+		fprintf(out, "???? ");
 	if (mac) {
-		fprintf (out, "mac %s ", mac);
+		fprintf(out, "mac %s ", mac);
 		if (!conf_format)
-			fprintf (out, " (%i matches)", mc);
-		fprintf (out, "\n");
+			fprintf(out, " (%i matches)", mc);
+		fprintf(out, "\n");
 		return;
 	}
-	if (strcmp (proto, "all") == 0)
-		fprintf (out, "ip ");
+	if (strcmp(proto, "all") == 0)
+		fprintf(out, "ip ");
 	else
-		fprintf (out, "%s ", proto);
+		fprintf(out, "%s ", proto);
 	if (icmp_type) {
 		if (icmp_type_code)
-			fprintf (out, "type %s %s ", icmp_type, icmp_type_code);
+			fprintf(out, "type %s %s ", icmp_type, icmp_type_code);
 		else
-			fprintf (out, "type %s ", icmp_type);
+			fprintf(out, "type %s ", icmp_type);
 	}
-	if (strcasecmp (src, "0.0.0.0/0") == 0)
-		fprintf (out, "any ");
-	else if (strcmp (src_netmask, "255.255.255.255") == 0)
-		fprintf (out, "host %s ", _src);
+	if (strcasecmp(src, "0.0.0.0/0") == 0)
+		fprintf(out, "any ");
+	else if (strcmp(src_netmask, "255.255.255.255") == 0)
+		fprintf(out, "host %s ", _src);
 	else
-		fprintf (out, "%s %s ", _src, ciscomask (src_netmask));
+		fprintf(out, "%s %s ", _src, libconfig_ip_ciscomask(src_netmask));
 	if (*src_ports)
-		fprintf (out, "%s ", src_ports);
-	if (strcasecmp (dst, "0.0.0.0/0") == 0)
-		fprintf (out, "any ");
-	else if (strcmp (dst_netmask, "255.255.255.255") == 0)
-		fprintf (out, "host %s ", _dst);
+		fprintf(out, "%s ", src_ports);
+	if (strcasecmp(dst, "0.0.0.0/0") == 0)
+		fprintf(out, "any ");
+	else if (strcmp(dst_netmask, "255.255.255.255") == 0)
+		fprintf(out, "host %s ", _dst);
 	else
-		fprintf (out, "%s %s ", _dst, ciscomask (dst_netmask));
+		fprintf(out, "%s %s ", _dst, libconfig_ip_ciscomask(dst_netmask));
 	if (*dst_ports)
-		fprintf (out, "%s ", dst_ports);
+		fprintf(out, "%s ", dst_ports);
 	if (flags) {
-		if (strncmp (flags, "0x16/0x02", 9)) {
+		if (strncmp(flags, "0x16/0x02", 9)) {
 			char *t;
 
-			t = strtok (flags, "/");
+			t = strtok(flags, "/");
 			if (t != NULL) {
-				fprintf (out, "flags ");
-				acl_print_flags (out, t);
-				fprintf (out, "/");
-				t = strtok (NULL, "/");
-				acl_print_flags (out, t);
-				fprintf (out, " ");
+				fprintf(out, "flags ");
+				libconfig_acl_print_flags(out, t);
+				fprintf(out, "/");
+				t = strtok(NULL, "/");
+				libconfig_acl_print_flags(out, t);
+				fprintf(out, " ");
 			}
 		} else
-			fprintf (out, "flags syn ");
+			fprintf(out, "flags syn ");
 	}
 	if (tos)
-		fprintf (out, "tos %d ", (int)strtol (tos, NULL, 16));
+		fprintf(out, "tos %d ", (int) strtol(tos, NULL, 16));
 	if (state) {
-		if (strstr (state, "ESTABLISHED"))
-			fprintf (out, "established ");
-		if (strstr (state, "NEW"))
-			fprintf (out, "new ");
-		if (strstr (state, "RELATED"))
-			fprintf (out, "related ");
+		if (strstr(state, "ESTABLISHED"))
+			fprintf(out, "established ");
+		if (strstr(state, "NEW"))
+			fprintf(out, "new ");
+		if (strstr(state, "RELATED"))
+			fprintf(out, "related ");
 	}
 	if (!conf_format)
-		fprintf (out, " (%i matches)", mc);
-	fprintf (out, "\n");
+		fprintf(out, " (%i matches)", mc);
+	fprintf(out, "\n");
 }
 
-void lconfig_acl_dump (char *xacl, FILE *F, int conf_format)
+void libconfig_acl_dump(char *xacl, FILE *F, int conf_format)
 {
 	FILE *ipc;
 	char buf[512];
@@ -366,142 +366,159 @@ void lconfig_acl_dump (char *xacl, FILE *F, int conf_format)
 	int aclp = 1;
 	FILE *procfile;
 
-	procfile = fopen ("/proc/net/ip_tables_names", "r");
+	procfile = fopen("/proc/net/ip_tables_names", "r");
 	if (!procfile) {
 		if (conf_format)
-			fprintf (F, "!\n"); /* ! for next: router rip */
+			fprintf(F, "!\n"); /* ! for next: router rip */
 		return;
 	}
-	fclose (procfile);
+	fclose(procfile);
 
 	acl[0] = 0;
 
-	ipc = popen ("/bin/iptables -L -nv", "r");
+	ipc = popen("/bin/iptables -L -nv", "r");
 
 	if (!ipc) {
-		fprintf (stderr, "%% ACL subsystem not found\n");
+		fprintf(stderr, "%% ACL subsystem not found\n");
 		return;
 	}
 
-	while (!feof (ipc)) {
+	while (!feof(ipc)) {
 		buf[0] = 0;
-		fgets (buf, sizeof(buf), ipc);
-		tmp = strchr (buf, '\n');
+		fgets(buf, sizeof(buf), ipc);
+		tmp = strchr(buf, '\n');
 		if (tmp)
 			*tmp = 0;
 
-		if (strncmp (buf, "Chain ", 6) == 0) {
+		if (strncmp(buf, "Chain ", 6) == 0) {
 			//if ((conf_format)&&(aclp)) fprintf(F, "!\n");
 			trimcolumn(buf+6);
-			strncpy (acl, buf + 6, 100);
+			strncpy(acl, buf + 6, 100);
 			acl[100] = 0;
 			aclp = 0;
-		} else if (strncmp (buf, " pkts", 5) != 0) /*  pkts bytes target     prot opt in     out     source               destination */
-		{
-			if (strlen (buf) && ((xacl == NULL) || (strcmp (xacl,
-			                acl) == 0))) {
+		} else if (strncmp(buf, " pkts", 5) != 0) {
+			/* pkts bytes target prot opt in out source destination */
+			if (strlen(buf) && ((xacl == NULL) || (strcmp(xacl, acl) == 0))) {
 				arglist *args;
 				char *p;
 
 				p = buf;
 				while ((*p) && (*p == ' '))
 					p++;
-				args = make_args (p);
-				if (args->argc < 9) /*     0     0 DROP       tcp  --  *      *       0.0.0.0/0            0.0.0.0/0          tcp flags:0x16/0x02 */
-				{
-					destroy_args (args);
+
+				/* 0 0 DROP tcp -- * * 0.0.0.0/0 0.0.0.0/0 tcp flags:0x16/0x02 */
+				args = libconfig_make_args(p);
+				if (args->argc < 9) {
+					libconfig_destroy_args(args);
 					continue;
 				}
+
 				type = args->argv[2];
 				prot = args->argv[3];
 				input = args->argv[5];
 				output = args->argv[6];
 				source = args->argv[7];
 				dest = args->argv[8];
-				sports = strstr (buf, "spts:");
-				if (sports)
+
+				sports = strstr(buf, "spts:");
+				if (sports) {
 					sports += 5;
-				else {
-					sports = strstr (buf, "spt:");
+				} else {
+					sports = strstr(buf, "spt:");
 					if (sports)
 						sports += 4;
 				}
-				dports = strstr (buf, "dpts:");
-				if (dports)
+
+				dports = strstr(buf, "dpts:");
+				if (dports) {
 					dports += 5;
-				else {
-					dports = strstr (buf, "dpt:");
+				} else {
+					dports = strstr(buf, "dpt:");
 					if (dports)
 						dports += 4;
 				}
-				if ((flags = strstr (buf, "tcp flags:")))
+
+				if ((flags = strstr(buf, "tcp flags:")))
 					flags += 10;
-				if ((tos = strstr (buf, "TOS match 0x")))
+
+				if ((tos = strstr(buf, "TOS match 0x")))
 					tos += 12;
-				if ((state = strstr (buf, "state ")))
+
+				if ((state = strstr(buf, "state ")))
 					state += 6;
-				if ((icmp_type = strstr (buf, "icmp type "))) {
+
+				if ((icmp_type = strstr(buf, "icmp type "))) {
 					icmp_type += 10;
-					if ((icmp_type_code = strstr (buf,
+					if ((icmp_type_code = strstr(buf,
 					                "code ")))
 						icmp_type_code += 5;
 				}
-				if ((tcpmss = strstr (buf, "TCPMSS clamp to ")))
+
+				if ((tcpmss = strstr(buf, "TCPMSS clamp to "))) {
 					tcpmss += 16;
-				else if ((tcpmss = strstr (buf, "TCPMSS set ")))
+				} else if ((tcpmss = strstr(buf, "TCPMSS set "))) {
 					tcpmss += 11;
-				if ((mac = strstr (buf, "MAC ")))
+				}
+
+				if ((mac = strstr(buf, "MAC ")))
 					mac += 4;
+
 				if (flags)
 					trimcolumn(flags);
+
 				if (sports)
 					trimcolumn(sports);
+
 				if (dports)
 					trimcolumn(dports);
+
 				if (tos)
 					trimcolumn(tos);
+
 				if (state)
 					trimcolumn(state);
+
 				if (icmp_type)
 					trimcolumn(icmp_type);
+
 				if (icmp_type_code)
 					trimcolumn(icmp_type_code);
+
 				if (tcpmss)
 					trimcolumn(tcpmss);
+
 				if (mac)
 					trimcolumn(mac);
 
-				if ((strcmp (type, "ACCEPT") == 0) || (strcmp (
-				                type, "DROP") == 0) || (strcmp (
-				                type, "REJECT") == 0)
-				                || (strcmp (type, "LOG") == 0)
-				                || (strcmp (type, "TCPMSS")
-				                                == 0)) {
-					if (strcmp (acl, "INPUT") != 0
-					                && strcmp (acl,
-					                                "OUTPUT")
-					                                != 0
-					                && strcmp (acl,
-					                                "FORWARD")
-					                                != 0) /* filter CHAINs */
-					{
+				if ((strcmp(type, "ACCEPT") == 0) ||
+					(strcmp(type, "DROP") == 0) ||
+					(strcmp(type, "REJECT") == 0) ||
+					(strcmp(type, "LOG") == 0) ||
+					(strcmp(type, "TCPMSS") == 0)) {
+
+					if (strcmp(acl, "INPUT") != 0 &&
+						strcmp(acl, "OUTPUT") != 0 &&
+						strcmp(acl, "FORWARD") != 0) {
+						/* filter CHAINs */
+
 						if ((!aclp) && (!conf_format)) {
-							fprintf (
-							                F,
-							                "IP access list %s\n",
-							                acl);
+							fprintf(F, "IP access list %s\n", acl);
 						}
+
 						aclp = 1;
 						mcount = buf;
+
 						if (!conf_format) {
 							while (*mcount == ' ')
 								++mcount;
 						}
-						acl_print_rule (type, prot, source,
+
+						_libconfig_acl_print_rule(type,
+						                prot, source,
 						                dest, sports,
 						                dports, acl, F,
 						                conf_format,
-						                atoi (mcount),
+						                atoi(mcount),
 						                flags, tos,
 						                state,
 						                icmp_type,
@@ -510,108 +527,109 @@ void lconfig_acl_dump (char *xacl, FILE *F, int conf_format)
 					}
 				} else {
 					if (!conf_format) {
-						if (strcmp (acl, "FORWARD")) /* INTPUT || OUTPUT */
-						{
-							if (strcmp (input, "*")
-							                && !strstr (
-							                                input,
-							                                "ipsec"))
-								fprintf (
-								                F,
-								                "interface %s in access-list %s\n",
-								                input,
-								                type);
-							if (strcmp (output, "*")
-							                && !strstr (
-							                                output,
-							                                "ipsec"))
-								fprintf (
-								                F,
-								                "interface %s out access-list %s\n",
-								                output,
-								                type);
+						if (strcmp(acl, "FORWARD")) {
+							/* INTPUT || OUTPUT */
+
+							if (strcmp(input, "*") && !strstr(input,"ipsec"))
+								fprintf(F,
+									"interface %s in access-list %s\n",
+								        input,
+								        type);
+
+							if (strcmp(output, "*") && !strstr(output, "ipsec"))
+								fprintf(F,
+									"interface %s out access-list %s\n",
+									output,
+									type);
 						}
 					}
 				}
-				destroy_args (args);
+				libconfig_destroy_args(args);
 			}
 		}
 	}
-	pclose (ipc);
+	pclose(ipc);
 }
 
-void lconfig_acl_dump_policy (FILE *F)
+void libconfig_acl_dump_policy(FILE *F)
 {
 	FILE *ipc;
 	char buf[512];
 	char *p;
 	FILE *procfile;
 
-	procfile = fopen ("/proc/net/ip_tables_names", "r");
+	procfile = fopen("/proc/net/ip_tables_names", "r");
 	if (!procfile) {
-		fprintf (F, "access-policy accept\n");
+		fprintf(F, "access-policy accept\n");
 		return;
 	}
-	fclose (procfile);
 
-	ipc = popen ("/bin/iptables -L -nv", "r");
+	fclose(procfile);
+
+	ipc = popen("/bin/iptables -L -nv", "r");
 
 	if (!ipc) {
-		fprintf (stderr, "%% ACL subsystem not found\n");
+		fprintf(stderr, "%% ACL subsystem not found\n");
 		return;
 	}
 
-	while (!feof (ipc)) {
+	while (!feof(ipc)) {
 		buf[0] = 0;
-		fgets (buf, sizeof(buf), ipc);
-		p = strstr (buf, "policy");
+		fgets(buf, sizeof(buf), ipc);
+		p = strstr(buf, "policy");
 		if (p) {
-			if (strncasecmp (p + 7, "accept", 6) == 0) {
-				fprintf (F, "access-policy accept\n");
+			if (strncasecmp(p + 7, "accept", 6) == 0) {
+				fprintf(F, "access-policy accept\n");
 				break;
-			} else if (strncasecmp (p + 7, "drop", 4) == 0) {
-				fprintf (F, "access-policy drop\n");
+			} else if (strncasecmp(p + 7, "drop", 4) == 0) {
+				fprintf(F, "access-policy drop\n");
 				break;
 			}
 		}
 	}
-	pclose (ipc);
+
+	pclose(ipc);
 }
 
-int acl_exists (char *acl)
+int libconfig_acl_exists(char *acl)
 {
 	FILE *f;
 	char *tmp, buf[256];
 	int acl_exists = 0;
 
-	f = popen ("/bin/iptables -L -n", "r");
+	f = popen("/bin/iptables -L -n", "r");
 
 	if (!f) {
-		fprintf (stderr, "%% ACL subsystem not found\n");
+		fprintf(stderr, "%% ACL subsystem not found\n");
 		return 0;
 	}
 
-	while (!feof (f)) {
+	while (!feof(f)) {
 		buf[0] = 0;
-		fgets (buf, 255, f);
+		fgets(buf, 255, f);
 		buf[255] = 0;
-		striplf (buf);
-		if (strncmp (buf, "Chain ", 6) == 0) {
-			tmp = strchr (buf + 6, ' ');
+		libconfig_str_striplf(buf);
+		if (strncmp(buf, "Chain ", 6) == 0) {
+			tmp = strchr(buf + 6, ' ');
 			if (tmp) {
 				*tmp = 0;
-				if (strcmp (buf + 6, acl) == 0) {
+				if (strcmp(buf + 6, acl) == 0) {
 					acl_exists = 1;
 					break;
 				}
 			}
 		}
 	}
-	pclose (f);
+
+	pclose(f);
+
 	return acl_exists;
 }
 
-int acl_matched_exists (char *acl, char *iface_in, char *iface_out, char *chain)
+int libconfig_acl_matched_exists(char *acl,
+                                 char *iface_in,
+                                 char *iface_out,
+                                 char *chain)
 {
 	FILE *F;
 	char *tmp, buf[256];
@@ -619,68 +637,78 @@ int acl_matched_exists (char *acl, char *iface_in, char *iface_out, char *chain)
 	int in_chain = 0;
 	char *iface_in_, *iface_out_, *target;
 
-	F = popen ("/bin/iptables -L -nv", "r");
+	F = popen("/bin/iptables -L -nv", "r");
 
 	if (!F) {
-		fprintf (stderr, "%% ACL subsystem not found\n");
+		fprintf(stderr, "%% ACL subsystem not found\n");
 		return 0;
 	}
 
 	DEBUG_CMD("acl_matched_exists\n");
 
-	while (!feof (F)) {
+	while (!feof(F)) {
 		buf[0] = 0;
-		fgets (buf, 255, F);
+		fgets(buf, 255, F);
 		buf[255] = 0;
-		striplf (buf);
-		if (strncmp (buf, "Chain ", 6) == 0) {
+		libconfig_str_striplf(buf);
+
+		if (strncmp(buf, "Chain ", 6) == 0) {
+
+			/* chegou a proxima chain sem encontrar - finaliza */
 			if (in_chain)
-				break; // chegou `a proxima chain sem encontrar - finaliza
-			tmp = strchr (buf + 6, ' ');
+				break;
+
+			tmp = strchr(buf + 6, ' ');
+
 			if (tmp) {
 				*tmp = 0;
-				if (strcmp (buf + 6, chain) == 0)
+				if (strcmp(buf + 6, chain) == 0)
 					in_chain = 1;
 			}
-		} else if ((in_chain) && (strncmp (buf, " pkts", 5) != 0)
-		                && (strlen (buf) > 40)) {
+
+		} else if ((in_chain) && (strncmp(buf, " pkts", 5) != 0) && (strlen(buf) > 40)) {
+
 			arglist *args;
 			char *p;
 
 			p = buf;
 			while ((*p) && (*p == ' '))
 				p++;
-			args = make_args (p);
+
+			args = libconfig_make_args(p);
 			if (args->argc < 7) {
-				destroy_args (args);
+				libconfig_destroy_args(args);
 				continue;
 			}
+
 			iface_in_ = args->argv[5];
 			iface_out_ = args->argv[6];
 			target = args->argv[2];
-			if (((iface_in == NULL)
-			                || (strcmp (iface_in_, iface_in) == 0))
-			                && ((iface_out == NULL) || (strcmp (
-			                                iface_out_, iface_out)
-			                                == 0))
-			                && ((acl == NULL) || (strcmp (target,
-			                                acl) == 0))) {
+
+			if (((iface_in == NULL) || (strcmp(iface_in_, iface_in) == 0))
+				&& ((iface_out == NULL) || (strcmp(iface_out_, iface_out) == 0))
+				&& ((acl == NULL) || (strcmp(target, acl) == 0))) {
+
 				acl_exists = 1;
-				destroy_args (args);
+				libconfig_destroy_args(args);
 				break;
 			}
-			destroy_args (args);
+
+			libconfig_destroy_args(args);
 		}
 	}
-	pclose (F);
+
+	pclose(F);
+
 	return acl_exists;
 }
 
-int lconfig_acl_get_iface_rules (char *iface, char *in_acl, char *out_acl)
+int libconfig_acl_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 {
 	typedef enum {
 		chain_fwd, chain_in, chain_out, chain_other
 	} acl_chain;
+
 	FILE *F;
 	char buf[256];
 	acl_chain chain = chain_fwd;
@@ -688,106 +716,116 @@ int lconfig_acl_get_iface_rules (char *iface, char *in_acl, char *out_acl)
 	char *acl_in = NULL, *acl_out = NULL;
 	FILE *procfile;
 
-	procfile = fopen ("/proc/net/ip_tables_names", "r");
+	procfile = fopen("/proc/net/ip_tables_names", "r");
+
 	if (!procfile)
 		return 0;
-	fclose (procfile);
 
-	F = popen ("/bin/iptables -L -nv", "r");
+	fclose(procfile);
+
+	F = popen("/bin/iptables -L -nv", "r");
 
 	if (!F) {
-		fprintf (stderr, "%% ACL subsystem not found\n");
+		fprintf(stderr, "%% ACL subsystem not found\n");
 		return 0;
 	}
 
-	while (!feof (F)) {
+	while (!feof(F)) {
 		buf[0] = 0;
-		fgets (buf, 255, F);
+		fgets(buf, 255, F);
 		buf[255] = 0;
-		striplf (buf);
-		if (strncmp (buf, "Chain ", 6) == 0) {
-			if (strncmp (buf + 6, "FORWARD", 7) == 0)
+		libconfig_str_striplf(buf);
+		if (strncmp(buf, "Chain ", 6) == 0) {
+			if (strncmp(buf + 6, "FORWARD", 7) == 0)
 				chain = chain_fwd;
-			else if (strncmp (buf + 6, "INPUT", 5) == 0)
+			else if (strncmp(buf + 6, "INPUT", 5) == 0)
 				chain = chain_in;
-			else if (strncmp (buf + 6, "OUTPUT", 6) == 0)
+			else if (strncmp(buf + 6, "OUTPUT", 6) == 0)
 				chain = chain_out;
 			else
 				chain = chain_other;
-		} else if ((strncmp (buf, " pkts", 5) != 0) && (strlen (buf)
-		                > 40)) {
+		} else if ((strncmp(buf, " pkts", 5) != 0) && (strlen(buf) > 40)) {
 			arglist *args;
 			char *p;
 
 			p = buf;
 			while ((*p) && (*p == ' '))
 				p++;
-			args = make_args (p);
+
+			args = libconfig_make_args(p);
 			if (args->argc < 7) {
-				destroy_args (args);
+				libconfig_destroy_args(args);
 				continue;
 			}
+
 			iface_in_ = args->argv[5];
 			iface_out_ = args->argv[6];
 			target = args->argv[2];
+
 			if ((chain == chain_fwd || chain == chain_in)
-			                && (strcmp (iface, iface_in_) == 0)) {
+				&& (strcmp(iface, iface_in_) == 0)) {
 				acl_in = target;
-				strncpy (in_acl, acl_in, 100);
+				strncpy(in_acl, acl_in, 100);
 				in_acl[100] = 0;
 			}
+
 			if ((chain == chain_fwd || chain == chain_out)
-			                && (strcmp (iface, iface_out_) == 0)) {
+				&& (strcmp(iface, iface_out_) == 0)) {
 				acl_out = target;
-				strncpy (out_acl, acl_out, 100);
+				strncpy(out_acl, acl_out, 100);
 				out_acl[100] = 0;
 			}
+
 			if (acl_in && acl_out)
 				break;
-			destroy_args (args);
+
+			libconfig_destroy_args(args);
 		}
 	}
-	pclose (F);
+
+	pclose(F);
+
 	return 0;
 }
 
-int acl_get_refcount (char *acl)
+int libconfig_acl_get_refcount(char *acl)
 {
 	FILE *F;
 	char *tmp;
 	char buf[256];
 
-	F = popen ("/bin/iptables -L -n", "r");
+	F = popen("/bin/iptables -L -n", "r");
 
 	if (!F) {
-		fprintf (stderr, "%% ACL subsystem not found\n");
+		fprintf(stderr, "%% ACL subsystem not found\n");
 		return 0;
 	}
 
-	while (!feof (F)) {
+	while (!feof(F)) {
 		buf[0] = 0;
-		fgets (buf, 255, F);
+		fgets(buf, 255, F);
 		buf[255] = 0;
-		striplf (buf);
-		if (strncmp (buf, "Chain ", 6) == 0) {
-			tmp = strchr (buf + 6, ' ');
+		libconfig_str_striplf(buf);
+		if (strncmp(buf, "Chain ", 6) == 0) {
+			tmp = strchr(buf + 6, ' ');
 			if (tmp) {
 				*tmp = 0;
-				if (strcmp (buf + 6, acl) == 0) {
-					tmp = strchr (tmp + 1, '(');
+				if (strcmp(buf + 6, acl) == 0) {
+					tmp = strchr(tmp + 1, '(');
 					if (!tmp)
 						return 0;
+
 					tmp++;
-					return atoi (tmp);
+					return atoi(tmp);
 				}
 			}
 		}
 	}
-	pclose (F);
+	pclose(F);
 	return 0;
 }
 
-int acl_clean_iface_acls (char *iface)
+int libconfig_acl_clean_iface_acls(char *iface)
 {
 	FILE *F;
 	char buf[256];
@@ -796,77 +834,80 @@ int acl_clean_iface_acls (char *iface)
 	char *p, *iface_in_, *iface_out_, *target;
 	FILE *procfile;
 
-	procfile = fopen ("/proc/net/ip_tables_names", "r");
+	procfile = fopen("/proc/net/ip_tables_names", "r");
 	if (!procfile)
 		return 0;
-	fclose (procfile);
+	fclose(procfile);
 
-	F = popen ("/bin/iptables -L -nv", "r");
+	F = popen("/bin/iptables -L -nv", "r");
 
 	if (!F) {
-		fprintf (stderr, "%% ACL subsystem not found\n");
+		fprintf(stderr, "%% ACL subsystem not found\n");
 		return -1;
 	}
 
 	DEBUG_CMD("clean_iface_acls\n");
 
 	chain[0] = 0;
-	while (!feof (F)) {
+	while (!feof(F)) {
 		buf[0] = 0;
-		fgets (buf, 255, F);
+		fgets(buf, 255, F);
 		buf[255] = 0;
-		striplf (buf);
-		if (strncmp (buf, "Chain ", 6) == 0) {
-			p = strchr (buf + 6, ' ');
+		libconfig_str_striplf(buf);
+		if (strncmp(buf, "Chain ", 6) == 0) {
+			p = strchr(buf + 6, ' ');
+
 			if (p) {
 				*p = 0;
-				strncpy (chain, buf + 6, 16);
+				strncpy(chain, buf + 6, 16);
 				chain[15] = 0;
 			}
-		} else if ((strncmp (buf, " pkts", 5) != 0) && (strlen (buf)
-		                > 40)) {
+
+		} else if ((strncmp(buf, " pkts", 5) != 0) && (strlen(buf) > 40)) {
 			arglist *args;
 
 			p = buf;
 			while ((*p) && (*p == ' '))
 				p++;
-			args = make_args (p);
+
+			args = libconfig_make_args(p);
 			if (args->argc < 7) {
-				destroy_args (args);
+				libconfig_destroy_args(args);
 				continue;
 			}
+
 			iface_in_ = args->argv[5];
 			iface_out_ = args->argv[6];
 			target = args->argv[2];
-			if (strncmp (iface, iface_in_, strlen (iface)) == 0) {
-				sprintf (
-				                cmd,
-				                "/bin/iptables -D %s -i %s -j %s",
-				                chain, iface_in_, target);
+
+			if (strncmp(iface, iface_in_, strlen(iface)) == 0) {
+
+				sprintf(cmd, "/bin/iptables -D %s -i %s -j %s",
+						chain, iface_in_, target);
 
 				DEBUG_CMD(cmd);
 
-				system (cmd);
+				system(cmd);
 			}
 
-			if (strncmp (iface, iface_out_, strlen (iface)) == 0) {
-				sprintf (
-				                cmd,
-				                "/bin/iptables -D %s -o %s -j %s",
+			if (strncmp(iface, iface_out_, strlen(iface)) == 0) {
+				sprintf(cmd, "/bin/iptables -D %s -o %s -j %s",
 				                chain, iface_out_, target);
 				DEBUG_CMD(cmd);
 
-				system (cmd);
+				system(cmd);
 			}
-			destroy_args (args);
+			libconfig_destroy_args(args);
 		}
 	}
-	pclose (F);
+
+	pclose(F);
+
 	return 0;
 }
 
 /* #ifdef OPTION_IPSEC Starter deve fazer uso de #ifdef */
-int acl_copy_iface_acls (char *src, char *trg) /* starter/interfaces.c */
+int libconfig_acl_copy_iface_acls(char *src, char *trg) /* starter/interfaces.c */
 {
 	FILE *F;
 	char buf[256];
@@ -875,147 +916,176 @@ int acl_copy_iface_acls (char *src, char *trg) /* starter/interfaces.c */
 	char *p, *iface_in_, *iface_out_, *target;
 	FILE *procfile;
 
-	procfile = fopen ("/proc/net/ip_tables_names", "r");
+	procfile = fopen("/proc/net/ip_tables_names", "r");
+
 	if (!procfile)
 		return 0;
-	fclose (procfile);
 
-	F = popen ("/bin/iptables -L -nv", "r");
+	fclose(procfile);
+
+	F = popen("/bin/iptables -L -nv", "r");
 
 	if (!F) {
-		fprintf (stderr, "%% ACL subsystem not found\n");
+		fprintf(stderr, "%% ACL subsystem not found\n");
 		return -1;
 	}
 
 	DEBUG_CMD("copy_iface_acls\n");
 
 	chain[0] = 0;
-	while (!feof (F)) {
+	while (!feof(F)) {
 		buf[0] = 0;
-		fgets (buf, 255, F);
+		fgets(buf, 255, F);
 		buf[255] = 0;
-		striplf (buf);
-		if (strncmp (buf, "Chain ", 6) == 0) {
-			p = strchr (buf + 6, ' ');
+		libconfig_str_striplf(buf);
+		if (strncmp(buf, "Chain ", 6) == 0) {
+			p = strchr(buf + 6, ' ');
+
 			if (p) {
 				*p = 0;
-				strncpy (chain, buf + 6, 16);
+				strncpy(chain, buf + 6, 16);
 				chain[15] = 0;
 			}
-		} else if ((strncmp (buf, " pkts", 5) != 0) && (strlen (buf)
-		                > 40)) {
+
+		} else if ((strncmp(buf, " pkts", 5) != 0)
+		                && (strlen(buf) > 40)) {
 			arglist *args;
 
 			p = buf;
 			while ((*p) && (*p == ' '))
 				p++;
-			args = make_args (p);
+
+			args = libconfig_make_args(p);
 			if (args->argc < 7) {
-				destroy_args (args);
+				libconfig_destroy_args(args);
 				continue;
 			}
+
 			iface_in_ = args->argv[5];
 			iface_out_ = args->argv[6];
 			target = args->argv[2];
 
-			if (strncmp (src, iface_in_, strlen (src)) == 0) {
-				sprintf (
-				                cmd,
-				                "/bin/iptables -A %s -i %s -j %s",
+			if (strncmp(src, iface_in_, strlen(src)) == 0) {
+				sprintf(cmd, "/bin/iptables -A %s -i %s -j %s",
 				                chain, trg, target);
 
 				DEBUG_CMD(cmd);
 
-				system (cmd);
+				system(cmd);
 			}
-			if (strncmp (src, iface_out_, strlen (src)) == 0) {
-				sprintf (
-				                cmd,
-				                "/bin/iptables -A %s -o %s -j %s",
+
+			if (strncmp(src, iface_out_, strlen(src)) == 0) {
+				sprintf(cmd, "/bin/iptables -A %s -o %s -j %s",
 				                chain, trg, target);
 
 				DEBUG_CMD(cmd);
 
-				system (cmd);
+				system(cmd);
 			}
 
-			destroy_args (args);
+			libconfig_destroy_args(args);
 		}
 	}
-	pclose (F);
+
+	pclose(F);
+
 	return 0;
 }
 
 #ifdef OPTION_IPSEC
-int acl_interface_ipsec(int add_del, int chain, char *dev, char *listno)
+int libconfig_acl_interface_ipsec(int add_del,
+                                  int chain,
+                                  char *dev,
+                                  char *listno)
 {
 	int i;
 	char filename[32], ipsec[16], iface[16], buf[256];
 	FILE *f;
 
-	for (i=0; i < N_IPSEC_IF; i++)
-	{
+	for (i = 0; i < N_IPSEC_IF; i++) {
 		sprintf(ipsec, "ipsec%d", i);
 		strcpy(filename, "/var/run/");
 		strcat(filename, ipsec);
-		if ((f=fopen(filename, "r")) != NULL)
-		{
+		if ((f = fopen(filename, "r")) != NULL) {
 			fgets(iface, 16, f);
 			fclose(f);
-			striplf(iface);
+			libconfig_str_striplf(iface);
 			if (strcmp(iface, dev) == 0) /* found ipsec attach to dev */
 			{
-				if (add_del)
-				{
-					if (chain == chain_in)
-					{
-						sprintf(buf, "/bin/iptables -A INPUT -i %s -j %s", ipsec, listno);
+				if (add_del) {
+					if (chain == chain_in) {
+						sprintf(buf,
+							"/bin/iptables -A INPUT -i %s -j %s",
+							ipsec, listno);
+
 						DEBUG_CMD(buf);
 						system(buf);
 
-						sprintf(buf, "/bin/iptables -A FORWARD -i %s -j %s", ipsec, listno);
+						sprintf(buf,
+						        "/bin/iptables -A FORWARD -i %s -j %s",
+						        ipsec, listno);
+
 						DEBUG_CMD(buf);
 						system(buf);
-					}
-					else
-					{
-						sprintf(buf, "/bin/iptables -A OUTPUT -o %s -j %s", ipsec, listno);
+					} else {
+						sprintf(buf,
+							"/bin/iptables -A OUTPUT -o %s -j %s",
+							ipsec, listno);
+
 						DEBUG_CMD(buf);
 						system(buf);
 
-						sprintf(buf, "/bin/iptables -A FORWARD -o %s -j %s", ipsec, listno);
+						sprintf(buf,
+						        "/bin/iptables -A FORWARD -o %s -j %s",
+						        ipsec, listno);
+
 						DEBUG_CMD(buf);
 						system(buf);
 					}
-				}
-				else
-				{
-					if ((chain == chain_in) || (chain == chain_both))
-					{
-						if (acl_matched_exists(listno, ipsec, 0, "INPUT"))
-						{
-							snprintf(buf, 256, "/bin/iptables -D INPUT -i %s -j %s", ipsec, listno);
+				} else {
+					if ((chain == chain_in) || (chain == chain_both)) {
+						if (libconfig_acl_matched_exists(listno, ipsec, 0, "INPUT")) {
+							snprintf(buf,
+								256,
+								"/bin/iptables -D INPUT -i %s -j %s",
+								ipsec,
+								listno);
+
 							DEBUG_CMD(buf);
 							system(buf);
 						}
-						if (acl_matched_exists(listno, ipsec, 0, "FORWARD"))
-						{
-							snprintf(buf, 256, "/bin/iptables -D FORWARD -i %s -j %s", ipsec, listno);
+
+						if (libconfig_acl_matched_exists(listno, ipsec, 0, "FORWARD")) {
+							snprintf(buf,
+								256,
+								"/bin/iptables -D FORWARD -i %s -j %s",
+								ipsec,
+								listno);
+
 							DEBUG_CMD(buf);
 							system(buf);
 						}
 					}
-					if ((chain == chain_out) || (chain == chain_both))
-					{
-						if (acl_matched_exists(listno, 0, ipsec, "OUTPUT"))
-						{
-							snprintf(buf, 256, "/bin/iptables -D OUTPUT -o %s -j %s", ipsec, listno);
+					if ((chain == chain_out) || (chain
+					                == chain_both)) {
+						if (libconfig_acl_matched_exists(listno, 0, ipsec, "OUTPUT")) {
+							snprintf(buf,
+								256,
+								"/bin/iptables -D OUTPUT -o %s -j %s",
+								ipsec,
+								listno);
+
 							DEBUG_CMD(buf);
 							system(buf);
 						}
-						if (acl_matched_exists(listno, 0, ipsec, "FORWARD"))
-						{
-							snprintf(buf, 256, "/bin/iptables -D FORWARD -o %s -j %s", ipsec, listno);
+
+						if (libconfig_acl_matched_exists(listno, 0, ipsec, "FORWARD")) {
+							snprintf(buf,
+								256,
+								"/bin/iptables -D FORWARD -o %s -j %s",
+								ipsec,
+								listno);
+
 							DEBUG_CMD(buf);
 							system(buf);
 						}
@@ -1030,10 +1100,10 @@ int acl_interface_ipsec(int add_del, int chain, char *dev, char *listno)
 }
 #endif
 
-int delete_module (const char *name); /* libbb ? */
+int delete_module(const char *name); /* libbb ? */
 
-void acl_cleanup_modules (void)
+void libconfig_acl_cleanup_modules(void)
 {
-	delete_module (NULL); /* clean unused modules! */
+	delete_module(NULL); /* clean unused modules! */
 }
 

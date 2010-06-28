@@ -1,4 +1,12 @@
-#include <stdio.h>
+/*
+ * snmp.h
+ *
+ *  Created on: Jun 24, 2010
+ */
+
+#ifndef SNMP_H_
+#define SNMP_H_
+
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/session_api.h>
 #include <net-snmp/library/system.h>
@@ -56,71 +64,85 @@ struct trap_data_obj {
 	char *value;
 };
 
-int snmp_get_contact(char *buffer, int max_len);
-int snmp_get_location(char *buffer, int max_len);
-int snmp_set_contact(char *contact);
-int snmp_set_location(char *location);
-int snmp_reload_config(void);
-int snmp_is_running(void);
-int snmp_start(void);
-int snmp_stop(void);
-int snmp_set_community(const char *community_name, int add_del, int ro);
-int snmp_dump_communities(FILE *out);
-int snmp_dump_versions(FILE *out);
-int snmp_add_trapsink(char *addr, char *community);
-int snmp_del_trapsink(char *addr);
-int snmp_get_trapsinks(char ***sinks);
+int libconfig_snmp_get_contact(char *buffer, int max_len);
+int libconfig_snmp_get_location(char *buffer, int max_len);
+int libconfig_snmp_set_contact(char *contact);
+int libconfig_snmp_set_location(char *location);
+int libconfig_snmp_reload_config(void);
+int libconfig_snmp_is_running(void);
+int libconfig_snmp_start(void);
+int libconfig_snmp_stop(void);
+int libconfig_snmp_set_community(const char *community_name,
+                                 int add_del,
+                                 int ro);
+int libconfig_snmp_dump_communities(FILE *out);
+int libconfig_snmp_dump_versions(FILE *out);
+int libconfig_snmp_add_trapsink(char *addr, char *community);
+int libconfig_snmp_del_trapsink(char *addr);
+int libconfig_snmp_get_trapsinks(char ***sinks);
 
-int itf_should_sendtrap(char *itf);
-int do_rmon_event_log(int index, char *description);
-int do_rmon_add_event(int num,
-                      int log,
-                      char *community,
-                      int status,
-                      char *descr,
-                      char *owner);
-int do_rmon_add_alarm(int num,
-                      char *var_oid,
-                      oid *name,
-                      size_t namelen,
-                      int interval,
-                      int var_type,
-                      int rising_th,
-                      int rising_event,
-                      int falling_th,
-                      int falling_event,
-                      int status,
-                      char *owner);
-int do_remove_rmon_event(char *index);
-int do_remove_rmon_alarm(char *index);
-int do_rmon_event_show(char *index);
-int do_rmon_alarm_show(char *index);
-int send_rmond_signal(int sig);
-int do_rmon_events_clear(void);
-int create_pdu_data(struct trap_data_obj **data_p);
-int add_pdu_data_entry(struct trap_data_obj **data_p,
-                       char *oid_str,
-                       int type,
-                       char *value);
-int destroy_pdu_data(struct trap_data_obj **data_p);
-int sendtrap(char *snmp_trap_version,
-             char *community_rcv,
-             char *trap_obj_oid,
-             struct trap_data_obj *data);
-int get_access_rmon_config(struct rmon_config **shm_rmon_p);
-int loose_access_rmon_config(struct rmon_config **shm_rmon_p);
-int add_snmp_user(char *user,
-                  int rw,
-                  char *authpriv,
-                  char *authproto,
-                  char *privproto,
-                  char *authpasswd,
-                  char *privpasswd);
-int remove_snmp_user(char *user);
-unsigned int list_snmp_users(char ***store);
-void load_prepare_snmp_users(void);
-void start_default_snmp(void);
-void dev_add_snmptrap(char *itf);
-void dev_del_snmptrap(char *itf);
+int libconfig_snmp_itf_should_sendtrap(char *itf);
 
+int libconfig_snmp_rmon_event_log(int index, char *description);
 
+int libconfig_snmp_rmon_add_event(int num,
+                                  int log,
+                                  char *community,
+                                  int status,
+                                  char *descr,
+                                  char *owner);
+
+int libconfig_snmp_rmon_add_alarm(int num,
+                                  char *var_oid,
+                                  oid *name,
+                                  size_t namelen,
+                                  int interval,
+                                  int var_type,
+                                  int rising_th,
+                                  int rising_event,
+                                  int falling_th,
+                                  int falling_event,
+                                  int status,
+                                  char *owner);
+
+int libconfig_snmp_rmon_remove_event(char *index);
+int libconfig_snmp_rmon_remove_alarm(char *index);
+int libconfig_snmp_rmon_show_event(char *index);
+int libconfig_snmp_rmon_show_alarm(char *index);
+int libconfig_snmp_rmon_send_signal(int sig);
+int libconfig_snmp_rmon_clear_events(void);
+int libconfig_snmp_create_pdu_data(struct trap_data_obj **data_p);
+
+int libconfig_snmp_add_pdu_data_entry(struct trap_data_obj **data_p,
+                                      char *oid_str,
+                                      int type,
+                                      char *value);
+
+int libconfig_snmp_destroy_pdu_data(struct trap_data_obj **data_p);
+
+int libconfig_snmp_sendtrap(char *snmp_trap_version,
+                            char *community_rcv,
+                            char *trap_obj_oid,
+                            struct trap_data_obj *data);
+
+int libconfig_snmp_rmon_get_access_cfg(struct rmon_config **shm_rmon_p);
+
+int libconfig_snmp_rmon_free_access_cfg(struct rmon_config **shm_rmon_p);
+
+int libconfig_snmp_add_user(char *user,
+                            int rw,
+                            char *authpriv,
+                            char *authproto,
+                            char *privproto,
+                            char *authpasswd,
+                            char *privpasswd);
+
+int libconfig_snmp_remove_user(char *user);
+
+unsigned int libconfig_snmp_list_users(char ***store);
+void libconfig_snmp_load_prepare_users(void);
+void libconfig_snmp_start_default(void);
+void libconfig_snmp_add_dev_trap(char *itf);
+void libconfig_snmp_del_dev_trap(char *itf);
+
+#endif /* SNMP_H_ */

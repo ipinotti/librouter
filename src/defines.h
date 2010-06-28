@@ -1,5 +1,11 @@
-#ifndef _DEFINES_H_
-#define _DEFINES_H_
+/*
+ * defines.h
+ *
+ *  Created on: Jun 23, 2010
+ */
+
+#ifndef DEFINES_H_
+#define DEFINES_H_
 
 #define ETHERNETDEV "ethernet"
 #define AUXDEV "aux"
@@ -207,5 +213,4 @@ enum {
 	MODEM_MGNT_TRANSPARENT
 };
 
-#endif
-
+#endif /* DEFINES_H_ */

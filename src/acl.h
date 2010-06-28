@@ -44,20 +44,26 @@ struct acl_config {
 
 #define trimcolumn(x) tmp=strchr(x, ' '); if (tmp != NULL) *tmp=0;
 
-void acl_create_new(char *);
-void acl_apply(struct acl_config *);
-int acl_exists(char *);
-int acl_matched_exists(char *acl, char *iface_in, char *iface_out, char *chain);
-int lconfig_acl_get_iface_rules (char *iface, char *in_acl, char *out_acl);
-int acl_get_refcount(char *acl);
-int acl_clean_iface_acls(char *iface);
-int acl_copy_iface_acls(char *src, char *trg);
-int acl_interface_ipsec(int add_del, int chain, char *dev, char *listno);
-void acl_cleanup_modules(void);
-void acl_set_ports(const char *ports, char *str);
-void acl_print_flags(FILE *out, char *flags);
-void lconfig_acl_dump(char *xacl, FILE *F, int conf_format);
-void lconfig_acl_dump_policy(FILE *F);
+void libconfig_acl_create_new(char *);
+void libconfig_acl_apply(struct acl_config *);
+int libconfig_acl_exists(char *);
+int libconfig_acl_matched_exists(char *acl,
+                                 char *iface_in,
+                                 char *iface_out,
+                                 char *chain);
+int libconfig_acl_get_iface_rules(char *iface, char *in_acl, char *out_acl);
+int libconfig_acl_get_refcount(char *acl);
+int libconfig_acl_clean_iface_acls(char *iface);
+int libconfig_acl_copy_iface_acls(char *src, char *trg);
+int libconfig_acl_interface_ipsec(int add_del,
+                                  int chain,
+                                  char *dev,
+                                  char *listno);
+void libconfig_acl_cleanup_modules(void);
+void libconfig_acl_set_ports(const char *ports, char *str);
+void libconfig_acl_print_flags(FILE *out, char *flags);
+void libconfig_acl_dump(char *xacl, FILE *F, int conf_format);
+void libconfig_acl_dump_policy(FILE *F);
 
 #endif
 

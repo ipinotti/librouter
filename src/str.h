@@ -1,12 +1,25 @@
-#ifndef _STR_H
-#define _STR_H
+/*
+ * str.h
+ *
+ *  Created on: Jun 23, 2010
+ */
 
-char *find_substr(char *buf, char *key);
-int replace_string_in_file_nl(char *filename, char *key, char *value);
-int find_string_in_file_nl(char *filename, char *key, char *buffer, int len);
-void striplf(char *string);
-int is_empty(char *string);
-int replace_exact_string(char *filename, char *key, char *value);
-unsigned int readPassword(int echo_on, char *store, unsigned int max_len);
+#ifndef STR_H_
+#define STR_H_
 
-#endif
+char *libconfig_str_find_substr(char *buf, char *key);
+int libconfig_str_replace_string_in_file(char *filename,
+                                         char *key,
+                                         char *value);
+int libconfig_str_find_string_in_file(char *filename,
+                                      char *key,
+                                      char *buffer,
+                                      int len);
+void libconfig_str_striplf(char *string);
+int libconfig_str_is_empty(char *string);
+int libconfig_str_replace_exact_string(char *filename, char *key, char *value);
+unsigned int libconfig_str_read_password(int echo_on,
+                                         char *store,
+                                         unsigned int max_len);
+
+#endif /* STR_H_ */

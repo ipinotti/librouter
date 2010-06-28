@@ -70,7 +70,7 @@ int set_timezone(char *name, int hours, int mins)
 	fd = open(TZFILE, O_CREAT|O_WRONLY);
 	if (fd<0)
 	{
-		pr_error(1, "Can't open %s", TZFILE);
+		libconfig_pr_error(1, "Can't open %s", TZFILE);
 		return (-1);
 	}
 
@@ -296,7 +296,7 @@ int set_date(int day, int mon, int year, int hour, int min, int sec)
 		return -1;
 	if (err < 0)
 	{
-		pr_error(1, "cannot set date");
+		libconfig_pr_error(1, "cannot set date");
 	}
 	else
 	{	

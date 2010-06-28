@@ -1,9 +1,16 @@
+/*
+ * debug.c
+ *
+ *  Created on: Jun 23, 2010
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <syslog.h>
+
 #include "options.h"
 #include "defines.h"
 #include "dhcp.h"
@@ -55,96 +62,107 @@ static debuginfo DEBUG[] = { /* !!! Check cish_defines.h */
 	{NULL, NULL, NULL, 0}
 };
 
-static int find_debug(const char *name)
+static int _libconfig_find_debug(const char *name)
 {
 	int i;
 
-	for (i=0; DEBUG[i].name; i++)
-	{
-		if (!strncasecmp(name, DEBUG[i].name, strlen(DEBUG[i].name))) return i;
+	for (i = 0; DEBUG[i].name; i++) {
+		if (!strncasecmp(name, DEBUG[i].name, strlen(DEBUG[i].name)))
+			return i;
 	}
 	return -1;
 }
 
-char *find_debug_token(char *logline, char *name, int enabled)
+char *libconfig_debug_find_token(char *logline, char *name, int enabled)
 {
 	char *p;
 	debuginfo *dk;
 
-	for( dk=DEBUG; dk->name; dk++ ) {
-		if( (enabled || dk->enabled) && (strncmp(logline, dk->token, strlen(dk->token)) == 0) ) {
-			p = strchr(logline+strlen(dk->token), ' ');
-			if( p == NULL )
+	for (dk = DEBUG; dk->name; dk++) {
+		if ((enabled || dk->enabled) &&
+			(strncmp(logline, dk->token, strlen(dk->token)) == 0)) {
+
+			p = strchr(logline + strlen(dk->token), ' ');
+
+			if (p == NULL)
 				return NULL;
+
 			strncpy(name, dk->name, 14); /* renamed token! */
 			strcat(name, ": ");
-			return (p+1); /* log info! */
+
+			return (p + 1); /* log info! */
 		}
 	}
 	return NULL;
 }
 
-int set_debug_token(int on_off, const char *token)
+int libconfig_debug_set_token(int on_off, const char *token)
 {
 	int i, j;
 
-	i=find_debug(token);
-	if (i >= 0)
-	{
-		DEBUG[i].enabled=on_off;
+	i = _libconfig_find_debug(token);
+
+	if (i >= 0) {
+		DEBUG[i].enabled = on_off;
 #if 0
-		cish_cfg->debug[i]=on_off; /* debug persistent */
+		/* debug persistent */
+		cish_cfg->debug[i]=on_off;
 #endif
-		printf("  %s debbuging is %s\n", DEBUG[i].description, on_off ? "on" : "off");
+		printf("  %s debbuging is %s\n", DEBUG[i].description,
+		                on_off ? "on" : "off");
 	}
-	if (!on_off)
-	{
-		for (j=0; DEBUG[j].name; j++)
-		{ if (DEBUG[j].enabled) return -1; } /* Verifica se ainda ha algum debugging ligado. Se sim, mantem... */
+
+	if (!on_off) {
+
+		/* Verifica se ainda ha algum debugging ligado. Se sim, mantem... */
+		for (j = 0; DEBUG[j].name; j++) {
+			if (DEBUG[j].enabled)
+				return -1;
+		}
 	}
 	return i;
 }
 
-void set_debug_all(int on_off)
+void libconfig_debug_set_all(int on_off)
 {
 	int i;
 
-	for (i=0; DEBUG[i].name; i++) {
-		DEBUG[i].enabled=on_off;
+	for (i = 0; DEBUG[i].name; i++) {
+		DEBUG[i].enabled = on_off;
 #if 0
 		cish_cfg->debug[i]=on_off; /* debug persistent */
 #endif
 	}
-	printf ("  All debugging %s\n", on_off ? "enabled" : "disabled");
+	printf("  All debugging %s\n", on_off ? "enabled" : "disabled");
 }
 
-void dump_debug(void)
+void libconfig_debug_dump(void)
 {
 	int i;
 
-	for (i=0; DEBUG[i].name; i++)
-	{
-		if (DEBUG[i].enabled) printf("  %s debugging is on\n", DEBUG[i].description);
+	for (i = 0; DEBUG[i].name; i++) {
+		if (DEBUG[i].enabled)
+			printf("  %s debugging is on\n", DEBUG[i].description);
 	}
 }
 
-int get_debug_state(const char *token)
+int libconfig_debug_get_state(const char *token)
 {
 	int i;
 
-	i=find_debug(token);
+	i = _libconfig_find_debug(token);
 	if (i >= 0)
 		return DEBUG[i].enabled;
 	return i;
 }
 
-void recover_debug_all(void)
+void libconfig_debug_recover_all(void)
 {
 #if 0
 	int i;
 
 	for (i=0; DEBUG[i].name; i++)
-		DEBUG[i].enabled=cish_cfg->debug[i]; /* debug persistent */
+	DEBUG[i].enabled=cish_cfg->debug[i]; /* debug persistent */
 #endif
 }
 

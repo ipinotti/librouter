@@ -1,17 +1,32 @@
-#include <linux/config.h>
-#include "typedefs.h"
+/*
+ * ppp.h
+ *
+ *  Created on: Jun 24, 2010
+ */
 
-#define PPP_CFG_FILE "/var/run/serial%d.config" /* 0 1 2 */
-#define L2TP_PPP_CFG_FILE "/var/run/l2tp.%s.config" /* l2tpd */
+#ifndef PPP_H_
+#define PPP_H_
+
+#include <linux/config.h>
+
+/* 0 1 2 */
+#define PPP_CFG_FILE "/var/run/serial%d.config"
+/* l2tpd */
+#define L2TP_PPP_CFG_FILE "/var/run/l2tp.%s.config"
 
 #define PPP_CHAT_DIR "/var/run/chat/"
 #define PPP_CHAT_FILE PPP_CHAT_DIR"%s"
 
-#define PPP_UP_FILE_AUX "/var/run/ppp/aux%d.tty" /* ppp_get_state; ppp_get_pppdevice; */
-#define PPP_UP_FILE_SERIAL "/var/run/ppp/serial%d.tty" /* ppp_get_state; ppp_get_pppdevice; */
+/* ppp_get_state; ppp_get_pppdevice; */
+#define PPP_UP_FILE_AUX "/var/run/ppp/aux%d.tty"
 
-#define PPP_PPPD_UP_FILE_AUX "/var/run/aux%d.pid" /* ppp_is_pppd_running; */
-#define PPP_PPPD_UP_FILE_SERIAL "/var/run/serial%d.pid" /* ppp_is_pppd_running; */
+/* ppp_get_state; ppp_get_pppdevice; */
+#define PPP_UP_FILE_SERIAL "/var/run/ppp/serial%d.tty"
+
+/* ppp_is_pppd_running; */
+#define PPP_PPPD_UP_FILE_AUX "/var/run/aux%d.pid"
+/* ppp_is_pppd_running; */
+#define PPP_PPPD_UP_FILE_SERIAL "/var/run/serial%d.pid"
 
 #if defined(CONFIG_DEVFS_FS)
 #define MGETTY_PID_AUX "/var/run/mgetty.pid.tts_aux%d"
@@ -38,22 +53,22 @@
 #define MAX_RADIUS_AUTH_KEY 256
 #define MAX_RADIUS_SERVERS 256
 
-enum
-{
-	FLOW_CONTROL_NONE=0,
-	FLOW_CONTROL_RTSCTS,
-	FLOW_CONTROL_XONXOFF
+enum {
+	FLOW_CONTROL_NONE = 0, FLOW_CONTROL_RTSCTS, FLOW_CONTROL_XONXOFF
 };
 
-typedef struct
-{
-	char osdevice[16]; /* tts/wanX; tts/auxX */
+typedef struct {
+	/* tts/wanX; tts/auxX */
+	char osdevice[16];
 	char cishdevice[16];
 	int unit;
-	char auth_user[MAX_PPP_USER], auth_pass[MAX_PPP_PASS];
+	char auth_user[MAX_PPP_USER];
+	char auth_pass[MAX_PPP_PASS];
 	char chat_script[MAX_CHAT_SCRIPT];
-	char ip_addr[16], ip_mask[16], ip_peer_addr[16];
-	u32  ipx_network;
+	char ip_addr[16];
+	char ip_mask[16];
+	char ip_peer_addr[16];
+	unsigned int ipx_network;
 	char ipx_node[6];
 	int ipx_enabled;
 	int default_route;
@@ -68,12 +83,16 @@ typedef struct
 	int usepeerdns;
 	int echo_interval;
 	int echo_failure;
-	int backup; /* 0:disable 1:aux0 2:aux1 */
+	/* 0:disable 1:aux0 2:aux1 */
+	int backup;
 	int activate_delay;
 	int deactivate_delay;
 	int server_flags;
-	char server_auth_user[MAX_PPP_USER], server_auth_pass[MAX_PPP_PASS];
-	char server_ip_addr[16], server_ip_mask[16], server_ip_peer_addr[16];
+	char server_auth_user[MAX_PPP_USER];
+	char server_auth_pass[MAX_PPP_PASS];
+	char server_ip_addr[16];
+	char server_ip_mask[16];
+	char server_ip_peer_addr[16];
 	char radius_authkey[MAX_RADIUS_AUTH_KEY];
 	int radius_retries;
 	int radius_sameserver;
@@ -84,35 +103,40 @@ typedef struct
 	int tacacs_sameserver;
 	char tacacs_servers[MAX_RADIUS_SERVERS];
 	int tacacs_trynextonreject;
-	int ip_unnumbered; /* Flag indicadora do IP UNNUMBERED (interface_major) -1 to disable */
+	/* Flag indicadora do IP UNNUMBERED (interface_major) -1 to disable */
+	int ip_unnumbered;
 	char peer[16];
 	int peer_mask;
-	int multilink; /* Enable multilink (mp) option */
+	/* Enable multilink (mp) option */
+	int multilink;
 	int debug;
 	char apn[MAX_PPP_APN];
 #ifdef CONFIG_HDLC_SPPP_LFI
-	int fragment_size;
-	int priomarks[CONFIG_MAX_LFI_PRIORITY_MARKS];
+int fragment_size;
+int priomarks[CONFIG_MAX_LFI_PRIORITY_MARKS];
 #endif
 } ppp_config;
 
-int notify_systtyd(void);
-int notify_mgetty(int serial_no);
-int ppp_get_config(int serial_no, ppp_config *cfg);
-int ppp_set_config(int serial_no, ppp_config *cfg);
-int ppp_has_config(int serial_no);
-int ppp_add_chat(char *chat_name, char *chat_str);
-int ppp_del_chat(char *chat_name);
-char *ppp_get_chat(char *chat_name);
-int ppp_chat_exists(char *chat_name);
-void ppp_set_defaults(int serial_no, ppp_config *cfg);
-int ppp_get_state(int serial_no);
-int ppp_is_pppd_running(int serial_no);
-char *ppp_get_pppdevice(int serial_no);
-void ppp_pppd_arglist(char **arglist, ppp_config *cfg, int server);
+int libconfig_ppp_notify_systtyd(void);
+int libconfig_ppp_notify_mgetty(int serial_no);
+int libconfig_ppp_get_config(int serial_no, ppp_config *cfg);
+int libconfig_ppp_set_config(int serial_no, ppp_config *cfg);
+int libconfig_ppp_has_config(int serial_no);
+int libconfig_ppp_add_chat(char *chat_name, char *chat_str);
+int libconfig_ppp_del_chat(char *chat_name);
+char *libconfig_ppp_get_chat(char *chat_name);
+int libconfig_ppp_chat_exists(char *chat_name);
+void libconfig_ppp_set_defaults(int serial_no, ppp_config *cfg);
+int libconfig_ppp_get_state(int serial_no);
+int libconfig_ppp_is_pppd_running(int serial_no);
+char *libconfig_ppp_get_device(int serial_no);
+void libconfig_ppp_pppd_arglist(char **arglist, ppp_config *cfg, int server);
 
-int l2tp_ppp_get_config(char *name, ppp_config *cfg);
-int l2tp_ppp_has_config(char *name);
-int l2tp_ppp_set_config(char *name, ppp_config *cfg);
-void l2tp_ppp_set_defaults(char *name, ppp_config *cfg);
+int libconfig_ppp_l2tp_get_config(char *name, ppp_config *cfg);
+int libconfig_ppp_l2tp_has_config(char *name);
+int libconfig_ppp_l2tp_set_config(char *name, ppp_config *cfg);
+void libconfig_ppp_l2tp_set_defaults(char *name, ppp_config *cfg);
 
+int libconfig_ppp_reload_backupd(void);
+
+#endif /* PPP_H_ */

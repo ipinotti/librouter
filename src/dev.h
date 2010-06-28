@@ -1,40 +1,48 @@
-#ifndef _DEV_H
-#define _DEV_H
-#include "defines.h"
-#include "typedefs.h"
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#include <linux/if.h>
-#include <linux/netdevice.h>
+/*
+ * dev.h
+ *
+ *  Created on: Jun 23, 2010
+ */
+
+#ifndef DEV_H_
+#define DEV_H_
 
 #define DESCRIPTION_DIR "/var/run/description/"
 #define DESCRIPTION_FILE DESCRIPTION_DIR"%s"
 
-int dev_get_flags(char *dev, __u32 *flags);
-int dev_set_qlen(char *dev, int qlen);
-int dev_get_qlen(char *dev);
-int dev_set_mtu(char *dev, int mtu);
-int dev_get_mtu(char *dev);
-int dev_set_link_down(char *dev);
-int dev_set_link_up(char *dev);
-int dev_get_link(char *dev);
-int dev_get_hwaddr(char *dev, unsigned char *hwaddr);
-int dev_change_name(char *ifname, char *new_ifname);
-int dev_exists(char *dev_name);
-char *dev_get_description(char *dev);
-int dev_add_description(char *dev, char *description);
-int dev_del_description(char *dev);
-int clear_interface_counters(char *dev);
-int arp_del(char *host);
-int arp_add(char *host, char *mac);
+int libconfig_dev_get_flags(char *dev, unsigned int *flags);
+int libconfig_dev_set_qlen(char *dev, int qlen);
+int libconfig_dev_get_qlen(char *dev);
+int libconfig_dev_set_mtu(char *dev, int mtu);
+int libconfig_dev_get_mtu(char *dev);
+int libconfig_dev_set_link_down(char *dev);
+int libconfig_dev_set_link_up(char *dev);
+int libconfig_dev_get_link(char *dev);
+int libconfig_dev_get_hwaddr(char *dev, unsigned char *hwaddr);
+int libconfig_dev_change_name(char *ifname, char *new_ifname);
+int libconfig_dev_exists(char *dev_name);
+char *libconfig_dev_get_description(char *dev);
+int libconfig_dev_add_description(char *dev, char *description);
+int libconfig_dev_del_description(char *dev);
+int libconfig_clear_interface_counters(char *dev);
+int libconfig_arp_del(char *host);
+int libconfig_arp_add(char *host, char *mac);
 int notify_driver_about_shutdown(char *dev);
 
-int get_interface_buffers_use(char *, char *, char *, unsigned int);
-
-int dev_set_rxring(char *, int);
-int dev_get_rxring(char *);
-int dev_set_txring(char *, int);
-int dev_get_txring(char *);
-int dev_set_weight(char *, int);
-int dev_get_weight(char *);
+#ifdef CONFIG_BUFFERS_USE_STATS
+int libconfig_dev_interface_get_buffers_use(char *dev,
+                                            char *tx,
+                                            char *rx,
+                                            unsigned int len);
 #endif
+
+#ifdef CONFIG_DEVELOPMENT
+int libconfig_dev_set_rxring(char *dev, int size);
+int libconfig_dev_get_rxring(char *dev);
+int libconfig_dev_set_txring(char *dev, int size);
+int libconfig_dev_get_txring(char *dev);
+int libconfig_dev_set_weight(char *dev, int size);
+int libconfig_dev_get_weight(char *dev);
+#endif
+
+#endif /* DEV_H_ */

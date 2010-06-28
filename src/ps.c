@@ -1,3 +1,9 @@
+/*
+ * ps.c
+ *
+ *  Created on: Jun 23, 2010
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -67,17 +73,17 @@ static struct {
                 { NULL, NULL }
 };
 
-static char *nexttoksep(char **strp, char *sep)
+static char *_nexttoksep(char **strp, char *sep)
 {
 	char *p = strsep(strp, sep);
 	return (p == 0) ? "" : p;
 }
-static char *nexttok(char **strp)
+static char *_nexttok(char **strp)
 {
-	return nexttoksep(strp, " ");
+	return _nexttoksep(strp, " ");
 }
 
-static int ps_line(struct process_t *ps)
+static int _ps_line(struct process_t *ps)
 {
 	int pid = ps->pid;
 	char statline[1024];
@@ -110,7 +116,6 @@ static int ps_line(struct process_t *ps)
 	}
 	cmdline[r] = 0;
 
-
 	fd = open(statline, O_RDONLY);
 	if (fd == 0)
 		return -1;
@@ -122,7 +127,7 @@ static int ps_line(struct process_t *ps)
 	statline[r] = 0;
 
 	ptr = statline;
-	nexttok(&ptr); // skip pid
+	_nexttok(&ptr); // skip pid
 	ptr++; // skip "("
 
 	name = ptr;
@@ -130,53 +135,53 @@ static int ps_line(struct process_t *ps)
 	*ptr++ = '\0'; // and null-terminate name.
 
 	ptr++; // skip " "
-	state = nexttok(&ptr);
-	ppid = atoi(nexttok(&ptr));
-	nexttok(&ptr); // pgrp
-	nexttok(&ptr); // sid
-	tty = atoi(nexttok(&ptr));
+	state = _nexttok(&ptr);
+	ppid = atoi(_nexttok(&ptr));
+	_nexttok(&ptr); // pgrp
+	_nexttok(&ptr); // sid
+	tty = atoi(_nexttok(&ptr));
 
-	nexttok(&ptr); // tpgid
-	nexttok(&ptr); // flags
-	nexttok(&ptr); // minflt
-	nexttok(&ptr); // cminflt
-	nexttok(&ptr); // majflt
-	nexttok(&ptr); // cmajflt
+	_nexttok(&ptr); // tpgid
+	_nexttok(&ptr); // flags
+	_nexttok(&ptr); // minflt
+	_nexttok(&ptr); // cminflt
+	_nexttok(&ptr); // majflt
+	_nexttok(&ptr); // cmajflt
 #if 1
-	utime = atoi(nexttok(&ptr));
-	stime = atoi(nexttok(&ptr));
+	utime = atoi(_nexttok(&ptr));
+	stime = atoi(_nexttok(&ptr));
 #else
-	nexttok(&ptr); // utime
-	nexttok(&ptr); // stime
+	_nexttok(&ptr); // utime
+	_nexttok(&ptr); // stime
 #endif
-	nexttok(&ptr); // cutime
-	nexttok(&ptr); // cstime
-	prio = atoi(nexttok(&ptr));
-	nice = atoi(nexttok(&ptr));
-	nexttok(&ptr); // threads
-	nexttok(&ptr); // itrealvalue
-	nexttok(&ptr); // starttime
-	vss = strtoul(nexttok(&ptr), 0, 10); // vsize
-	rss = strtoul(nexttok(&ptr), 0, 10); // rss
-	nexttok(&ptr); // rlim
-	nexttok(&ptr); // startcode
-	nexttok(&ptr); // endcode
-	nexttok(&ptr); // startstack
-	nexttok(&ptr); // kstkesp
-	eip = strtoul(nexttok(&ptr), 0, 10); // kstkeip
-	nexttok(&ptr); // signal
-	nexttok(&ptr); // blocked
-	nexttok(&ptr); // sigignore
-	nexttok(&ptr); // sigcatch
-	wchan = strtoul(nexttok(&ptr), 0, 10); // wchan
-	nexttok(&ptr); // nswap
-	nexttok(&ptr); // cnswap
-	nexttok(&ptr); // exit signal
-	nexttok(&ptr); // processor
-	rtprio = atoi(nexttok(&ptr)); // rt_priority
-	sched = atoi(nexttok(&ptr)); // scheduling policy
+	_nexttok(&ptr); // cutime
+	_nexttok(&ptr); // cstime
+	prio = atoi(_nexttok(&ptr));
+	nice = atoi(_nexttok(&ptr));
+	_nexttok(&ptr); // threads
+	_nexttok(&ptr); // itrealvalue
+	_nexttok(&ptr); // starttime
+	vss = strtoul(_nexttok(&ptr), 0, 10); // vsize
+	rss = strtoul(_nexttok(&ptr), 0, 10); // rss
+	_nexttok(&ptr); // rlim
+	_nexttok(&ptr); // startcode
+	_nexttok(&ptr); // endcode
+	_nexttok(&ptr); // startstack
+	_nexttok(&ptr); // kstkesp
+	eip = strtoul(_nexttok(&ptr), 0, 10); // kstkeip
+	_nexttok(&ptr); // signal
+	_nexttok(&ptr); // blocked
+	_nexttok(&ptr); // sigignore
+	_nexttok(&ptr); // sigcatch
+	wchan = strtoul(_nexttok(&ptr), 0, 10); // wchan
+	_nexttok(&ptr); // nswap
+	_nexttok(&ptr); // cnswap
+	_nexttok(&ptr); // exit signal
+	_nexttok(&ptr); // processor
+	rtprio = atoi(_nexttok(&ptr)); // rt_priority
+	sched = atoi(_nexttok(&ptr)); // scheduling policy
 
-	tty = atoi(nexttok(&ptr));
+	tty = atoi(_nexttok(&ptr));
 
 	pw = getpwuid(stats.st_uid);
 	if (pw == 0) {
@@ -185,7 +190,7 @@ static int ps_line(struct process_t *ps)
 		strcpy(user, pw->pw_name);
 	}
 
-	for (i=0;  proc_names[i].linux_name != NULL; i++) {
+	for (i = 0; proc_names[i].linux_name != NULL; i++) {
 		if (!strcmp(name, proc_names[i].linux_name)) {
 			found = 1;
 			break;
@@ -206,14 +211,14 @@ static int ps_line(struct process_t *ps)
 }
 
 /**
- * lconfig_get_ps_info
+ * libconfig_ps_get_info
  *
  * Search for running processes
  * lconfig_free_ps_info be called after usage
  *
  * @return linked list of running processes
  */
-struct process_t *lconfig_get_ps_info(void)
+struct process_t *libconfig_ps_get_info(void)
 {
 	DIR *d;
 	struct dirent *de;
@@ -243,7 +248,7 @@ struct process_t *lconfig_get_ps_info(void)
 
 			cur->pid = atoi(de->d_name);
 
-			ps_line(cur);
+			_ps_line(cur);
 		}
 	}
 	closedir(d);
@@ -258,7 +263,7 @@ struct process_t *lconfig_get_ps_info(void)
  *
  * @param ps
  */
-void lconfig_free_ps_info (struct process_t *ps)
+void libconfig_ps_free_info (struct process_t *ps)
 {
 	struct process_t *next;
 

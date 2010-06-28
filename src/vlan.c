@@ -24,75 +24,76 @@
 #include "error.h"
 #include "defines.h"
 
-int vlan_exists(int ethernet_no, int vid)
+int libconfig_vlan_exists(int ethernet_no, int vid)
 {
 	char ifname[IFNAMSIZ];
 
 	sprintf(ifname, "ethernet%d.%d", ethernet_no, vid);
-	return (dev_exists(ifname));
+	return (libconfig_dev_exists(ifname));
 }
 
-int vlan_vid(int ethernet_no, int vid, int add_del, int bridge)
-{
-	struct vlan_ioctl_args if_request;
-	int sock;
-
-	if ((vid < 2) || (vid > 4094))
-	{
-		pr_error(0, "vlan: invalid vid: %d", vid);
-		return (-1);
-	}
-	/* Create a channel to the NET kernel. */
-	if ((sock=socket(AF_INET, SOCK_STREAM, 0)) < 0)
-	{
-		pr_error(1, "vlan: socket");
-		return (-1);
-	}
-	if_request.u.VID=vid;
-	if (add_del)
-	{
-		sprintf(if_request.device1, "ethernet%d", ethernet_no);
-		if_request.cmd = ADD_VLAN_CMD;
-	}
-	else
-	{
-		sprintf(if_request.device1, "ethernet%d.%d", ethernet_no, vid);
-		if_request.cmd = DEL_VLAN_CMD;
-	}
-	if (ioctl(sock, SIOCSIFVLAN, &if_request) < 0)
-	{
-		pr_error(1, "vlan: unable to %s vlan", add_del ? "create" : "delete");
-		close(sock);
-		return (-1);
-	}
-	close(sock);
-	return 0;
-}
-
-
-#if 0
-/* Class of Service */
-int set_vlan_cos(int ethernet_no, int vid, int cos)
+int libconfig_vlan_vid(int ethernet_no, int vid, int add_del, int bridge)
 {
 	struct vlan_ioctl_args if_request;
 	int sock;
 
 	if ((vid < 2) || (vid > 4094)) {
-		pr_error(0, "vlan: invalid vid: %d", vid);
-		return (-1);
-	}
-	/* Create a channel to the NET kernel. */
-	if ((sock=socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-		pr_error(1, "vlan: socket");
+		libconfig_pr_error(0, "vlan: invalid vid: %d", vid);
 		return (-1);
 	}
 
-	if_request.u.cos=cos;
+	/* Create a channel to the NET kernel. */
+	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+		libconfig_pr_error(1, "vlan: socket");
+		return (-1);
+	}
+
+	if_request.u.VID = vid;
+
+	if (add_del) {
+		sprintf(if_request.device1, "ethernet%d", ethernet_no);
+		if_request.cmd = ADD_VLAN_CMD;
+	} else {
+		sprintf(if_request.device1, "ethernet%d.%d", ethernet_no, vid);
+		if_request.cmd = DEL_VLAN_CMD;
+	}
+
+	if (ioctl(sock, SIOCSIFVLAN, &if_request) < 0) {
+		libconfig_pr_error(1, "vlan: unable to %s vlan",
+		                add_del ? "create" : "delete");
+		close(sock);
+		return (-1);
+	}
+
+	close(sock);
+
+	return 0;
+}
+
+#if 0
+/* Class of Service */
+int libconfig_vlan_set_cos(int ethernet_no, int vid, int cos)
+{
+	struct vlan_ioctl_args if_request;
+	int sock;
+
+	if ((vid < 2) || (vid > 4094)) {
+		libconfig_pr_error(0, "vlan: invalid vid: %d", vid);
+		return (-1);
+	}
+
+	/* Create a channel to the NET kernel. */
+	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+		libconfig_pr_error(1, "vlan: socket");
+		return (-1);
+	}
+
+	if_request.u.cos = cos;
 	if_request.cmd = SET_VLAN_EGRESS_PRIO_MAP_CMD;
 	sprintf(if_request.device1, "ethernet%d.%d", ethernet_no, vid);
 
-	if (ioctl(sock, SIOCSIFVLAN, &if_request) < 0)	{
-		pr_error(1, "vlan: ioctl");
+	if (ioctl(sock, SIOCSIFVLAN, &if_request) < 0) {
+		libconfig_pr_error(1, "vlan: ioctl");
 		close(sock);
 		return (-1);
 	}
@@ -101,21 +102,23 @@ int set_vlan_cos(int ethernet_no, int vid, int cos)
 	return 0;
 }
 
-int get_vlan_cos(char *dev_name)
+int libconfig_vlan_get_cos(char *dev_name)
 {
 	struct vlan_ioctl_args if_request;
 	int sock;
 
 	/* Create a channel to the NET kernel. */
-	if ((sock=socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-		pr_error(1, "vlan: socket");
+	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+		libconfig_pr_error(1, "vlan: socket");
 		return (-1);
 	}
 
 	if_request.cmd = GET_VLAN_EGRESS_PRIO_MAP_CMD;
-	strncpy(if_request.device1, (char *)dev_name, sizeof(if_request.device1));
-	if (ioctl(sock, SIOCSIFVLAN, &if_request) < 0)	{
-		pr_error(1, "vlan: ioctl");
+	strncpy(if_request.device1, (char *) dev_name,
+	                sizeof(if_request.device1));
+
+	if (ioctl(sock, SIOCSIFVLAN, &if_request) < 0) {
+		libconfig_pr_error(1, "vlan: ioctl");
 		close(sock);
 		return (-1);
 	}

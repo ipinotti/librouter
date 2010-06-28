@@ -1,3 +1,9 @@
+/*
+ * ip.c
+ *
+ *  Created on: Jun 24, 2010
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -43,53 +49,53 @@
 int ip_addr_table_backup_shmid = 0; /* ip address backup base on shmid */
 struct ipaddr_table *ip_addr_table_backup = NULL; /* ip address backup base on shm */
 
-int create_ipaddr_shm (int flags) /* SHM_RDONLY */
+int libconfig_ip_create_shm(int flags) /* SHM_RDONLY */
 {
 	if (ip_addr_table_backup_shmid == 0) {
-		if ((ip_addr_table_backup_shmid = shmget (
+		if ((ip_addr_table_backup_shmid = shmget(
 								(key_t) IPADDR_SHM_KEY, sizeof(struct ipaddr)
 								* MAX_NUM_IPS, IPC_CREAT
 								| IPC_EXCL | 0600)) == -1) {
-			if ((ip_addr_table_backup_shmid = shmget (
+			if ((ip_addr_table_backup_shmid = shmget(
 									(key_t) IPADDR_SHM_KEY,
-									sizeof(struct ipaddr) * MAX_NUM_IPS,
-									0)) == -1)
+									sizeof(struct ipaddr) * MAX_NUM_IPS, 0))
+					== -1)
 			return -1;
-			else if ((ip_addr_table_backup = shmat (
+			else if ((ip_addr_table_backup = shmat(
 									ip_addr_table_backup_shmid, 0, flags))
 					== NULL)
 			return -1;
 		} else {
-			if ((ip_addr_table_backup = shmat (
+			if ((ip_addr_table_backup = shmat(
 									ip_addr_table_backup_shmid, 0, 0))
 					== NULL)
 			return -1;
-			memset (ip_addr_table_backup, 0,
-					sizeof(struct ipaddr) * MAX_NUM_IPS); /* initial setting! */
+			memset(ip_addr_table_backup, 0, sizeof(struct ipaddr)
+					* MAX_NUM_IPS); /* initial setting! */
 		}
 	}
 	return 0;
 }
 
-int detach_ipaddr_shm (void)
+int libconfig_ip_detach_shm(void)
 {
 	if (ip_addr_table_backup)
-	return shmdt (ip_addr_table_backup);
+	return shmdt(ip_addr_table_backup);
 	return 0;
 }
 
-int ipaddr_modify_shm (int add_del, struct ipaddr_table *data)
+int libconfig_ip_modify_shm(int add_del, struct ipaddr_table *data)
 {
 	int i;
 
 	if (ip_addr_table_backup == NULL) {
-		syslog (LOG_ERR, "Addresses data not loaded!");
+		syslog(LOG_ERR, "Addresses data not loaded!");
 		return -1;
 	}
 	for (i = 0; i < MAX_NUM_IPS; i++) {
 		if (ip_addr_table_backup[i].ifname[0] == 0)
 		break; /* free slot */
-		if (memcmp (&ip_addr_table_backup[i], data,
+		if (memcmp(&ip_addr_table_backup[i], data,
 						sizeof(struct ipaddr)) == 0)
 		break; /* same data! */
 	}
@@ -99,23 +105,23 @@ int ipaddr_modify_shm (int add_del, struct ipaddr_table *data)
 	ip_addr_table_backup[i] = *data;
 	else {
 		if (i < (MAX_NUM_IPS - 1)) /* shift over! */
-		memmove (&ip_addr_table_backup[i],
+		memmove(&ip_addr_table_backup[i],
 				&ip_addr_table_backup[i + 1],
 				sizeof(struct ipaddr) * (MAX_NUM_IPS
 						- i - 1));
-		memset (&ip_addr_table_backup[MAX_NUM_IPS - 1], 0,
+		memset(&ip_addr_table_backup[MAX_NUM_IPS - 1], 0,
 				sizeof(struct ipaddr));
 	}
 	return 0;
 }
 #endif
 
-static int link_name_to_index (char *ifname, struct link_table *link)
+static int _link_name_to_index(char *ifname, struct link_table *link)
 {
 	int i;
 
 	for (i = 0; i < MAX_NUM_LINKS; i++) {
-		if (strcmp (link[i].ifname, ifname) == 0)
+		if (strcmp(link[i].ifname, ifname) == 0)
 			return link[i].index;
 	}
 
@@ -123,7 +129,7 @@ static int link_name_to_index (char *ifname, struct link_table *link)
 }
 
 #if 0
-static unsigned int link_name_to_flags(char *ifname)
+static unsigned int _link_name_to_flags(char *ifname)
 {
 	int i;
 
@@ -136,9 +142,9 @@ static unsigned int link_name_to_flags(char *ifname)
 #endif
 
 /* add/del ip address with netlink */
-int ipaddr_modify (int add_del,
-                   struct ipaddr_table *data,
-                   struct intf_info *info)
+int libconfig_ip_modify_addr(int add_del,
+                  struct ipaddr_table *data,
+                  struct intf_info *info)
 {
 	struct rtnl_handle rth;
 	struct {
@@ -150,13 +156,13 @@ int ipaddr_modify (int add_del,
 	char *p, dev[16];
 
 #if 0 /* !!! */
-	fprintf(stderr, "ipaddr_modify %d %s\n", add_del, data->ifname);
+	fprintf(stderr, "libconfig_ip_modify_addr %d %s\n", add_del, data->ifname);
 #endif
 
 	/* Add or Remove */
 	cmd = add_del ? RTM_NEWADDR : RTM_DELADDR;
 
-	memset (&req, 0, sizeof(req));
+	memset(&req, 0, sizeof(req));
 	req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ifaddrmsg));
 	req.n.nlmsg_flags = NLM_F_REQUEST;
 	req.n.nlmsg_type = cmd;
@@ -164,18 +170,16 @@ int ipaddr_modify (int add_del,
 	req.ifa.ifa_prefixlen = data->bitlen;
 
 	/* local */
-	addattr_l (&req.n, sizeof(req), IFA_LOCAL, &data->local.s_addr, 4);
+	addattr_l(&req.n, sizeof(req), IFA_LOCAL, &data->local.s_addr, 4);
 
 	/* peer */
-	addattr_l (&req.n, sizeof(req), IFA_ADDRESS, &data->remote.s_addr, 4);
+	addattr_l(&req.n, sizeof(req), IFA_ADDRESS, &data->remote.s_addr, 4);
 
 	/* broadcast */
-	addattr_l (&req.n, sizeof(req), IFA_BROADCAST, &data->broadcast.s_addr,
-	                4);
+	addattr_l(&req.n, sizeof(req), IFA_BROADCAST, &data->broadcast.s_addr, 4);
 
 	/* label */
-	addattr_l (&req.n, sizeof(req), IFA_LABEL, data->ifname, strlen (
-	                data->ifname) + 1);
+	addattr_l(&req.n, sizeof(req), IFA_LABEL, data->ifname, strlen(data->ifname) + 1);
 
 	if (cmd != RTM_DELADDR) {
 		if (*((unsigned char *) (&data->local.s_addr)) == 127)
@@ -184,32 +188,32 @@ int ipaddr_modify (int add_del,
 			req.ifa.ifa_scope = RT_SCOPE_UNIVERSE;
 	}
 
-	if (rtnl_open (&rth, 0) < 0)
+	if (rtnl_open(&rth, 0) < 0)
 		return -1;
 
 	/* Identifica que eh um alias e retira os ':' */
-	strncpy (dev, data->ifname, 16);
-	if ((p = strchr (dev, ':')) != NULL) {
+	strncpy(dev, data->ifname, 16);
+	if ((p = strchr(dev, ':')) != NULL) {
 		*p = 0;
 	}
 
-	if ((req.ifa.ifa_index = link_name_to_index (dev, &(info->link[0])))
+	if ((req.ifa.ifa_index = _link_name_to_index(dev, &(info->link[0])))
 	                == 0) {
-		fprintf (stderr, "Cannot find device \"%s\"\n", dev);
+		fprintf(stderr, "Cannot find device \"%s\"\n", dev);
 		goto error;
 	}
 
-	if (rtnl_talk (&rth, &req.n, 0, 0, NULL, NULL, NULL) < 0)
+	if (rtnl_talk(&rth, &req.n, 0, 0, NULL, NULL, NULL) < 0)
 		goto error;
 
-	rtnl_close (&rth);
+	rtnl_close(&rth);
 	return 0;
 
-	error: rtnl_close (&rth);
+	error: rtnl_close(&rth);
 	return -1;
 }
 
-static int __get_addrinfo (struct nlmsghdr *n, struct ipaddr_table *ipaddr)
+static int _get_addrinfo(struct nlmsghdr *n, struct ipaddr_table *ipaddr)
 {
 	struct ifaddrmsg *ifa = NLMSG_DATA(n);
 	int len = n->nlmsg_len;
@@ -220,14 +224,14 @@ static int __get_addrinfo (struct nlmsghdr *n, struct ipaddr_table *ipaddr)
 
 	len -= NLMSG_LENGTH(sizeof(*ifa));
 	if (len < 0) {
-		fprintf (stderr, "BUG: wrong nlmsg len %d\n", len);
+		fprintf(stderr, "BUG: wrong nlmsg len %d\n", len);
 		return -1;
 	}
 
-	bzero (ipaddr, sizeof(struct ipaddr_table));
+	bzero(ipaddr, sizeof(struct ipaddr_table));
 
-	memset (rta_tb, 0, sizeof(rta_tb));
-	parse_rtattr (rta_tb, IFA_MAX, IFA_RTA (ifa), n->nlmsg_len
+	memset(rta_tb, 0, sizeof(rta_tb));
+	parse_rtattr(rta_tb, IFA_MAX, IFA_RTA (ifa), n->nlmsg_len
 	                - NLMSG_LENGTH(sizeof(*ifa)));
 
 	if (!rta_tb[IFA_LOCAL])
@@ -242,45 +246,45 @@ static int __get_addrinfo (struct nlmsghdr *n, struct ipaddr_table *ipaddr)
 	ipaddr->bitlen = ifa->ifa_prefixlen;
 
 	if (rta_tb[IFA_LOCAL]) {
-		memcpy (&ipaddr->local, RTA_DATA (rta_tb[IFA_LOCAL]), 4);
+		memcpy(&ipaddr->local, RTA_DATA (rta_tb[IFA_LOCAL]), 4);
 
 		if (rta_tb[IFA_ADDRESS]) {
-			memcpy (&ipaddr->remote,
-			                RTA_DATA (rta_tb[IFA_ADDRESS]), 4);
+			memcpy(&ipaddr->remote, RTA_DATA (rta_tb[IFA_ADDRESS]),
+			                4);
 		}
 	}
 
 	if (rta_tb[IFA_BROADCAST]) {
-		memcpy (&ipaddr->broadcast, RTA_DATA (rta_tb[IFA_BROADCAST]), 4);
+		memcpy(&ipaddr->broadcast, RTA_DATA (rta_tb[IFA_BROADCAST]), 4);
 	}
 
-	strncpy (ipaddr->ifname, (char*) RTA_DATA (rta_tb[IFA_LABEL]), IFNAMSIZ);
+	strncpy(ipaddr->ifname, (char*) RTA_DATA (rta_tb[IFA_LABEL]), IFNAMSIZ);
 
 	return 0;
 }
 
-int store_nlmsg (const struct sockaddr_nl *who, struct nlmsghdr *n, void *arg)
+int libconfig_ip_store_nlmsg(const struct sockaddr_nl *who, struct nlmsghdr *n, void *arg)
 {
 	struct nlmsg_list **linfo = (struct nlmsg_list**) arg;
 	struct nlmsg_list *h;
 	struct nlmsg_list **lp;
 
-	h = malloc (n->nlmsg_len + sizeof(void*));
+	h = malloc(n->nlmsg_len + sizeof(void*));
 	if (h == NULL)
 		return -1;
 
-	memcpy (&h->h, n, n->nlmsg_len);
+	memcpy(&h->h, n, n->nlmsg_len);
 	h->next = NULL;
 
 	for (lp = linfo; *lp; lp = &(*lp)->next)
 		/* NOTHING */;
 	*lp = h;
 
-	ll_remember_index (who, n, NULL);
+	ll_remember_index(who, n, NULL);
 	return 0;
 }
 
-static int __get_linkinfo (struct nlmsghdr *n, struct link_table *link)
+static int _get_linkinfo(struct nlmsghdr *n, struct link_table *link)
 {
 	struct ifinfomsg *ifi = NLMSG_DATA(n);
 	struct rtattr * tb[IFLA_MAX + 1];
@@ -293,24 +297,24 @@ static int __get_linkinfo (struct nlmsghdr *n, struct link_table *link)
 	if (len < 0)
 		return -1;
 
-	bzero (link, sizeof(struct link_table));
+	bzero(link, sizeof(struct link_table));
 	link->index = ifi->ifi_index;
 
-	memset (tb, 0, sizeof(tb));
-	parse_rtattr (tb, IFLA_MAX, IFLA_RTA (ifi), len);
+	memset(tb, 0, sizeof(tb));
+	parse_rtattr(tb, IFLA_MAX, IFLA_RTA (ifi), len);
 	if (tb[IFLA_IFNAME] == NULL) {
-		fprintf (stderr, "BUG: nil ifname\n");
+		fprintf(stderr, "BUG: nil ifname\n");
 		return -1;
 	}
 
-	strncpy (link->ifname, tb[IFLA_IFNAME] ? (char*) RTA_DATA (
-	                tb[IFLA_IFNAME]) : "<nil>", IFNAMSIZ);
+	strncpy(link->ifname, tb[IFLA_IFNAME] ? (char*) RTA_DATA (
+			tb[IFLA_IFNAME]) : "<nil>", IFNAMSIZ);
 
 	if (tb[IFLA_MTU])
 		link->mtu = *(int*) RTA_DATA (tb[IFLA_MTU]);
 
 	if (tb[IFLA_STATS]) {
-		memcpy (&link->stats, RTA_DATA (tb[IFLA_STATS]),
+		memcpy(&link->stats, RTA_DATA (tb[IFLA_STATS]),
 		                sizeof(struct net_device_stats));
 	}
 
@@ -320,7 +324,7 @@ static int __get_linkinfo (struct nlmsghdr *n, struct link_table *link)
 		link->addr_size = size;
 		if (size >= MAX_HWADDR)
 			size = MAX_HWADDR;
-		memcpy (link->addr, RTA_DATA (tb[IFLA_ADDRESS]), size);
+		memcpy(link->addr, RTA_DATA (tb[IFLA_ADDRESS]), size);
 	}
 
 	link->flags = ifi->ifi_flags;
@@ -329,7 +333,7 @@ static int __get_linkinfo (struct nlmsghdr *n, struct link_table *link)
 	return 0;
 }
 
-int get_if_list (struct intf_info *info)
+int libconfig_ip_get_if_list(struct intf_info *info)
 {
 	int link_index, ip_index;
 	struct link_table *link = &info->link[0];
@@ -339,23 +343,23 @@ int get_if_list (struct intf_info *info)
 	struct nlmsg_list *ainfo = NULL;
 	struct nlmsg_list *l, *a, *tmp;
 
-	if (rtnl_open (&rth, 0) < 0)
+	if (rtnl_open(&rth, 0) < 0)
 		return -1;
 
-	if (rtnl_wilddump_request (&rth, AF_INET, RTM_GETLINK) < 0) {
-		perror ("Cannot send dump request");
+	if (rtnl_wilddump_request(&rth, AF_INET, RTM_GETLINK) < 0) {
+		perror("Cannot send dump request");
 		goto error;
 	}
-	if (rtnl_dump_filter (&rth, store_nlmsg, &linfo, NULL, NULL) < 0) {
-		fprintf (stderr, "Link Dump terminated\n");
+	if (rtnl_dump_filter(&rth, libconfig_ip_store_nlmsg, &linfo, NULL, NULL) < 0) {
+		fprintf(stderr, "Link Dump terminated\n");
 		goto error;
 	}
-	if (rtnl_wilddump_request (&rth, AF_INET, RTM_GETADDR) < 0) {
-		perror ("Cannot send dump request");
+	if (rtnl_wilddump_request(&rth, AF_INET, RTM_GETADDR) < 0) {
+		perror("Cannot send dump request");
 		goto error;
 	}
-	if (rtnl_dump_filter (&rth, store_nlmsg, &ainfo, NULL, NULL) < 0) {
-		fprintf (stderr, "Address Dump terminated\n");
+	if (rtnl_dump_filter(&rth, libconfig_ip_store_nlmsg, &ainfo, NULL, NULL) < 0) {
+		fprintf(stderr, "Address Dump terminated\n");
 		goto error;
 	}
 
@@ -368,16 +372,16 @@ int get_if_list (struct intf_info *info)
 	 */
 	for (l = linfo; l;) {
 		/* Update link pointer if __get_linkinfo succeeds */
-		if (!__get_linkinfo (&l->h, link))
+		if (!_get_linkinfo(&l->h, link))
 			link++;
 		tmp = l;
 		l = l->next;
-		free (tmp);
+		free(tmp);
 	}
 
 	for (a = ainfo; a;) {
 		/* Update ipaddr pointer if __get_addrinfo succeeds */
-		if (!__get_addrinfo (&a->h, ipaddr)) {
+		if (!_get_addrinfo(&a->h, ipaddr)) {
 			ip_dbg("__getaddrinfo succeeded for %s\n", ipaddr->ifname);
 			ip_dbg("ip address is %s\n", inet_ntoa(ipaddr->local));
 			ip_dbg("bitmask is %d\n", ipaddr->bitlen);
@@ -385,17 +389,17 @@ int get_if_list (struct intf_info *info)
 		}
 		tmp = a;
 		a = a->next;
-		free (tmp);
+		free(tmp);
 	}
 
-	rtnl_close (&rth);
+	rtnl_close(&rth);
 	return 0;
 
-	error: rtnl_close (&rth);
+	error: rtnl_close(&rth);
 	return -1;
 }
 
-void ip_bitlen2mask (int bitlen, char *mask)
+void libconfig_ip_bitlen2mask(int bitlen, char *mask)
 {
 	unsigned long bitmask;
 	int i;
@@ -404,82 +408,77 @@ void ip_bitlen2mask (int bitlen, char *mask)
 		bitmask >>= 1;
 		bitmask |= (1 << 31);
 	}
-	sprintf (mask, "%d.%d.%d.%d", (int) ((bitmask >> 24) & 0xff),
+	sprintf(mask, "%d.%d.%d.%d", (int) ((bitmask >> 24) & 0xff),
 	                (int) ((bitmask >> 16) & 0xff), (int) ((bitmask >> 8)
 	                                & 0xff), (int) (bitmask & 0xff));
 }
 
 /* DEL_ADDR, ADD_ADDR, DEL_SADDR, ADD_SADDR */
-int ip_addr_add_del (ip_addr_oper_t add_del,
-                     char *ifname,
-                     char *local_ip,
-                     char *remote_ip,
-                     char *netmask)
+int libconfig_ip_addr_add_del(ip_addr_oper_t add_del,
+                    char *ifname,
+                    char *local_ip,
+                    char *remote_ip,
+                    char *netmask)
 {
 	int i, bitlen, ret = 0;
 	IP mask, bitmask;
 	struct ipaddr_table data, prim;
 	struct intf_info info;
 
-	memset (&info, 0, sizeof(struct intf_info));
+	memset(&info, 0, sizeof(struct intf_info));
 
 	/* Get information into info structure */
-	if ((ret = get_if_list (&info)) < 0)
+	if ((ret = libconfig_ip_get_if_list(&info)) < 0)
 		return -1;
 
-	strncpy (data.ifname, ifname, IFNAMSIZ);
+	strncpy(data.ifname, ifname, IFNAMSIZ);
 
-	if (inet_aton (local_ip, &data.local) == 0)
+	if (inet_aton(local_ip, &data.local) == 0)
 		return -1;
 
 	if ((remote_ip != NULL) && (remote_ip[0])) {
-		if (inet_aton (remote_ip, &data.remote) == 0)
+		if (inet_aton(remote_ip, &data.remote) == 0)
 			return -1;
 	} else {
 		data.remote.s_addr = data.local.s_addr; /* remote as local! */
 	}
 
-	if (inet_aton (netmask, &mask) == 0)
+	if (inet_aton(netmask, &mask) == 0)
 		return -1;
 	for (bitlen = 0, bitmask.s_addr = 0; bitlen < 32; bitlen++) {
 		if (mask.s_addr == bitmask.s_addr)
 			break;
-		bitmask.s_addr |= htonl (1 << (31 - bitlen));
+		bitmask.s_addr |= htonl(1 << (31 - bitlen));
 	}
 	data.bitlen = bitlen; /* /8 /16 /24 */
 
 	data.broadcast.s_addr = data.remote.s_addr;
 	for (; bitlen < 32; bitlen++)
-		data.broadcast.s_addr |= htonl (1 << (31 - bitlen));
+		data.broadcast.s_addr |= htonl(1 << (31 - bitlen));
 
 	prim = data; /* for primary address search */
 	if (add_del & 0x2) { /* secondary address */
 		int primary;
-		strcat (data.ifname, ":0"); /* alias label! */
+		strcat(data.ifname, ":0"); /* alias label! */
 		for (i = 0; info.ipaddr[i].ifname[0] != 0 && i < MAX_NUM_IPS; i++) {
-			if (strcmp (prim.ifname, info.ipaddr[i].ifname) == 0) {
+			if (strcmp(prim.ifname, info.ipaddr[i].ifname) == 0) {
 				primary = 1; /* primary address setted */
 				break;
 			}
 		}
 		if (primary) {
 			for (i = 0; i < MAX_NUM_IPS; i++)
-				if (memcmp (&info.ipaddr[i], &data,
-				                sizeof(struct ipaddr_table))
-				                == 0 || memcmp (
-				                &info.ipaddr[i], &prim,
-				                sizeof(struct ipaddr_table))
-				                == 0)
+				if (memcmp(&info.ipaddr[i], &data,sizeof(struct ipaddr_table)) == 0 ||
+					memcmp(&info.ipaddr[i], &prim, sizeof(struct ipaddr_table)) == 0)
 					break; /* found same address entry */
 		} else {
 			data = prim; /* secondary as primary */
 			i = MAX_NUM_IPS; /* not found test below */
 		}
 	} else { /* primary address */
-		strcat (prim.ifname, ":0"); /* alias label! */
+		strcat(prim.ifname, ":0"); /* alias label! */
 		for (i = 0; i < MAX_NUM_IPS; i++)
-			if (memcmp (&info.ipaddr[i], &data,
-			                sizeof(struct ipaddr_table)) == 0)
+			if (memcmp(&info.ipaddr[i], &data, sizeof(struct ipaddr_table)) == 0)
 				break; /* found same address entry */
 	}
 
@@ -491,30 +490,30 @@ int ip_addr_add_del (ip_addr_oper_t add_del,
 			return -1; /* address already configured! */
 	}
 
-	ret = ipaddr_modify ((add_del & 0x1), &data, &info);
+	ret = libconfig_ip_modify_addr((add_del & 0x1), &data, &info);
 
 	return ret;
 }
 
-int ip_addr_flush (char *ifname)
+int libconfig_ip_addr_flush(char *ifname)
 {
 	int i, ret;
 	char alias[32];
 	struct intf_info info;
 
-	memset (&info, 0, sizeof(struct intf_info));
+	memset(&info, 0, sizeof(struct intf_info));
 
-	strcpy (alias, ifname);
-	strcat (alias, ":0");
+	strcpy(alias, ifname);
+	strcat(alias, ":0");
 
-	if ((ret = get_if_list (&info)) < 0)
+	if ((ret = libconfig_ip_get_if_list(&info)) < 0)
 		return ret;
 
 	for (i = 0; i < MAX_NUM_IPS; i++) {
-		if (strcmp (ifname, info.ipaddr[i].ifname) == 0 || strcmp (
-		                alias, info.ipaddr[i].ifname) == 0) { /* with alias */
+		if (strcmp(ifname, info.ipaddr[i].ifname) == 0 || strcmp(alias,
+		                info.ipaddr[i].ifname) == 0) { /* with alias */
 			/* delete primary also delete secondaries */
-			ret = ipaddr_modify (0, &info.ipaddr[i], &info);
+			ret = libconfig_ip_modify_addr(0, &info.ipaddr[i], &info);
 		}
 	}
 
@@ -542,23 +541,23 @@ const char *rmasks[33] = { "255.255.255.255", "127.255.255.255",
                 "0.0.1.255", "0.0.0.255", "0.0.0.127", "0.0.0.63", "0.0.0.31",
                 "0.0.0.15", "0.0.0.7", "0.0.0.3", "0.0.0.1", "0.0.0.0" };
 
-const char *ciscomask (const char *mask)
+const char *libconfig_ip_ciscomask(const char *mask)
 {
 	int i;
 
 	for (i = 0; i < 33; i++) {
-		if (strcmp (masks[i], mask) == 0)
+		if (strcmp(masks[i], mask) == 0)
 			return rmasks[i];
 	}
 	return mask;
 }
 
-const char *extract_mask (char *cidrblock)
+const char *libconfig_ip_extract_mask(char *cidrblock)
 {
 	char *seperate;
 	int bits;
 
-	seperate = strchr (cidrblock, '/');
+	seperate = strchr(cidrblock, '/');
 	if (!seperate) {
 		return masks[32];
 	}
@@ -566,32 +565,32 @@ const char *extract_mask (char *cidrblock)
 	*seperate = 0;
 	++seperate;
 
-	bits = atoi (seperate);
+	bits = atoi(seperate);
 	if ((bits < 33) && (bits >= 0))
 		return masks[bits];
 	return masks[32];
 }
 
-int netmask2cidr (const char *netmask)
+int libconfig_ip_netmask2cidr(const char *netmask)
 {
 	int i;
 
 	for (i = 0; i < 33; i++) {
-		if (strcmp (masks[i], netmask) == 0)
+		if (strcmp(masks[i], netmask) == 0)
 			return i;
-		if (strcmp (rmasks[i], netmask) == 0)
+		if (strcmp(rmasks[i], netmask) == 0)
 			return i;
 	}
 	return -1;
 }
 
-int get_mac (char *ifname, char *mac)
+int libconfig_ip_get_mac(char *ifname, char *mac)
 {
-	return dev_get_hwaddr (ifname, (unsigned char *) mac);
+	return libconfig_dev_get_hwaddr(ifname, (unsigned char *) mac);
 }
 
 /* !!! Caso especial para ethernet, em funcao do modo bridge */
-char *get_ethernet_dev (char *dev)
+char *libconfig_ip_ethernet_get_dev(char *dev)
 {
 #if 0
 	static char brname[32]; /* dangerous! */
@@ -599,73 +598,73 @@ char *get_ethernet_dev (char *dev)
 	snprintf(brname, 32, "%s1", BRIDGE_NAME); // TODO - incluir teste para mais de uma bridge
 	// Teste: a ethernet pertence a alguma bridge ?
 	if (br_checkif(brname, dev))
-	return brname;
+		return brname;
 	else
 #endif
 	return dev;
 }
 
-void set_ethernet_ip_addr (char *ifname, char *addr, char *mask) /* main ethernet interface */
+void libconfig_ip_ethernet_set_addr(char *ifname, char *addr, char *mask) /* main ethernet interface */
 {
-	char *dev = get_ethernet_dev (ifname); /* bridge x ethernet */
+	char *dev = libconfig_ip_ethernet_get_dev(ifname); /* bridge x ethernet */
 	struct intf_info info;
 	int i;
 
-	memset (&info, 0, sizeof(struct intf_info));
+	memset(&info, 0, sizeof(struct intf_info));
 
-	if (get_if_list (&info) < 0)
+	if (libconfig_ip_get_if_list(&info) < 0)
 		return;
 
 	/* remove current address */
 	for (i = 0; i < MAX_NUM_IPS; i++) {
-		if (strcmp (dev, info.ipaddr[i].ifname) == 0) {
-			ipaddr_modify (0, &info.ipaddr[i], &info);
+		if (strcmp(dev, info.ipaddr[i].ifname) == 0) {
+			libconfig_ip_modify_addr(0, &info.ipaddr[i], &info);
 			break;
 		}
 	}
 
 	ip_addr_add (dev, addr, NULL, mask); /* new address */
 
-	if (strcmp (dev, "ethernet0") == 0)
-		reload_udhcpd (0); /* udhcpd integration! */
+	if (strcmp(dev, "ethernet0") == 0)
+		libconfig_udhcpd_reload(0); /* udhcpd integration! */
 }
 
-void set_ethernet_ip_addr_secondary (char *ifname, char *addr, char *mask)
+void libconfig_ip_ethernet_set_addr_secondary(char *ifname, char *addr, char *mask)
 {
-	char *dev = get_ethernet_dev (ifname); /* bridge x ethernet */
+	char *dev = libconfig_ip_ethernet_get_dev(ifname); /* bridge x ethernet */
 
 	ip_addr_add_secondary (dev, addr, NULL, mask);
 }
 
-void set_ethernet_no_ip_addr (char *ifname)
+void libconfig_ip_ethernet_set_no_addr(char *ifname)
 {
-	char *dev = get_ethernet_dev (ifname); /* bridge x ethernet */
+	char *dev = libconfig_ip_ethernet_get_dev(ifname); /* bridge x ethernet */
 
-	ip_addr_flush (dev); /* Clear all interface addresses */
+	libconfig_ip_addr_flush(dev); /* Clear all interface addresses */
 }
 
-void set_ethernet_no_ip_addr_secondary (char *ifname, char *addr, char *mask)
+void libconfig_ip_ethernet_set_no_addr_secondary(char *ifname, char *addr, char *mask)
 {
-	char *dev = get_ethernet_dev (ifname); /* bridge x ethernet */
+	char *dev = libconfig_ip_ethernet_get_dev(ifname); /* bridge x ethernet */
 
 	ip_addr_del_secondary (dev, addr, NULL, mask);
 }
 
 /* Get address info !!! set_dhcp_server */
-int get_interface_address (char *ifname, IP *addr, IP *mask, IP *bc, IP *peer)
+int libconfig_ip_interface_get_info(char *ifname, IP *addr, IP *mask, IP *bc, IP *peer)
 {
 	int i, ret;
 	struct intf_info info;
 
-	memset (&info, 0, sizeof(struct intf_info));
+	memset(&info, 0, sizeof(struct intf_info));
 
 	/* Get information into info structure */
-	if ((ret = get_if_list (&info)) < 0)
+	if ((ret = libconfig_ip_get_if_list(&info)) < 0)
 		return ret;
 
 	/* running addresses */
 	for (i = 0; i < MAX_NUM_IPS; i++) {
-		if (strcmp (ifname, info.ipaddr[i].ifname) == 0)
+		if (strcmp(ifname, info.ipaddr[i].ifname) == 0)
 			break;
 	}
 
@@ -678,7 +677,7 @@ int get_interface_address (char *ifname, IP *addr, IP *mask, IP *bc, IP *peer)
 			*bc = info.ipaddr[i].broadcast;
 		if (mask) {
 			if (info.ipaddr[i].bitlen)
-				mask->s_addr = htonl (~((1 << (32
+				mask->s_addr = htonl(~((1 << (32
 				                - info.ipaddr[i].bitlen)) - 1));
 			else
 				mask->s_addr = 0;
@@ -688,43 +687,43 @@ int get_interface_address (char *ifname, IP *addr, IP *mask, IP *bc, IP *peer)
 	return 0;
 }
 
-void get_interface_ip_addr (char *ifname, char *addr_str, char *mask_str)
+void libconfig_ip_interface_get_ip_addr(char *ifname, char *addr_str, char *mask_str)
 {
 	IP addr, mask;
 
 	addr.s_addr = 0;
 	mask.s_addr = 0;
 
-	get_interface_address (ifname, &addr, &mask, 0, 0);
-	strcpy (addr_str, inet_ntoa (addr));
-	strcpy (mask_str, inet_ntoa (mask));
+	libconfig_ip_interface_get_info(ifname, &addr, &mask, 0, 0);
+	strcpy(addr_str, inet_ntoa(addr));
+	strcpy(mask_str, inet_ntoa(mask));
 }
 
 /* ppp unnumbered helper !!! ppp unnumbered x bridge hdlc */
-void get_ethernet_ip_addr (char *ifname, char *addr_str, char *mask_str)
+void libconfig_ip_ethernet_ip_addr(char *ifname, char *addr_str, char *mask_str)
 {
 	char *dev;
 
-	dev = get_ethernet_dev (ifname); /* bridge x ethernet */
-	get_interface_ip_addr (dev, addr_str, mask_str);
+	dev = libconfig_ip_ethernet_get_dev(ifname); /* bridge x ethernet */
+	libconfig_ip_interface_get_ip_addr(dev, addr_str, mask_str);
 }
 
 /* Interface generic */
-void set_interface_ip_addr (char *ifname, char *addr, char *mask)
+void libconfig_ip_interface_set_addr(char *ifname, char *addr, char *mask)
 {
 	int i;
 	struct intf_info info;
 
-	memset (&info, 0, sizeof(struct intf_info));
+	memset(&info, 0, sizeof(struct intf_info));
 
 	/* Get information into info structure */
-	if (get_if_list (&info) < 0)
+	if (libconfig_ip_get_if_list(&info) < 0)
 		return;
 
 	/* remove current address */
 	for (i = 0; i < MAX_NUM_IPS; i++) {
-		if (strcmp (ifname, info.ipaddr[i].ifname) == 0) {
-			ipaddr_modify (0, &info.ipaddr[i], &info);
+		if (strcmp(ifname, info.ipaddr[i].ifname) == 0) {
+			libconfig_ip_modify_addr(0, &info.ipaddr[i], &info);
 			break;
 		}
 	}
@@ -732,22 +731,22 @@ void set_interface_ip_addr (char *ifname, char *addr, char *mask)
 	ip_addr_add (ifname, addr, NULL, mask); /* new address */
 }
 
-void set_interface_ip_addr_secondary (char *ifname, char *addr, char *mask)
+void libconfig_ip_interface_set_addr_secondary(char *ifname, char *addr, char *mask)
 {
 	ip_addr_add_secondary (ifname, addr, NULL, mask);
 }
 
-void set_interface_no_ip_addr (char *ifname)
+void libconfig_ip_interface_set_no_addr(char *ifname)
 {
-	ip_addr_flush (ifname); /* Clear all interface addresses */
+	libconfig_ip_addr_flush(ifname); /* Clear all interface addresses */
 }
 
-void set_interface_no_ip_addr_secondary (char *ifname, char *addr, char *mask)
+void libconfig_ip_interface_set_no_addr_secondary(char *ifname, char *addr, char *mask)
 {
 	ip_addr_del_secondary (ifname, addr, NULL, mask);
 }
 
-unsigned int is_valid_port (char *data)
+unsigned int libconfig_ip_is_valid_port(char *data)
 {
 	char *p;
 
@@ -759,13 +758,13 @@ unsigned int is_valid_port (char *data)
 			return 0;
 	}
 
-	if (atoi (data) < 0)
+	if (atoi(data) < 0)
 		return 0;
 
 	return 1;
 }
 
-unsigned int is_valid_netmask (char *mask)
+unsigned int libconfig_ip_is_valid_netmask(char *mask)
 {
 	arg_list argl = NULL;
 	unsigned char elem;
@@ -774,10 +773,10 @@ unsigned int is_valid_netmask (char *mask)
 
 	if (!mask)
 		return 0;
-	strncpy (data, mask, 15);
+	strncpy(data, mask, 15);
 	data[15] = 0;
 	for (p = data, n = 0; *p;) {
-		if ((t = strchr (p, '.'))) {
+		if ((t = strchr(p, '.'))) {
 			*t = ' ';
 			n++;
 			p = t + 1;
@@ -786,14 +785,14 @@ unsigned int is_valid_netmask (char *mask)
 	}
 	if (n != 3)
 		return 0;
-	if (!(n = parse_args_din (data, &argl)))
+	if (!(n = libconfig_parse_args_din(data, &argl)))
 		return 0;
 	if (n != 4) {
-		free_args_din (&argl);
+		libconfig_destroy_args_din(&argl);
 		return 0;
 	}
 	for (i = 0, ok = 1, bit = 1; i < n; i++) {
-		elem = (unsigned char) atoi (argl[i]);
+		elem = (unsigned char) atoi(argl[i]);
 		if (elem != 0xFF) {
 			if (bit) {
 				for (k = 7; k >= 0; k--) {
@@ -819,26 +818,26 @@ unsigned int is_valid_netmask (char *mask)
 		if (!ok)
 			break;
 	}
-	free_args_din (&argl);
+	libconfig_destroy_args_din(&argl);
 	return ok;
 }
 
 /* Busca as estatisticas de uma interface */
-int get_iface_stats (char *ifname, void *store)
+int libconfig_ip_iface_get_stats(char *ifname, void *store)
 {
 	int i;
 	struct intf_info info;
 
-	memset (&info, 0, sizeof(struct intf_info));
+	memset(&info, 0, sizeof(struct intf_info));
 
-	if ((store == NULL) || (get_if_list (&info) < 0))
+	if ((store == NULL) || (libconfig_ip_get_if_list(&info) < 0))
 		return -1;
 
 	/* Find interface and copy its statistics
 	 * to memory pointed by store */
 	for (i = 0; i < MAX_NUM_LINKS; i++) {
-		if (strcmp (info.link[i].ifname, ifname) == 0) {
-			memcpy (store, &info.link[i].stats,
+		if (strcmp(info.link[i].ifname, ifname) == 0) {
+			memcpy(store, &info.link[i].stats,
 			                sizeof(struct net_device_stats));
 			return 0;
 		}
@@ -846,7 +845,7 @@ int get_iface_stats (char *ifname, void *store)
 	return -1;
 }
 
-int lconfig_get_iface_config(char *interface, struct interface_conf *conf)
+int libconfig_ip_iface_get_config(char *interface, struct interface_conf *conf)
 {
 	struct intf_info info;
 	char mac_bin[6];
@@ -855,12 +854,11 @@ int lconfig_get_iface_config(char *interface, struct interface_conf *conf)
 	int i;
 	char daemon_dhcpc[32];
 
-
 	memset(&info, 0, sizeof(struct intf_info));
 	memset(conf, 0, sizeof(struct interface_conf));
 
 	/* Get all information */
-	ret = get_if_list(&info);
+	ret = libconfig_ip_get_if_list(&info);
 
 	if (ret < 0) {
 		printf("%% ERROR : Could not get interfaces information\n");
@@ -895,10 +893,12 @@ int lconfig_get_iface_config(char *interface, struct interface_conf *conf)
 		conf->mac[0] = 0;
 
 		/* Get ethernet 0 MAC if not an ethernet interface */
-		if (get_mac(conf->linktype == ARPHRD_ETHER ? conf->name : "ethernet0", mac_bin) == 0)
+		if (libconfig_ip_get_mac(
+		                conf->linktype == ARPHRD_ETHER ? conf->name : "ethernet0",
+		                mac_bin) == 0)
 			sprintf(conf->mac, "%02x%02x.%02x%02x.%02x%02x",
-					mac_bin[0], mac_bin[1], mac_bin[2],
-					mac_bin[3], mac_bin[4], mac_bin[5]);
+			                mac_bin[0], mac_bin[1], mac_bin[2],
+			                mac_bin[3], mac_bin[4], mac_bin[5]);
 
 		/* Search for main IP address */
 		ipaddr = &info.ipaddr[0];
@@ -910,7 +910,7 @@ int lconfig_get_iface_config(char *interface, struct interface_conf *conf)
 
 			if (!strcmp(interface, ipaddr->ifname)) {
 				strcpy(main_ip->ipaddr, inet_ntoa(ipaddr->local));
-				ip_bitlen2mask(ipaddr->bitlen, main_ip->ipmask);
+				libconfig_ip_bitlen2mask(ipaddr->bitlen, main_ip->ipmask);
 				/* If point-to-point, there is a remote IP address */
 				if (conf->flags & IFF_POINTOPOINT)
 					strcpy(main_ip->ippeer, inet_ntoa(ipaddr->remote));
@@ -933,7 +933,7 @@ int lconfig_get_iface_config(char *interface, struct interface_conf *conf)
 
 			if (strcmp(name, ipaddr->ifname) == 0) {
 				strcpy(sec_ip->ipaddr, inet_ntoa(ipaddr->local));
-				ip_bitlen2mask(ipaddr->bitlen, sec_ip->ipmask);
+				libconfig_ip_bitlen2mask(ipaddr->bitlen, sec_ip->ipmask);
 				sec_ip++;
 			}
 		}
@@ -950,7 +950,7 @@ int lconfig_get_iface_config(char *interface, struct interface_conf *conf)
 
 	/* If it is a PPP device, it may not exist, but it is
 	 * still needed that we show some configuration */
-	if ( (ret < 0) && (!strncmp(interface,"ppp",3)) ) {
+	if ((ret < 0) && (!strncmp(interface, "ppp", 3))) {
 		conf->name = strdup(interface);
 		conf->linktype = ARPHRD_PPP;
 		ret = 0;
@@ -959,7 +959,7 @@ int lconfig_get_iface_config(char *interface, struct interface_conf *conf)
 	return ret;
 }
 
-void lconfig_free_iface_config(struct interface_conf *conf)
+void libconfig_ip_iface_free_config(struct interface_conf *conf)
 {
 	if (conf == NULL)
 		return;

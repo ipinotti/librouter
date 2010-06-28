@@ -1,5 +1,11 @@
-#ifndef _OPTIONS_H
-#define _OPTIONS_H
+/*
+ * options.h
+ *
+ *  Created on: Jun 23, 2010
+ */
+
+#ifndef OPTIONS_H_
+#define OPTIONS_H_
 /* #include <linux/config.h> */
 
 /*****************************************************************************/
@@ -41,4 +47,4 @@
 #define PIMD_DAEMON 		"pimdd"
 #define SMC_DAEMON 		"smcroute"
 
-#endif
+#endif /* OPTIONS_H_ */

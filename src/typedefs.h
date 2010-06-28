@@ -1,9 +1,11 @@
-#ifndef _TYPEDEFS
-#define _TYPEDEFS
+/*
+ * typedefs.h
+ *
+ *  Created on: Jun 23, 2010
+ */
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#ifndef TYPEDEFS_H_
+#define TYPEDEFS_H_
 
 typedef unsigned char BOOL;
 typedef unsigned char BYTE;
@@ -12,8 +14,6 @@ typedef unsigned long long u64;
 typedef unsigned int u32;
 typedef unsigned short int u16;
 typedef unsigned char u8;
-typedef struct in_addr IP;
-typedef char **arg_list;
 
 #ifndef MAX
 #define MAX(a,b) (((a)>(b)) ? (a) : (b))
@@ -25,5 +25,5 @@ typedef char **arg_list;
 
 #define is_ip_zero(ip) ( ((ip).s_addr)==((unsigned int)0) )
 
-#endif
+#endif /* TYPEDEFS_H_ */
 
