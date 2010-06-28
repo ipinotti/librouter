@@ -52,6 +52,7 @@ struct interface_conf {
 	char mac[32];
 	struct ip_t main_ip;
 	struct ip_t sec_ip[MAX_NUM_IPS];
+	int dhcpc; /* DHCP Client running ? */
 	enum dump_type {
 		DUMP_INTF_CONFIG,
 		DUMP_INTF_STATUS

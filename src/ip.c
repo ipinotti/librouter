@@ -853,6 +853,7 @@ int lconfig_get_iface_config(char *interface, struct interface_conf *conf)
 	char name[16];
 	int ret = -1;
 	int i;
+	char daemon_dhcpc[32];
 
 
 	memset(&info, 0, sizeof(struct intf_info));
@@ -938,6 +939,14 @@ int lconfig_get_iface_config(char *interface, struct interface_conf *conf)
 		}
 
 	}
+
+	/* Check if IP was configured by DHCP */
+	if (conf->linktype == ARPHRD_ETHER) {
+		sprintf(daemon_dhcpc, DHCPC_DAEMON, interface);
+		if (is_daemon_running(daemon_dhcpc))
+			conf->dhcpc = 1;
+	}
+
 
 	/* If it is a PPP device, it may not exist, but it is
 	 * still needed that we show some configuration */
