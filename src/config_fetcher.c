@@ -154,6 +154,31 @@ void lconfig_dump_aaa(FILE *f, cish_config *cish_cfg)
 		break;
 	}
 
+	/* Dump aaa authentication web mode */
+	switch (discover_pam_current_mode(FILE_PAM_WEB)) {
+	case AAA_AUTH_NONE:
+		fprintf(f, "aaa authentication web default none\n");
+		break;
+	case AAA_AUTH_LOCAL:
+		fprintf(f, "aaa authentication web default local\n");
+		break;
+	case AAA_AUTH_RADIUS:
+		fprintf(f, "aaa authentication web group radius\n");
+		break;
+	case AAA_AUTH_RADIUS_LOCAL:
+		fprintf(f, "aaa authentication web group radius local\n");
+		break;
+	case AAA_AUTH_TACACS:
+		fprintf(f, "aaa authentication web default group tacacs+\n");
+		break;
+	case AAA_AUTH_TACACS_LOCAL:
+		fprintf(f, "aaa authentication web default group tacacs+ local\n");
+		break;
+	default:
+		fprintf(f, "aaa authentication web none\n");
+		break;
+	}
+
 	/* Dump aaa authorization mode */
 	switch (discover_pam_current_author_mode(FILE_PAM_GENERIC)) {
 	case AAA_AUTHOR_NONE:
