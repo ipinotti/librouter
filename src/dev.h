@@ -29,6 +29,9 @@ int libconfig_arp_del(char *host);
 int libconfig_arp_add(char *host, char *mac);
 int notify_driver_about_shutdown(char *dev);
 
+int libconfig_dev_shutdown(char *dev);
+int libconfig_dev_noshutdown(char *dev);
+
 #ifdef CONFIG_BUFFERS_USE_STATS
 int libconfig_dev_interface_get_buffers_use(char *dev,
                                             char *tx,
