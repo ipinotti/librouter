@@ -15,22 +15,22 @@
 
 #define MAX_LINES 50
 
-int libconfig_pim_dense_phyint(int add, char *dev);
-int libconfig_pim_sparse_phyint(int add, char *dev);
+int librouter_pim_dense_phyint(int add, char *dev);
+int librouter_pim_sparse_phyint(int add, char *dev);
 
-void libconfig_pim_sparse_bsr_candidate(int add,
+void librouter_pim_sparse_bsr_candidate(int add,
                                         char *dev,
                                         char *major,
                                         char *priority);
 
-void libconfig_pim_sparse_rp_address(int add, char *rp);
-void libconfig_pim_sparse_rp_candidate(int add,
+void librouter_pim_sparse_rp_address(int add, char *rp);
+void librouter_pim_sparse_rp_candidate(int add,
                         char *dev,
                         char *major,
                         char *priority,
                         char *interval);
 
-void libconfig_pim_dump(FILE *out);
-void libconfig_pim_dump_interface(FILE *out, char *ifname);
+void librouter_pim_dump(FILE *out);
+void librouter_pim_dump_interface(FILE *out, char *ifname);
 
 #endif /* PIM_H_ */

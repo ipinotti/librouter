@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.57)
 
-AC_INIT([libconfig],[0.1],[tgrande@pd3.com.br])
+AC_INIT([librouter],[0.1],[tgrande@pd3.com.br])
 AC_CONFIG_SRCDIR([src/typedefs.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])

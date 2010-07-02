@@ -308,7 +308,7 @@ error:
  * @param img image file
  * @return
  */
-int libconfig_flash_check_image(char *img)
+int librouter_flash_check_image(char *img)
 {
 	struct stat sbuf;
 	image_header_t *header;
@@ -359,7 +359,7 @@ int libconfig_flash_check_image(char *img)
 	checksum = ntohl(header->ih_hcrc);
 	header->ih_hcrc = htonl(0); /* clear for re-calculation */
 
-	if (libconfig_crc32(0, file_data, len) != checksum) {
+	if (librouter_crc32(0, file_data, len) != checksum) {
 		fprintf(stderr,
 		        "*** Warning: \"%s\" has bad header checksum!\n",
 		        img);
@@ -379,7 +379,7 @@ int libconfig_flash_check_image(char *img)
 
 	file_data = (unsigned char *) (file_ptr + sizeof(image_header_t));
 	len = sbuf.st_size - sizeof(image_header_t);
-	if (libconfig_crc32(0, file_data, len) != ntohl(header->ih_dcrc)) {
+	if (librouter_crc32(0, file_data, len) != ntohl(header->ih_dcrc)) {
 		printf("  Bad Data CRC\n");
 		fprintf(stderr,
 		        "*** Warning: \"%s\" has corrupted data!\n",
@@ -423,7 +423,7 @@ err:
  * @param img image file
  * @return
  */
-int libconfig_flash_write_image(char *img)
+int librouter_flash_write_image(char *img)
 {
 	struct stat sbuf;
 	image_header_t * header;
@@ -433,7 +433,7 @@ int libconfig_flash_write_image(char *img)
 	char *data, *fptr;
 	char mtddev[32];
 
-	err = libconfig_flash_check_image(img);
+	err = librouter_flash_check_image(img);
 
 	if (err > 0) {
 		return IMAGE_ERROR;
@@ -509,7 +509,7 @@ err:
  *
  * @param burn ???
  */
-void libconfig_write_image(int burn)
+void librouter_write_image(int burn)
 {
 	DIR *dir;
 	struct dirent *entry;
@@ -583,7 +583,7 @@ void libconfig_write_image(int burn)
 		checksum = ntohl(hdr->ih_hcrc);
 		hdr->ih_hcrc = htonl(0); /* clear for re-calculation */
 
-		if (libconfig_crc32(0, data, len) != checksum) {
+		if (librouter_crc32(0, data, len) != checksum) {
 			fprintf(stderr, "*** Warning: \"%s\" has bad header checksum!\n", entry->d_name);
 			continue;
 		}
@@ -598,7 +598,7 @@ void libconfig_write_image(int burn)
 
 		data = (unsigned char *) (ptr + sizeof(image_header_t));
 		len = sbuf.st_size - sizeof(image_header_t);
-		if (libconfig_crc32(0, data, len) != ntohl(hdr->ih_dcrc)) {
+		if (librouter_crc32(0, data, len) != ntohl(hdr->ih_dcrc)) {
 			printf("  Bad Data CRC\n");
 			fprintf(stderr, "*** Warning: \"%s\" has corrupted data!\n", entry->d_name);
 			continue;
@@ -639,7 +639,7 @@ void libconfig_write_image(int burn)
 		len = sizeof(image_header_t) + hdr->ih_size;
 #if 0				/* Eh necessario um fd para a flash!!! */
 		if (!memcmp(data, (image_header_t *) addrflash, sizeof(image_header_t))) {
-			if (libconfig_crc32
+			if (librouter_crc32
 					(0, (char *)addrflash + sizeof(image_header_t),
 							((image_header_t *) addrflash)->ih_size) == ntohl(hdr->ih_dcrc)) {
 				printf("  Image already written!\n");

@@ -61,12 +61,12 @@ struct _saved_feature {
 	char key[16];
 };
 
-int libconfig_nv_load_configuration(char *filename);
-int libconfig_nv_load_previous_configuration(char *filename);
+int librouter_nv_load_configuration(char *filename);
+int librouter_nv_load_previous_configuration(char *filename);
 #ifdef CONFIG_PROTOTIPO
 int load_slot_configuration(char *filename, int slot);
 #endif
-int libconfig_nv_save_configuration(char *filename);
+int librouter_nv_save_configuration(char *filename);
 
 #ifdef FEATURES_ON_FLASH
 int load_features(void *buf, long size);
@@ -79,15 +79,15 @@ char *get_system_ID(int);
 char *get_product_name(void);
 #endif
 #if defined(OPTION_IPSEC)
-int libconfig_nv_save_ipsec_secret(char *secret);
-char *libconfig_nv_get_rsakeys(void);
+int librouter_nv_save_ipsec_secret(char *secret);
+char *librouter_nv_get_rsakeys(void);
 #endif
-int libconfig_nv_save_ssh_secret(char *filename);
-int libconfig_nv_load_ssh_secret(char *filename);
-int libconfig_nv_save_ntp_secret(char *filename);
-int libconfig_nv_load_ntp_secret(char *filename);
-int libconfig_nv_save_snmp_secret(char *filename);
-int libconfig_nv_load_snmp_secret(char *filename);
+int librouter_nv_save_ssh_secret(char *filename);
+int librouter_nv_load_ssh_secret(char *filename);
+int librouter_nv_save_ntp_secret(char *filename);
+int librouter_nv_load_ntp_secret(char *filename);
+int librouter_nv_save_snmp_secret(char *filename);
+int librouter_nv_load_snmp_secret(char *filename);
 int get_starts_counter(char *store, unsigned int max_len);
 int get_uboot_env(char *name, char *store, int max_len);
 int get_trialminutes_counter(char *store, unsigned int max_len);

@@ -18,23 +18,23 @@ enum {
 	DNS_STATIC_NAMESERVER = 2, DNS_DYNAMIC_NAMESERVER
 };
 
-void libconfig_dns_nameserver(int add, char *nameserver);
-void libconfig_dns_dynamic_nameserver(int add, char *nameserver);
+void librouter_dns_nameserver(int add, char *nameserver);
+void librouter_dns_dynamic_nameserver(int add, char *nameserver);
 
-int libconfig_dns_get_nameserver_by_type_actv_index(unsigned int type,
+int librouter_dns_get_nameserver_by_type_actv_index(unsigned int type,
                                       unsigned int actv,
                                       unsigned int index,
                                       char *addr);
-int libconfig_dns_get_nameserver_by_type_index(unsigned int type,
+int librouter_dns_get_nameserver_by_type_index(unsigned int type,
                                  unsigned int index,
                                  char *addr);
-int libconfig_dns_get_nameserver_by_actv_index(unsigned int actv,
+int librouter_dns_get_nameserver_by_actv_index(unsigned int actv,
                                  unsigned int index,
                                  char *addr);
 
-void libconfig_dns_lookup(int on_off);
-int libconfig_dns_domain_lookup_enabled(void);
+void librouter_dns_lookup(int on_off);
+int librouter_dns_domain_lookup_enabled(void);
 
-void libconfig_dns_dump_nameservers(FILE *out);
+void librouter_dns_dump_nameservers(FILE *out);
 
 #endif /* DNS_H_ */

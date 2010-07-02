@@ -27,7 +27,7 @@
 #include "process.h"
 #include "str.h"
 
-int libconfig_exec_telinit(char c, int sleeptime)
+int librouter_exec_telinit(char c, int sleeptime)
 {
 	struct init_request request;
 	int fd, bytes;
@@ -40,7 +40,7 @@ int libconfig_exec_telinit(char c, int sleeptime)
 
 	fd = open(INIT_FIFO, O_WRONLY);
 	if (fd < 0) {
-		libconfig_pr_error(1, "telinit");
+		librouter_pr_error(1, "telinit");
 		return (-1);
 	}
 
@@ -53,14 +53,14 @@ int libconfig_exec_telinit(char c, int sleeptime)
 #define FILE_INITTAB "/etc/inittab"
 
 // Adiciona/deleta um programa da lista de programas iniciados pelo init.
-int libconfig_exec_init_program(int add_del, char *prog)
+int librouter_exec_init_program(int add_del, char *prog)
 {
 	FILE *f;
 	char buf[101];
 	int found = 0;
 
 	if ((f = fopen(FILE_INITTAB, "r+")) == NULL) {
-		libconfig_pr_error(1, "could not open %s", FILE_INITTAB);
+		librouter_pr_error(1, "could not open %s", FILE_INITTAB);
 		return (-1);
 	}
 	while ((!feof(f)) && (!found)) {
@@ -74,13 +74,13 @@ int libconfig_exec_init_program(int add_del, char *prog)
 	}
 	fclose(f);
 	if (!found) {
-		libconfig_pr_error(0, "%s not found in %s", prog, FILE_INITTAB);
+		librouter_pr_error(0, "%s not found in %s", prog, FILE_INITTAB);
 		return (-1);
 	}
-	return libconfig_exec_telinit('q', 5);
+	return librouter_exec_telinit('q', 5);
 }
 
-int libconfig_exec_check_daemon(char *prog)
+int librouter_exec_check_daemon(char *prog)
 {
 	FILE *f;
 	char buf[101];
@@ -89,7 +89,7 @@ int libconfig_exec_check_daemon(char *prog)
 
 	f = fopen(FILE_INITTAB, "r+");
 	if (!f) {
-		libconfig_pr_error(1, "could not open %s", FILE_INITTAB);
+		librouter_pr_error(1, "could not open %s", FILE_INITTAB);
 		return (0);
 	}
 	while ((!feof(f)) && (!found)) {
@@ -103,7 +103,7 @@ int libconfig_exec_check_daemon(char *prog)
 	}
 	fclose(f);
 	if (!found) {
-		libconfig_pr_error(0, "%s not found in %s", prog, FILE_INITTAB);
+		librouter_pr_error(0, "%s not found in %s", prog, FILE_INITTAB);
 		return (0);
 	}
 	return (c == 'u');
@@ -117,7 +117,7 @@ int libconfig_exec_check_daemon(char *prog)
 //  0 em caso de sucesso ou
 // -1 em caso de erro na funcao ou caso o programa executado
 //   retorne com exit_status menor que zero.
-int libconfig_exec_prog(int no_out, char *path, ...)
+int librouter_exec_prog(int no_out, char *path, ...)
 {
 	int ret, i;
 	pid_t pid;
@@ -142,12 +142,12 @@ int libconfig_exec_prog(int no_out, char *path, ...)
 			close(2); // close stderr
 		}
 		ret = execv(path, argv);
-		libconfig_pr_error(1, "unable to execute %s", path);
+		librouter_pr_error(1, "unable to execute %s", path);
 		return (-1);
 		break;
 
 	case -1:
-		libconfig_pr_error(1, "could not fork");
+		librouter_pr_error(1, "could not fork");
 		return (-1);
 		break;
 
@@ -155,15 +155,15 @@ int libconfig_exec_prog(int no_out, char *path, ...)
 	{
 		int status;
 		if (waitpid(pid, &status, 0) < 0) {
-			libconfig_pr_error(1, "waitpid");
+			librouter_pr_error(1, "waitpid");
 			return (-1);
 		}
 		if (!WIFEXITED(status)) {
-			libconfig_pr_error(0, "child did not exited normally");
+			librouter_pr_error(0, "child did not exited normally");
 			return (-1);
 		}
 		if (WEXITSTATUS(status) < 0) {
-			libconfig_pr_error(0, "child exit status = %d %s",
+			librouter_pr_error(0, "child exit status = %d %s",
 			                WEXITSTATUS(status), path);
 			return (-1);
 		}
@@ -176,7 +176,7 @@ int libconfig_exec_prog(int no_out, char *path, ...)
 #define FILE_INETD "/etc/inetd.conf"
 
 // Adiciona/deleta um programa da lista de programas iniciados pelo inetd.
-int libconfig_exec_set_inetd_program(int add_del, char *prog)
+int librouter_exec_set_inetd_program(int add_del, char *prog)
 {
 	FILE *f;
 	char buf[101];
@@ -185,7 +185,7 @@ int libconfig_exec_set_inetd_program(int add_del, char *prog)
 
 	f = fopen(FILE_INETD, "r+");
 	if (!f) {
-		libconfig_pr_error(1, "could not open %s", FILE_INETD);
+		librouter_pr_error(1, "could not open %s", FILE_INETD);
 		return (-1);
 	}
 
@@ -202,13 +202,13 @@ int libconfig_exec_set_inetd_program(int add_del, char *prog)
 	fclose(f);
 
 	if (!found) {
-		libconfig_pr_error(0, "%s not found in %s", prog, FILE_INETD);
+		librouter_pr_error(0, "%s not found in %s", prog, FILE_INETD);
 		return (-1);
 	}
 
-	pid = libconfig_process_get_pid("inetd");
+	pid = librouter_process_get_pid("inetd");
 	if (!pid) {
-		libconfig_pr_error(0, "inetd is not running");
+		librouter_pr_error(0, "inetd is not running");
 		return (-1);
 	}
 	kill(pid, SIGHUP);
@@ -217,7 +217,7 @@ int libconfig_exec_set_inetd_program(int add_del, char *prog)
 }
 
 // Verfica se um programa esta ativo na lista de aplicativos iniciados pelo inetd
-int libconfig_exec_get_inetd_program(char *prog)
+int librouter_exec_get_inetd_program(char *prog)
 {
 	FILE *f;
 	char buf[101];
@@ -226,7 +226,7 @@ int libconfig_exec_get_inetd_program(char *prog)
 
 	f = fopen(FILE_INETD, "r+");
 	if (!f) {
-		libconfig_pr_error(1, "could not open %s", FILE_INETD);
+		librouter_pr_error(1, "could not open %s", FILE_INETD);
 		return (-1);
 	}
 
@@ -245,7 +245,7 @@ int libconfig_exec_get_inetd_program(char *prog)
 
 // Executa o programa "path" com seus argumentos "..." e armazena
 // a saida do programa no buffer "buffer", de tamanho maximo "len".
-int libconfig_exec_prog_capture(char *buffer, int len, char *path, ...)
+int librouter_exec_prog_capture(char *buffer, int len, char *path, ...)
 {
 	int ret, i;
 	pid_t pid;
@@ -276,11 +276,11 @@ int libconfig_exec_prog_capture(char *buffer, int len, char *path, ...)
 		dup(fd[1]);
 		//invalidate_plist(); // para forcar a releitura da lista de processos
 		ret = execv(path, argv);
-		libconfig_pr_error(1, "could not exec %s %s", path, argv);
+		librouter_pr_error(1, "could not exec %s %s", path, argv);
 		return -1;
 		break;
 	case -1:
-		libconfig_pr_error(1, "fork");
+		librouter_pr_error(1, "fork");
 		return -1;
 		break;
 	default: // parent
@@ -313,7 +313,7 @@ int libconfig_exec_prog_capture(char *buffer, int len, char *path, ...)
  * @param com_chr
  * @return
  */
-int libconfig_exec_replace_str_before_key(char *filename, char *key, char *com_chr)
+int librouter_exec_replace_str_before_key(char *filename, char *key, char *com_chr)
 {
 	int fd = 0, size_f, size_r, i, ret = -1;
 	char *buf = NULL, *p = NULL, *pk = NULL, *r_tp = NULL;
@@ -396,7 +396,7 @@ error5:
  * @param new_string
  * @return
  */
-int libconfig_exec_replace_string_file(char *filename, char *key, char *new_string)
+int librouter_exec_replace_string_file(char *filename, char *key, char *new_string)
 {
 	struct stat st;
 	char *p, *buf = NULL;
@@ -448,7 +448,7 @@ error:
 	return ret;
 }
 
-int libconfig_exec_copy_file(char *filename_src, char *filename_dst)
+int librouter_exec_copy_file(char *filename_src, char *filename_dst)
 {
 	int fd;
 	FILE *f;
@@ -508,7 +508,7 @@ int libconfig_exec_copy_file(char *filename_src, char *filename_dst)
  * @param value
  * @return
  */
-int libconfig_exec_control_inittab_lineoptions(char *program, char *option, char *value)
+int librouter_exec_control_inittab_lineoptions(char *program, char *option, char *value)
 {
 	int fd;
 	struct stat st;
@@ -586,7 +586,7 @@ int libconfig_exec_control_inittab_lineoptions(char *program, char *option, char
  * @param maxlen
  * @return
  */
-int libconfig_exec_get_inittab_lineoptions(char *program,
+int librouter_exec_get_inittab_lineoptions(char *program,
                             char *option,
                             char *store,
                             unsigned int maxlen)
@@ -660,7 +660,7 @@ int libconfig_exec_get_inittab_lineoptions(char *program,
  * @param len
  * @return
  */
-int libconfig_exec_test_write_len(char *filename,
+int librouter_exec_test_write_len(char *filename,
                          unsigned int maxsize,
                          char *buf,
                          unsigned int len)
@@ -752,7 +752,7 @@ int libconfig_exec_test_write_len(char *filename,
  * vai copiar para a regiao de memoria apontada por buf nao mais do que
  * 32 bytes. O conteudo copiado serah "182.168.1.1".
  */
-int libconfig_exec_get_init_option_value(char *prog,
+int librouter_exec_get_init_option_value(char *prog,
                                   char *option,
                                   char *store,
                                   unsigned int max_len)
@@ -768,7 +768,7 @@ int libconfig_exec_get_init_option_value(char *prog,
 
 	store[0] = 0;
 	if ((f = fopen(FILE_INITTAB, "r+")) == NULL) {
-		libconfig_pr_error(1, "could not open %s", FILE_INITTAB);
+		librouter_pr_error(1, "could not open %s", FILE_INITTAB);
 		return -1;
 	}
 
@@ -779,15 +779,15 @@ int libconfig_exec_get_init_option_value(char *prog,
 		buf[127] = 0;
 		if (strstr(buf, prog) != NULL) {
 			ok = 1;
-			if (((n_args = libconfig_parse_args_din(buf, &argl)) > 0) &&
-				(libconfig_parse_args_din(prog, &argl2) > 0)) {
+			if (((n_args = librouter_parse_args_din(buf, &argl)) > 0) &&
+				(librouter_parse_args_din(prog, &argl2) > 0)) {
 				if (strstr(argl[0], argl2[0]) == NULL)
 					ok = 0;
 			}
 
-			libconfig_destroy_args_din(&argl2);
+			librouter_destroy_args_din(&argl2);
 			if (ok == 1) {
-				if ((n_args < 3) || (libconfig_parse_args_din(option, &argl2) != 1))
+				if ((n_args < 3) || (librouter_parse_args_din(option, &argl2) != 1))
 					goto error;
 
 				for (i = 0; i < n_args; i++) {
@@ -802,12 +802,12 @@ int libconfig_exec_get_init_option_value(char *prog,
 				}
 
 error:
-				libconfig_destroy_args_din(&argl);
-				libconfig_destroy_args_din(&argl2);
+				librouter_destroy_args_din(&argl);
+				librouter_destroy_args_din(&argl2);
 				fclose(f);
 				return ret;
 			}
-			libconfig_destroy_args_din(&argl);
+			librouter_destroy_args_din(&argl);
 		}
 	}
 
@@ -816,7 +816,7 @@ error:
 }
 
 /* Adiciona/remove uma opcao de um programa iniciado pelo init. */
-int libconfig_exec_change_init_option(int add_del, char *prog, char *option)
+int librouter_exec_change_init_option(int add_del, char *prog, char *option)
 {
 	FILE *f;
 	int n_args, opt_args;
@@ -828,7 +828,7 @@ int libconfig_exec_change_init_option(int add_del, char *prog, char *option)
 		return -1;
 
 	if ((f = fopen(FILE_INITTAB, "r+")) == NULL) {
-		libconfig_pr_error(1, "could not open %s", FILE_INITTAB);
+		librouter_pr_error(1, "could not open %s", FILE_INITTAB);
 		return -1;
 	}
 
@@ -839,14 +839,14 @@ int libconfig_exec_change_init_option(int add_del, char *prog, char *option)
 		buf[127] = 0;
 		if (strstr(buf, prog) != NULL) {
 			ok = 1;
-			if ((libconfig_parse_args_din(buf, &argl) > 0) &&
-				(libconfig_parse_args_din(prog, &argl2) > 0)) {
+			if ((librouter_parse_args_din(buf, &argl) > 0) &&
+				(librouter_parse_args_din(prog, &argl2) > 0)) {
 				if (strstr(argl[0], argl2[0]) == NULL)
 					ok = 0;
 			}
 
-			libconfig_destroy_args_din(&argl);
-			libconfig_destroy_args_din(&argl2);
+			librouter_destroy_args_din(&argl);
+			librouter_destroy_args_din(&argl2);
 			if (ok == 1) {
 				found = 1;
 				break;
@@ -859,14 +859,14 @@ int libconfig_exec_change_init_option(int add_del, char *prog, char *option)
 	if (found == 0)
 		return -1;
 
-	if ((n_args = libconfig_parse_args_din(buf, &argl)) == 0) {
-		libconfig_destroy_args_din(&argl);
+	if ((n_args = librouter_parse_args_din(buf, &argl)) == 0) {
+		librouter_destroy_args_din(&argl);
 		return -1;
 	}
 
-	if ((opt_args = libconfig_parse_args_din(option, &argl2)) == 0) {
-		libconfig_destroy_args_din(&argl);
-		libconfig_destroy_args_din(&argl2);
+	if ((opt_args = librouter_parse_args_din(option, &argl2)) == 0) {
+		librouter_destroy_args_din(&argl);
+		librouter_destroy_args_din(&argl2);
 		return -1;
 	}
 
@@ -885,8 +885,8 @@ int libconfig_exec_change_init_option(int add_del, char *prog, char *option)
 
 	if (add_del) {
 		if (found == 1) {
-			libconfig_destroy_args_din(&argl);
-			libconfig_destroy_args_din(&argl2);
+			librouter_destroy_args_din(&argl);
+			librouter_destroy_args_din(&argl2);
 			return 0;
 		}
 
@@ -902,8 +902,8 @@ int libconfig_exec_change_init_option(int add_del, char *prog, char *option)
 		}
 	} else {
 		if (found == 0) {
-			libconfig_destroy_args_din(&argl);
-			libconfig_destroy_args_din(&argl2);
+			librouter_destroy_args_din(&argl);
+			librouter_destroy_args_din(&argl2);
 			return 0;
 		}
 
@@ -925,10 +925,10 @@ int libconfig_exec_change_init_option(int add_del, char *prog, char *option)
 		}
 	}
 
-	libconfig_destroy_args_din(&argl);
-	libconfig_destroy_args_din(&argl2);
+	librouter_destroy_args_din(&argl);
+	librouter_destroy_args_din(&argl2);
 	new_line[strlen(new_line) - 1] = (strchr(buf, '\n') != NULL) ? '\n' : 0;
 
-	return libconfig_str_replace_exact_string(FILE_INITTAB, buf, new_line);
+	return librouter_str_replace_exact_string(FILE_INITTAB, buf, new_line);
 }
 

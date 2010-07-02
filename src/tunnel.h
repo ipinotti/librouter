@@ -19,10 +19,10 @@ typedef enum {
 	TUNNEL_KEY
 } tunnel_param_type;
 
-int libconfig_tunnel_add(char *);
-int libconfig_tunnel_del(char *);
-int libconfig_tunnel_change(char *, tunnel_param_type, void *);
-int libconfig_tunnel_mode(char *, int);
-void libconfig_tunnel_dump_interface(FILE *, int, char *);
+int librouter_tunnel_add(char *);
+int librouter_tunnel_del(char *);
+int librouter_tunnel_change(char *, tunnel_param_type, void *);
+int librouter_tunnel_mode(char *, int);
+void librouter_tunnel_dump_interface(FILE *, int, char *);
 
 #endif /* TUNNEL_H_ */

@@ -9,7 +9,7 @@
 #include "hash_sn.h"
 #include "md5.h"
 
-unsigned char *libconfig_hash_sn_str(unsigned char *serial)
+unsigned char *librouter_hash_sn_str(unsigned char *serial)
 {
 	int i, serial_len;
 	static unsigned char password[20];

@@ -305,11 +305,11 @@ static int _do_del_ioctl(char *basedev, struct ip_tunnel_parm *p)
 #endif
 
 /* interface tunnel <0-9> */
-int libconfig_tunnel_add(char *name)
+int librouter_tunnel_add(char *name)
 {
 	struct ip_tunnel_parm p;
 
-	if (!libconfig_dev_exists(name)) {
+	if (!librouter_dev_exists(name)) {
 
 		memset(&p, 0, sizeof(p));
 
@@ -325,12 +325,12 @@ int libconfig_tunnel_add(char *name)
 }
 
 /* no interface tunnel <0-9> */
-int libconfig_tunnel_del(char *name)
+int librouter_tunnel_del(char *name)
 {
 	int err;
 	struct ip_tunnel_parm p;
 
-	if (libconfig_dev_exists(name)) {
+	if (librouter_dev_exists(name)) {
 		if ((err = _do_get_ioctl(name, &p)))
 			return -1;
 		return _do_del_ioctl(p.name, &p);
@@ -342,13 +342,13 @@ int libconfig_tunnel_del(char *name)
 /*
  tos/dsfield p->iph.tos = uval;
  */
-int libconfig_tunnel_change(char *name, tunnel_param_type type, void *param)
+int librouter_tunnel_change(char *name, tunnel_param_type type, void *param)
 {
 	int err;
 	struct in_addr address;
 	struct ip_tunnel_parm p;
 
-	if (libconfig_dev_exists(name)) {
+	if (librouter_dev_exists(name)) {
 		if ((err = _do_get_ioctl(name, &p))) {
 			fprintf(stderr, "%% %s not found.\n", name);
 			return -1;
@@ -372,7 +372,7 @@ int libconfig_tunnel_change(char *name, tunnel_param_type type, void *param)
 				if (p.link) {
 					IP addr;
 
-					if (libconfig_ip_interface_get_info((char *)param, &addr, NULL, NULL, NULL) == 0)
+					if (librouter_ip_interface_get_info((char *)param, &addr, NULL, NULL, NULL) == 0)
 						p.iph.saddr = addr.s_addr;
 				}
 			}
@@ -471,12 +471,12 @@ int libconfig_tunnel_change(char *name, tunnel_param_type type, void *param)
 	return 0;
 }
 
-int libconfig_tunnel_mode(char *name, int mode)
+int librouter_tunnel_mode(char *name, int mode)
 {
 	int err;
 	struct ip_tunnel_parm p;
 
-	if (libconfig_dev_exists(name)) {
+	if (librouter_dev_exists(name)) {
 		if ((err = _do_get_ioctl(name, &p)))
 			return -1;
 		if (p.iph.protocol != mode) {
@@ -492,13 +492,13 @@ int libconfig_tunnel_mode(char *name, int mode)
 	return 0;
 }
 
-void libconfig_tunnel_dump_interface(FILE *out, int conf_format, char *name)
+void librouter_tunnel_dump_interface(FILE *out, int conf_format, char *name)
 {
 	int err;
 	struct in_addr address;
 	struct ip_tunnel_parm p;
 
-	if (libconfig_dev_exists(name)) {
+	if (librouter_dev_exists(name)) {
 		if ((err = _do_get_ioctl(name, &p)))
 			return;
 
@@ -609,7 +609,7 @@ void libconfig_tunnel_dump_interface(FILE *out, int conf_format, char *name)
 }
 
 #if 0
-void libconfig_tunnel_print(struct ip_tunnel_parm *p)
+void librouter_tunnel_print(struct ip_tunnel_parm *p)
 {
 	char s1[256];
 	char s2[256];

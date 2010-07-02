@@ -16,7 +16,7 @@
 #define reverse_nibble(b) ( ((b&0x0f)<<4) | ((b>>4)&0xf) )
 #endif
 
-char *libconfig_hash_str(char *buf, unsigned char id)
+char *librouter_hash_str(char *buf, unsigned char id)
 {
 	int i;
 	unsigned char md5buffer[16];

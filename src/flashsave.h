@@ -43,8 +43,8 @@ enum write_error {
 	IMAGE_ERROR = 1, WRITE_ERROR,
 };
 
-int libconfig_flash_write_image(char *img);
-int libconfig_flash_check_image(char *img);
-void libconfig_write_image(int burn);
+int librouter_flash_write_image(char *img);
+int librouter_flash_check_image(char *img);
+void librouter_write_image(int burn);
 
 #endif /* FLASHSAVE_H_ */

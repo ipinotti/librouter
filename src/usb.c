@@ -34,7 +34,7 @@
  * @param port
  * @return
  */
-int libconfig_usb_device_is_connected(int port)
+int librouter_usb_device_is_connected(int port)
 {
 	struct DIR * target = NULL;
 	char port_usb_num[2];
@@ -66,13 +66,13 @@ int libconfig_usb_device_is_connected(int port)
  * @param port
  * @return
  */
-int libconfig_usb_device_is_modem(int port)
+int librouter_usb_device_is_modem(int port)
 {
 	struct DIR * target = NULL;
 	char buff_addr[sizeof(ADDR_PORT_USB)];
 	int result = 0, i = 0;
 
-	if (!libconfig_usb_device_is_connected(port)) {
+	if (!librouter_usb_device_is_connected(port)) {
 		goto res;
 	}
 
@@ -105,7 +105,7 @@ res:
  * @param usb
  * @return
  */
-int libconfig_usb_get_descriptor(libconfig_usb_dev * usb)
+int librouter_usb_get_descriptor(librouter_usb_dev * usb)
 {
 
 	FILE * file;
@@ -150,7 +150,7 @@ int libconfig_usb_get_descriptor(libconfig_usb_dev * usb)
 		sprintf(conv_temp, "%04x", desc.idProduct);
 		conv_id_prod = atoi(conv_temp);
 
-		if ((libconfig_usb_device_is_connected(usb->port))
+		if ((librouter_usb_device_is_connected(usb->port))
 		                && (desc.idVendor != IDVENDOR_LINUX_HUB)
 		                && (id_prod_usb_ffc == conv_id_prod)) {
 

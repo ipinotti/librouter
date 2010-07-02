@@ -39,7 +39,7 @@
 #include "typedefs.h"
 
 #ifdef UDHCPD
-pid_t libconfig_udhcpd_pid_by_eth(int eth)
+pid_t librouter_udhcpd_pid_by_eth(int eth)
 {
 	FILE *F;
 	pid_t pid;
@@ -57,29 +57,29 @@ pid_t libconfig_udhcpd_pid_by_eth(int eth)
 	return (pid_t) -1;
 }
 
-int libconfig_udhcpd_reload(int eth)
+int librouter_udhcpd_reload(int eth)
 {
 	pid_t pid;
 
-	if ((pid = libconfig_udhcpd_pid_by_eth(eth)) != -1) {
+	if ((pid = librouter_udhcpd_pid_by_eth(eth)) != -1) {
 		kill(pid, SIGHUP);
 		return 0;
 	}
 	return -1;
 }
 
-int libconfig_udhcpd_kick_by_eth(int eth)
+int librouter_udhcpd_kick_by_eth(int eth)
 {
 	pid_t pid;
 
-	if ((pid = libconfig_udhcpd_pid_by_eth(eth)) != -1) {
+	if ((pid = librouter_udhcpd_pid_by_eth(eth)) != -1) {
 		kill(pid, SIGUSR1); /* atualiza leases file */
 		return 0;
 	}
 	return -1;
 }
 
-pid_t libconfig_udhcpd_pid_by_name(char *ifname)
+pid_t librouter_udhcpd_pid_by_name(char *ifname)
 {
 	FILE *F;
 	pid_t pid;
@@ -97,11 +97,11 @@ pid_t libconfig_udhcpd_pid_by_name(char *ifname)
 	return (pid_t) -1;
 }
 
-int libconfig_udhcpd_kick_by_name(char *ifname)
+int librouter_udhcpd_kick_by_name(char *ifname)
 {
 	pid_t pid;
 
-	if ((pid = libconfig_udhcpd_pid_by_name(ifname)) != -1) {
+	if ((pid = librouter_udhcpd_pid_by_name(ifname)) != -1) {
 		kill(pid, SIGUSR1); /* perform renew */
 		return 0;
 	}
@@ -109,85 +109,85 @@ int libconfig_udhcpd_kick_by_name(char *ifname)
 }
 #endif
 
-int libconfig_dhcp_get_status(void)
+int librouter_dhcp_get_status(void)
 {
 	int ret = DHCP_NONE;
 	char daemon0[64];
 
 	sprintf(daemon0, DHCPD_DAEMON, 0);
 
-	if (libconfig_exec_check_daemon(daemon0))
+	if (librouter_exec_check_daemon(daemon0))
 		return DHCP_SERVER;
 
-	if (libconfig_exec_check_daemon(DHCRELAY_DAEMON))
+	if (librouter_exec_check_daemon(DHCRELAY_DAEMON))
 		return DHCP_RELAY;
 
 	return DHCP_NONE;
 }
 
-int libconfig_dhcpd_set_status(int on_off, int eth)
+int librouter_dhcpd_set_status(int on_off, int eth)
 {
 	int ret;
 	char daemon[64];
 
 	if (on_off) {
-		if ((ret = libconfig_udhcpd_reload(eth)) != -1)
+		if ((ret = librouter_udhcpd_reload(eth)) != -1)
 			return ret;
 		sprintf(daemon, DHCPD_DAEMON, eth);
-		return libconfig_exec_init_program(1, daemon);
+		return librouter_exec_init_program(1, daemon);
 	}
 	sprintf(daemon, DHCPD_DAEMON, 0);
-	ret = libconfig_exec_init_program(0, daemon);
+	ret = librouter_exec_init_program(0, daemon);
 
 	return ret;
 }
 
-int libconfig_dhcp_set_none(void)
+int librouter_dhcp_set_none(void)
 {
 	int ret, pid;
 
-	ret = libconfig_dhcp_get_status();
+	ret = librouter_dhcp_get_status();
 	if (ret == DHCP_SERVER) {
-		if (libconfig_dhcpd_set_status(0, 0) < 0)
+		if (librouter_dhcpd_set_status(0, 0) < 0)
 			return (-1);
 #if 0 /* ifndef UDHCPD */
-		pid=libconfig_udhcpd_pid_by_eth(?);
-		if ((pid > 0) && (libconfig_process_wait_for(pid, 6) == 0)) return (-1);
+		pid=librouter_udhcpd_pid_by_eth(?);
+		if ((pid > 0) && (librouter_process_wait_for(pid, 6) == 0)) return (-1);
 #endif
 	}
 	if (ret == DHCP_RELAY) {
-		if (libconfig_exec_init_program(0, DHCRELAY_DAEMON) < 0)
+		if (librouter_exec_init_program(0, DHCRELAY_DAEMON) < 0)
 			return (-1);
-		pid = libconfig_process_get_pid(DHCRELAY_DAEMON);
-		if ((pid) && (libconfig_process_wait_for(pid, 6) == 0))
+		pid = librouter_process_get_pid(DHCRELAY_DAEMON);
+		if ((pid) && (librouter_process_wait_for(pid, 6) == 0))
 			return (-1);
 	}
 	return 0;
 }
 
-int libconfig_dhcp_set_no_server(void)
+int librouter_dhcp_set_no_server(void)
 {
 #if 0
 	int pid;
 #endif
 
-	if (libconfig_dhcpd_set_status(0, 0) < 0)
+	if (librouter_dhcpd_set_status(0, 0) < 0)
 		return (-1);
 #if 0 /* ifndef UDHCPD */
-	pid=libconfig_process_get_pid(DHCPD_DAEMON);
-	if ((pid)&&(libconfig_process_wait_for(pid, 6) == 0)) return (-1);
+	pid=librouter_process_get_pid(DHCPD_DAEMON);
+	if ((pid)&&(librouter_process_wait_for(pid, 6) == 0)) return (-1);
 #endif
 	return 0;
 }
 
-int libconfig_dhcp_set_no_relay(void)
+int librouter_dhcp_set_no_relay(void)
 {
 	int pid;
 
-	if (libconfig_exec_init_program(0, DHCRELAY_DAEMON) < 0)
+	if (librouter_exec_init_program(0, DHCRELAY_DAEMON) < 0)
 		return (-1);
-	pid = libconfig_process_get_pid(DHCRELAY_DAEMON);
-	if ((pid) && (libconfig_process_wait_for(pid, 6) == 0))
+	pid = librouter_process_get_pid(DHCRELAY_DAEMON);
+	if ((pid) && (librouter_process_wait_for(pid, 6) == 0))
 		return (-1);
 
 	return 0;
@@ -195,7 +195,7 @@ int libconfig_dhcp_set_no_relay(void)
 
 #define NEED_ETHERNET_SUBNET /* verifica se a rede/mascara eh a da ethernet */
 /* ip dhcp server NETWORK MASK POOL-START POOL-END [dns-server DNS1 dns-server DNS2 router ROUTER domain-name DOMAIN default-lease-time D H M S max-lease-time D H M S] */
-int libconfig_dhcp_set_server(int save_dns, char *cmdline)
+int librouter_dhcp_set_server(int save_dns, char *cmdline)
 {
 	int i, eth;
 	char *network = NULL, *mask = NULL, *pool_start = NULL, *pool_end =
@@ -213,9 +213,9 @@ int libconfig_dhcp_set_server(int save_dns, char *cmdline)
 	IP dhcp_network, dhcp_mask;
 #endif
 
-	args = libconfig_make_args(cmdline);
+	args = librouter_make_args(cmdline);
 	if (args->argc < 7) {
-		libconfig_destroy_args(args);
+		librouter_destroy_args(args);
 		return (-1);
 	}
 
@@ -226,16 +226,16 @@ int libconfig_dhcp_set_server(int save_dns, char *cmdline)
 	pool_end = args->argv[i++];
 
 #ifdef NEED_ETHERNET_SUBNET
-	libconfig_ip_interface_get_info(libconfig_ip_ethernet_get_dev("ethernet0"), &eth_addr,
+	librouter_ip_interface_get_info(librouter_ip_ethernet_get_dev("ethernet0"), &eth_addr,
 	                &eth_mask, 0, 0);
 	eth_network.s_addr = eth_addr.s_addr & eth_mask.s_addr;
 	inet_aton(network, &dhcp_network);
 	inet_aton(mask, &dhcp_mask);
 	if ((dhcp_network.s_addr != eth_network.s_addr) || (dhcp_mask.s_addr
 	                != eth_mask.s_addr)) {
-		libconfig_pr_error(0,
+		librouter_pr_error(0,
 		                "network segment not in ethernet segment address");
-		libconfig_destroy_args(args);
+		librouter_destroy_args(args);
 		return (-1);
 	} else {
 		eth = 0;
@@ -291,7 +291,7 @@ int libconfig_dhcp_set_server(int save_dns, char *cmdline)
 			}
 
 		} else {
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 			return (-1);
 		}
 		i++;
@@ -300,8 +300,8 @@ int libconfig_dhcp_set_server(int save_dns, char *cmdline)
 	/* cria o arquivo de configuracao */
 	sprintf(filename, FILE_DHCPDCONF, eth);
 	if ((file = fopen(filename, "w")) == NULL) {
-		libconfig_pr_error(1, "could not create %s", filename);
-		libconfig_destroy_args(args);
+		librouter_pr_error(1, "could not create %s", filename);
+		librouter_destroy_args(args);
 		return (-1);
 	}
 
@@ -383,7 +383,7 @@ int libconfig_dhcp_set_server(int save_dns, char *cmdline)
 	fprintf(file, "}\n");
 #endif
 	fclose(file);
-	libconfig_destroy_args(args);
+	librouter_destroy_args(args);
 
 	sprintf(filename, FILE_DHCPDLEASES, eth);
 	file = fopen(filename, "r");
@@ -396,14 +396,14 @@ int libconfig_dhcp_set_server(int save_dns, char *cmdline)
 	fclose(file);
 
 	/* se o dhcrelay estiver rodando, tira do ar! */
-	if (libconfig_dhcp_get_status() == DHCP_RELAY)
-		libconfig_dhcp_set_no_relay();
+	if (librouter_dhcp_get_status() == DHCP_RELAY)
+		librouter_dhcp_set_no_relay();
 
 	/* poe o dhcpd para rodar */
-	return libconfig_dhcpd_set_status(1, eth);
+	return librouter_dhcpd_set_status(1, eth);
 }
 
-int libconfig_dhcp_get_server(char *buf)
+int librouter_dhcp_get_server(char *buf)
 {
 	int len;
 	FILE *file;
@@ -414,7 +414,7 @@ int libconfig_dhcp_get_server(char *buf)
 	buf[0] = 0;
 	sprintf(filename, FILE_DHCPDCONF, 0);
 	if ((file = fopen(filename, "r")) != NULL) {
-		if (libconfig_udhcpd_pid_by_eth(0) != -1) {
+		if (librouter_udhcpd_pid_by_eth(0) != -1) {
 			/* pula o '#' */
 			fseek(file, 1, SEEK_SET);
 			fgets(buf, 1023, file);
@@ -429,7 +429,7 @@ int libconfig_dhcp_get_server(char *buf)
 	return 0;
 }
 
-int libconfig_dhcp_check_server(char *ifname)
+int librouter_dhcp_check_server(char *ifname)
 {
 	int eth;
 	FILE *file;
@@ -451,17 +451,17 @@ int libconfig_dhcp_check_server(char *ifname)
 		fgets(buf, 255, file);
 		fclose(file);
 
-		args = libconfig_make_args(buf);
+		args = librouter_make_args(buf);
 		if (args->argc < 7) {
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 			return (-1);
 		}
 
 		inet_aton(args->argv[3], &dhcp_network);
 		inet_aton(args->argv[4], &dhcp_mask);
-		libconfig_destroy_args(args);
+		librouter_destroy_args(args);
 
-		libconfig_ip_interface_get_info(libconfig_ip_ethernet_get_dev(ifname), &eth_addr, &eth_mask, 0, 0);
+		librouter_ip_interface_get_info(librouter_ip_ethernet_get_dev(ifname), &eth_addr, &eth_mask, 0, 0);
 		eth_network.s_addr = eth_addr.s_addr & eth_mask.s_addr;
 
 		if ((dhcp_network.s_addr != eth_network.s_addr) ||
@@ -472,32 +472,32 @@ int libconfig_dhcp_check_server(char *ifname)
 			unlink(filename);
 			sprintf(filename, DHCPD_DAEMON, eth);
 
-			return libconfig_exec_init_program(0, filename);
+			return librouter_exec_init_program(0, filename);
 		}
 	}
 
 	return 0;
 }
 
-int libconfig_dhcp_set_relay(char *servers)
+int librouter_dhcp_set_relay(char *servers)
 {
 	/* se o dhcpd ou o dhcrelay estiver rodando, tira do ar */
-	if (libconfig_dhcp_set_none() < 0)
+	if (librouter_dhcp_set_none() < 0)
 		return (-1);
 
-	libconfig_str_replace_string_in_file("/etc/inittab", "/bin/dhcrelay -q -d", servers);
+	librouter_str_replace_string_in_file("/etc/inittab", "/bin/dhcrelay -q -d", servers);
 
 	/* poe o dhcrelay para rodar */
-	return libconfig_exec_init_program(1, DHCRELAY_DAEMON);
+	return librouter_exec_init_program(1, DHCRELAY_DAEMON);
 }
 
-int libconfig_dhcp_get_relay(char *buf)
+int librouter_dhcp_get_relay(char *buf)
 {
 	char *p;
 	char cmdline[MAX_PROC_CMDLINE];
 	int len;
 
-	if (libconfig_process_get_info(DHCRELAY_DAEMON, NULL, cmdline) == 0)
+	if (librouter_process_get_info(DHCRELAY_DAEMON, NULL, cmdline) == 0)
 		return (-1);
 
 	p = strstr(cmdline, DHCRELAY_DAEMON" -q -d ");
@@ -515,7 +515,7 @@ int libconfig_dhcp_get_relay(char *buf)
 }
 
 #ifdef OPTION_IPSEC
-pid_t libconfig_udhcpd_pid_local(void)
+pid_t librouter_udhcpd_pid_local(void)
 {
 	FILE *F;
 	pid_t pid;
@@ -532,11 +532,11 @@ pid_t libconfig_udhcpd_pid_local(void)
 	return (pid_t) -1;
 }
 
-int libconfig_udhcpd_reload_local(void)
+int librouter_udhcpd_reload_local(void)
 {
 	pid_t pid;
 
-	if ((pid = libconfig_udhcpd_pid_local()) != -1) {
+	if ((pid = librouter_udhcpd_pid_local()) != -1) {
 		kill(pid, SIGHUP);
 		return 0;
 	}
@@ -544,30 +544,30 @@ int libconfig_udhcpd_reload_local(void)
 	return -1;
 }
 
-int libconfig_dhcp_get_local(void)
+int librouter_dhcp_get_local(void)
 {
-	if (libconfig_exec_check_daemon(DHCPD_DAEMON_LOCAL))
+	if (librouter_exec_check_daemon(DHCPD_DAEMON_LOCAL))
 		return DHCP_SERVER;
 	else
 		return DHCP_NONE;
 }
 
-int libconfig_dhcpd_set_local(int on_off)
+int librouter_dhcpd_set_local(int on_off)
 {
 	int ret;
 
-	if (on_off && libconfig_dhcp_get_local() == DHCP_SERVER)
-		return libconfig_udhcpd_reload_local();
+	if (on_off && librouter_dhcp_get_local() == DHCP_SERVER)
+		return librouter_udhcpd_reload_local();
 
-	ret = libconfig_exec_init_program(on_off, DHCPD_DAEMON_LOCAL);
+	ret = librouter_exec_init_program(on_off, DHCPD_DAEMON_LOCAL);
 
-	libconfig_l2tp_exec(RESTART); /* L2TPd integration! */
+	librouter_l2tp_exec(RESTART); /* L2TPd integration! */
 
 	return ret;
 }
 
 /* Discover from file which ethernet interface is to be used in dhcp requests (L2TP) */
-int libconfig_dhcp_l2tp_get_interface(void)
+int librouter_dhcp_l2tp_get_interface(void)
 {
 	int *eth_number, fd;
 
@@ -587,7 +587,7 @@ int libconfig_dhcp_l2tp_get_interface(void)
  * l2tp pool <local|ethernet 0> POOL-START POOL-END [dns-server DNS1 dns-server DNS2 router ROUTER
  * domain-name DOMAIN default-lease-time D H M S max-lease-time D H M S mask MASK]
  */
-int libconfig_dhcp_set_server_local(int save_dns, char *cmdline)
+int librouter_dhcp_set_server_local(int save_dns, char *cmdline)
 {
 	int i = 3;
 	char *mask = NULL, *pool_start = NULL, *pool_end = NULL, *dns1 = NULL,
@@ -599,7 +599,7 @@ int libconfig_dhcp_set_server_local(int save_dns, char *cmdline)
 	arglist *args;
 	FILE *file;
 
-	args = libconfig_make_args(cmdline);
+	args = librouter_make_args(cmdline);
 	if (strcmp(args->argv[2], "ethernet") == 0) {
 		int eth_number = atoi(args->argv[3]);
 		FILE *fd;
@@ -608,13 +608,13 @@ int libconfig_dhcp_set_server_local(int save_dns, char *cmdline)
 		fwrite(&eth_number, sizeof(int), 1, fd);
 		fclose(fd);
 
-		libconfig_dhcpd_set_local(0); /* turn off udhcpd local! */
-		libconfig_destroy_args(args);
+		librouter_dhcpd_set_local(0); /* turn off udhcpd local! */
+		librouter_destroy_args(args);
 		return 0;
 	}
 
 	if (args->argc < 5) { /* l2tp pool local POOL-START POOL-END */
-		libconfig_destroy_args(args);
+		librouter_destroy_args(args);
 		return -1;
 	}
 
@@ -672,7 +672,7 @@ int libconfig_dhcp_set_server_local(int save_dns, char *cmdline)
 				break;
 			}
 		} else {
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 			return (-1);
 		}
 		i++;
@@ -680,8 +680,8 @@ int libconfig_dhcp_set_server_local(int save_dns, char *cmdline)
 
 	/* cria o arquivo de configuracao */
 	if ((file = fopen(FILE_DHCPDCONF_LOCAL, "w")) == NULL) {
-		libconfig_pr_error(1, "could not create %s", FILE_DHCPDCONF_LOCAL);
-		libconfig_destroy_args(args);
+		librouter_pr_error(1, "could not create %s", FILE_DHCPDCONF_LOCAL);
+		librouter_destroy_args(args);
 		return (-1);
 	}
 
@@ -733,7 +733,7 @@ int libconfig_dhcp_set_server_local(int save_dns, char *cmdline)
 		fprintf(file, "opt winsnode %d\n", netbios_node_type);
 
 	fclose(file);
-	libconfig_destroy_args(args);
+	librouter_destroy_args(args);
 
 	file = fopen(FILE_DHCPDLEASES_LOCAL, "r");
 	if (!file) {
@@ -742,16 +742,16 @@ int libconfig_dhcp_set_server_local(int save_dns, char *cmdline)
 	}
 	fclose(file);
 
-	return libconfig_dhcpd_set_local(1);
+	return librouter_dhcpd_set_local(1);
 }
 
-int libconfig_dhcp_get_server_local(char *buf)
+int librouter_dhcp_get_server_local(char *buf)
 {
 	FILE *file;
 	int len;
 
 	if (!(file = fopen(FILE_DHCPDCONF_LOCAL, "r"))) {
-		libconfig_pr_error(1, "could not open %s", FILE_DHCPDCONF_LOCAL);
+		librouter_pr_error(1, "could not open %s", FILE_DHCPDCONF_LOCAL);
 		return (-1);
 	}
 	fseek(file, 1, SEEK_SET); // pula o '#'

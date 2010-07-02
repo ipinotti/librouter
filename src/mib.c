@@ -17,7 +17,7 @@
 
 #undef SNMP_TRANSLATE_DEBUG
 
-struct obj_node *libconfig_snmp_get_tree_node(char *name,
+struct obj_node *librouter_snmp_get_tree_node(char *name,
                                               struct obj_node *P_node)
 {
 	int i;
@@ -30,7 +30,7 @@ struct obj_node *libconfig_snmp_get_tree_node(char *name,
 		}
 
 		if (P_node->sons[i]->n_sons) {
-			if ((tmp = libconfig_snmp_get_tree_node(name, P_node->sons[i])))
+			if ((tmp = librouter_snmp_get_tree_node(name, P_node->sons[i])))
 				return tmp;
 		}
 	}
@@ -94,7 +94,7 @@ static unsigned int _do_translation(char *oid_element,
 			return 1;
 		}
 	} else {
-		if ((node = libconfig_snmp_get_tree_node(oid_element, top)))
+		if ((node = librouter_snmp_get_tree_node(oid_element, top)))
 			return _recursive_fill(node, name_buf, used_len, free_len);
 	}
 
@@ -137,7 +137,7 @@ static int _get_tree_shm_addr(void **shm_init)
 	return 0;
 }
 
-int libconfig_snmp_translate_oid(char *oid_str, oid *name, size_t *namelen)
+int librouter_snmp_translate_oid(char *oid_str, oid *name, size_t *namelen)
 {
 	char *p, *local;
 	arg_list argl = NULL;
@@ -154,7 +154,7 @@ int libconfig_snmp_translate_oid(char *oid_str, oid *name, size_t *namelen)
 		while ((p = strchr(local, '.')))
 			*p = ' ';
 
-		if ((n = libconfig_parse_args_din(local, &argl)) > 0) {
+		if ((n = librouter_parse_args_din(local, &argl)) > 0) {
 			for (i = 0, load_mib = 0; !load_mib && i < n; i++) {
 				for (p = argl[i]; *p; p++) {
 					if (isdigit(*p) == 0) {
@@ -165,10 +165,10 @@ int libconfig_snmp_translate_oid(char *oid_str, oid *name, size_t *namelen)
 			}
 
 			if (load_mib) {
-				if (libconfig_lock_snmp_tree_access()) {
+				if (librouter_lock_snmp_tree_access()) {
 					if (_get_tree_shm_addr(&shm_init)) {
 
-						libconfig_snmp_adjust_shm_to_static((struct obj_node *) (shm_init + sizeof(unsigned int)),shm_init);
+						librouter_snmp_adjust_shm_to_static((struct obj_node *) (shm_init + sizeof(unsigned int)),shm_init);
 						top = (struct obj_node *) (shm_init + sizeof(unsigned int));
 
 						for (i = 0, ret = 1, used_len = 0, free_len = *namelen; i < n; i++) {
@@ -183,13 +183,13 @@ int libconfig_snmp_translate_oid(char *oid_str, oid *name, size_t *namelen)
 						if (ret)
 							*namelen = used_len;
 
-						libconfig_snmp_adjust_shm_to_offset((struct obj_node *) (shm_init + sizeof(unsigned int)), shm_init);
+						librouter_snmp_adjust_shm_to_offset((struct obj_node *) (shm_init + sizeof(unsigned int)), shm_init);
 
 						/* Detach shared memory from this process */
 						shmdt(shm_init);
 					}
 
-					libconfig_unlock_snmp_tree_access();
+					librouter_unlock_snmp_tree_access();
 				}
 			} else {
 				for (i = 0, used_len = 0, free_len = *namelen; i < n; i++) {
@@ -205,7 +205,7 @@ int libconfig_snmp_translate_oid(char *oid_str, oid *name, size_t *namelen)
 				ret = 1;
 			}
 
-			libconfig_destroy_args_din(&argl);
+			librouter_destroy_args_din(&argl);
 		}
 
 		free(local);
@@ -231,7 +231,7 @@ int libconfig_snmp_translate_oid(char *oid_str, oid *name, size_t *namelen)
 	return ret;
 }
 
-void libconfig_snmp_adjust_shm_to_offset(struct obj_node *P_node,
+void librouter_snmp_adjust_shm_to_offset(struct obj_node *P_node,
                                          void *start_addr)
 {
 	int i;
@@ -245,7 +245,7 @@ void libconfig_snmp_adjust_shm_to_offset(struct obj_node *P_node,
 
 	if (P_node->n_sons) {
 		for (i = 0; i < P_node->n_sons; i++) {
-			libconfig_snmp_adjust_shm_to_offset(P_node->sons[i], start_addr);
+			librouter_snmp_adjust_shm_to_offset(P_node->sons[i], start_addr);
 			P_node->sons[i] = (struct obj_node *) ((unsigned long) P_node->sons[i] - (unsigned long) start_addr);
 		}
 
@@ -253,7 +253,7 @@ void libconfig_snmp_adjust_shm_to_offset(struct obj_node *P_node,
 	}
 }
 
-void libconfig_snmp_adjust_shm_to_static(struct obj_node *P_node,
+void librouter_snmp_adjust_shm_to_static(struct obj_node *P_node,
                                          void *start_addr)
 {
 	int i;
@@ -269,19 +269,19 @@ void libconfig_snmp_adjust_shm_to_static(struct obj_node *P_node,
 		P_node->sons = (struct obj_node **) ((unsigned long) P_node->sons + (unsigned long) start_addr);
 		for (i = 0; i < P_node->n_sons; i++) {
 			P_node->sons[i] = (struct obj_node *) ((unsigned long) P_node->sons[i] + (unsigned long) start_addr);
-			libconfig_snmp_adjust_shm_to_static(P_node->sons[i], start_addr);
+			librouter_snmp_adjust_shm_to_static(P_node->sons[i], start_addr);
 		}
 	}
 }
 
-int libconfig_snmp_oid_to_str(char *oid_str, char *buf, int max_len)
+int librouter_snmp_oid_to_str(char *oid_str, char *buf, int max_len)
 {
 	int i;
 	oid name[MAX_OID_LEN];
 	size_t namelen = MAX_OID_LEN;
 	char tp[10], local[MAX_OID_LEN * 10];
 
-	if (libconfig_snmp_translate_oid(oid_str, name, &namelen)) {
+	if (librouter_snmp_translate_oid(oid_str, name, &namelen)) {
 		local[0] = '\0';
 
 		for (i = 0; i < namelen; i++) {
@@ -299,7 +299,7 @@ int libconfig_snmp_oid_to_str(char *oid_str, char *buf, int max_len)
 	return 0;
 }
 
-int libconfig_snmp_oid_to_obj_name(char *oid_str, char *buf, int max_len)
+int librouter_snmp_oid_to_obj_name(char *oid_str, char *buf, int max_len)
 {
 	arg_list argl = NULL;
 	struct obj_node *P_node;
@@ -310,7 +310,7 @@ int libconfig_snmp_oid_to_obj_name(char *oid_str, char *buf, int max_len)
 	if ((local = strdup(oid_str))) {
 		while ((p = strchr(local, '.')))
 			*p = ' ';
-		if ((n = libconfig_parse_args_din(local, &argl)) > 0) {
+		if ((n = librouter_parse_args_din(local, &argl)) > 0) {
 			for (i = 0, all_decimal = 1; all_decimal && i < n; i++) {
 				for (p = argl[i]; *p; p++) {
 					if (isdigit(*p) == 0) {
@@ -320,9 +320,9 @@ int libconfig_snmp_oid_to_obj_name(char *oid_str, char *buf, int max_len)
 				}
 			}
 			if (all_decimal) {
-				if (libconfig_lock_snmp_tree_access()) {
+				if (librouter_lock_snmp_tree_access()) {
 					if (_get_tree_shm_addr(&shm_init)) {
-						libconfig_snmp_adjust_shm_to_static((struct obj_node *) (shm_init + sizeof(unsigned int)), shm_init);
+						librouter_snmp_adjust_shm_to_static((struct obj_node *) (shm_init + sizeof(unsigned int)), shm_init);
 						P_node = (struct obj_node *) (shm_init + sizeof(unsigned int));
 
 						if (P_node->sub_oid == atoi(argl[0])) {
@@ -355,17 +355,17 @@ int libconfig_snmp_oid_to_obj_name(char *oid_str, char *buf, int max_len)
 								ret = 0;
 						}
 
-						libconfig_snmp_adjust_shm_to_offset((struct obj_node *) (shm_init + sizeof(unsigned int)), shm_init);
+						librouter_snmp_adjust_shm_to_offset((struct obj_node *) (shm_init + sizeof(unsigned int)), shm_init);
 
 						/* Detach shared memory from this process */
 						shmdt(shm_init);
 					}
 
-					libconfig_unlock_snmp_tree_access();
+					librouter_unlock_snmp_tree_access();
 				}
 			}
 
-			libconfig_destroy_args_din(&argl);
+			librouter_destroy_args_din(&argl);
 		}
 
 		free(local);
@@ -374,7 +374,7 @@ int libconfig_snmp_oid_to_obj_name(char *oid_str, char *buf, int max_len)
 	return ret;
 }
 
-void libconfig_snmp_dump_mibtree_obj(struct obj_node *P_node, int level)
+void librouter_snmp_dump_mibtree_obj(struct obj_node *P_node, int level)
 {
 	int i;
 
@@ -419,31 +419,31 @@ void libconfig_snmp_dump_mibtree_obj(struct obj_node *P_node, int level)
 
 	if ((P_node->n_sons > 0) && (P_node->sons != NULL)) {
 		for (i = 0; i < P_node->n_sons; i++)
-			libconfig_snmp_dump_mibtree_obj(P_node->sons[i], level + 1);
+			librouter_snmp_dump_mibtree_obj(P_node->sons[i], level + 1);
 	}
 }
 
-int libconfig_snmp_dump_mibtree(void)
+int librouter_snmp_dump_mibtree(void)
 {
 	int ret = -1;
 	struct obj_node *top;
 	void *shm_init = (void *) 0;
 
-	if (libconfig_lock_snmp_tree_access()) {
+	if (librouter_lock_snmp_tree_access()) {
 		if (_get_tree_shm_addr(&shm_init)) {
-			libconfig_snmp_adjust_shm_to_static((struct obj_node *) (shm_init + sizeof(unsigned int)), shm_init);
+			librouter_snmp_adjust_shm_to_static((struct obj_node *) (shm_init + sizeof(unsigned int)), shm_init);
 			top = (struct obj_node *) (shm_init + sizeof(unsigned int));
 
 			/* Loop */
-			libconfig_snmp_dump_mibtree_obj(top, 0);
-			libconfig_snmp_adjust_shm_to_offset((struct obj_node *) (shm_init + sizeof(unsigned int)), shm_init);
+			librouter_snmp_dump_mibtree_obj(top, 0);
+			librouter_snmp_adjust_shm_to_offset((struct obj_node *) (shm_init + sizeof(unsigned int)), shm_init);
 
 			/* Detach shared memory from this process */
 			shmdt(shm_init);
 			ret = 0;
 		}
 
-		libconfig_unlock_snmp_tree_access();
+		librouter_unlock_snmp_tree_access();
 	}
 
 	return ret;

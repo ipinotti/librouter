@@ -15,6 +15,6 @@
 #define SSH_KEY_FILE "/etc/dropbear/dropbear_rsa_host_key"
 #endif
 
-int libconfig_ssh_create_rsakey(int);
+int librouter_ssh_create_rsakey(int);
 
 #endif /* SSH_H_ */

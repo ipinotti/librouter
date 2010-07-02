@@ -10,7 +10,7 @@
 #include "crc.h" /* Checksum and CRC definitions */
 
 /*
- * Function:	libconfig_calculate_crc32_checksum
+ * Function:	librouter_calculate_crc32_checksum
  *
  * This function calculates a 32-bit CRC for the supplied range, returning
  * the checksum (which should be zero).  The core calculation executes the
@@ -26,7 +26,7 @@
 
 /* Start of region to calculate CRC */
 /* Size of region to calculate CRC */
-u32 libconfig_calculate_crc32_checksum(unsigned char *dwStart, u32 dwSize)
+u32 librouter_calculate_crc32_checksum(unsigned char *dwStart, u32 dwSize)
 {
 	u32 dwCRCTable[CRC_TSIZE]; /* CRC32 lookup table */
 	u16 wIndex; /* Index into the CRC table */

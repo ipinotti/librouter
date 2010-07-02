@@ -62,7 +62,7 @@ static debuginfo DEBUG[] = { /* !!! Check cish_defines.h */
 	{NULL, NULL, NULL, 0}
 };
 
-static int _libconfig_find_debug(const char *name)
+static int _librouter_find_debug(const char *name)
 {
 	int i;
 
@@ -73,7 +73,7 @@ static int _libconfig_find_debug(const char *name)
 	return -1;
 }
 
-char *libconfig_debug_find_token(char *logline, char *name, int enabled)
+char *librouter_debug_find_token(char *logline, char *name, int enabled)
 {
 	char *p;
 	debuginfo *dk;
@@ -96,11 +96,11 @@ char *libconfig_debug_find_token(char *logline, char *name, int enabled)
 	return NULL;
 }
 
-int libconfig_debug_set_token(int on_off, const char *token)
+int librouter_debug_set_token(int on_off, const char *token)
 {
 	int i, j;
 
-	i = _libconfig_find_debug(token);
+	i = _librouter_find_debug(token);
 
 	if (i >= 0) {
 		DEBUG[i].enabled = on_off;
@@ -123,7 +123,7 @@ int libconfig_debug_set_token(int on_off, const char *token)
 	return i;
 }
 
-void libconfig_debug_set_all(int on_off)
+void librouter_debug_set_all(int on_off)
 {
 	int i;
 
@@ -136,7 +136,7 @@ void libconfig_debug_set_all(int on_off)
 	printf("  All debugging %s\n", on_off ? "enabled" : "disabled");
 }
 
-void libconfig_debug_dump(void)
+void librouter_debug_dump(void)
 {
 	int i;
 
@@ -146,17 +146,17 @@ void libconfig_debug_dump(void)
 	}
 }
 
-int libconfig_debug_get_state(const char *token)
+int librouter_debug_get_state(const char *token)
 {
 	int i;
 
-	i = _libconfig_find_debug(token);
+	i = _librouter_find_debug(token);
 	if (i >= 0)
 		return DEBUG[i].enabled;
 	return i;
 }
 
-void libconfig_debug_recover_all(void)
+void librouter_debug_recover_all(void)
 {
 #if 0
 	int i;

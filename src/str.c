@@ -32,7 +32,7 @@
  * @param key
  * @return
  */
-char *libconfig_str_find_substr(char *buf, char *key)
+char *librouter_str_find_substr(char *buf, char *key)
 {
 	char *p, *p2;
 
@@ -70,7 +70,7 @@ char *libconfig_str_find_substr(char *buf, char *key)
  * @param value
  * @return
  */
-int libconfig_str_replace_string_in_file(char *filename, char *key, char *value)
+int librouter_str_replace_string_in_file(char *filename, char *key, char *value)
 {
 	int fd = 0, len, i, ret = -1;
 	char *buf = NULL, *p, *p2, space = ' ', coment = '#';
@@ -78,17 +78,17 @@ int libconfig_str_replace_string_in_file(char *filename, char *key, char *value)
 	char filename_new[64];
 
 	if ((fd = open(filename, O_RDONLY)) < 0) {
-		libconfig_pr_error(1, "could not open %s", filename);
+		librouter_pr_error(1, "could not open %s", filename);
 		goto error;
 	}
 
 	if (fstat(fd, &st) < 0) {
-		libconfig_pr_error(1, "fstat");
+		librouter_pr_error(1, "fstat");
 		goto error;
 	}
 
 	if ((buf = malloc(st.st_size)) == NULL) {
-		libconfig_pr_error(1, "could not alloc memory");
+		librouter_pr_error(1, "could not alloc memory");
 		goto error;
 	}
 
@@ -107,7 +107,7 @@ int libconfig_str_replace_string_in_file(char *filename, char *key, char *value)
 	filename_new[63] = 0;
 	strcat(filename_new, ".new");
 	if ((fd = open(filename_new, O_WRONLY | O_CREAT | O_TRUNC, 0600)) < 0) {
-		libconfig_pr_error(1, "could not create %s", filename_new);
+		librouter_pr_error(1, "could not create %s", filename_new);
 		goto error;
 	}
 
@@ -165,7 +165,7 @@ error:
  * @param len
  * @return
  */
-int libconfig_str_find_string_in_file(char *filename,
+int librouter_str_find_string_in_file(char *filename,
                                       char *key,
                                       char *buffer,
                                       int len)
@@ -176,17 +176,17 @@ int libconfig_str_find_string_in_file(char *filename,
 	struct stat st;
 
 	if ((fd = open(filename, O_RDONLY)) < 0) {
-		libconfig_pr_error(1, "could not open %s", filename);
+		librouter_pr_error(1, "could not open %s", filename);
 		goto error;
 	}
 
 	if (fstat(fd, &st) < 0) {
-		libconfig_pr_error(1, "fstat");
+		librouter_pr_error(1, "fstat");
 		goto error;
 	}
 
 	if ((buf = malloc(st.st_size)) == NULL) {
-		libconfig_pr_error(1, "could not alloc memory");
+		librouter_pr_error(1, "could not alloc memory");
 		goto error;
 	}
 
@@ -219,7 +219,7 @@ error:
 	goto end;
 }
 
-void libconfig_str_striplf(char *string)
+void librouter_str_striplf(char *string)
 {
 	int ln; /* string length tempvar */
 
@@ -228,7 +228,7 @@ void libconfig_str_striplf(char *string)
 		string[--ln] = 0;
 }
 
-int libconfig_str_is_empty(char *string)
+int librouter_str_is_empty(char *string)
 {
 	char *c = string;
 
@@ -245,7 +245,7 @@ int libconfig_str_is_empty(char *string)
  * @param value
  * @return
  */
-int libconfig_str_replace_exact_string(char *filename, char *key, char *value)
+int librouter_str_replace_exact_string(char *filename, char *key, char *value)
 {
 	struct stat st;
 	unsigned int len;
@@ -257,17 +257,17 @@ int libconfig_str_replace_exact_string(char *filename, char *key, char *value)
 
 	len = strlen(key);
 	if ((fd = open(filename, O_RDONLY)) < 0) {
-		libconfig_pr_error(0, "could not open file %s", filename);
+		librouter_pr_error(0, "could not open file %s", filename);
 		goto error;
 	}
 
 	if (fstat(fd, &st) < 0) {
-		libconfig_pr_error(0, "fstat");
+		librouter_pr_error(0, "fstat");
 		goto error;
 	}
 
 	if ((buf = malloc(st.st_size + 1)) == NULL) {
-		libconfig_pr_error(0, "malloc");
+		librouter_pr_error(0, "malloc");
 		goto error;
 	}
 
@@ -279,7 +279,7 @@ int libconfig_str_replace_exact_string(char *filename, char *key, char *value)
 		goto end;
 
 	if ((fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, st.st_mode)) < 0) {
-		libconfig_pr_error(0, "could not create %s", filename);
+		librouter_pr_error(0, "could not create %s", filename);
 		goto end;
 	}
 
@@ -302,7 +302,7 @@ error:
 
 #define TERM_CURSORLEFT(a)	"\e["#a"D"	/* moves cursor */
 
-unsigned int libconfig_str_read_password(int echo_on, char *store, unsigned int max_len)
+unsigned int librouter_str_read_password(int echo_on, char *store, unsigned int max_len)
 {
 	char local[10];
 	struct termios zap, original;

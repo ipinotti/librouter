@@ -48,11 +48,11 @@ static void _print_nat_rule(const char *action,
 	src_ports[0] = 0;
 	dst_ports[0] = 0;
 
-	src_netmask = libconfig_ip_extract_mask(_src);
-	dst_netmask = libconfig_ip_extract_mask(_dst);
+	src_netmask = librouter_ip_extract_mask(_src);
+	dst_netmask = librouter_ip_extract_mask(_dst);
 
-	libconfig_acl_set_ports(sports, src_ports);
-	libconfig_acl_set_ports(dports, dst_ports);
+	librouter_acl_set_ports(sports, src_ports);
+	librouter_acl_set_ports(dports, dst_ports);
 
 	if (conf_format)
 		fprintf(out, "nat-rule ");
@@ -72,7 +72,7 @@ static void _print_nat_rule(const char *action,
 	else if (strcmp(src_netmask, "255.255.255.255") == 0)
 		fprintf(out, "host %s ", _src);
 	else
-		fprintf(out, "%s %s ", _src, libconfig_ip_ciscomask(src_netmask));
+		fprintf(out, "%s %s ", _src, librouter_ip_ciscomask(src_netmask));
 
 	if (*src_ports)
 		fprintf(out, "%s ", src_ports);
@@ -82,7 +82,7 @@ static void _print_nat_rule(const char *action,
 	else if (strcmp(dst_netmask, "255.255.255.255") == 0)
 		fprintf(out, "host %s ", _dst);
 	else
-		fprintf(out, "%s %s ", _dst, libconfig_ip_ciscomask(dst_netmask));
+		fprintf(out, "%s %s ", _dst, librouter_ip_ciscomask(dst_netmask));
 
 	if (*dst_ports)
 		fprintf(out, "%s ", dst_ports);
@@ -152,7 +152,7 @@ static void _print_nat_rule(const char *action,
 	fprintf(out, "\n");
 }
 
-void libconfig_nat_dump(char *xacl, FILE *F, int conf_format)
+void librouter_nat_dump(char *xacl, FILE *F, int conf_format)
 {
 	FILE *ipc;
 	char *tmp;
@@ -208,9 +208,9 @@ void libconfig_nat_dump(char *xacl, FILE *F, int conf_format)
 				p = buf;
 				while ((*p) && (*p == ' '))
 					p++;
-				args = libconfig_make_args(p);
+				args = librouter_make_args(p);
 				if (args->argc < 9) {
-					libconfig_destroy_args(args);
+					librouter_destroy_args(args);
 					continue;
 				}
 
@@ -303,7 +303,7 @@ void libconfig_nat_dump(char *xacl, FILE *F, int conf_format)
 						}
 					}
 				}
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 			}
 		}
 	}
@@ -311,7 +311,7 @@ void libconfig_nat_dump(char *xacl, FILE *F, int conf_format)
 	pclose(ipc);
 }
 
-void libconfig_nat_dump_helper(FILE *f, cish_config *cish_cfg)
+void librouter_nat_dump_helper(FILE *f, cish_config *cish_cfg)
 {
 	if (cish_cfg->nat_helper_ftp_ports[0]) {
 		fprintf(f, "ip nat helper ftp ports %s\n", cish_cfg->nat_helper_ftp_ports);
@@ -334,7 +334,7 @@ void libconfig_nat_dump_helper(FILE *f, cish_config *cish_cfg)
 	fprintf(f, "!\n");
 }
 
-int libconfig_nat_get_iface_rules(char *iface, char *in_acl, char *out_acl)
+int librouter_nat_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 {
 	typedef enum {
 		chain_in, chain_out, chain_other
@@ -366,7 +366,7 @@ int libconfig_nat_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 		fgets(buf, 255, F);
 		buf[255] = 0;
 
-		libconfig_str_striplf(buf);
+		librouter_str_striplf(buf);
 
 		if (strncmp(buf, "Chain ", 6) == 0) {
 			if (strncmp(buf + 6, "PREROUTING", 10) == 0)
@@ -384,10 +384,10 @@ int libconfig_nat_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 			while ((*p) && (*p == ' '))
 				p++;
 
-			args = libconfig_make_args(p);
+			args = librouter_make_args(p);
 
 			if (args->argc < 7) {
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 				continue;
 			}
 
@@ -410,7 +410,7 @@ int libconfig_nat_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 			if (acl_in && acl_out)
 				break;
 
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 		}
 	}
 	pclose(F);

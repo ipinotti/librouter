@@ -7,6 +7,6 @@
 #ifndef ERROR_H_
 #define ERROR_H_
 
-void libconfig_pr_error(int output_strerror, char *fmt, ...);
+void librouter_pr_error(int output_strerror, char *fmt, ...);
 
 #endif /* ERROR_H_ */

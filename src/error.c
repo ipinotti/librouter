@@ -11,7 +11,7 @@
 
 #include "error.h"
 
-void libconfig_pr_error(int output_strerror, char *fmt, ...)
+void librouter_pr_error(int output_strerror, char *fmt, ...)
 {
 	va_list args;
 	char buf[1024];

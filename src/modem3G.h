@@ -8,11 +8,11 @@
 #ifndef _MODEM3G_H
 #define _MODEM3G_H
 
-int libconfig_modem3g_get_apn (char * apn, int devcish);
-int libconfig_modem3g_set_apn (char * apn, int devcish);
-int libconfig_modem3g_get_username (char * username, int devcish);
-int libconfig_modem3g_set_username (char * username, int devcish);
-int libconfig_modem3g_get_password (char * password, int devcish);
-int libconfig_modem3g_set_password (char * password, int devcish);
+int librouter_modem3g_get_apn (char * apn, int devcish);
+int librouter_modem3g_set_apn (char * apn, int devcish);
+int librouter_modem3g_get_username (char * username, int devcish);
+int librouter_modem3g_set_username (char * username, int devcish);
+int librouter_modem3g_get_password (char * password, int devcish);
+int librouter_modem3g_set_password (char * password, int devcish);
 
 #endif

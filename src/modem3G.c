@@ -35,7 +35,7 @@
  * @param apn
  * @return
  */
-int libconfig_modem3g_get_apn (char * apn, int devcish)
+int librouter_modem3g_get_apn (char * apn, int devcish)
 {
 	int check=0,length=0,i=0;
 	char file[100] = MODEM3G_CHAT_FILE;
@@ -45,7 +45,7 @@ int libconfig_modem3g_get_apn (char * apn, int devcish)
 	snprintf(device,10,"%d",devcish);
 	strcat(file,device);
 
-	check = libconfig_str_find_string_in_file (file, key, apn, 100);
+	check = librouter_str_find_string_in_file (file, key, apn, 100);
 	length = strlen(apn);
 
 	for (i = 1; i < (length-1); ++i)
@@ -72,7 +72,7 @@ int libconfig_modem3g_get_apn (char * apn, int devcish)
  * @param apn
  * @return
  */
-int libconfig_modem3g_set_apn (char * apn, int devcish)
+int librouter_modem3g_set_apn (char * apn, int devcish)
 {
 	//arq1 == "chat-modem-3g-";
 
@@ -84,7 +84,7 @@ int libconfig_modem3g_set_apn (char * apn, int devcish)
 	snprintf(device,10,"%d",devcish);
 	strcat(file,device);
 
-	check = libconfig_str_replace_string_in_file (file, key, apn);
+	check = librouter_str_replace_string_in_file (file, key, apn);
 
 	if (check == 0)
 		return 1;
@@ -102,7 +102,7 @@ int libconfig_modem3g_set_apn (char * apn, int devcish)
  * @param username
  * @return
  */
-int libconfig_modem3g_get_username (char * username, int devcish)
+int librouter_modem3g_get_username (char * username, int devcish)
 {
 	//arq2 == "modem-3g-";
 
@@ -114,7 +114,7 @@ int libconfig_modem3g_get_username (char * username, int devcish)
 	snprintf(device,10,"%d",devcish);
 	strcat(file,device);
 
-	check = libconfig_str_find_string_in_file (file, key, username, 100);
+	check = librouter_str_find_string_in_file (file, key, username, 100);
 
 	if (check == 0)
 		return 1;
@@ -134,7 +134,7 @@ int libconfig_modem3g_get_username (char * username, int devcish)
  * @param username
  * @return
  */
-int libconfig_modem3g_set_username (char * username, int devcish)
+int librouter_modem3g_set_username (char * username, int devcish)
 {
 	//arq2 == "modem-3g-";
 
@@ -146,7 +146,7 @@ int libconfig_modem3g_set_username (char * username, int devcish)
 	snprintf(device,10,"%d",devcish);
 	strcat(file,device);
 
-	check = libconfig_str_replace_string_in_file (file, key, username);
+	check = librouter_str_replace_string_in_file (file, key, username);
 
 	if (check == 0)
 		return 1;
@@ -164,7 +164,7 @@ int libconfig_modem3g_set_username (char * username, int devcish)
  * @param password
  * @return
  */
-int libconfig_modem3g_get_password (char * password, int devcish)
+int librouter_modem3g_get_password (char * password, int devcish)
 {
 	//arq2 == "modem-3g-";
 
@@ -176,7 +176,7 @@ int libconfig_modem3g_get_password (char * password, int devcish)
 	snprintf(device,10,"%d",devcish);
 	strcat(file,device);
 
-	check = libconfig_str_find_string_in_file (file, key, password, 100);
+	check = librouter_str_find_string_in_file (file, key, password, 100);
 
 	if (check == 0)
 		return 1;
@@ -195,7 +195,7 @@ int libconfig_modem3g_get_password (char * password, int devcish)
  * @param password
  * @return
  */
-int libconfig_modem3g_set_password (char * password, int devcish)
+int librouter_modem3g_set_password (char * password, int devcish)
 {
 	//arq2 == "modem-3g-";
 
@@ -207,7 +207,7 @@ int libconfig_modem3g_set_password (char * password, int devcish)
 	snprintf(device,10,"%d",devcish);
 	strcat(file,device);
 
-	check = libconfig_str_replace_string_in_file (file, key, password);
+	check = librouter_str_replace_string_in_file (file, key, password);
 
 	if (check == 0)
 		return 1;

@@ -64,35 +64,35 @@ struct trap_data_obj {
 	char *value;
 };
 
-int libconfig_snmp_get_contact(char *buffer, int max_len);
-int libconfig_snmp_get_location(char *buffer, int max_len);
-int libconfig_snmp_set_contact(char *contact);
-int libconfig_snmp_set_location(char *location);
-int libconfig_snmp_reload_config(void);
-int libconfig_snmp_is_running(void);
-int libconfig_snmp_start(void);
-int libconfig_snmp_stop(void);
-int libconfig_snmp_set_community(const char *community_name,
+int librouter_snmp_get_contact(char *buffer, int max_len);
+int librouter_snmp_get_location(char *buffer, int max_len);
+int librouter_snmp_set_contact(char *contact);
+int librouter_snmp_set_location(char *location);
+int librouter_snmp_reload_config(void);
+int librouter_snmp_is_running(void);
+int librouter_snmp_start(void);
+int librouter_snmp_stop(void);
+int librouter_snmp_set_community(const char *community_name,
                                  int add_del,
                                  int ro);
-int libconfig_snmp_dump_communities(FILE *out);
-int libconfig_snmp_dump_versions(FILE *out);
-int libconfig_snmp_add_trapsink(char *addr, char *community);
-int libconfig_snmp_del_trapsink(char *addr);
-int libconfig_snmp_get_trapsinks(char ***sinks);
+int librouter_snmp_dump_communities(FILE *out);
+int librouter_snmp_dump_versions(FILE *out);
+int librouter_snmp_add_trapsink(char *addr, char *community);
+int librouter_snmp_del_trapsink(char *addr);
+int librouter_snmp_get_trapsinks(char ***sinks);
 
-int libconfig_snmp_itf_should_sendtrap(char *itf);
+int librouter_snmp_itf_should_sendtrap(char *itf);
 
-int libconfig_snmp_rmon_event_log(int index, char *description);
+int librouter_snmp_rmon_event_log(int index, char *description);
 
-int libconfig_snmp_rmon_add_event(int num,
+int librouter_snmp_rmon_add_event(int num,
                                   int log,
                                   char *community,
                                   int status,
                                   char *descr,
                                   char *owner);
 
-int libconfig_snmp_rmon_add_alarm(int num,
+int librouter_snmp_rmon_add_alarm(int num,
                                   char *var_oid,
                                   oid *name,
                                   size_t namelen,
@@ -105,31 +105,31 @@ int libconfig_snmp_rmon_add_alarm(int num,
                                   int status,
                                   char *owner);
 
-int libconfig_snmp_rmon_remove_event(char *index);
-int libconfig_snmp_rmon_remove_alarm(char *index);
-int libconfig_snmp_rmon_show_event(char *index);
-int libconfig_snmp_rmon_show_alarm(char *index);
-int libconfig_snmp_rmon_send_signal(int sig);
-int libconfig_snmp_rmon_clear_events(void);
-int libconfig_snmp_create_pdu_data(struct trap_data_obj **data_p);
+int librouter_snmp_rmon_remove_event(char *index);
+int librouter_snmp_rmon_remove_alarm(char *index);
+int librouter_snmp_rmon_show_event(char *index);
+int librouter_snmp_rmon_show_alarm(char *index);
+int librouter_snmp_rmon_send_signal(int sig);
+int librouter_snmp_rmon_clear_events(void);
+int librouter_snmp_create_pdu_data(struct trap_data_obj **data_p);
 
-int libconfig_snmp_add_pdu_data_entry(struct trap_data_obj **data_p,
+int librouter_snmp_add_pdu_data_entry(struct trap_data_obj **data_p,
                                       char *oid_str,
                                       int type,
                                       char *value);
 
-int libconfig_snmp_destroy_pdu_data(struct trap_data_obj **data_p);
+int librouter_snmp_destroy_pdu_data(struct trap_data_obj **data_p);
 
-int libconfig_snmp_sendtrap(char *snmp_trap_version,
+int librouter_snmp_sendtrap(char *snmp_trap_version,
                             char *community_rcv,
                             char *trap_obj_oid,
                             struct trap_data_obj *data);
 
-int libconfig_snmp_rmon_get_access_cfg(struct rmon_config **shm_rmon_p);
+int librouter_snmp_rmon_get_access_cfg(struct rmon_config **shm_rmon_p);
 
-int libconfig_snmp_rmon_free_access_cfg(struct rmon_config **shm_rmon_p);
+int librouter_snmp_rmon_free_access_cfg(struct rmon_config **shm_rmon_p);
 
-int libconfig_snmp_add_user(char *user,
+int librouter_snmp_add_user(char *user,
                             int rw,
                             char *authpriv,
                             char *authproto,
@@ -137,12 +137,12 @@ int libconfig_snmp_add_user(char *user,
                             char *authpasswd,
                             char *privpasswd);
 
-int libconfig_snmp_remove_user(char *user);
+int librouter_snmp_remove_user(char *user);
 
-unsigned int libconfig_snmp_list_users(char ***store);
-void libconfig_snmp_load_prepare_users(void);
-void libconfig_snmp_start_default(void);
-void libconfig_snmp_add_dev_trap(char *itf);
-void libconfig_snmp_del_dev_trap(char *itf);
+unsigned int librouter_snmp_list_users(char ***store);
+void librouter_snmp_load_prepare_users(void);
+void librouter_snmp_start_default(void);
+void librouter_snmp_add_dev_trap(char *itf);
+void librouter_snmp_del_dev_trap(char *itf);
 
 #endif /* SNMP_H_ */

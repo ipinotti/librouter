@@ -15,7 +15,7 @@
 //#define DEBUG_CMD(x) syslog(LOG_DEBUG, "%s\n", x)
 #define DEBUG_CMD(x)
 
-void libconfig_acl_create_new(char *name)
+void librouter_acl_create_new(char *name)
 {
 	char cmd[64];
 
@@ -28,7 +28,7 @@ void libconfig_acl_create_new(char *name)
  * \param acl: structure with acl configuration
  * \return void
  */
-void libconfig_acl_apply(struct acl_config *acl)
+void librouter_acl_apply(struct acl_config *acl)
 {
 	char cmd[256];
 	FILE *f;
@@ -155,7 +155,7 @@ void libconfig_acl_apply(struct acl_config *acl)
 
 	/* Check if we already have this rule */
 	if ((f = fopen(TMP_CFG_FILE, "w+"))) {
-		libconfig_acl_dump(0, f, 1);
+		librouter_acl_dump(0, f, 1);
 		fseek(f, 0, SEEK_SET);
 
 		/* Parse through all existing rules */
@@ -176,7 +176,7 @@ void libconfig_acl_apply(struct acl_config *acl)
 	}
 }
 
-void libconfig_acl_set_ports(const char *ports, char *str)
+void librouter_acl_set_ports(const char *ports, char *str)
 {
 	char *p;
 
@@ -203,7 +203,7 @@ void libconfig_acl_set_ports(const char *ports, char *str)
 	}
 }
 
-void libconfig_acl_print_flags(FILE *out, char *flags)
+void librouter_acl_print_flags(FILE *out, char *flags)
 {
 	char flags_ascii[6][4] = { "FIN", "SYN", "RST", "PSH", "ACK", "URG" };
 	int i, print;
@@ -222,7 +222,7 @@ void libconfig_acl_print_flags(FILE *out, char *flags)
 	}
 }
 
-static void _libconfig_acl_print_rule(const char *action,
+static void _librouter_acl_print_rule(const char *action,
                                       const char *proto,
                                       const char *src,
                                       const char *dst,
@@ -251,10 +251,10 @@ static void _libconfig_acl_print_rule(const char *action,
 	_dst = strdup(dst);
 	src_ports[0] = 0;
 	dst_ports[0] = 0;
-	src_netmask = libconfig_ip_extract_mask(_src);
-	dst_netmask = libconfig_ip_extract_mask(_dst);
-	libconfig_acl_set_ports(sports, src_ports);
-	libconfig_acl_set_ports(dports, dst_ports);
+	src_netmask = librouter_ip_extract_mask(_src);
+	dst_netmask = librouter_ip_extract_mask(_dst);
+	librouter_acl_set_ports(sports, src_ports);
+	librouter_acl_set_ports(dports, dst_ports);
 
 	if (conf_format)
 		fprintf(out, "access-list ");
@@ -299,7 +299,7 @@ static void _libconfig_acl_print_rule(const char *action,
 	else if (strcmp(src_netmask, "255.255.255.255") == 0)
 		fprintf(out, "host %s ", _src);
 	else
-		fprintf(out, "%s %s ", _src, libconfig_ip_ciscomask(src_netmask));
+		fprintf(out, "%s %s ", _src, librouter_ip_ciscomask(src_netmask));
 	if (*src_ports)
 		fprintf(out, "%s ", src_ports);
 	if (strcasecmp(dst, "0.0.0.0/0") == 0)
@@ -307,7 +307,7 @@ static void _libconfig_acl_print_rule(const char *action,
 	else if (strcmp(dst_netmask, "255.255.255.255") == 0)
 		fprintf(out, "host %s ", _dst);
 	else
-		fprintf(out, "%s %s ", _dst, libconfig_ip_ciscomask(dst_netmask));
+		fprintf(out, "%s %s ", _dst, librouter_ip_ciscomask(dst_netmask));
 	if (*dst_ports)
 		fprintf(out, "%s ", dst_ports);
 	if (flags) {
@@ -317,10 +317,10 @@ static void _libconfig_acl_print_rule(const char *action,
 			t = strtok(flags, "/");
 			if (t != NULL) {
 				fprintf(out, "flags ");
-				libconfig_acl_print_flags(out, t);
+				librouter_acl_print_flags(out, t);
 				fprintf(out, "/");
 				t = strtok(NULL, "/");
-				libconfig_acl_print_flags(out, t);
+				librouter_acl_print_flags(out, t);
 				fprintf(out, " ");
 			}
 		} else
@@ -341,7 +341,7 @@ static void _libconfig_acl_print_rule(const char *action,
 	fprintf(out, "\n");
 }
 
-void libconfig_acl_dump(char *xacl, FILE *F, int conf_format)
+void librouter_acl_dump(char *xacl, FILE *F, int conf_format)
 {
 	FILE *ipc;
 	char buf[512];
@@ -407,9 +407,9 @@ void libconfig_acl_dump(char *xacl, FILE *F, int conf_format)
 					p++;
 
 				/* 0 0 DROP tcp -- * * 0.0.0.0/0 0.0.0.0/0 tcp flags:0x16/0x02 */
-				args = libconfig_make_args(p);
+				args = librouter_make_args(p);
 				if (args->argc < 9) {
-					libconfig_destroy_args(args);
+					librouter_destroy_args(args);
 					continue;
 				}
 
@@ -513,7 +513,7 @@ void libconfig_acl_dump(char *xacl, FILE *F, int conf_format)
 								++mcount;
 						}
 
-						_libconfig_acl_print_rule(type,
+						_librouter_acl_print_rule(type,
 						                prot, source,
 						                dest, sports,
 						                dports, acl, F,
@@ -544,14 +544,14 @@ void libconfig_acl_dump(char *xacl, FILE *F, int conf_format)
 						}
 					}
 				}
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 			}
 		}
 	}
 	pclose(ipc);
 }
 
-void libconfig_acl_dump_policy(FILE *F)
+void librouter_acl_dump_policy(FILE *F)
 {
 	FILE *ipc;
 	char buf[512];
@@ -591,7 +591,7 @@ void libconfig_acl_dump_policy(FILE *F)
 	pclose(ipc);
 }
 
-int libconfig_acl_exists(char *acl)
+int librouter_acl_exists(char *acl)
 {
 	FILE *f;
 	char *tmp, buf[256];
@@ -608,7 +608,7 @@ int libconfig_acl_exists(char *acl)
 		buf[0] = 0;
 		fgets(buf, 255, f);
 		buf[255] = 0;
-		libconfig_str_striplf(buf);
+		librouter_str_striplf(buf);
 		if (strncmp(buf, "Chain ", 6) == 0) {
 			tmp = strchr(buf + 6, ' ');
 			if (tmp) {
@@ -626,7 +626,7 @@ int libconfig_acl_exists(char *acl)
 	return acl_exists;
 }
 
-int libconfig_acl_matched_exists(char *acl,
+int librouter_acl_matched_exists(char *acl,
                                  char *iface_in,
                                  char *iface_out,
                                  char *chain)
@@ -650,7 +650,7 @@ int libconfig_acl_matched_exists(char *acl,
 		buf[0] = 0;
 		fgets(buf, 255, F);
 		buf[255] = 0;
-		libconfig_str_striplf(buf);
+		librouter_str_striplf(buf);
 
 		if (strncmp(buf, "Chain ", 6) == 0) {
 
@@ -675,9 +675,9 @@ int libconfig_acl_matched_exists(char *acl,
 			while ((*p) && (*p == ' '))
 				p++;
 
-			args = libconfig_make_args(p);
+			args = librouter_make_args(p);
 			if (args->argc < 7) {
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 				continue;
 			}
 
@@ -690,11 +690,11 @@ int libconfig_acl_matched_exists(char *acl,
 				&& ((acl == NULL) || (strcmp(target, acl) == 0))) {
 
 				acl_exists = 1;
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 				break;
 			}
 
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 		}
 	}
 
@@ -703,7 +703,7 @@ int libconfig_acl_matched_exists(char *acl,
 	return acl_exists;
 }
 
-int libconfig_acl_get_iface_rules(char *iface, char *in_acl, char *out_acl)
+int librouter_acl_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 {
 	typedef enum {
 		chain_fwd, chain_in, chain_out, chain_other
@@ -734,7 +734,7 @@ int libconfig_acl_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 		buf[0] = 0;
 		fgets(buf, 255, F);
 		buf[255] = 0;
-		libconfig_str_striplf(buf);
+		librouter_str_striplf(buf);
 		if (strncmp(buf, "Chain ", 6) == 0) {
 			if (strncmp(buf + 6, "FORWARD", 7) == 0)
 				chain = chain_fwd;
@@ -752,9 +752,9 @@ int libconfig_acl_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 			while ((*p) && (*p == ' '))
 				p++;
 
-			args = libconfig_make_args(p);
+			args = librouter_make_args(p);
 			if (args->argc < 7) {
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 				continue;
 			}
 
@@ -779,7 +779,7 @@ int libconfig_acl_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 			if (acl_in && acl_out)
 				break;
 
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 		}
 	}
 
@@ -788,7 +788,7 @@ int libconfig_acl_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 	return 0;
 }
 
-int libconfig_acl_get_refcount(char *acl)
+int librouter_acl_get_refcount(char *acl)
 {
 	FILE *F;
 	char *tmp;
@@ -805,7 +805,7 @@ int libconfig_acl_get_refcount(char *acl)
 		buf[0] = 0;
 		fgets(buf, 255, F);
 		buf[255] = 0;
-		libconfig_str_striplf(buf);
+		librouter_str_striplf(buf);
 		if (strncmp(buf, "Chain ", 6) == 0) {
 			tmp = strchr(buf + 6, ' ');
 			if (tmp) {
@@ -825,7 +825,7 @@ int libconfig_acl_get_refcount(char *acl)
 	return 0;
 }
 
-int libconfig_acl_clean_iface_acls(char *iface)
+int librouter_acl_clean_iface_acls(char *iface)
 {
 	FILE *F;
 	char buf[256];
@@ -853,7 +853,7 @@ int libconfig_acl_clean_iface_acls(char *iface)
 		buf[0] = 0;
 		fgets(buf, 255, F);
 		buf[255] = 0;
-		libconfig_str_striplf(buf);
+		librouter_str_striplf(buf);
 		if (strncmp(buf, "Chain ", 6) == 0) {
 			p = strchr(buf + 6, ' ');
 
@@ -870,9 +870,9 @@ int libconfig_acl_clean_iface_acls(char *iface)
 			while ((*p) && (*p == ' '))
 				p++;
 
-			args = libconfig_make_args(p);
+			args = librouter_make_args(p);
 			if (args->argc < 7) {
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 				continue;
 			}
 
@@ -897,7 +897,7 @@ int libconfig_acl_clean_iface_acls(char *iface)
 
 				system(cmd);
 			}
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 		}
 	}
 
@@ -907,7 +907,7 @@ int libconfig_acl_clean_iface_acls(char *iface)
 }
 
 /* #ifdef OPTION_IPSEC Starter deve fazer uso de #ifdef */
-int libconfig_acl_copy_iface_acls(char *src, char *trg) /* starter/interfaces.c */
+int librouter_acl_copy_iface_acls(char *src, char *trg) /* starter/interfaces.c */
 {
 	FILE *F;
 	char buf[256];
@@ -937,7 +937,7 @@ int libconfig_acl_copy_iface_acls(char *src, char *trg) /* starter/interfaces.c 
 		buf[0] = 0;
 		fgets(buf, 255, F);
 		buf[255] = 0;
-		libconfig_str_striplf(buf);
+		librouter_str_striplf(buf);
 		if (strncmp(buf, "Chain ", 6) == 0) {
 			p = strchr(buf + 6, ' ');
 
@@ -955,9 +955,9 @@ int libconfig_acl_copy_iface_acls(char *src, char *trg) /* starter/interfaces.c 
 			while ((*p) && (*p == ' '))
 				p++;
 
-			args = libconfig_make_args(p);
+			args = librouter_make_args(p);
 			if (args->argc < 7) {
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 				continue;
 			}
 
@@ -983,7 +983,7 @@ int libconfig_acl_copy_iface_acls(char *src, char *trg) /* starter/interfaces.c 
 				system(cmd);
 			}
 
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 		}
 	}
 
@@ -993,7 +993,7 @@ int libconfig_acl_copy_iface_acls(char *src, char *trg) /* starter/interfaces.c 
 }
 
 #ifdef OPTION_IPSEC
-int libconfig_acl_interface_ipsec(int add_del,
+int librouter_acl_interface_ipsec(int add_del,
                                   int chain,
                                   char *dev,
                                   char *listno)
@@ -1009,7 +1009,7 @@ int libconfig_acl_interface_ipsec(int add_del,
 		if ((f = fopen(filename, "r")) != NULL) {
 			fgets(iface, 16, f);
 			fclose(f);
-			libconfig_str_striplf(iface);
+			librouter_str_striplf(iface);
 			if (strcmp(iface, dev) == 0) /* found ipsec attach to dev */
 			{
 				if (add_del) {
@@ -1044,7 +1044,7 @@ int libconfig_acl_interface_ipsec(int add_del,
 					}
 				} else {
 					if ((chain == chain_in) || (chain == chain_both)) {
-						if (libconfig_acl_matched_exists(listno, ipsec, 0, "INPUT")) {
+						if (librouter_acl_matched_exists(listno, ipsec, 0, "INPUT")) {
 							snprintf(buf,
 								256,
 								"/bin/iptables -D INPUT -i %s -j %s",
@@ -1055,7 +1055,7 @@ int libconfig_acl_interface_ipsec(int add_del,
 							system(buf);
 						}
 
-						if (libconfig_acl_matched_exists(listno, ipsec, 0, "FORWARD")) {
+						if (librouter_acl_matched_exists(listno, ipsec, 0, "FORWARD")) {
 							snprintf(buf,
 								256,
 								"/bin/iptables -D FORWARD -i %s -j %s",
@@ -1068,7 +1068,7 @@ int libconfig_acl_interface_ipsec(int add_del,
 					}
 					if ((chain == chain_out) || (chain
 					                == chain_both)) {
-						if (libconfig_acl_matched_exists(listno, 0, ipsec, "OUTPUT")) {
+						if (librouter_acl_matched_exists(listno, 0, ipsec, "OUTPUT")) {
 							snprintf(buf,
 								256,
 								"/bin/iptables -D OUTPUT -o %s -j %s",
@@ -1079,7 +1079,7 @@ int libconfig_acl_interface_ipsec(int add_del,
 							system(buf);
 						}
 
-						if (libconfig_acl_matched_exists(listno, 0, ipsec, "FORWARD")) {
+						if (librouter_acl_matched_exists(listno, 0, ipsec, "FORWARD")) {
 							snprintf(buf,
 								256,
 								"/bin/iptables -D FORWARD -o %s -j %s",
@@ -1102,7 +1102,7 @@ int libconfig_acl_interface_ipsec(int add_del,
 
 int delete_module(const char *name); /* libbb ? */
 
-void libconfig_acl_cleanup_modules(void)
+void librouter_acl_cleanup_modules(void)
 {
 	delete_module(NULL); /* clean unused modules! */
 }

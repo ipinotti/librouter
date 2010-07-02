@@ -7,6 +7,6 @@
 #ifndef CRC32_H_
 #define CRC32_H_
 
-unsigned long libconfig_crc32 (unsigned long crc, const unsigned char *buf, unsigned int len);
+unsigned long librouter_crc32 (unsigned long crc, const unsigned char *buf, unsigned int len);
 
 #endif /* CRC32_H_ */

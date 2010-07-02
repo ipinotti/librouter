@@ -38,39 +38,39 @@ struct trap_sink {
 oid objid_sysuptime[] = { 1, 3, 6, 1, 2, 1, 1, 3, 0 };
 oid objid_snmptrap[] = { 1, 3, 6, 1, 6, 3, 1, 1, 4, 1, 0 };
 
-int libconfig_snmp_get_contact(char *buffer, int max_len)
+int librouter_snmp_get_contact(char *buffer, int max_len)
 {
-	return libconfig_str_find_string_in_file(FILE_SNMPD_CONF,
+	return librouter_str_find_string_in_file(FILE_SNMPD_CONF,
 			"syscontact", buffer, max_len);
 }
 
-int libconfig_snmp_get_location(char *buffer, int max_len)
+int librouter_snmp_get_location(char *buffer, int max_len)
 {
-	return libconfig_str_find_string_in_file(FILE_SNMPD_CONF,
+	return librouter_str_find_string_in_file(FILE_SNMPD_CONF,
 	                "syslocation", buffer, max_len);
 }
 
-int libconfig_snmp_set_contact(char *contact)
+int librouter_snmp_set_contact(char *contact)
 {
-	return libconfig_str_replace_string_in_file(FILE_SNMPD_CONF,
+	return librouter_str_replace_string_in_file(FILE_SNMPD_CONF,
 	                "syscontact", contact);
 }
 
-int libconfig_snmp_set_location(char *location)
+int librouter_snmp_set_location(char *location)
 {
-	return libconfig_str_replace_string_in_file(FILE_SNMPD_CONF,
+	return librouter_str_replace_string_in_file(FILE_SNMPD_CONF,
 	                "syslocation", location);
 }
 
-int libconfig_snmp_reload_config(void)
+int librouter_snmp_reload_config(void)
 {
 	pid_t pid;
 
-	pid = libconfig_process_get_pid(PROG_SNMPD);
+	pid = librouter_process_get_pid(PROG_SNMPD);
 
 	if (pid) {
 		kill(pid, SIGHUP);
-		libconfig_snmp_rmon_send_signal(SIGUSR1);
+		librouter_snmp_rmon_send_signal(SIGUSR1);
 	}
 
 	return 0;
@@ -78,20 +78,20 @@ int libconfig_snmp_reload_config(void)
 
 #define SNMP_DAEMON "snmpd"
 
-int libconfig_snmp_is_running(void)
+int librouter_snmp_is_running(void)
 {
-	return libconfig_exec_check_daemon(SNMP_DAEMON);
+	return librouter_exec_check_daemon(SNMP_DAEMON);
 }
 
-int libconfig_snmp_start(void)
+int librouter_snmp_start(void)
 {
 	int ret;
 
-	if (!libconfig_snmp_is_running()) {
-		ret = libconfig_exec_daemon(SNMP_DAEMON);
+	if (!librouter_snmp_is_running()) {
+		ret = librouter_exec_daemon(SNMP_DAEMON);
 
 		if (ret != -1)
-			libconfig_snmp_rmon_send_signal(SIGUSR1);
+			librouter_snmp_rmon_send_signal(SIGUSR1);
 
 		return ret;
 	}
@@ -99,46 +99,46 @@ int libconfig_snmp_start(void)
 	return 0;
 }
 
-int libconfig_snmp_stop(void)
+int librouter_snmp_stop(void)
 {
-	if (libconfig_snmp_is_running()) {
+	if (librouter_snmp_is_running()) {
 #if 1
 		int ret;
 		pid_t pid;
 		time_t timeout;
 
-		pid = libconfig_process_get_pid(SNMP_DAEMON);
+		pid = librouter_process_get_pid(SNMP_DAEMON);
 
-		if ((ret = libconfig_kill_daemon(SNMP_DAEMON)) == 0) {
-			for (timeout = time(NULL) + 10; (libconfig_process_get_pid(SNMP_DAEMON) == pid) && (time(NULL) < timeout);)
+		if ((ret = librouter_kill_daemon(SNMP_DAEMON)) == 0) {
+			for (timeout = time(NULL) + 10; (librouter_process_get_pid(SNMP_DAEMON) == pid) && (time(NULL) < timeout);)
 				usleep(100000);
 		}
 
-		libconfig_snmp_rmon_send_signal(SIGUSR1);
+		librouter_snmp_rmon_send_signal(SIGUSR1);
 
 		return ret;
 #else
-		return libconfig_kill_daemon(SNMP_DAEMON);
+		return librouter_kill_daemon(SNMP_DAEMON);
 #endif
 	}
 
 	return 0;
 }
 
-int libconfig_snmp_set_community(const char *community_name, int add_del, int ro)
+int librouter_snmp_set_community(const char *community_name, int add_del, int ro)
 {
 	char buf[1024];
 	FILE *conf, *new_conf;
 
 	conf = fopen(FILE_SNMPD_CONF, "r");
 	if (!conf) {
-		libconfig_pr_error(0, "Could not configure SNMP server");
+		librouter_pr_error(0, "Could not configure SNMP server");
 		return (-1);
 	}
 
 	new_conf = fopen(FILE_SNMPD_CONF".new", "w");
 	if (!new_conf) {
-		libconfig_pr_error(0, "Could not reconfigure SNMP server");
+		librouter_pr_error(0, "Could not reconfigure SNMP server");
 		fclose(conf);
 		return (-1);
 	}
@@ -151,7 +151,7 @@ int libconfig_snmp_set_community(const char *community_name, int add_del, int ro
 
 		buf[1023] = 0;
 
-		libconfig_str_striplf(buf);
+		librouter_str_striplf(buf);
 
 		if (strncmp(buf, ro ? "rocommunity" : "rwcommunity", 11) == 0) {
 			/* don't copy ours */
@@ -184,7 +184,7 @@ int libconfig_snmp_set_community(const char *community_name, int add_del, int ro
 	return 0;
 }
 
-int libconfig_snmp_dump_communities(FILE *out)
+int librouter_snmp_dump_communities(FILE *out)
 {
 	char buf[1024];
 	int count = 0;
@@ -192,7 +192,7 @@ int libconfig_snmp_dump_communities(FILE *out)
 
 	conf = fopen(FILE_SNMPD_CONF, "r");
 	if (!conf) {
-		libconfig_pr_error(0,
+		librouter_pr_error(0,
 		                "Could not read SNMP server configuration");
 		return (-1);
 	}
@@ -204,7 +204,7 @@ int libconfig_snmp_dump_communities(FILE *out)
 			break;
 
 		buf[1023] = 0;
-		libconfig_str_striplf(buf);
+		librouter_str_striplf(buf);
 
 		if ((strncmp(buf, "rocommunity", 11) == 0) || (strncmp(buf, "rwcommunity", 11) == 0)) {
 			fprintf(out, "snmp-server community %s r%c\n", buf + 12, buf[1]);
@@ -216,12 +216,12 @@ int libconfig_snmp_dump_communities(FILE *out)
 	return count;
 }
 
-int libconfig_snmp_dump_versions(FILE *out)
+int librouter_snmp_dump_versions(FILE *out)
 {
 	int count = 0;
 	char *p1, *p2, *p3, buf[8];
 
-	if (libconfig_exec_get_inittab_lineoptions(PROG_SNMPD, "-J", buf, 8) > 0) {
+	if (librouter_exec_get_inittab_lineoptions(PROG_SNMPD, "-J", buf, 8) > 0) {
 
 		p1 = strstr(buf, "1");
 		p2 = strstr(buf, "2c");
@@ -253,7 +253,7 @@ int libconfig_snmp_dump_versions(FILE *out)
 	return count;
 }
 
-int libconfig_snmp_add_trapsink(char *addr, char *community)
+int librouter_snmp_add_trapsink(char *addr, char *community)
 {
 	int fd, left;
 	FILE *conf;
@@ -261,13 +261,13 @@ int libconfig_snmp_add_trapsink(char *addr, char *community)
 	char *p, *local, line[201];
 
 	if ((fd = open(FILE_SNMPD_CONF, O_RDONLY)) < 0) {
-		libconfig_pr_error(0, "Could not read SNMP configuration");
+		librouter_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 
 	if (fstat(fd, &st) < 0) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read SNMP configuration");
+		librouter_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 
@@ -275,7 +275,7 @@ int libconfig_snmp_add_trapsink(char *addr, char *community)
 	st.st_size += 200;
 	if (!(local = malloc(st.st_size))) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read SNMP configuration");
+		librouter_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 
@@ -284,7 +284,7 @@ int libconfig_snmp_add_trapsink(char *addr, char *community)
 
 	if (!(conf = fopen(FILE_SNMPD_CONF, "r"))) {
 		free(local);
-		libconfig_pr_error(0, "Could not read SNMP configuration");
+		librouter_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 
@@ -310,7 +310,7 @@ int libconfig_snmp_add_trapsink(char *addr, char *community)
 
 	if ((fd = open(FILE_SNMPD_CONF, O_WRONLY | O_CREAT, st.st_mode)) < 0) {
 		free(local);
-		libconfig_pr_error(0, "Could not read SNMP configuration");
+		librouter_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 
@@ -322,7 +322,7 @@ int libconfig_snmp_add_trapsink(char *addr, char *community)
 	return 0;
 }
 
-int libconfig_snmp_del_trapsink(char *addr)
+int librouter_snmp_del_trapsink(char *addr)
 {
 	int fd, left;
 	FILE *conf;
@@ -330,19 +330,19 @@ int libconfig_snmp_del_trapsink(char *addr)
 	char *p, *local, line[201];
 
 	if ((fd = open(FILE_SNMPD_CONF, O_RDONLY)) < 0) {
-		libconfig_pr_error(0, "Could not read SNMP configuration");
+		librouter_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 
 	if (fstat(fd, &st) < 0) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read SNMP configuration");
+		librouter_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 
 	if (!(local = malloc(st.st_size))) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read SNMP configuration");
+		librouter_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 
@@ -351,7 +351,7 @@ int libconfig_snmp_del_trapsink(char *addr)
 
 	if (!(conf = fopen(FILE_SNMPD_CONF, "r"))) {
 		free(local);
-		libconfig_pr_error(0, "Could not read SNMP configuration");
+		librouter_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 
@@ -374,7 +374,7 @@ int libconfig_snmp_del_trapsink(char *addr)
 
 	if ((fd = open(FILE_SNMPD_CONF, O_WRONLY | O_CREAT, st.st_mode)) < 0) {
 		free(local);
-		libconfig_pr_error(0, "Could not read SNMP configuration");
+		librouter_pr_error(0, "Could not read SNMP configuration");
 		return -1;
 	}
 
@@ -386,7 +386,7 @@ int libconfig_snmp_del_trapsink(char *addr)
 	return 0;
 }
 
-int libconfig_snmp_get_trapsinks(char ***sinks)
+int librouter_snmp_get_trapsinks(char ***sinks)
 {
 	FILE *f;
 	int i, len = 0;
@@ -451,7 +451,7 @@ int libconfig_snmp_get_trapsinks(char ***sinks)
 	return i;
 }
 
-int libconfig_snmp_itf_should_sendtrap(char *itf)
+int librouter_snmp_itf_should_sendtrap(char *itf)
 {
 	FILE *f;
 	int found = 0;
@@ -477,7 +477,7 @@ int libconfig_snmp_itf_should_sendtrap(char *itf)
 	return found;
 }
 
-int libconfig_snmp_input(int operation,
+int librouter_snmp_input(int operation,
                netsnmp_session * session,
                int reqid,
                netsnmp_pdu *pdu,
@@ -486,7 +486,7 @@ int libconfig_snmp_input(int operation,
 	return 1;
 }
 
-int libconfig_snmp_rmon_event_log(int index, char *description)
+int librouter_snmp_rmon_event_log(int index, char *description)
 {
 	char *buf;
 	time_t the_time;
@@ -500,7 +500,7 @@ int libconfig_snmp_rmon_event_log(int index, char *description)
 
 	sprintf(buf, "%d %02d:%02d:%02d %s\n", index, tm_ptr->tm_hour, tm_ptr->tm_min, tm_ptr->tm_sec, description);
 
-	if (libconfig_exec_test_write_len(FILE_RMON_LOG_EVENTS, FILE_RMON_LOG_EVENTS_MAX_SIZE, buf, strlen(buf)) < 0) {
+	if (librouter_exec_test_write_len(FILE_RMON_LOG_EVENTS, FILE_RMON_LOG_EVENTS_MAX_SIZE, buf, strlen(buf)) < 0) {
 		free(buf);
 		return -1;
 	}
@@ -536,28 +536,28 @@ static int _rmon_create_shm(void)
 	return 0;
 }
 
-int libconfig_snmp_rmon_get_access_cfg(struct rmon_config **shm_rmon_p)
+int librouter_snmp_rmon_get_access_cfg(struct rmon_config **shm_rmon_p)
 {
 	int shm_confid;
 	void *shm_confid_l = (void *) 0;
 
-	if (libconfig_lock_rmon_config_access()) {
+	if (librouter_lock_rmon_config_access()) {
 		/* Point to shared memory */
 		if ((shm_confid = shmget((key_t) RMON_SHM_KEY, sizeof(struct rmon_config), 0666)) == -1) {
 
 			if (_rmon_create_shm() < 0) {
-				libconfig_unlock_rmon_config_access();
+				librouter_unlock_rmon_config_access();
 				return 0;
 			}
 
 			if ((shm_confid = shmget((key_t) RMON_SHM_KEY, sizeof(struct rmon_config), 0666)) == -1) {
-				libconfig_unlock_rmon_config_access();
+				librouter_unlock_rmon_config_access();
 				return 0;
 			}
 		}
 
 		if ((shm_confid_l = shmat(shm_confid, (void *) 0, 0)) == (void *) -1) {
-			libconfig_unlock_rmon_config_access();
+			librouter_unlock_rmon_config_access();
 			return 0;
 		}
 
@@ -568,14 +568,14 @@ int libconfig_snmp_rmon_get_access_cfg(struct rmon_config **shm_rmon_p)
 	return 0;
 }
 
-int libconfig_snmp_rmon_free_access_cfg(struct rmon_config **shm_rmon_p)
+int librouter_snmp_rmon_free_access_cfg(struct rmon_config **shm_rmon_p)
 {
 	int ret = 1;
 
 	if (shmdt((void *) *shm_rmon_p) == -1)
 		ret = 0;
 
-	if (libconfig_unlock_rmon_config_access() == 0)
+	if (librouter_unlock_rmon_config_access() == 0)
 		ret = 0;
 
 	*shm_rmon_p = NULL;
@@ -583,7 +583,7 @@ int libconfig_snmp_rmon_free_access_cfg(struct rmon_config **shm_rmon_p)
 	return ret;
 }
 
-int libconfig_snmp_rmon_add_event(int num,
+int librouter_snmp_rmon_add_event(int num,
                                   int log,
                                   char *community,
                                   int status,
@@ -593,7 +593,7 @@ int libconfig_snmp_rmon_add_event(int num,
 	struct rmon_config *shm_rmon_p;
 	int i, found = 0, ret_value = -1;
 
-	if (libconfig_snmp_rmon_get_access_cfg(&shm_rmon_p)) {
+	if (librouter_snmp_rmon_get_access_cfg(&shm_rmon_p)) {
 
 		for (i = 0; i < NUM_EVENTS; i++) {
 			if (shm_rmon_p->events[i].index == num) {
@@ -669,13 +669,13 @@ int libconfig_snmp_rmon_add_event(int num,
 				ret_value = 0;
 		}
 
-		libconfig_snmp_rmon_free_access_cfg(&shm_rmon_p);
+		librouter_snmp_rmon_free_access_cfg(&shm_rmon_p);
 	}
 
 	return ret_value;
 }
 
-int libconfig_snmp_rmon_add_alarm(int num,
+int librouter_snmp_rmon_add_alarm(int num,
                                   char *var_oid,
                                   oid *name,
                                   size_t namelen,
@@ -691,7 +691,7 @@ int libconfig_snmp_rmon_add_alarm(int num,
 	struct rmon_config *shm_rmon_p;
 	int i, k, found, ret_value = -1;
 
-	if (libconfig_snmp_rmon_get_access_cfg(&shm_rmon_p)) {
+	if (librouter_snmp_rmon_get_access_cfg(&shm_rmon_p)) {
 
 		for (i = 0, found = 0; i < NUM_ALARMS; i++) {
 			if (shm_rmon_p->alarms[i].index == num) {
@@ -769,18 +769,18 @@ int libconfig_snmp_rmon_add_alarm(int num,
 				ret_value = 0;
 		}
 
-		libconfig_snmp_rmon_free_access_cfg(&shm_rmon_p);
+		librouter_snmp_rmon_free_access_cfg(&shm_rmon_p);
 	}
 
 	return ret_value;
 }
 
-int libconfig_snmp_rmon_remove_event(char *index)
+int librouter_snmp_rmon_remove_event(char *index)
 {
 	struct rmon_config *shm_rmon_p;
 	int i, idx, found = 0, ret_value = -1;
 
-	if (libconfig_snmp_rmon_get_access_cfg(&shm_rmon_p)) {
+	if (librouter_snmp_rmon_get_access_cfg(&shm_rmon_p)) {
 
 		if (index) {
 			idx = atoi(index);
@@ -818,18 +818,18 @@ int libconfig_snmp_rmon_remove_event(char *index)
 			ret_value = 0;
 		}
 
-		libconfig_snmp_rmon_free_access_cfg(&shm_rmon_p);
+		librouter_snmp_rmon_free_access_cfg(&shm_rmon_p);
 	}
 
 	return ret_value;
 }
 
-int libconfig_snmp_rmon_remove_alarm(char *index)
+int librouter_snmp_rmon_remove_alarm(char *index)
 {
 	struct rmon_config *shm_rmon_p;
 	int i, idx, found = 0, ret_value = -1;
 
-	if (libconfig_snmp_rmon_get_access_cfg(&shm_rmon_p)) {
+	if (librouter_snmp_rmon_get_access_cfg(&shm_rmon_p)) {
 
 		if (index) {
 			idx = atoi(index);
@@ -850,13 +850,13 @@ int libconfig_snmp_rmon_remove_alarm(char *index)
 			ret_value = 0;
 		}
 
-		libconfig_snmp_rmon_free_access_cfg(&shm_rmon_p);
+		librouter_snmp_rmon_free_access_cfg(&shm_rmon_p);
 	}
 
 	return ret_value;
 }
 
-void libconfig_snmp_rmon_event_info(struct rmon_config *shm_rmon_p, int i, int idx)
+void librouter_snmp_rmon_event_info(struct rmon_config *shm_rmon_p, int i, int idx)
 {
 	FILE *f;
 	arg_list argl = NULL;
@@ -899,12 +899,12 @@ void libconfig_snmp_rmon_event_info(struct rmon_config *shm_rmon_p, int i, int i
 			if ((f = fopen(FILE_RMON_LOG_EVENTS, "r"))) {
 
 				while (fgets(line, 300, f)) {
-					if (libconfig_parse_args_din(line, &argl) > 1) {
+					if (librouter_parse_args_din(line, &argl) > 1) {
 						if (atoi(argl[0]) == idx)
 							strcpy(last, line);
 					}
 
-					libconfig_destroy_args_din(&argl);
+					librouter_destroy_args_din(&argl);
 				}
 
 				fclose(f);
@@ -912,10 +912,10 @@ void libconfig_snmp_rmon_event_info(struct rmon_config *shm_rmon_p, int i, int i
 		}
 
 		if (last[0]) {
-			if (libconfig_parse_args_din(last, &argl) > 1)
+			if (librouter_parse_args_din(last, &argl) > 1)
 				printf(", last fired %s", argl[1]);
 
-			libconfig_destroy_args_din(&argl);
+			librouter_destroy_args_din(&argl);
 		}
 
 		printf("\n");
@@ -923,11 +923,11 @@ void libconfig_snmp_rmon_event_info(struct rmon_config *shm_rmon_p, int i, int i
 
 	if ((f = fopen(FILE_RMON_LOG_EVENTS, "r"))) {
 		for (exist = 0; (exist == 0) && fgets(line, 300, f);) {
-			if (libconfig_parse_args_din(line, &argl) > 1) {
+			if (librouter_parse_args_din(line, &argl) > 1) {
 				if (atoi(argl[0]) == idx)
 					exist++;
 			}
-			libconfig_destroy_args_din(&argl);
+			librouter_destroy_args_din(&argl);
 		}
 
 		if (exist) {
@@ -936,7 +936,7 @@ void libconfig_snmp_rmon_event_info(struct rmon_config *shm_rmon_p, int i, int i
 			printf("     Index     Time      Description\n");
 
 			for (count = 1; fgets(line, 300, f);) {
-				if ((args = libconfig_parse_args_din(line, &argl)) > 1) {
+				if ((args = librouter_parse_args_din(line, &argl)) > 1) {
 					if (atoi(argl[0]) == idx) {
 						sprintf(tmp, "%d", count);
 						printf("\033[%dC%s   %s   ", 10 - strlen(tmp),tmp, argl[1]);
@@ -949,7 +949,7 @@ void libconfig_snmp_rmon_event_info(struct rmon_config *shm_rmon_p, int i, int i
 					}
 				}
 
-				libconfig_destroy_args_din(&argl);
+				librouter_destroy_args_din(&argl);
 			}
 		} else {
 			printf("  No log entries\n");
@@ -959,12 +959,12 @@ void libconfig_snmp_rmon_event_info(struct rmon_config *shm_rmon_p, int i, int i
 	}
 }
 
-int libconfig_snmp_rmon_show_event(char *index)
+int librouter_snmp_rmon_show_event(char *index)
 {
 	int i, idx = 0, ret = -1;
 	struct rmon_config *shm_rmon_p;
 
-	if (libconfig_snmp_rmon_get_access_cfg(&shm_rmon_p)) {
+	if (librouter_snmp_rmon_get_access_cfg(&shm_rmon_p)) {
 
 		if (index)
 			idx = atoi(index);
@@ -974,21 +974,21 @@ int libconfig_snmp_rmon_show_event(char *index)
 		for (i = 0; i < NUM_EVENTS; i++) {
 			if (idx) {
 				if (shm_rmon_p->events[i].index == idx) {
-					libconfig_snmp_rmon_event_info(shm_rmon_p, i, shm_rmon_p->events[i].index);
+					librouter_snmp_rmon_event_info(shm_rmon_p, i, shm_rmon_p->events[i].index);
 					ret = 0;
 					break;
 				}
 			} else {
-				libconfig_snmp_rmon_event_info(shm_rmon_p, i, shm_rmon_p->events[i].index);
+				librouter_snmp_rmon_event_info(shm_rmon_p, i, shm_rmon_p->events[i].index);
 			}
 		}
-		libconfig_snmp_rmon_free_access_cfg(&shm_rmon_p);
+		librouter_snmp_rmon_free_access_cfg(&shm_rmon_p);
 	}
 
 	return ret;
 }
 
-void libconfig_snmp_rmon_alarm_info(struct rmon_config *shm_rmon_p, int i, int idx)
+void librouter_snmp_rmon_alarm_info(struct rmon_config *shm_rmon_p, int i, int idx)
 {
 	char buf[50];
 
@@ -1007,7 +1007,7 @@ void libconfig_snmp_rmon_alarm_info(struct rmon_config *shm_rmon_p, int i, int i
 
 	if (strlen(shm_rmon_p->alarms[i].str_oid) && shm_rmon_p->alarms[i].interval)
 		printf("  Monitors %s every %d second(s)\n",
-		                libconfig_snmp_oid_to_obj_name(shm_rmon_p->alarms[i].str_oid, buf, 50) ? buf : shm_rmon_p->alarms[i].str_oid,
+		                librouter_snmp_oid_to_obj_name(shm_rmon_p->alarms[i].str_oid, buf, 50) ? buf : shm_rmon_p->alarms[i].str_oid,
 		                shm_rmon_p->alarms[i].interval);
 
 	switch (shm_rmon_p->alarms[i].sample_type) {
@@ -1048,12 +1048,12 @@ void libconfig_snmp_rmon_alarm_info(struct rmon_config *shm_rmon_p, int i, int i
 	}
 }
 
-int libconfig_snmp_rmon_show_alarm(char *index)
+int librouter_snmp_rmon_show_alarm(char *index)
 {
 	int i, idx = 0, ret = -1;
 	struct rmon_config *shm_rmon_p;
 
-	if (libconfig_snmp_rmon_get_access_cfg(&shm_rmon_p)) {
+	if (librouter_snmp_rmon_get_access_cfg(&shm_rmon_p)) {
 
 		if (index)
 			idx = atoi(index);
@@ -1064,7 +1064,7 @@ int libconfig_snmp_rmon_show_alarm(char *index)
 			if (idx) {
 				if (shm_rmon_p->alarms[i].index == idx) {
 
-					libconfig_snmp_rmon_alarm_info(
+					librouter_snmp_rmon_alarm_info(
 					                shm_rmon_p,
 					                i,
 					                shm_rmon_p->alarms[i].index);
@@ -1072,20 +1072,20 @@ int libconfig_snmp_rmon_show_alarm(char *index)
 					break;
 				}
 			} else {
-				libconfig_snmp_rmon_alarm_info(shm_rmon_p, i,
+				librouter_snmp_rmon_alarm_info(shm_rmon_p, i,
 				                shm_rmon_p->alarms[i].index);
 			}
 		}
 
-		libconfig_snmp_rmon_free_access_cfg(&shm_rmon_p);
+		librouter_snmp_rmon_free_access_cfg(&shm_rmon_p);
 	}
 
 	return ret;
 }
 
-int libconfig_snmp_rmon_send_signal(int sig)
+int librouter_snmp_rmon_send_signal(int sig)
 {
-	pid_t pid = libconfig_process_get_pid(RMON_DAEMON);
+	pid_t pid = librouter_process_get_pid(RMON_DAEMON);
 
 	if (pid > 1) {
 		if (kill(pid, sig) == 0)
@@ -1095,7 +1095,7 @@ int libconfig_snmp_rmon_send_signal(int sig)
 	return 0;
 }
 
-int libconfig_snmp_rmon_clear_events(void)
+int librouter_snmp_rmon_clear_events(void)
 {
 	FILE *f;
 
@@ -1106,7 +1106,7 @@ int libconfig_snmp_rmon_clear_events(void)
 	return 0;
 }
 
-int libconfig_snmp_create_pdu_data(struct trap_data_obj **data_p)
+int librouter_snmp_create_pdu_data(struct trap_data_obj **data_p)
 {
 	if ((*data_p = (struct trap_data_obj *) malloc(sizeof(struct trap_data_obj)))) {
 		memset(*data_p, '\0', sizeof(struct trap_data_obj));
@@ -1116,7 +1116,7 @@ int libconfig_snmp_create_pdu_data(struct trap_data_obj **data_p)
 	return -1;
 }
 
-int libconfig_snmp_add_pdu_data_entry(struct trap_data_obj **data_p,
+int librouter_snmp_add_pdu_data_entry(struct trap_data_obj **data_p,
                                       char *oid_str,
                                       int type,
                                       char *value)
@@ -1163,7 +1163,7 @@ int libconfig_snmp_add_pdu_data_entry(struct trap_data_obj **data_p,
 	return -1;
 }
 
-int libconfig_snmp_destroy_pdu_data(struct trap_data_obj **data_p)
+int librouter_snmp_destroy_pdu_data(struct trap_data_obj **data_p)
 {
 	struct trap_data_obj *p = *data_p;
 
@@ -1182,7 +1182,7 @@ int libconfig_snmp_destroy_pdu_data(struct trap_data_obj **data_p)
 	return 0;
 }
 
-int libconfig_snmp_sendtrap(char *snmp_trap_version,
+int librouter_snmp_sendtrap(char *snmp_trap_version,
                             char *community_rcv,
                             char *trap_obj_oid,
                             struct trap_data_obj *trap_data)
@@ -1201,11 +1201,11 @@ int libconfig_snmp_sendtrap(char *snmp_trap_version,
 		return -1;
 
 	while (fgets(buf, 300, f)) {
-		if (libconfig_parse_args_din(buf, &argl) > 1) {
+		if (librouter_parse_args_din(buf, &argl) > 1) {
 			if (strcmp(argl[0], "trapsink") == 0)
 				len++;
 		}
-		libconfig_destroy_args_din(&argl);
+		librouter_destroy_args_din(&argl);
 	}
 
 	if ((sinks = malloc(len * sizeof(struct trap_sink))) == NULL) {
@@ -1222,7 +1222,7 @@ int libconfig_snmp_sendtrap(char *snmp_trap_version,
 	fseek(f, 0, SEEK_SET);
 
 	for (k = 0; fgets(buf, 300, f);) {
-		if ((args = libconfig_parse_args_din(buf, &argl)) > 1) {
+		if ((args = librouter_parse_args_din(buf, &argl)) > 1) {
 			if (strcmp(argl[0], "trapsink") == 0) {
 				if ((sinks[k].ip_addr = malloc(strlen(argl[1]) + 1))) {
 
@@ -1243,7 +1243,7 @@ int libconfig_snmp_sendtrap(char *snmp_trap_version,
 				}
 			}
 		}
-		libconfig_destroy_args_din(&argl);
+		librouter_destroy_args_din(&argl);
 	}
 
 	fclose(f);
@@ -1272,7 +1272,7 @@ int libconfig_snmp_sendtrap(char *snmp_trap_version,
 		session.local_port = 0;
 
 		/* function to interpret incoming data */
-		session.callback = libconfig_snmp_input;
+		session.callback = librouter_snmp_input;
 
 		/* pointer to data that the callback function may consider important */
 		session.callback_magic = NULL;
@@ -1308,7 +1308,7 @@ int libconfig_snmp_sendtrap(char *snmp_trap_version,
 					name_length = MAX_OID_LEN;
 					memset(name, '\0', MAX_OID_LEN * sizeof(oid));
 
-					if (libconfig_snmp_translate_oid( trap_data[k].oid, name, &name_length)) {
+					if (librouter_snmp_translate_oid( trap_data[k].oid, name, &name_length)) {
 
 						type = '\0';
 
@@ -1393,21 +1393,21 @@ static int _snmp_config_add_user(char *user, int rw, char *seclevel)
 			if (fgets(buf, 255, f) != NULL) {
 				buf[255] = 0;
 
-				if (libconfig_parse_args_din(buf, &argl) == 3) {
+				if (librouter_parse_args_din(buf, &argl) == 3) {
 
 					if (((strcmp(argl[0], "rwuser") == 0) ||
 						(strcmp(argl[0], "rouser") == 0)) && (strcmp(argl[1], user) == 0))
 						found = 1;
 				}
 
-				libconfig_destroy_args_din(&argl);
+				librouter_destroy_args_din(&argl);
 			}
 		}
 
 		fclose(f);
 
 		if (found == 1) {
-			if (libconfig_exec_replace_string_file( FILE_SNMPD_DATA_CONF, buf, "") < 0)
+			if (librouter_exec_replace_string_file( FILE_SNMPD_DATA_CONF, buf, "") < 0)
 				return -1;
 		}
 	}
@@ -1444,20 +1444,20 @@ static int _snmp_config_remove_user(char *user)
 
 		if (fgets(buf, 255, f) != NULL) {
 			buf[255] = 0;
-			if (libconfig_parse_args_din(buf, &argl) == 3) {
+			if (librouter_parse_args_din(buf, &argl) == 3) {
 				if (((strcmp(argl[0], "rwuser") == 0) ||
 					(strcmp(argl[0], "rouser")== 0)) && (strcmp(argl[1], user) == 0))
 					found = 1;
 			}
 
-			libconfig_destroy_args_din(&argl);
+			librouter_destroy_args_din(&argl);
 		}
 	}
 
 	fclose(f);
 
 	if (found == 1) {
-		if (libconfig_exec_replace_string_file(FILE_SNMPD_DATA_CONF, buf, "") < 0)
+		if (librouter_exec_replace_string_file(FILE_SNMPD_DATA_CONF, buf, "") < 0)
 			return -1;
 	}
 
@@ -1483,14 +1483,14 @@ static int _snmp_adjust_fdb(unsigned int add, char *line, int rw)
 				if (fgets(buf, 255, f) != NULL) {
 					buf[255] = 0;
 
-					if (libconfig_parse_args_din(buf, &argl) >= 2) {
+					if (librouter_parse_args_din(buf, &argl) >= 2) {
 						if ((strcmp(argl[0], "createUser") == 0) &&
 							(strcmp(argl[1], line) == 0) &&
 							(strchr(buf, '\n') != NULL))
 							found = 1;
 					}
 
-					libconfig_destroy_args_din(&argl);
+					librouter_destroy_args_din(&argl);
 				}
 			}
 
@@ -1499,10 +1499,10 @@ static int _snmp_adjust_fdb(unsigned int add, char *line, int rw)
 
 		if (found == 1) {
 			/* Ajusta arquivo SNMP_USERKEY_FILE */
-			libconfig_exec_replace_string_file(SNMP_USERKEY_FILE, buf, "");
+			librouter_exec_replace_string_file(SNMP_USERKEY_FILE, buf, "");
 
 			/* Ajusta arquivo FILE_SNMPD_STORE_CONF */
-			libconfig_exec_copy_file(SNMP_USERKEY_FILE, FILE_SNMPD_STORE_CONF);
+			librouter_exec_copy_file(SNMP_USERKEY_FILE, FILE_SNMPD_STORE_CONF);
 		}
 
 		/* Ajusta arquivo FILE_SNMPD_DATA_CONF */
@@ -1524,12 +1524,12 @@ static int _snmp_adjust_fdb(unsigned int add, char *line, int rw)
 		fclose(f);
 
 		/* Ajusta arquivo FILE_SNMPD_STORE_CONF */
-		if (libconfig_exec_copy_file(SNMP_USERKEY_FILE, FILE_SNMPD_STORE_CONF) < 0)
+		if (librouter_exec_copy_file(SNMP_USERKEY_FILE, FILE_SNMPD_STORE_CONF) < 0)
 			break;
 
 		/* Ajusta arquivo FILE_SNMPD_DATA_CONF */
 		found = 0;
-		if ((n = libconfig_parse_args_din(line, &argl)) >= 2) {
+		if ((n = librouter_parse_args_din(line, &argl)) >= 2) {
 			if ((strcmp(argl[0], "createUser") == 0) && (strchr(line, '\n') != NULL)) {
 				if (_snmp_config_add_user(argl[1], rw,
 				                ((n == 3) ? "noauth" : ((n == 5) ? "auth" : "priv"))) >= 0)
@@ -1537,7 +1537,7 @@ static int _snmp_adjust_fdb(unsigned int add, char *line, int rw)
 			}
 		}
 
-		libconfig_destroy_args_din(&argl);
+		librouter_destroy_args_din(&argl);
 
 		if (found == 0)
 			break;
@@ -1547,30 +1547,30 @@ static int _snmp_adjust_fdb(unsigned int add, char *line, int rw)
 		break;
 	}
 
-	return ((ret == 0) ? libconfig_nv_save_snmp_secret(SNMP_USERKEY_FILE) : ret);
+	return ((ret == 0) ? librouter_nv_save_snmp_secret(SNMP_USERKEY_FILE) : ret);
 }
 
-int libconfig_snmp_remove_user(char *user)
+int librouter_snmp_remove_user(char *user)
 {
-	int ret = 0, is_running = libconfig_snmp_is_running() ? 1 : 0;
+	int ret = 0, is_running = librouter_snmp_is_running() ? 1 : 0;
 
 	if (user == NULL)
 		return -1;
 
 	if (is_running == 1)
-		libconfig_snmp_stop();
+		librouter_snmp_stop();
 
 	ret = _snmp_adjust_fdb(0, user, 0);
 
 	if (is_running == 1)
-		libconfig_snmp_start();
+		librouter_snmp_start();
 	else
-		libconfig_snmp_rmon_send_signal(SIGUSR1);
+		librouter_snmp_rmon_send_signal(SIGUSR1);
 
 	return ret;
 }
 
-int libconfig_snmp_add_user(char *user,
+int librouter_snmp_add_user(char *user,
                             int rw,
                             char *authpriv,
                             char *authproto,
@@ -1581,10 +1581,10 @@ int libconfig_snmp_add_user(char *user,
 	FILE *f;
 	arg_list argl = NULL;
 	char auth[8], buf[256];
-	int len, ret = 0, found = 0, is_running = libconfig_snmp_is_running() ? 1 : 0;
+	int len, ret = 0, found = 0, is_running = librouter_snmp_is_running() ? 1 : 0;
 
 	if (is_running == 1)
-		libconfig_snmp_stop();
+		librouter_snmp_stop();
 
 	if ((user == NULL) || (authpriv == NULL)) {
 		ret = -1;
@@ -1606,13 +1606,13 @@ int libconfig_snmp_add_user(char *user,
 		while ((feof(f) == 0) && (found == 0)) {
 			if (fgets(buf, 255, f) != NULL) {
 				buf[255] = 0;
-				if (libconfig_parse_args_din(buf, &argl) >= 2) {
+				if (librouter_parse_args_din(buf, &argl) >= 2) {
 					if ((strcmp(argl[0], "createUser") == 0) &&
 						(strcmp(argl[1], user) == 0))
 						found = 1;
 				}
 
-				libconfig_destroy_args_din(&argl);
+				librouter_destroy_args_din(&argl);
 			}
 		}
 
@@ -1620,7 +1620,7 @@ int libconfig_snmp_add_user(char *user,
 	}
 
 	if (found == 1) {
-		if (libconfig_snmp_remove_user(user) < 0) {
+		if (librouter_snmp_remove_user(user) < 0) {
 			ret = -1;
 			goto error;
 		}
@@ -1676,14 +1676,14 @@ int libconfig_snmp_add_user(char *user,
 
 error:
 	if (is_running == 1)
-		libconfig_snmp_start();
+		librouter_snmp_start();
 	else
-		libconfig_snmp_rmon_send_signal(SIGUSR1);
+		librouter_snmp_rmon_send_signal(SIGUSR1);
 
 	return ret;
 }
 
-unsigned int libconfig_snmp_list_users(char ***store)
+unsigned int librouter_snmp_list_users(char ***store)
 {
 	FILE *f;
 	arg_list argl = NULL;
@@ -1698,11 +1698,11 @@ unsigned int libconfig_snmp_list_users(char ***store)
 	while (feof(f) == 0) {
 		if (fgets(buf, 255, f) != NULL) {
 			buf[255] = 0;
-			if (libconfig_parse_args_din(buf, &argl) >= 2) {
+			if (librouter_parse_args_din(buf, &argl) >= 2) {
 				if (strcmp(argl[0], "createUser") == 0)
 					count++;
 			}
-			libconfig_destroy_args_din(&argl);
+			librouter_destroy_args_din(&argl);
 		}
 	}
 
@@ -1726,13 +1726,13 @@ unsigned int libconfig_snmp_list_users(char ***store)
 	for (i = 0; (i < count) && (feof(f) == 0);) {
 		if (fgets(buf, 255, f) != NULL) {
 			buf[255] = 0;
-			if (libconfig_parse_args_din(buf, &argl) >= 2) {
+			if (librouter_parse_args_din(buf, &argl) >= 2) {
 				if (strcmp(argl[0], "createUser") == 0) {
 					if ((list[i] = malloc(strlen(argl[1]) + 1)) != NULL)
 						strcpy(list[i++], argl[1]);
 				}
 			}
-			libconfig_destroy_args_din(&argl);
+			librouter_destroy_args_din(&argl);
 		}
 	}
 
@@ -1744,20 +1744,20 @@ unsigned int libconfig_snmp_list_users(char ***store)
 	return i;
 }
 
-void libconfig_snmp_load_prepare_users(void)
+void librouter_snmp_load_prepare_users(void)
 {
 	int n;
 	FILE *f;
 	char buf[256];
 	arg_list argl = NULL;
 
-	if (libconfig_nv_load_snmp_secret(SNMP_USERKEY_FILE) > 0) {
+	if (librouter_nv_load_snmp_secret(SNMP_USERKEY_FILE) > 0) {
 		if ((f = fopen(SNMP_USERKEY_FILE, "r")) != NULL) {
 
 			while (feof(f) == 0) {
 				if (fgets(buf, 255, f) != NULL) {
 					buf[255] = 0;
-					if ((n = libconfig_parse_args_din(buf, &argl)) >= 2) {
+					if ((n = librouter_parse_args_din(buf, &argl)) >= 2) {
 						if ((strcmp(argl[0], "createUser") == 0) &&
 							(strchr(buf, '\n') != NULL)) {
 							/* Adiciona entrada de usuario dentro do arquivo "/etc/snmpd.conf" */
@@ -1767,7 +1767,7 @@ void libconfig_snmp_load_prepare_users(void)
 						}
 					}
 
-					libconfig_destroy_args_din(&argl);
+					librouter_destroy_args_din(&argl);
 				}
 			}
 
@@ -1775,18 +1775,18 @@ void libconfig_snmp_load_prepare_users(void)
 		}
 
 		/* Ajusta arquivo FILE_SNMPD_STORE_CONF */
-		libconfig_exec_copy_file(SNMP_USERKEY_FILE, FILE_SNMPD_STORE_CONF);
+		librouter_exec_copy_file(SNMP_USERKEY_FILE, FILE_SNMPD_STORE_CONF);
 	}
 }
 
-void libconfig_snmp_start_default(void)
+void librouter_snmp_start_default(void)
 {
 	/* Start with default community */
-	libconfig_snmp_set_community("public", 1, 0);
+	librouter_snmp_set_community("public", 1, 0);
 	return;
 }
 
-void libconfig_snmp_add_dev_trap(char *itf)
+void librouter_snmp_add_dev_trap(char *itf)
 {
 	FILE *f;
 	int fd, found = 0;
@@ -1801,7 +1801,7 @@ void libconfig_snmp_add_dev_trap(char *itf)
 	if ((f = fopen(TRAPCONF, "r+"))) {
 		while (!found && fgets(line, 100, f)) {
 
-			if (libconfig_parse_args_din(line, &argl) > 0) {
+			if (librouter_parse_args_din(line, &argl) > 0) {
 
 				if ((p = strchr(argl[0], '#')))
 					*p = '\0';
@@ -1811,7 +1811,7 @@ void libconfig_snmp_add_dev_trap(char *itf)
 						found++;
 				}
 
-				libconfig_destroy_args_din(&argl);
+				librouter_destroy_args_din(&argl);
 			}
 		}
 
@@ -1825,7 +1825,7 @@ void libconfig_snmp_add_dev_trap(char *itf)
 	}
 }
 
-void libconfig_snmp_del_dev_trap(char *itf)
+void librouter_snmp_del_dev_trap(char *itf)
 {
 	int fd;
 	FILE *f;

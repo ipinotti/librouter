@@ -56,7 +56,7 @@ inline char *findspace(char *src)
 	return t2;
 }
 
-int libconfig_arg_count(const char *string)
+int librouter_arg_count(const char *string)
 {
 	int ln;
 	int cnt;
@@ -78,7 +78,7 @@ int libconfig_arg_count(const char *string)
 	return cnt;
 }
 
-arglist *libconfig_make_args(const char *string)
+arglist *librouter_make_args(const char *string)
 {
 	arglist *result;
 	char *rightbound;
@@ -88,7 +88,7 @@ arglist *libconfig_make_args(const char *string)
 	int pos;
 
 	result = (arglist *) malloc(sizeof(arglist));
-	count = libconfig_arg_count(string);
+	count = librouter_arg_count(string);
 
 	result->argc = count;
 	result->argv = (char **) malloc((count + 1) * sizeof(char *));
@@ -117,7 +117,7 @@ arglist *libconfig_make_args(const char *string)
 	return result;
 }
 
-void libconfig_destroy_args(arglist *lst)
+void librouter_destroy_args(arglist *lst)
 {
 	int i;
 
@@ -128,7 +128,7 @@ void libconfig_destroy_args(arglist *lst)
 	free(lst);
 }
 
-int libconfig_parse_args_din(char *cmd_line, arg_list *rcv_p)
+int librouter_parse_args_din(char *cmd_line, arg_list *rcv_p)
 {
 	int i, count = 0, n_args = 0;
 	char *p, *s, *init, *buf_local, **list, **list_ini;
@@ -222,7 +222,7 @@ int libconfig_parse_args_din(char *cmd_line, arg_list *rcv_p)
 	return count;
 }
 
-void libconfig_destroy_args_din(arg_list *rcv_buf)
+void librouter_destroy_args_din(arg_list *rcv_buf)
 {
 	char **list;
 

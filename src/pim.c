@@ -23,7 +23,7 @@
 #include "str.h"
 
 #ifdef OPTION_PIMD
-static void libconfig_pim_dense_hup(void)
+static void librouter_pim_dense_hup(void)
 {
 	FILE *f;
 	pid_t pid;
@@ -41,7 +41,7 @@ static void libconfig_pim_dense_hup(void)
 		kill(pid, SIGHUP);
 }
 
-static void libconfig_pim_sparse_hup(void)
+static void librouter_pim_sparse_hup(void)
 {
 	FILE *f;
 	pid_t pid;
@@ -59,7 +59,7 @@ static void libconfig_pim_sparse_hup(void)
 		kill(pid, SIGHUP);
 }
 
-int libconfig_pim_dense_phyint(int add, char *dev)
+int librouter_pim_dense_phyint(int add, char *dev)
 {
 	FILE *f;
 	arglist *args[MAX_LINES];
@@ -68,9 +68,9 @@ int libconfig_pim_dense_phyint(int add, char *dev)
 
 	if ((f = fopen(PIMD_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f) && lines < MAX_LINES) {
-			libconfig_str_striplf(line);
+			librouter_str_striplf(line);
 			if (strlen(line))
-				args[lines++] = libconfig_make_args(line);
+				args[lines++] = librouter_make_args(line);
 		}
 		fclose(f);
 	}
@@ -84,7 +84,7 @@ int libconfig_pim_dense_phyint(int add, char *dev)
 					found = 1;
 
 					if (!add) {
-						libconfig_destroy_args(args[i]);
+						librouter_destroy_args(args[i]);
 						/* skip line (delete) */
 						continue;
 					}
@@ -108,18 +108,18 @@ int libconfig_pim_dense_phyint(int add, char *dev)
 					fprintf(f, "%s\n", args[i]->argv[j]);
 			}
 
-			libconfig_destroy_args(args[i]);
+			librouter_destroy_args(args[i]);
 		}
 
 		fclose(f);
 	}
 
-	libconfig_pim_dense_hup();
+	librouter_pim_dense_hup();
 
 	return intf;
 }
 
-int libconfig_pim_sparse_phyint(int add, char *dev)
+int librouter_pim_sparse_phyint(int add, char *dev)
 {
 	FILE *f;
 	arglist *args[MAX_LINES];
@@ -128,9 +128,9 @@ int libconfig_pim_sparse_phyint(int add, char *dev)
 
 	if ((f = fopen(PIMS_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f) && lines < MAX_LINES) {
-			libconfig_str_striplf(line);
+			librouter_str_striplf(line);
 			if (strlen(line))
-				args[lines++] = libconfig_make_args(line);
+				args[lines++] = librouter_make_args(line);
 		}
 		fclose(f);
 	}
@@ -144,7 +144,7 @@ int libconfig_pim_sparse_phyint(int add, char *dev)
 					found = 1;
 
 					if (!add) {
-						libconfig_destroy_args(args[i]);
+						librouter_destroy_args(args[i]);
 						/* skip line (delete) */
 						continue;
 					}
@@ -168,16 +168,16 @@ int libconfig_pim_sparse_phyint(int add, char *dev)
 					fprintf(f, "%s\n", args[i]->argv[j]);
 			}
 
-			libconfig_destroy_args(args[i]);
+			librouter_destroy_args(args[i]);
 		}
 
 		fclose(f);
 	}
-	libconfig_pim_sparse_hup();
+	librouter_pim_sparse_hup();
 	return intf;
 }
 
-void libconfig_pim_sparse_bsr_candidate(int add,
+void librouter_pim_sparse_bsr_candidate(int add,
                                         char *dev,
                                         char *major,
                                         char *priority)
@@ -189,9 +189,9 @@ void libconfig_pim_sparse_bsr_candidate(int add,
 
 	if ((f = fopen(PIMS_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f) && lines < MAX_LINES) {
-			libconfig_str_striplf(line);
+			librouter_str_striplf(line);
 			if (strlen(line)) {
-				args[lines] = libconfig_make_args(line);
+				args[lines] = librouter_make_args(line);
 				if (!strcmp(args[lines]->argv[0], "cand_bootstrap_router"))
 					found = 1;
 				lines++;
@@ -226,7 +226,7 @@ void libconfig_pim_sparse_bsr_candidate(int add,
 
 					found = 1;
 
-					libconfig_destroy_args(args[i]);
+					librouter_destroy_args(args[i]);
 					/* skip line (delete) */
 					continue;
 				}
@@ -239,16 +239,16 @@ void libconfig_pim_sparse_bsr_candidate(int add,
 					fprintf(f, "%s\n", args[i]->argv[j]);
 			}
 
-			libconfig_destroy_args(args[i]);
+			librouter_destroy_args(args[i]);
 		}
 
 		fclose(f);
 	}
 
-	libconfig_pim_sparse_hup();
+	librouter_pim_sparse_hup();
 }
 
-void libconfig_pim_sparse_rp_address(int add, char *rp)
+void librouter_pim_sparse_rp_address(int add, char *rp)
 {
 	FILE *f;
 	arglist *args[MAX_LINES];
@@ -257,9 +257,9 @@ void libconfig_pim_sparse_rp_address(int add, char *rp)
 
 	if ((f = fopen(PIMS_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f) && lines < MAX_LINES) {
-			libconfig_str_striplf(line);
+			librouter_str_striplf(line);
 			if (strlen(line)) {
-				args[lines] = libconfig_make_args(line);
+				args[lines] = librouter_make_args(line);
 				if (!strcmp(args[lines]->argv[0], "rp_address"))
 					found = 1;
 				lines++;
@@ -283,7 +283,7 @@ void libconfig_pim_sparse_rp_address(int add, char *rp)
 					}
 
 					found = 1;
-					libconfig_destroy_args(args[i]);
+					librouter_destroy_args(args[i]);
 					/* skip line (delete) */
 					continue;
 				}
@@ -296,16 +296,16 @@ void libconfig_pim_sparse_rp_address(int add, char *rp)
 					fprintf(f, "%s\n", args[i]->argv[j]);
 			}
 
-			libconfig_destroy_args(args[i]);
+			librouter_destroy_args(args[i]);
 		}
 
 		fclose(f);
 	}
 
-	libconfig_pim_sparse_hup();
+	librouter_pim_sparse_hup();
 }
 
-void libconfig_pim_sparse_rp_candidate(int add,
+void librouter_pim_sparse_rp_candidate(int add,
                         char *dev,
                         char *major,
                         char *priority,
@@ -318,9 +318,9 @@ void libconfig_pim_sparse_rp_candidate(int add,
 
 	if ((f = fopen(PIMS_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f) && lines < MAX_LINES) {
-			libconfig_str_striplf(line);
+			librouter_str_striplf(line);
 			if (strlen(line)) {
-				args[lines] = libconfig_make_args(line);
+				args[lines] = librouter_make_args(line);
 				if (!strcmp(args[lines]->argv[0], "cand_rp"))
 					found = 1;
 				lines++;
@@ -360,7 +360,7 @@ void libconfig_pim_sparse_rp_candidate(int add,
 					}
 
 					found = 1;
-					libconfig_destroy_args(args[i]);
+					librouter_destroy_args(args[i]);
 
 					/* skip line (delete) */
 					continue;
@@ -374,16 +374,16 @@ void libconfig_pim_sparse_rp_candidate(int add,
 					fprintf(f, "%s\n", args[i]->argv[j]);
 			}
 
-			libconfig_destroy_args(args[i]);
+			librouter_destroy_args(args[i]);
 		}
 
 		fclose(f);
 	}
 
-	libconfig_pim_sparse_hup();
+	librouter_pim_sparse_hup();
 }
 
-void libconfig_pim_dump_interface(FILE *out, char *ifname)
+void librouter_pim_dump_interface(FILE *out, char *ifname)
 {
 	FILE *f;
 	arglist *args;
@@ -393,11 +393,11 @@ void libconfig_pim_dump_interface(FILE *out, char *ifname)
 	if ((f = fopen(PIMD_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f) && !found) {
 
-			libconfig_str_striplf(line);
+			librouter_str_striplf(line);
 
 			if (strlen(line)) {
 
-				args = libconfig_make_args(line);
+				args = librouter_make_args(line);
 
 				if (!strcmp(args->argv[0], "phyint") &&
 						!strcmp(args->argv[1], ifname)) {
@@ -405,7 +405,7 @@ void libconfig_pim_dump_interface(FILE *out, char *ifname)
 					fprintf(out, " ip pim dense-mode\n");
 				}
 
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 			}
 		}
 
@@ -415,11 +415,11 @@ void libconfig_pim_dump_interface(FILE *out, char *ifname)
 	if ((f = fopen(PIMS_CFG_FILE, "r")) != NULL) {
 		while (fgets(line, 200, f) && !found) {
 
-			libconfig_str_striplf(line);
+			librouter_str_striplf(line);
 
 			if (strlen(line)) {
 
-				args = libconfig_make_args(line);
+				args = librouter_make_args(line);
 
 				if (!strcmp(args->argv[0], "phyint") &&
 						!strcmp(args->argv[1], ifname)) {
@@ -427,7 +427,7 @@ void libconfig_pim_dump_interface(FILE *out, char *ifname)
 					fprintf(out, " ip pim sparse-mode\n");
 				}
 
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 			}
 		}
 
@@ -435,7 +435,7 @@ void libconfig_pim_dump_interface(FILE *out, char *ifname)
 	}
 }
 
-void libconfig_pim_dump(FILE *out)
+void librouter_pim_dump(FILE *out)
 {
 	FILE *f;
 	arglist *args;
@@ -444,24 +444,24 @@ void libconfig_pim_dump(FILE *out)
 	if ((f = fopen(PIMS_CFG_FILE, "r")) != NULL) {
 
 		while (fgets(line, 200, f)) {
-			libconfig_str_striplf(line);
+			librouter_str_striplf(line);
 
 			if (strlen(line)) {
-				args = libconfig_make_args(line);
+				args = librouter_make_args(line);
 
 				if (!strcmp(args->argv[0], "cand_bootstrap_router")) {
 					if (args->argc == 2)
 						fprintf(out, "ip pim bsr-candidate %s\n",
-						                libconfig_device_convert_os(args->argv[1], 0));
+						                librouter_device_convert_os(args->argv[1], 0));
 					else if (args->argc == 4)
 						fprintf(out, "ip pim bsr-candidate %s priority %s\n",
-								libconfig_device_convert_os(args->argv[1], 0), args->argv[3]);
+								librouter_device_convert_os(args->argv[1], 0), args->argv[3]);
 
 					/* while */
 					break;
 				}
 
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 			}
 
 		}
@@ -471,10 +471,10 @@ void libconfig_pim_dump(FILE *out)
 
 		while (fgets(line, 200, f)) {
 
-			libconfig_str_striplf(line);
+			librouter_str_striplf(line);
 
 			if (strlen(line)) {
-				args = libconfig_make_args(line);
+				args = librouter_make_args(line);
 
 				if (!strcmp(args->argv[0], "rp_address")) {
 					if (args->argc == 2)
@@ -483,35 +483,35 @@ void libconfig_pim_dump(FILE *out)
 					break;
 				}
 
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 			}
 		}
 
 		rewind(f);
 
 		while (fgets(line, 200, f)) {
-			libconfig_str_striplf(line);
+			librouter_str_striplf(line);
 
 			if (strlen(line)) {
-				args = libconfig_make_args(line);
+				args = librouter_make_args(line);
 
 				if (!strcmp(args->argv[0], "cand_rp")) {
 					if (args->argc == 2)
 						fprintf(out,"ip pim rp-candidate %s\n",
-								libconfig_device_convert_os(args->argv[1], 0));
+								librouter_device_convert_os(args->argv[1], 0));
 					else if (args->argc == 4)
 						fprintf(out, "ip pim rp-candidate %s priority %s\n",
-						                libconfig_device_convert_os(args->argv[1], 0), args->argv[3]);
+						                librouter_device_convert_os(args->argv[1], 0), args->argv[3]);
 					else if (args->argc == 6)
 						fprintf(out, "ip pim rp-candidate %s priority %s interval %s\n",
-						                libconfig_device_convert_os(args->argv[1], 0),
+						                librouter_device_convert_os(args->argv[1], 0),
 						                args->argv[3],
 						                args->argv[5]);
 
 					break;
 				}
 
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 			}
 		}
 

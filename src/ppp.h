@@ -117,26 +117,26 @@ int priomarks[CONFIG_MAX_LFI_PRIORITY_MARKS];
 #endif
 } ppp_config;
 
-int libconfig_ppp_notify_systtyd(void);
-int libconfig_ppp_notify_mgetty(int serial_no);
-int libconfig_ppp_get_config(int serial_no, ppp_config *cfg);
-int libconfig_ppp_set_config(int serial_no, ppp_config *cfg);
-int libconfig_ppp_has_config(int serial_no);
-int libconfig_ppp_add_chat(char *chat_name, char *chat_str);
-int libconfig_ppp_del_chat(char *chat_name);
-char *libconfig_ppp_get_chat(char *chat_name);
-int libconfig_ppp_chat_exists(char *chat_name);
-void libconfig_ppp_set_defaults(int serial_no, ppp_config *cfg);
-int libconfig_ppp_get_state(int serial_no);
-int libconfig_ppp_is_pppd_running(int serial_no);
-char *libconfig_ppp_get_device(int serial_no);
-void libconfig_ppp_pppd_arglist(char **arglist, ppp_config *cfg, int server);
+int librouter_ppp_notify_systtyd(void);
+int librouter_ppp_notify_mgetty(int serial_no);
+int librouter_ppp_get_config(int serial_no, ppp_config *cfg);
+int librouter_ppp_set_config(int serial_no, ppp_config *cfg);
+int librouter_ppp_has_config(int serial_no);
+int librouter_ppp_add_chat(char *chat_name, char *chat_str);
+int librouter_ppp_del_chat(char *chat_name);
+char *librouter_ppp_get_chat(char *chat_name);
+int librouter_ppp_chat_exists(char *chat_name);
+void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg);
+int librouter_ppp_get_state(int serial_no);
+int librouter_ppp_is_pppd_running(int serial_no);
+char *librouter_ppp_get_device(int serial_no);
+void librouter_ppp_pppd_arglist(char **arglist, ppp_config *cfg, int server);
 
-int libconfig_ppp_l2tp_get_config(char *name, ppp_config *cfg);
-int libconfig_ppp_l2tp_has_config(char *name);
-int libconfig_ppp_l2tp_set_config(char *name, ppp_config *cfg);
-void libconfig_ppp_l2tp_set_defaults(char *name, ppp_config *cfg);
+int librouter_ppp_l2tp_get_config(char *name, ppp_config *cfg);
+int librouter_ppp_l2tp_has_config(char *name);
+int librouter_ppp_l2tp_set_config(char *name, ppp_config *cfg);
+void librouter_ppp_l2tp_set_defaults(char *name, ppp_config *cfg);
 
-int libconfig_ppp_reload_backupd(void);
+int librouter_ppp_reload_backupd(void);
 
 #endif /* PPP_H_ */

@@ -13,20 +13,20 @@
 
 #define NTP_CFG_FILE "/var/run/ntp.config"
 
-int libconfig_ntp_set(int timeout, char *ip);
-int libconfig_ntp_get(int *timeout, char *ip);
+int librouter_ntp_set(int timeout, char *ip);
+int librouter_ntp_get(int *timeout, char *ip);
 
-void libconfig_ntp_hup(void);
-int libconfig_ntp_is_auth_used(void);
-int libconfig_ntp_authenticate(int used);
-int libconfig_ntp_restrict(char *server, char *mask);
-int libconfig_ntp_server(char *server, char *key_num);
-int libconfig_ntp_trust_on_key(char *num);
-int libconfig_ntp_exclude_restrict(char *addr);
-int libconfig_ntp_exclude_server(char *addr);
-int libconfig_ntp_exclude_trustedkeys(char *num);
-int libconfig_ntp_set_key(char *key_num, char *value);
+void librouter_ntp_hup(void);
+int librouter_ntp_is_auth_used(void);
+int librouter_ntp_authenticate(int used);
+int librouter_ntp_restrict(char *server, char *mask);
+int librouter_ntp_server(char *server, char *key_num);
+int librouter_ntp_trust_on_key(char *num);
+int librouter_ntp_exclude_restrict(char *addr);
+int librouter_ntp_exclude_server(char *addr);
+int librouter_ntp_exclude_trustedkeys(char *num);
+int librouter_ntp_set_key(char *key_num, char *value);
 
-void libconfig_ntp_dump(FILE *out);
+void librouter_ntp_dump(FILE *out);
 
 #endif /* NTP_H_ */

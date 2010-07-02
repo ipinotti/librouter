@@ -11,7 +11,7 @@ typedef struct {
 	unsigned char led_sys;
 } ppcio_data;
 
-int libconfig_ppcio_read(ppcio_data *pd);
-int libconfig_ppcio_write(ppcio_data *pd);
+int librouter_ppcio_read(ppcio_data *pd);
+int librouter_ppcio_write(ppcio_data *pd);
 
 #endif /* PPCIO_H_ */

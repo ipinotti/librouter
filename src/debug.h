@@ -14,12 +14,12 @@ typedef struct {
 	int enabled;
 } debuginfo;
 
-char *libconfig_debug_find_token(char *logline, char *name, int enabled);
-int libconfig_debug_set_token(int on_off, const char *token);
-void libconfig_debug_set_all(int on_off);
-void libconfig_debug_dump(void);
-int libconfig_debug_get_state(const char *token);
-void libconfig_debug_recover_all(void);
+char *librouter_debug_find_token(char *logline, char *name, int enabled);
+int librouter_debug_set_token(int on_off, const char *token);
+void librouter_debug_set_all(int on_off);
+void librouter_debug_dump(void);
+int librouter_debug_get_state(const char *token);
+void librouter_debug_recover_all(void);
 
 unsigned int get_debug_console(void);
 

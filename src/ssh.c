@@ -15,7 +15,7 @@
 #include "nv.h"
 #include "ssh.h"
 
-int libconfig_ssh_create_rsakey(int keysize)
+int librouter_ssh_create_rsakey(int keysize)
 {
 	int ret;
 	char line[128];
@@ -28,9 +28,9 @@ int libconfig_ssh_create_rsakey(int keysize)
 #endif
 	system(line);
 
-	if (libconfig_nv_save_ssh_secret(SSH_KEY_FILE) < 0) {
+	if (librouter_nv_save_ssh_secret(SSH_KEY_FILE) < 0) {
 		ret = -1;
-		libconfig_pr_error(1, "unable to save key");
+		librouter_pr_error(1, "unable to save key");
 	}
 	else
 		ret = 0;

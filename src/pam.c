@@ -83,7 +83,7 @@ static int _pam_null_conv(int n,
  * @param appdata_ptr
  * @return
  */
-static int libconfig_pam_web_conv(int num_msg,
+static int librouter_pam_web_conv(int num_msg,
                     const struct pam_message **msgm,
                     struct pam_response **response,
                     void *appdata_ptr)
@@ -135,7 +135,7 @@ static int libconfig_pam_web_conv(int num_msg,
 }
 
 /**
- * libconfig_pam_web_authenticate
+ * librouter_pam_web_authenticate
  *
  * Authenticate a user via PAM methods
  *
@@ -143,7 +143,7 @@ static int libconfig_pam_web_conv(int num_msg,
  * @param pass String with the user's password
  * @return AUTH_OK if success, AUTH_NOK if fail to authenticate
  */
-int libconfig_pam_web_authenticate(char *user, char *pass)
+int librouter_pam_web_authenticate(char *user, char *pass)
 {
 	int pam_err;
 	int ret = AUTH_NOK;
@@ -155,7 +155,7 @@ int libconfig_pam_web_authenticate(char *user, char *pass)
 	web_data.user = strdup(user);
 	web_data.pass = strdup(pass);
 
-	fpam_conv.conv = libconfig_pam_web_conv;
+	fpam_conv.conv = librouter_pam_web_conv;
 	fpam_conv.appdata_ptr = &web_data;
 
 	if ((pam_err = pam_start("web", NULL, &null_conv, &pam_handle)) != PAM_SUCCESS)
@@ -205,7 +205,7 @@ web_auth_err:
  * @param file_name File to be checked
  * @return authentication mode currently configured
  */
-int libconfig_pam_get_current_mode(char *file_name)
+int librouter_pam_get_current_mode(char *file_name)
 {
 	/* authentication */
 	FILE *f;
@@ -259,7 +259,7 @@ int libconfig_pam_get_current_mode(char *file_name)
  * @param file_name File to be checked
  * @return authorization mode currently configured
  */
-int libconfig_pam_get_current_author_mode(char *file_name)
+int librouter_pam_get_current_author_mode(char *file_name)
 {
 	/* authorization */
 	FILE *f;
@@ -304,7 +304,7 @@ int libconfig_pam_get_current_author_mode(char *file_name)
  * @param file_name File to be checked
  * @return accouting mode currently configured
  */
-int libconfig_pam_get_current_acct_mode(char *file_name)
+int librouter_pam_get_current_acct_mode(char *file_name)
 {
 	/* exec accounting */
 	FILE *f;
@@ -346,7 +346,7 @@ int libconfig_pam_get_current_acct_mode(char *file_name)
  * @param file_name : File to be checked
  * @return : command accounting mode currently configured
  */
-int libconfig_pam_get_current_acct_cmd_mode(char *file_name)
+int librouter_pam_get_current_acct_cmd_mode(char *file_name)
 {
 	/* command accounting */
 	FILE *f;
@@ -391,7 +391,7 @@ int libconfig_pam_get_current_acct_cmd_mode(char *file_name)
  * @param mode configured mode
  * @return family
  */
-static int _libconfig_pam_get_aaa_family(int mode)
+static int _librouter_pam_get_aaa_family(int mode)
 {
 	int i;
 
@@ -411,7 +411,7 @@ static int _libconfig_pam_get_aaa_family(int mode)
  * @param f File descripton of the file
  * @return 0
  */
-static int _libconfig_pam_comment_section(char *src, char *dest, FILE *f)
+static int _librouter_pam_comment_section(char *src, char *dest, FILE *f)
 {
 	while (fgets(src, 511, f)) {
 
@@ -436,7 +436,7 @@ static int _libconfig_pam_comment_section(char *src, char *dest, FILE *f)
  * @param mode Current PAM mode
  * @return 1 if line is to be commented, 0 otherwise.
  */
-static int _libconfig_pam_uncomment_line(char *buf, int mode)
+static int _librouter_pam_uncomment_line(char *buf, int mode)
 {
 	if (mode == AAA_AUTH_NONE && strstr(buf, "auth_none"))
 		return 1;
@@ -471,7 +471,7 @@ static int _libconfig_pam_uncomment_line(char *buf, int mode)
  * @param pam_file File name to be read/written to
  * @return 1 if success, 0 otherwise
  */
-static int _libconfig_pam_disable_mode(int mode, char *pam_file)
+static int _librouter_pam_disable_mode(int mode, char *pam_file)
 {
 	int fd;
 	FILE *f;
@@ -500,24 +500,24 @@ static int _libconfig_pam_disable_mode(int mode, char *pam_file)
 	}
 
 	while (fgets(src, sizeof(src) - 1, f)) {
-		int family = _libconfig_pam_get_aaa_family(mode);
+		int family = _librouter_pam_get_aaa_family(mode);
 
 		strcat(dest, src);
 
 		if (family == AAA_AUTH) {
 
 			if (strstr(src, "_SECTION AUTHENTICATION"))
-				_libconfig_pam_comment_section(src, dest, f);
+				_librouter_pam_comment_section(src, dest, f);
 
 		} else if (family == AAA_AUTHOR) {
 
 			if (strstr(src, "_SECTION AUTHORIZATION"))
-				_libconfig_pam_comment_section(src, dest, f);
+				_librouter_pam_comment_section(src, dest, f);
 
 		} else if (family == AAA_ACCT) {
 
 			if (strstr(src, "_SECTION ACCOUNTING"))
-				_libconfig_pam_comment_section(src, dest, f);
+				_librouter_pam_comment_section(src, dest, f);
 
 		}
 	}
@@ -547,7 +547,7 @@ static int _libconfig_pam_disable_mode(int mode, char *pam_file)
  */
 int pam_set_mode(char *src, char *dest, int mode, char *pam_file)
 {
-	int family = _libconfig_pam_get_aaa_family(mode);
+	int family = _librouter_pam_get_aaa_family(mode);
 
 	if (strstr(src, "auth_current_mode") && family == AAA_AUTH) {
 		/* Authentication */
@@ -591,7 +591,7 @@ int pam_set_mode(char *src, char *dest, int mode, char *pam_file)
 		/* Command accounting */
 		int current_acct;
 
-		current_acct = libconfig_pam_get_current_acct_cmd_mode(pam_file);
+		current_acct = librouter_pam_get_current_acct_cmd_mode(pam_file);
 		if (mode == AAA_ACCT_TACACS_CMD_1) {
 			if (current_acct == AAA_ACCT_TACACS_CMD_15)
 				strcat(dest, "#acct_current_command_mode=AAA_ACCT_TACACS_CMD_ALL\n");
@@ -636,7 +636,7 @@ int pam_set_mode(char *src, char *dest, int mode, char *pam_file)
  * @param pam_file
  * @return 1 when success, 0 otherwise
  */
-int libconfig_pam_config_mode(cish_config *cish_cfg,
+int librouter_pam_config_mode(cish_config *cish_cfg,
                   int mode,
                   int change_active_mode,
                   char *pam_file)
@@ -665,7 +665,7 @@ int libconfig_pam_config_mode(cish_config *cish_cfg,
 
 	if (change_active_mode) {
 		/* Primeira varredura pelo arquivo: ligar ou desligar modo */
-		_libconfig_pam_disable_mode(mode, pam_file);
+		_librouter_pam_disable_mode(mode, pam_file);
 
 		buffer[0] = '\0';
 		if (!(f = fopen(pam_file, "r"))) {
@@ -677,7 +677,7 @@ int libconfig_pam_config_mode(cish_config *cish_cfg,
 			if (pam_set_mode(buf, buffer, mode, pam_file)) {
 				/* When 1 is returned, then line was changed */
 				continue;
-			} else if (_libconfig_pam_uncomment_line(buf, mode)) {
+			} else if (_librouter_pam_uncomment_line(buf, mode)) {
 				p = buf;
 
 				/* remove commentary! */
@@ -706,7 +706,7 @@ int libconfig_pam_config_mode(cish_config *cish_cfg,
 	return 1;
 }
 
-int libconfig_pam_get_auth_type(char *device)
+int librouter_pam_get_auth_type(char *device)
 {
 	int serial_no = 0;
 	ppp_config cfg;
@@ -729,8 +729,8 @@ int libconfig_pam_get_auth_type(char *device)
 	else
 		return AUTH_TYPE_NONE;
 
-	if (libconfig_ppp_has_config(serial_no)) {
-		libconfig_ppp_get_config(serial_no, &cfg);
+	if (librouter_ppp_has_config(serial_no)) {
+		librouter_ppp_get_config(serial_no, &cfg);
 
 		if (cfg.server_flags & SERVER_FLAGS_CHAP) {
 			return AUTH_TYPE_CHAP;

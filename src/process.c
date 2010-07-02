@@ -32,7 +32,7 @@
  *		  deve ter pelo menos MAX_PROC_CMDLINE bytes.
  * @return Retorna o PID do processo, ou 0 caso nao o encontre.
  */
-pid_t libconfig_process_get_info(char *progname, char *arg, char *proc_cmdline)
+pid_t librouter_process_get_info(char *progname, char *arg, char *proc_cmdline)
 {
 	DIR *dir;
 	struct dirent *d;
@@ -45,7 +45,7 @@ pid_t libconfig_process_get_info(char *progname, char *arg, char *proc_cmdline)
 
 	/* Open the /proc directory. */
 	if ((dir = opendir("/proc")) == NULL) {
-		libconfig_pr_error(1, "cannot opendir(/proc)");
+		librouter_pr_error(1, "cannot opendir(/proc)");
 		return (0);
 	}
 
@@ -125,7 +125,7 @@ pid_t libconfig_process_get_info(char *progname, char *arg, char *proc_cmdline)
  * @param pid
  * @return
  */
-int libconfig_process_pid_exists(pid_t pid)
+int librouter_process_pid_exists(pid_t pid)
 {
 	return (!((kill(pid, 0) < 0) && (errno == ESRCH)));
 }
@@ -138,9 +138,9 @@ int libconfig_process_pid_exists(pid_t pid)
  * @param timeout
  * @return
  */
-int libconfig_process_wait_for(pid_t pid, int timeout)
+int librouter_process_wait_for(pid_t pid, int timeout)
 {
-	while ((timeout > 0) && (libconfig_process_pid_exists(pid))) {
+	while ((timeout > 0) && (librouter_process_pid_exists(pid))) {
 		sleep(1);
 		timeout--;
 	}
@@ -148,7 +148,7 @@ int libconfig_process_wait_for(pid_t pid, int timeout)
 	return (timeout);
 }
 
-int libconfig_process_get_runlevel(void)
+int librouter_process_get_runlevel(void)
 {
 	struct utmp *ut;
 	//char prev;

@@ -23,7 +23,7 @@
 #include "ppp.h"
 
 #ifdef OPTION_NTPD
-void libconfig_ntp_hup(void)
+void librouter_ntp_hup(void)
 {
 	FILE *f;
 	char buf[32];
@@ -45,7 +45,7 @@ void libconfig_ntp_hup(void)
 /*
  *  Returns 1 if NTP authentication is used and 0 if not
  */
-int libconfig_ntp_is_auth_used(void)
+int librouter_ntp_is_auth_used(void)
 {
 	FILE *f;
 	arglist *args;
@@ -59,7 +59,7 @@ int libconfig_ntp_is_auth_used(void)
 		if ((p = strchr(line, '\n')))
 			*p = '\0';
 
-		args = libconfig_make_args(line);
+		args = librouter_make_args(line);
 
 		if (args->argc > 1) {
 			if (!strcmp(args->argv[0], "#authenticate")) {
@@ -69,7 +69,7 @@ int libconfig_ntp_is_auth_used(void)
 			}
 		}
 
-		libconfig_destroy_args(args);
+		librouter_destroy_args(args);
 	}
 
 	fclose(f);
@@ -77,7 +77,7 @@ int libconfig_ntp_is_auth_used(void)
 	return used;
 }
 
-int libconfig_ntp_authenticate(int used)
+int librouter_ntp_authenticate(int used)
 {
 	int fd;
 	FILE *f;
@@ -85,23 +85,23 @@ int libconfig_ntp_authenticate(int used)
 	struct stat st;
 	char *p, *local, line[200];
 
-	if (used == libconfig_ntp_is_auth_used())
+	if (used == librouter_ntp_is_auth_used())
 		return 0;
 
 	if ((fd = open(FILE_NTP_CONF, O_RDONLY)) < 0) {
-		libconfig_pr_error(0, "Could not read NTP configuration (open)");
+		librouter_pr_error(0, "Could not read NTP configuration (open)");
 		return -1;
 	}
 
 	if (fstat(fd, &st) < 0) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read NTP configuration (fstat)");
+		librouter_pr_error(0, "Could not read NTP configuration (fstat)");
 		return -1;
 	}
 
 	if (!(local = malloc(st.st_size + 128))) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read NTP configuration (malloc)");
+		librouter_pr_error(0, "Could not read NTP configuration (malloc)");
 		return -1;
 	}
 
@@ -109,7 +109,7 @@ int libconfig_ntp_authenticate(int used)
 	close(fd);
 
 	if (!(f = fopen(FILE_NTP_CONF, "r"))) {
-		libconfig_pr_error(0, "Could not read NTP configuration (fopen)");
+		librouter_pr_error(0, "Could not read NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -120,7 +120,7 @@ int libconfig_ntp_authenticate(int used)
 			*p = '\0';
 
 		if (strlen(line)) {
-			args = libconfig_make_args(line);
+			args = librouter_make_args(line);
 
 			if (args->argc >= 4) {
 				if (!strcmp(args->argv[0], "server")) {
@@ -164,14 +164,14 @@ int libconfig_ntp_authenticate(int used)
 				}
 			}
 
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 		}
 	}
 
 	fclose(f);
 
 	if (!(f = fopen(FILE_NTP_CONF, "w"))) {
-		libconfig_pr_error(0, "Could not write NTP configuration (fopen)");
+		librouter_pr_error(0, "Could not write NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -180,12 +180,12 @@ int libconfig_ntp_authenticate(int used)
 	fclose(f);
 	free(local);
 
-	libconfig_ntp_hup();
+	librouter_ntp_hup();
 	return 0;
 }
 #endif
 
-int libconfig_ntp_restrict(char *server, char *mask)
+int librouter_ntp_restrict(char *server, char *mask)
 {
 	FILE *f;
 	arglist *args;
@@ -194,19 +194,19 @@ int libconfig_ntp_restrict(char *server, char *mask)
 	char *p, *local, line[200];
 
 	if ((fd = open(FILE_NTP_CONF, O_RDONLY)) < 0) {
-		libconfig_pr_error(0, "Could not read NTP configuration (open)");
+		librouter_pr_error(0, "Could not read NTP configuration (open)");
 		return -1;
 	}
 
 	if (fstat(fd, &st) < 0) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read NTP configuration (fstat)");
+		librouter_pr_error(0, "Could not read NTP configuration (fstat)");
 		return -1;
 	}
 
 	if (!(local = malloc(st.st_size + 128))) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read NTP configuration (malloc)");
+		librouter_pr_error(0, "Could not read NTP configuration (malloc)");
 		return -1;
 	}
 
@@ -214,7 +214,7 @@ int libconfig_ntp_restrict(char *server, char *mask)
 	close(fd);
 
 	if (!(f = fopen(FILE_NTP_CONF, "r+"))) {
-		libconfig_pr_error(0, "Could not read NTP configuration (fopen)");
+		librouter_pr_error(0, "Could not read NTP configuration (fopen)");
 		return -1;
 	}
 
@@ -224,7 +224,7 @@ int libconfig_ntp_restrict(char *server, char *mask)
 			*p = '\0';
 
 		if (strlen(line)) {
-			args = libconfig_make_args(line);
+			args = librouter_make_args(line);
 
 			/* restrict <ipaddr> mask <netmask> nomodify noserve (noquery) */
 			if (args->argc >= 4) {
@@ -247,14 +247,14 @@ int libconfig_ntp_restrict(char *server, char *mask)
 				strcat(local, "\n");
 			}
 
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 		}
 	}
 
 	fclose(f);
 
 	if (!(f = fopen(FILE_NTP_CONF, "w"))) {
-		libconfig_pr_error(0, "Could not write NTP configuration (fopen)");
+		librouter_pr_error(0, "Could not write NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -268,12 +268,12 @@ int libconfig_ntp_restrict(char *server, char *mask)
 	}
 
 	fclose(f);
-	libconfig_ntp_hup();
+	librouter_ntp_hup();
 
 	return 0;
 }
 
-int libconfig_ntp_server(char *server, char *key_num)
+int librouter_ntp_server(char *server, char *key_num)
 {
 	FILE *f;
 	arglist *args;
@@ -282,23 +282,23 @@ int libconfig_ntp_server(char *server, char *key_num)
 	char *p, *local, line[200];
 
 #ifdef OPTION_NTPD_authenticate
-	int auth=libconfig_ntp_is_auth_used();
+	int auth=librouter_ntp_is_auth_used();
 #endif
 
 	if ((fd = open(FILE_NTP_CONF, O_RDONLY)) < 0) {
-		libconfig_pr_error(0, "Could not read NTP configuration (open)");
+		librouter_pr_error(0, "Could not read NTP configuration (open)");
 		return -1;
 	}
 
 	if (fstat(fd, &st) < 0) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read NTP configuration (fstat)");
+		librouter_pr_error(0, "Could not read NTP configuration (fstat)");
 		return -1;
 	}
 
 	if (!(local = malloc(st.st_size + 128))) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read NTP configuration (malloc)");
+		librouter_pr_error(0, "Could not read NTP configuration (malloc)");
 		return -1;
 	}
 
@@ -306,7 +306,7 @@ int libconfig_ntp_server(char *server, char *key_num)
 	close(fd);
 
 	if (!(f = fopen(FILE_NTP_CONF, "r+"))) {
-		libconfig_pr_error(0, "Could not read NTP configuration (fopen)");
+		librouter_pr_error(0, "Could not read NTP configuration (fopen)");
 		return -1;
 	}
 
@@ -316,7 +316,7 @@ int libconfig_ntp_server(char *server, char *key_num)
 			*p = '\0';
 
 		if (strlen(line)) {
-			args = libconfig_make_args(line);
+			args = librouter_make_args(line);
 
 			/* server <ipaddr> iburst key 1-16 */
 			if (!found &&
@@ -337,14 +337,14 @@ int libconfig_ntp_server(char *server, char *key_num)
 				strcat(local, line);
 			}
 			strcat(local, "\n");
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 		}
 	}
 
 	fclose(f);
 
 	if (!(f = fopen(FILE_NTP_CONF, "w"))) {
-		libconfig_pr_error(0, "Could not write NTP configuration (fopen)");
+		librouter_pr_error(0, "Could not write NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -376,15 +376,15 @@ int libconfig_ntp_server(char *server, char *key_num)
 
 	fclose(f);
 
-	if (!libconfig_exec_check_daemon(NTP_DAEMON))
-		libconfig_exec_daemon(NTP_DAEMON);
+	if (!librouter_exec_check_daemon(NTP_DAEMON))
+		librouter_exec_daemon(NTP_DAEMON);
 	else
-		libconfig_ntp_hup();
+		librouter_ntp_hup();
 
 	return 0;
 }
 
-int libconfig_ntp_trust_on_key(char *num)
+int librouter_ntp_trust_on_key(char *num)
 {
 	FILE *f;
 	arglist *args;
@@ -393,19 +393,19 @@ int libconfig_ntp_trust_on_key(char *num)
 	char *p, *local, line[200];
 
 	if ((fd = open(FILE_NTP_CONF, O_RDONLY)) < 0) {
-		libconfig_pr_error(0, "Could not read NTP configuration (open)");
+		librouter_pr_error(0, "Could not read NTP configuration (open)");
 		return -1;
 	}
 
 	if (fstat(fd, &st) < 0) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read NTP configuration (fstat)");
+		librouter_pr_error(0, "Could not read NTP configuration (fstat)");
 		return -1;
 	}
 
 	if (!(local = malloc(st.st_size + 128))) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read NTP configuration (malloc)");
+		librouter_pr_error(0, "Could not read NTP configuration (malloc)");
 		return -1;
 	}
 
@@ -413,7 +413,7 @@ int libconfig_ntp_trust_on_key(char *num)
 	close(fd);
 
 	if (!(f = fopen(FILE_NTP_CONF, "r"))) {
-		libconfig_pr_error(0, "Could not read NTP configuration (fopen)");
+		librouter_pr_error(0, "Could not read NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -424,7 +424,7 @@ int libconfig_ntp_trust_on_key(char *num)
 			*p = '\0';
 
 		if (strlen(line)) {
-			args = libconfig_make_args(line);
+			args = librouter_make_args(line);
 
 			if (args->argc > 0) {
 
@@ -455,7 +455,7 @@ int libconfig_ntp_trust_on_key(char *num)
 				strcat(local, line);
 				strcat(local, "\n");
 			}
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 		}
 	}
 
@@ -469,7 +469,7 @@ int libconfig_ntp_trust_on_key(char *num)
 	fclose(f);
 
 	if (!(f = fopen(FILE_NTP_CONF, "w"))) {
-		libconfig_pr_error(0,
+		librouter_pr_error(0,
 		                "Could not write NTP configuration (fopen)");
 		free(local);
 		return -1;
@@ -480,12 +480,12 @@ int libconfig_ntp_trust_on_key(char *num)
 
 	free(local);
 
-	libconfig_ntp_hup();
+	librouter_ntp_hup();
 
 	return 0;
 }
 
-int libconfig_ntp_exclude_restrict(char *addr)
+int librouter_ntp_exclude_restrict(char *addr)
 {
 	int fd;
 	FILE *f;
@@ -494,19 +494,19 @@ int libconfig_ntp_exclude_restrict(char *addr)
 	char *p, *local, line[200];
 
 	if ((fd = open(FILE_NTP_CONF, O_RDONLY)) < 0) {
-		libconfig_pr_error(0, "Could not read NTP configuration (open)");
+		librouter_pr_error(0, "Could not read NTP configuration (open)");
 		return -1;
 	}
 
 	if (fstat(fd, &st) < 0) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read NTP configuration (fstat)");
+		librouter_pr_error(0, "Could not read NTP configuration (fstat)");
 		return -1;
 	}
 
 	if (!(local = malloc(st.st_size + 128))) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read NTP configuration (malloc)");
+		librouter_pr_error(0, "Could not read NTP configuration (malloc)");
 		return -1;
 	}
 
@@ -514,7 +514,7 @@ int libconfig_ntp_exclude_restrict(char *addr)
 	close(fd);
 
 	if (!(f = fopen(FILE_NTP_CONF, "r"))) {
-		libconfig_pr_error(0,"Could not read NTP configuration (fopen)");
+		librouter_pr_error(0,"Could not read NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -525,7 +525,7 @@ int libconfig_ntp_exclude_restrict(char *addr)
 			*p = '\0';
 
 		if (strlen(line)) {
-			args = libconfig_make_args(line);
+			args = librouter_make_args(line);
 
 			/* restrict <ipaddr> mask <netmask> nomodify noserve (noquery) */
 			if (args->argc >= 4) {
@@ -546,14 +546,14 @@ int libconfig_ntp_exclude_restrict(char *addr)
 				strcat(local, line);
 				strcat(local, "\n");
 			}
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 		}
 	}
 
 	fclose(f);
 
 	if (!(f = fopen(FILE_NTP_CONF, "w"))) {
-		libconfig_pr_error(0, "Could not write NTP configuration (fopen)");
+		librouter_pr_error(0, "Could not write NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -563,12 +563,12 @@ int libconfig_ntp_exclude_restrict(char *addr)
 
 	free(local);
 
-	libconfig_ntp_hup();
+	librouter_ntp_hup();
 
 	return 0;
 }
 
-int libconfig_ntp_exclude_server(char *addr)
+int librouter_ntp_exclude_server(char *addr)
 {
 	int fd, servers = 0;
 	FILE *f;
@@ -577,19 +577,19 @@ int libconfig_ntp_exclude_server(char *addr)
 	char *p, *local, line[200];
 
 	if ((fd = open(FILE_NTP_CONF, O_RDONLY)) < 0) {
-		libconfig_pr_error(0, "Could not read NTP configuration (open)");
+		librouter_pr_error(0, "Could not read NTP configuration (open)");
 		return -1;
 	}
 
 	if (fstat(fd, &st) < 0) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read NTP configuration (fstat)");
+		librouter_pr_error(0, "Could not read NTP configuration (fstat)");
 		return -1;
 	}
 
 	if (!(local = malloc(st.st_size + 128))) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read NTP configuration (malloc)");
+		librouter_pr_error(0, "Could not read NTP configuration (malloc)");
 		return -1;
 	}
 
@@ -597,7 +597,7 @@ int libconfig_ntp_exclude_server(char *addr)
 	close(fd);
 
 	if (!(f = fopen(FILE_NTP_CONF, "r"))) {
-		libconfig_pr_error(0, "Could not read NTP configuration (fopen)");
+		librouter_pr_error(0, "Could not read NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -608,7 +608,7 @@ int libconfig_ntp_exclude_server(char *addr)
 			*p = '\0';
 
 		if (strlen(line)) {
-			args = libconfig_make_args(line);
+			args = librouter_make_args(line);
 
 			/* server <ipaddress> iburst [key <1-16>] */
 			if (args->argc >= 3) {
@@ -630,14 +630,14 @@ int libconfig_ntp_exclude_server(char *addr)
 				strcat(local, line);
 				strcat(local, "\n");
 			}
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 		}
 	}
 
 	fclose(f);
 
 	if (!(f = fopen(FILE_NTP_CONF, "w"))) {
-		libconfig_pr_error(0, "Could not write NTP configuration (fopen)");
+		librouter_pr_error(0, "Could not write NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -647,15 +647,15 @@ int libconfig_ntp_exclude_server(char *addr)
 
 	free(local);
 
-	if (!servers && libconfig_exec_check_daemon(NTP_DAEMON))
-		libconfig_kill_daemon(NTP_DAEMON);
+	if (!servers && librouter_exec_check_daemon(NTP_DAEMON))
+		librouter_kill_daemon(NTP_DAEMON);
 	else
-		libconfig_ntp_hup();
+		librouter_ntp_hup();
 
 	return 0;
 }
 
-int libconfig_ntp_exclude_trustedkeys(char *num)
+int librouter_ntp_exclude_trustedkeys(char *num)
 {
 	FILE *f;
 	int i, fd;
@@ -664,19 +664,19 @@ int libconfig_ntp_exclude_trustedkeys(char *num)
 	char *p, *local, line[200];
 
 	if ((fd = open(FILE_NTP_CONF, O_RDONLY)) < 0) {
-		libconfig_pr_error(0, "Could not read NTP configuration (open)");
+		librouter_pr_error(0, "Could not read NTP configuration (open)");
 		return -1;
 	}
 
 	if (fstat(fd, &st) < 0) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read NTP configuration (fstat)");
+		librouter_pr_error(0, "Could not read NTP configuration (fstat)");
 		return -1;
 	}
 
 	if (!(local = malloc(st.st_size + 128))) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read NTP configuration (malloc)");
+		librouter_pr_error(0, "Could not read NTP configuration (malloc)");
 		return -1;
 	}
 
@@ -684,7 +684,7 @@ int libconfig_ntp_exclude_trustedkeys(char *num)
 	close(fd);
 
 	if (!(f = fopen(FILE_NTP_CONF, "r"))) {
-		libconfig_pr_error(0, "Could not read NTP configuration (fopen)");
+		librouter_pr_error(0, "Could not read NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -695,7 +695,7 @@ int libconfig_ntp_exclude_trustedkeys(char *num)
 			*p = '\0';
 
 		if (strlen(line)) {
-			args = libconfig_make_args(line);
+			args = librouter_make_args(line);
 
 			if (args->argc > 1) {
 				if (!strcmp(args->argv[0], "trustedkey")) {
@@ -717,14 +717,14 @@ int libconfig_ntp_exclude_trustedkeys(char *num)
 				strcat(local, line);
 				strcat(local, "\n");
 			}
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 		}
 	}
 
 	fclose(f);
 
 	if (!(f = fopen(FILE_NTP_CONF, "w"))) {
-		libconfig_pr_error(0, "Could not write NTP configuration (fopen)");
+		librouter_pr_error(0, "Could not write NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -734,12 +734,12 @@ int libconfig_ntp_exclude_trustedkeys(char *num)
 
 	free(local);
 
-	libconfig_ntp_hup();
+	librouter_ntp_hup();
 
 	return 0;
 }
 
-int libconfig_ntp_set_key(char *key_num, char *value)
+int librouter_ntp_set_key(char *key_num, char *value)
 {
 	int fd, found = 0;
 	FILE *f;
@@ -748,18 +748,18 @@ int libconfig_ntp_set_key(char *key_num, char *value)
 	char *p, *local, line[200];
 
 	if ((fd = open(FILE_NTPD_KEYS, O_RDONLY)) < 0) {
-		libconfig_pr_error(0, "Could not read NTP configuration (open)");
+		librouter_pr_error(0, "Could not read NTP configuration (open)");
 		return -1;
 	}
 
 	if (fstat(fd, &st) < 0) {
 		close(fd);
-		libconfig_pr_error(0, "Could not read NTP configuration (fstat)");
+		librouter_pr_error(0, "Could not read NTP configuration (fstat)");
 		return -1;
 	}
 
 	if (!(local = malloc(st.st_size + 128 + strlen(value)))) {
-		libconfig_pr_error(0, "Could not read NTP configuration (malloc)");
+		librouter_pr_error(0, "Could not read NTP configuration (malloc)");
 		return -1;
 	}
 
@@ -767,7 +767,7 @@ int libconfig_ntp_set_key(char *key_num, char *value)
 	close(fd);
 
 	if (!(f = fopen(FILE_NTPD_KEYS, "r"))) {
-		libconfig_pr_error(0, "Could not read NTP configuration (fopen)");
+		librouter_pr_error(0, "Could not read NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -778,7 +778,7 @@ int libconfig_ntp_set_key(char *key_num, char *value)
 			*p = '\0';
 
 		if (strlen(line)) {
-			args = libconfig_make_args(line);
+			args = librouter_make_args(line);
 
 			if (args->argc > 2) {
 				if (!found && !strcmp(args->argv[0], key_num)
@@ -796,7 +796,7 @@ int libconfig_ntp_set_key(char *key_num, char *value)
 				strcat(local, line);
 				strcat(local, "\n");
 			}
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 		}
 	}
 
@@ -810,7 +810,7 @@ int libconfig_ntp_set_key(char *key_num, char *value)
 	fclose(f);
 
 	if (!(f = fopen(FILE_NTPD_KEYS, "w"))) {
-		libconfig_pr_error(0, "Could not write NTP configuration (fopen)");
+		librouter_pr_error(0, "Could not write NTP configuration (fopen)");
 		free(local);
 		return -1;
 	}
@@ -820,16 +820,16 @@ int libconfig_ntp_set_key(char *key_num, char *value)
 
 	free(local);
 
-	libconfig_ntp_hup();
+	librouter_ntp_hup();
 
-	libconfig_nv_save_ntp_secret(NTP_KEY_FILE); /* save keys on flash! */
+	librouter_nv_save_ntp_secret(NTP_KEY_FILE); /* save keys on flash! */
 
 	return 0;
 }
 
 #else
 
-int libconfig_ntp_set(int timeout, char *ip)
+int librouter_ntp_set(int timeout, char *ip)
 {
 	FILE *f;
 
@@ -844,10 +844,10 @@ int libconfig_ntp_set(int timeout, char *ip)
 	} else
 		unlink(NTP_CFG_FILE);
 
-	return libconfig_ppp_notify_systtyd();
+	return librouter_ppp_notify_systtyd();
 }
 
-int libconfig_ntp_get(int *timeout, char *ip)
+int librouter_ntp_get(int *timeout, char *ip)
 {
 	arglist *args;
 	char buf[32];
@@ -861,10 +861,10 @@ int libconfig_ntp_get(int *timeout, char *ip)
 	fgets(buf, 32, f);
 	buf[31] = 0;
 	fclose(f);
-	args = libconfig_make_args(buf);
+	args = librouter_make_args(buf);
 
 	if (args->argc < 2) {
-		libconfig_destroy_args(args);
+		librouter_destroy_args(args);
 		return -1;
 	}
 
@@ -872,13 +872,13 @@ int libconfig_ntp_get(int *timeout, char *ip)
 	strncpy(ip, args->argv[1], 16);
 	ip[15] = 0;
 
-	libconfig_destroy_args(args);
+	librouter_destroy_args(args);
 
 	return 0;
 }
 #endif
 
-void libconfig_ntp_dump(FILE *out)
+void librouter_ntp_dump(FILE *out)
 {
 	int i, printed_something = 0;
 	FILE *f;
@@ -886,7 +886,7 @@ void libconfig_ntp_dump(FILE *out)
 	char *p, line[200];
 
 #ifdef OPTION_NTPD_authenticate
-	if (libconfig_ntp_is_auth_used()) fprintf(out, "ntp authenticate\n");
+	if (librouter_ntp_is_auth_used()) fprintf(out, "ntp authenticate\n");
 	else fprintf(out, "no ntp authenticate\n");
 #endif
 
@@ -897,7 +897,7 @@ void libconfig_ntp_dump(FILE *out)
 				*p = '\0';
 
 			if (strlen(line)) {
-				args = libconfig_make_args(line);
+				args = librouter_make_args(line);
 				/* restrict <ipaddr> mask <mask> */
 				if (!strcmp(args->argv[0], "restrict")) {
 					if (args->argc >= 4) {
@@ -907,7 +907,7 @@ void libconfig_ntp_dump(FILE *out)
 						                args->argv[3]);
 					}
 				}
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 			}
 		}
 
@@ -919,7 +919,7 @@ void libconfig_ntp_dump(FILE *out)
 				*p = '\0';
 
 			if (strlen(line)) {
-				args = libconfig_make_args(line);
+				args = librouter_make_args(line);
 				if (!strcmp(args->argv[0], "trustedkey")) {
 					printed_something = 1;
 					if (args->argc > 1) {
@@ -930,7 +930,7 @@ void libconfig_ntp_dump(FILE *out)
 						fprintf(out, "no ntp trusted-key\n");
 					}
 				}
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 			}
 		}
 
@@ -941,7 +941,7 @@ void libconfig_ntp_dump(FILE *out)
 				*p = '\0';
 
 			if (strlen(line)) {
-				args = libconfig_make_args(line);
+				args = librouter_make_args(line);
 
 				/* server <ipaddr> iburst [key 1-16] */
 				if (args->argc >= 2 && !strcmp(args->argv[0], "server")) {
@@ -952,7 +952,7 @@ void libconfig_ntp_dump(FILE *out)
 					else
 						fprintf(out, "\n");
 				}
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 			}
 		}
 		fclose(f);

@@ -53,18 +53,18 @@ typedef struct {
 } aaa_config_t;
 
 /* Prototypes */
-int libconfig_pam_web_authenticate(char *user, char *pass);
+int librouter_pam_web_authenticate(char *user, char *pass);
 
-int libconfig_pam_get_current_mode(char *file_name);
-int libconfig_pam_get_current_author_mode(char *file_name);
-int libconfig_pam_get_current_acct_mode(char *file_name);
-int libconfig_pam_get_current_acct_cmd_mode(char *file_name);
+int librouter_pam_get_current_mode(char *file_name);
+int librouter_pam_get_current_author_mode(char *file_name);
+int librouter_pam_get_current_acct_mode(char *file_name);
+int librouter_pam_get_current_acct_cmd_mode(char *file_name);
 
-int libconfig_pam_config_mode(cish_config *cish_cfg,
+int librouter_pam_config_mode(cish_config *cish_cfg,
                   int mode,
                   int change_active_mode,
                   char *pam_file);
 
-int libconfig_pam_get_auth_type(char *device);
+int librouter_pam_get_auth_type(char *device);
 
 #endif /* PAM_H_ */

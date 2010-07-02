@@ -19,13 +19,13 @@ typedef struct {
 
 extern dev_family _devices[];
 
-dev_family *libconfig_device_get_family(const char *name);
-char *libconfig_device_convert(const char *device, int major, int minor);
-char *libconfig_device_convert_os(const char *osdev, int mode);
-char *libconfig_device_to_linux_cmdline(char *cmdline);
-char *libconfig_device_from_linux_cmdline(char *cmdline);
-char *libconfig_zebra_from_linux_cmdline(char *cmdline);
-char *libconfig_zebra_to_linux_cmdline(char *cmdline);
+dev_family *librouter_device_get_family(const char *name);
+char *librouter_device_convert(const char *device, int major, int minor);
+char *librouter_device_convert_os(const char *osdev, int mode);
+char *librouter_device_to_linux_cmdline(char *cmdline);
+char *librouter_device_from_linux_cmdline(char *cmdline);
+char *librouter_zebra_from_linux_cmdline(char *cmdline);
+char *librouter_zebra_to_linux_cmdline(char *cmdline);
 
 #endif /* DEVICES_H_ */
 

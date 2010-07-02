@@ -40,7 +40,7 @@ static int fd_daemon;
  */
 
 /* Making connection to protocol daemon */
-int libconfig_quagga_connect_daemon(char *path)
+int librouter_quagga_connect_daemon(char *path)
 {
 	int i, ret = 0, sock, len;
 	struct sockaddr_un addr;
@@ -99,7 +99,7 @@ int libconfig_quagga_connect_daemon(char *path)
 	return 0;
 }
 
-int libconfig_quagga_execute_client(char *line, FILE *fp, char *buf_daemon, int show)
+int librouter_quagga_execute_client(char *line, FILE *fp, char *buf_daemon, int show)
 {
 	int i, ret, nbytes;
 	char buf[1024];
@@ -110,7 +110,7 @@ int libconfig_quagga_execute_client(char *line, FILE *fp, char *buf_daemon, int 
 	ret = write(fd_daemon, line, strlen(line) + 1);
 	if (ret <= 0) {
 		fprintf(stderr, "daemon_client_execute(%s): write error!\n", line);
-		libconfig_quagga_close_daemon();
+		librouter_quagga_close_daemon();
 		return 0;
 	}
 
@@ -123,7 +123,7 @@ int libconfig_quagga_execute_client(char *line, FILE *fp, char *buf_daemon, int 
 
 		if (nbytes <= 0 && errno != EINTR) {
 			fprintf(stderr, "daemon_client_execute(%s): read error!\n", line);
-			libconfig_quagga_close_daemon();
+			librouter_quagga_close_daemon();
 			return 0;
 		}
 
@@ -154,7 +154,7 @@ int libconfig_quagga_execute_client(char *line, FILE *fp, char *buf_daemon, int 
 	return ret;
 }
 
-void libconfig_quagga_close_daemon(void)
+void librouter_quagga_close_daemon(void)
 {
 	if (fd_daemon > 0)
 		close(fd_daemon);
@@ -162,101 +162,101 @@ void libconfig_quagga_close_daemon(void)
 }
 
 #define ZEBRA_OUTPUT_FILE "/var/run/.zebra_out"
-FILE *libconfig_quagga_zebra_show_cmd(const char *cmdline)
+FILE *librouter_quagga_zebra_show_cmd(const char *cmdline)
 {
 	FILE *f;
 	char *new_cmdline;
 
-	if (libconfig_quagga_connect_daemon(ZEBRA_PATH) < 0)
+	if (librouter_quagga_connect_daemon(ZEBRA_PATH) < 0)
 		return NULL;
 
 	f = fopen(ZEBRA_OUTPUT_FILE, "wt");
 	if (!f) {
-		libconfig_quagga_close_daemon();
+		librouter_quagga_close_daemon();
 		return NULL;
 	}
 
-	new_cmdline = libconfig_device_to_linux_cmdline((char*) cmdline);
-	libconfig_quagga_execute_client("enable", stdout, NULL, 0);
-	libconfig_quagga_execute_client(new_cmdline, f, NULL, 1);
+	new_cmdline = librouter_device_to_linux_cmdline((char*) cmdline);
+	librouter_quagga_execute_client("enable", stdout, NULL, 0);
+	librouter_quagga_execute_client(new_cmdline, f, NULL, 1);
 
 	fclose(f);
-	libconfig_quagga_close_daemon();
+	librouter_quagga_close_daemon();
 
 	return fopen(ZEBRA_OUTPUT_FILE, "rt");
 }
 
 #define OSPF_OUTPUT_FILE "/var/run/.ospf_out"
-FILE *libconfig_quagga_ospf_show_cmd(const char *cmdline)
+FILE *librouter_quagga_ospf_show_cmd(const char *cmdline)
 {
 	FILE *f;
 	char *new_cmdline;
 
-	if (libconfig_quagga_connect_daemon(OSPF_PATH) < 0)
+	if (librouter_quagga_connect_daemon(OSPF_PATH) < 0)
 		return NULL;
 
 	f = fopen(OSPF_OUTPUT_FILE, "wt");
 	if (!f) {
-		libconfig_quagga_close_daemon();
+		librouter_quagga_close_daemon();
 		return NULL;
 	}
 
-	new_cmdline = libconfig_device_to_linux_cmdline((char*) cmdline);
-	libconfig_quagga_execute_client("enable", stdout, NULL, 0);
-	libconfig_quagga_execute_client(new_cmdline, f, NULL, 1);
+	new_cmdline = librouter_device_to_linux_cmdline((char*) cmdline);
+	librouter_quagga_execute_client("enable", stdout, NULL, 0);
+	librouter_quagga_execute_client(new_cmdline, f, NULL, 1);
 
 	fclose(f);
-	libconfig_quagga_close_daemon();
+	librouter_quagga_close_daemon();
 
 	return fopen(OSPF_OUTPUT_FILE, "rt");
 }
 
 #define RIP_OUTPUT_FILE "/var/run/.rip_out"
-FILE *libconfig_quagga_rip_show_cmd(const char *cmdline)
+FILE *librouter_quagga_rip_show_cmd(const char *cmdline)
 {
 	FILE *f;
 	char *new_cmdline;
 
-	if (libconfig_quagga_connect_daemon(RIP_PATH) < 0)
+	if (librouter_quagga_connect_daemon(RIP_PATH) < 0)
 		return NULL;
 
 	f = fopen(RIP_OUTPUT_FILE, "wt");
 	if (!f) {
-		libconfig_quagga_close_daemon();
+		librouter_quagga_close_daemon();
 		return NULL;
 	}
 
-	new_cmdline = libconfig_device_to_linux_cmdline((char*) cmdline);
-	libconfig_quagga_execute_client("enable", stdout, NULL, 0);
-	libconfig_quagga_execute_client(new_cmdline, f, NULL, 1);
+	new_cmdline = librouter_device_to_linux_cmdline((char*) cmdline);
+	librouter_quagga_execute_client("enable", stdout, NULL, 0);
+	librouter_quagga_execute_client(new_cmdline, f, NULL, 1);
 
 	fclose(f);
-	libconfig_quagga_close_daemon();
+	librouter_quagga_close_daemon();
 
 	return fopen(RIP_OUTPUT_FILE, "rt");
 }
 
 #define BGP_OUTPUT_FILE "/var/run/.bgp_out"
-FILE *libconfig_quagga_bgp_show_cmd(const char *cmdline)
+FILE *librouter_quagga_bgp_show_cmd(const char *cmdline)
 {
 	FILE *f;
 	char *new_cmdline;
 
-	if (libconfig_quagga_connect_daemon(BGP_PATH) < 0)
+	if (librouter_quagga_connect_daemon(BGP_PATH) < 0)
 		return NULL;
 
 	f = fopen(BGP_OUTPUT_FILE, "wt");
 	if (!f) {
-		libconfig_quagga_close_daemon();
+		librouter_quagga_close_daemon();
 		return NULL;
 	}
 
-	new_cmdline = libconfig_device_to_linux_cmdline((char*) cmdline);
-	libconfig_quagga_execute_client("enable", stdout, NULL, 0);
-	libconfig_quagga_execute_client(new_cmdline, f, NULL, 1);
+	new_cmdline = librouter_device_to_linux_cmdline((char*) cmdline);
+	librouter_quagga_execute_client("enable", stdout, NULL, 0);
+	librouter_quagga_execute_client(new_cmdline, f, NULL, 1);
 
 	fclose(f);
-	libconfig_quagga_close_daemon();
+	librouter_quagga_close_daemon();
 
 	return fopen(BGP_OUTPUT_FILE, "rt");
 }
@@ -268,7 +268,7 @@ FILE *libconfig_quagga_bgp_show_cmd(const char *cmdline)
 
 /* Takes an cidr address (10.5.0.1/8) and creates in  */
 /* buf a classic address(10.5.0.1 255.0.0.0)          */
-int libconfig_quagga_cidr_to_classic(char *cidr_addr, char *buf)
+int librouter_quagga_cidr_to_classic(char *cidr_addr, char *buf)
 {
 	int i;
 	char ip[20], mask[20];
@@ -302,7 +302,7 @@ int libconfig_quagga_cidr_to_classic(char *cidr_addr, char *buf)
 	}
 	cidr[2] = '\0';
 
-	libconfig_quagga_cidr_to_netmask(atoi(cidr), mask);
+	librouter_quagga_cidr_to_netmask(atoi(cidr), mask);
 	sprintf(buf, "%s %s", ip, mask);
 
 	return 0;
@@ -310,11 +310,11 @@ int libconfig_quagga_cidr_to_classic(char *cidr_addr, char *buf)
 
 /* Takes a network address using classic notation (10.5.0.1 255.0.0.0) */
 /* and creates in buf a networ address using cidr notation(10.5.0.1/8) */
-int libconfig_quagga_classic_to_cidr(char *addr, char *mask, char *buf)
+int librouter_quagga_classic_to_cidr(char *addr, char *mask, char *buf)
 {
 	int bits;
 
-	bits = libconfig_quagga_netmask_to_cidr(mask);
+	bits = librouter_quagga_netmask_to_cidr(mask);
 
 	if (bits < 0)
 		return (-1);
@@ -328,15 +328,15 @@ int libconfig_quagga_classic_to_cidr(char *addr, char *mask, char *buf)
 /* an CIDR notation. The argument buf should be the string and myVal  */
 /* is a pointer to an unsigned int. It's based on Whatmask util       */
 /* source code.                                                       */
-int libconfig_quagga_netmask_to_cidr(char *buf)
+int librouter_quagga_netmask_to_cidr(char *buf)
 {
 	unsigned int tmp;
 
-	if (libconfig_quagga_octets_to_uint(&tmp, buf) < 0)
+	if (librouter_quagga_octets_to_uint(&tmp, buf) < 0)
 		return (-1);
 
-	if (libconfig_quagga_validate_mask(tmp) == 0)
-		return (libconfig_quagga_bitcount(tmp));
+	if (librouter_quagga_validate_mask(tmp) == 0)
+		return (librouter_quagga_bitcount(tmp));
 
 	return -1;
 }
@@ -345,11 +345,11 @@ int libconfig_quagga_netmask_to_cidr(char *buf)
 /* netmask string (e.g. "255.255.255.192"). The argument buf   */
 /* should have at least 16 bytes allocated to it. It's based   */
 /* on Whatmask util source code.                               */
-int libconfig_quagga_cidr_to_netmask(unsigned int cidr, char *buf)
+int librouter_quagga_cidr_to_netmask(unsigned int cidr, char *buf)
 {
 	if ((0 <= cidr) && (cidr <= 32)) {
-		libconfig_quagga_bitfill_from_left(cidr);
-		libconfig_quagga_uint_to_octets(libconfig_quagga_bitfill_from_left(cidr), buf);
+		librouter_quagga_bitfill_from_left(cidr);
+		librouter_quagga_uint_to_octets(librouter_quagga_bitfill_from_left(cidr), buf);
 		return 0;
 	}
 
@@ -359,7 +359,7 @@ int libconfig_quagga_cidr_to_netmask(unsigned int cidr, char *buf)
 /* Creates a netmask string (e.g. "255.255.255.192")  */
 /* from an unsgined int. The argument buf should have */
 /* at least 16 bytes allocated to it.                 */
-char * libconfig_quagga_uint_to_octets(unsigned int myval, char * buf)
+char * librouter_quagga_uint_to_octets(unsigned int myval, char * buf)
 {
 	unsigned int val1, val2, val3, val4;
 
@@ -379,7 +379,7 @@ char * libconfig_quagga_uint_to_octets(unsigned int myval, char * buf)
 /* Takes an octet string (e.g. "255.255.255.192")            */
 /* and creates an unsgined int. The argument buf should be   */
 /* the string and myVal is a pointer to an unsigned int      */
-int libconfig_quagga_octets_to_uint(unsigned int *myval, char *buf)
+int librouter_quagga_octets_to_uint(unsigned int *myval, char *buf)
 {
 	unsigned int val1, val2, val3, val4;
 	*myval = 0;
@@ -411,7 +411,7 @@ int libconfig_quagga_octets_to_uint(unsigned int *myval, char *buf)
 /* The fill starts on the left and moves toward the right like this: */
 /* 11111111000000000000000000000000                                  */
 /* The caller must be sure numBits is between 0 and 32 inclusive     */
-unsigned int libconfig_quagga_bitfill_from_left(unsigned int num_bits)
+unsigned int librouter_quagga_bitfill_from_left(unsigned int num_bits)
 {
 	unsigned int myval = 0;
 	int i;
@@ -425,7 +425,7 @@ unsigned int libconfig_quagga_bitfill_from_left(unsigned int num_bits)
 	return myval;
 }
 
-int libconfig_quagga_bitcount(unsigned int my_int)
+int librouter_quagga_bitcount(unsigned int my_int)
 {
 	int count = 0;
 
@@ -440,7 +440,7 @@ int libconfig_quagga_bitcount(unsigned int my_int)
 /* validatemask checks to see that an unsigned long    */
 /* has all 1s in a row starting on the left like this */
 /* Good: 11111111111111111111111110000000              */
-int libconfig_quagga_validate_mask(unsigned int myInt)
+int librouter_quagga_validate_mask(unsigned int myInt)
 {
 	int foundZero = 0;
 
@@ -465,24 +465,24 @@ int libconfig_quagga_validate_mask(unsigned int myInt)
 	return 0;
 }
 
-int libconfig_quagga_validate_ip(char *ip)
+int librouter_quagga_validate_ip(char *ip)
 {
 	unsigned int tmp;
-	return (libconfig_quagga_octets_to_uint(&tmp, ip));
+	return (librouter_quagga_octets_to_uint(&tmp, ip));
 }
 
 #define PROG_RIPD "ripd"
 
-int libconfig_quagga_ripd_is_running(void)
+int librouter_quagga_ripd_is_running(void)
 {
-	return libconfig_exec_check_daemon(PROG_RIPD);
+	return librouter_exec_check_daemon(PROG_RIPD);
 }
 
-int libconfig_quagga_ripd_exec(int on_noff)
+int librouter_quagga_ripd_exec(int on_noff)
 {
 	int ret;
 
-	ret = libconfig_exec_init_program(on_noff, PROG_RIPD);
+	ret = librouter_exec_init_program(on_noff, PROG_RIPD);
 
 	if (on_noff) {
 		int i;
@@ -511,16 +511,16 @@ int libconfig_quagga_ripd_exec(int on_noff)
 
 #define PROG_BGPD "bgpd"
 
-int libconfig_quagga_bgpd_is_running(void)
+int librouter_quagga_bgpd_is_running(void)
 {
-	return libconfig_exec_check_daemon(PROG_BGPD);
+	return librouter_exec_check_daemon(PROG_BGPD);
 }
 
-int libconfig_quagga_bgpd_exec(int on_noff)
+int librouter_quagga_bgpd_exec(int on_noff)
 {
 	int ret;
 
-	ret = libconfig_exec_init_program(on_noff, PROG_BGPD);
+	ret = librouter_exec_init_program(on_noff, PROG_BGPD);
 
 	if (on_noff) {
 		int i;
@@ -549,16 +549,16 @@ int libconfig_quagga_bgpd_exec(int on_noff)
 
 #define PROG_OSPFD "ospfd"
 
-int libconfig_quagga_ospfd_is_running(void)
+int librouter_quagga_ospfd_is_running(void)
 {
-	return libconfig_exec_check_daemon(PROG_OSPFD);
+	return librouter_exec_check_daemon(PROG_OSPFD);
 }
 
-int libconfig_quagga_ospfd_exec(int on_noff)
+int librouter_quagga_ospfd_exec(int on_noff)
 {
 	int ret;
 
-	ret = libconfig_exec_init_program(on_noff, PROG_OSPFD);
+	ret = librouter_exec_init_program(on_noff, PROG_OSPFD);
 
 	if (on_noff) {
 		int i;
@@ -584,7 +584,7 @@ int libconfig_quagga_ospfd_exec(int on_noff)
 	return ret;
 }
 
-int libconfig_quagga_zebra_hup(void)
+int librouter_quagga_zebra_hup(void)
 {
 	FILE *F;
 	char buf[16];
@@ -614,31 +614,31 @@ int libconfig_quagga_zebra_hup(void)
  Cuidado com "ip default-route" no ppp
  */
 #define ZEBRA_SYSTTY_OUTPUT_FILE "/var/run/.zebra_systty_out"
-int libconfig_quagga_floating_route(void)
+int librouter_quagga_floating_route(void)
 {
 	FILE *f;
 	char buf[128];
 	int ret = 0;
 
-	if (!libconfig_quagga_ripd_is_running() && !libconfig_quagga_ospfd_is_running())
+	if (!librouter_quagga_ripd_is_running() && !librouter_quagga_ospfd_is_running())
 		return -1;
 
-	if (libconfig_quagga_connect_daemon(ZEBRA_PATH) < 0)
+	if (librouter_quagga_connect_daemon(ZEBRA_PATH) < 0)
 		return -1;
 
 	f = fopen(ZEBRA_SYSTTY_OUTPUT_FILE, "wt");
 
 	if (!f) {
-		libconfig_quagga_close_daemon();
+		librouter_quagga_close_daemon();
 		return -1;
 	}
 
-	libconfig_quagga_execute_client("enable", stdout, NULL, 0);
-	libconfig_quagga_execute_client("show ip route", f, NULL, 1);
+	librouter_quagga_execute_client("enable", stdout, NULL, 0);
+	librouter_quagga_execute_client("show ip route", f, NULL, 1);
 
 	fclose(f);
 
-	libconfig_quagga_close_daemon();
+	librouter_quagga_close_daemon();
 	f = fopen(ZEBRA_SYSTTY_OUTPUT_FILE, "rt");
 	if (!f)
 		return -1;
@@ -665,7 +665,7 @@ int libconfig_quagga_floating_route(void)
  *  	Retorna o file descriptor, ou NULL se nao for possivel abrir o arquivo
  *  	ou encontrar a posicao desejada.
  */
-FILE * libconfig_quagga_get_conf(char *filename, char *key)
+FILE * librouter_quagga_get_conf(char *filename, char *key)
 {
 	FILE *f;
 	int len, found = 0;
@@ -679,7 +679,7 @@ FILE * libconfig_quagga_get_conf(char *filename, char *key)
 	while (!feof(f)) {
 		fgets(buf, 1024, f);
 		len = strlen(buf);
-		libconfig_str_striplf(buf);
+		librouter_str_striplf(buf);
 
 		if (strncmp(buf, key, strlen(key)) == 0) {
 			found = 1;
@@ -705,7 +705,7 @@ FILE * libconfig_quagga_get_conf(char *filename, char *key)
  *			sendo que 'intf' deve estar no formato linux (ex.: 'eth0')
  *
  */
-FILE * libconfig_quagga_bgp_get_conf(int main_nip)
+FILE * librouter_quagga_bgp_get_conf(int main_nip)
 {
 	char key[64];
 
@@ -714,21 +714,21 @@ FILE * libconfig_quagga_bgp_get_conf(int main_nip)
 	else
 		sprintf(key, "ip as-path");
 
-	return libconfig_quagga_get_conf(BGPD_CONF, key);
+	return librouter_quagga_get_conf(BGPD_CONF, key);
 }
 
 /* Search the ASN in bgpd configuration file */
-int libconfig_quagga_bgp_get_asn(void)
+int librouter_quagga_bgp_get_asn(void)
 {
 	FILE *bgp_conf;
 	const char router_bgp[] = "router bgp ";
 	char *buf, *asn_add;
 	int bgp_asn = 0;
 
-	if (!libconfig_quagga_bgpd_is_running())
+	if (!librouter_quagga_bgpd_is_running())
 		return 0;
 
-	bgp_conf = libconfig_quagga_bgp_get_conf(1);
+	bgp_conf = librouter_quagga_bgp_get_conf(1);
 
 	if (bgp_conf) {
 		buf = malloc(1024);
@@ -759,7 +759,7 @@ int libconfig_quagga_bgp_get_asn(void)
  *  main_ninterf = 0 -> posiciona no inicio da configuracao da interface 'intf',
  *			sendo que 'intf' deve estar no formato linux (ex.: 'eth0')
  */
-FILE *libconfig_quagga_zebra_get_conf(int main_ninterf, char *intf)
+FILE *librouter_quagga_zebra_get_conf(int main_ninterf, char *intf)
 {
 	char key[64];
 
@@ -768,15 +768,15 @@ FILE *libconfig_quagga_zebra_get_conf(int main_ninterf, char *intf)
 	else
 		sprintf(key, "interface %s", intf);
 
-	return libconfig_quagga_get_conf(ZEBRA_CONF, key);
+	return librouter_quagga_get_conf(ZEBRA_CONF, key);
 }
 
-void libconfig_quagga_zebra_dump_static_routes(FILE *out)
+void librouter_quagga_zebra_dump_static_routes(FILE *out)
 {
 	FILE *f;
 	char buf[1024];
 
-	f = libconfig_quagga_zebra_get_conf(1, NULL);
+	f = librouter_quagga_zebra_get_conf(1, NULL);
 
 	if (!f)
 		return;
@@ -787,8 +787,8 @@ void libconfig_quagga_zebra_dump_static_routes(FILE *out)
 		if (buf[0] == '!')
 			break;
 
-		libconfig_str_striplf(buf);
-		fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(libconfig_zebra_to_linux_cmdline(buf)));
+		librouter_str_striplf(buf);
+		fprintf(out, "%s\n", librouter_device_from_linux_cmdline(librouter_zebra_to_linux_cmdline(buf)));
 	}
 
 	fprintf(out, "!\n");
@@ -803,7 +803,7 @@ void libconfig_quagga_zebra_dump_static_routes(FILE *out)
  *  main_ninterf = 0 -> posiciona no inicio da configuracao da interface 'intf',
  *			sendo que 'intf' deve estar no formato linux (ex.: 'eth0')
  */
-FILE *libconfig_quagga_rip_get_conf(int main_ninterf, char *intf)
+FILE *librouter_quagga_rip_get_conf(int main_ninterf, char *intf)
 {
 	char key[64];
 
@@ -812,7 +812,7 @@ FILE *libconfig_quagga_rip_get_conf(int main_ninterf, char *intf)
 	else
 		sprintf(key, "interface %s", intf);
 
-	return libconfig_quagga_get_conf(RIPD_CONF, key);
+	return librouter_quagga_get_conf(RIPD_CONF, key);
 }
 
 /*  Abre o arquivo de configuracao do OSPF e posiciona o file descriptor de
@@ -822,7 +822,7 @@ FILE *libconfig_quagga_rip_get_conf(int main_ninterf, char *intf)
  *  main_ninterf = 0 -> posiciona no inicio da configuracao da interface 'intf',
  *			sendo que 'intf' deve estar no formato linux (ex.: 'eth0')
  */
-FILE *libconfig_quagga_ospf_get_conf(int main_ninterf, char *intf)
+FILE *librouter_quagga_ospf_get_conf(int main_ninterf, char *intf)
 {
 	char key[64];
 
@@ -831,20 +831,20 @@ FILE *libconfig_quagga_ospf_get_conf(int main_ninterf, char *intf)
 	else
 		sprintf(key, "interface %s", intf);
 
-	return libconfig_quagga_get_conf(OSPFD_CONF, key);
+	return librouter_quagga_get_conf(OSPFD_CONF, key);
 }
 
 /* Higher level of abstraction functions - 18/06/2010 */
 
 /**
- * libconfig_quagga_get_routes
+ * librouter_quagga_get_routes
  *
  * Get routes from system and return a linked
  * list of struct routes_t
  *
  * @return
  */
-struct routes_t * libconfig_quagga_get_routes(void)
+struct routes_t * librouter_quagga_get_routes(void)
 {
 	FILE *f;
 	char buf[256];
@@ -858,7 +858,7 @@ struct routes_t * libconfig_quagga_get_routes(void)
 	if (f == NULL)
 		return NULL;
 
-	libconfig_config_dump_routing(f);
+	librouter_config_dump_routing(f);
 	fclose(f);
 
 	f = fopen(CGI_TMP_FILE, "r");
@@ -866,7 +866,7 @@ struct routes_t * libconfig_quagga_get_routes(void)
 		return NULL;
 
 	while (fgets(buf, sizeof(buf), f)) {
-		arglist *args = libconfig_make_args(buf);
+		arglist *args = librouter_make_args(buf);
 
 		/* At least 5 arguments */
 		if (args->argc < 5)
@@ -926,13 +926,13 @@ struct routes_t * libconfig_quagga_get_routes(void)
 }
 
 /**
- * libconfig_quagga_free_routes
+ * librouter_quagga_free_routes
  *
  * Free a linked list of struct routes_t
  *
  * @param route
  */
-void libconfig_quagga_free_routes(struct routes_t *route)
+void librouter_quagga_free_routes(struct routes_t *route)
 {
 	struct routes_t *next;
 
@@ -959,30 +959,30 @@ void libconfig_quagga_free_routes(struct routes_t *route)
 }
 
 /**
- * libconfig_quagga_add_route
+ * librouter_quagga_add_route
  *
  * Apply route to system from received structure
  *
  * @param route
  * @return 0 if success, -1 otherwise
  */
-int libconfig_quagga_add_route(struct routes_t *route)
+int librouter_quagga_add_route(struct routes_t *route)
 {
 	char buf_daemon[256];
 	char zebra_cmd[256];
 
-	if (libconfig_quagga_connect_daemon(ZEBRA_PATH) < 0)
+	if (librouter_quagga_connect_daemon(ZEBRA_PATH) < 0)
 		return -1;
 
 	sprintf(zebra_cmd, "ip route %s %s %s", route->network, route->mask,
 	                route->gateway);
 
-	libconfig_quagga_execute_client("enable", stdout, buf_daemon, 0);
-	libconfig_quagga_execute_client("configure terminal", stdout, buf_daemon, 0);
-	libconfig_quagga_execute_client(zebra_cmd, stdout, buf_daemon, 0);
-	libconfig_quagga_execute_client("write file", stdout, buf_daemon, 0);
+	librouter_quagga_execute_client("enable", stdout, buf_daemon, 0);
+	librouter_quagga_execute_client("configure terminal", stdout, buf_daemon, 0);
+	librouter_quagga_execute_client(zebra_cmd, stdout, buf_daemon, 0);
+	librouter_quagga_execute_client("write file", stdout, buf_daemon, 0);
 
-	libconfig_quagga_close_daemon();
+	librouter_quagga_close_daemon();
 
 	return 0;
 }
@@ -999,21 +999,21 @@ static void __del_route(struct routes_t *route)
 	char buf_daemon[256];
 	char zebra_cmd[256];
 
-	if (libconfig_quagga_connect_daemon(ZEBRA_PATH) < 0)
+	if (librouter_quagga_connect_daemon(ZEBRA_PATH) < 0)
 		return;
 
 	sprintf(zebra_cmd, "no ip route %s %s %s", route->network, route->mask, route->gateway);
 
-	libconfig_quagga_execute_client("enable", stdout, buf_daemon, 0);
-	libconfig_quagga_execute_client("configure terminal", stdout, buf_daemon, 0);
-	libconfig_quagga_execute_client(zebra_cmd, stdout, buf_daemon, 0);
-	libconfig_quagga_execute_client("write file", stdout, buf_daemon, 0);
+	librouter_quagga_execute_client("enable", stdout, buf_daemon, 0);
+	librouter_quagga_execute_client("configure terminal", stdout, buf_daemon, 0);
+	librouter_quagga_execute_client(zebra_cmd, stdout, buf_daemon, 0);
+	librouter_quagga_execute_client("write file", stdout, buf_daemon, 0);
 
-	libconfig_quagga_close_daemon();
+	librouter_quagga_close_daemon();
 }
 
 /**
- * libconfig_quagga_del_route
+ * librouter_quagga_del_route
  *
  * Exported function to deleted a route from system.
  * Receives the hash as a function, used by the web
@@ -1022,11 +1022,11 @@ static void __del_route(struct routes_t *route)
  * @param hash
  * @return
  */
-int libconfig_quagga_del_route(char *hash)
+int librouter_quagga_del_route(char *hash)
 {
 	struct routes_t *route, *next;
 
-	next = route = libconfig_quagga_get_routes();
+	next = route = librouter_quagga_get_routes();
 	if (route == NULL)
 		return 0;
 
@@ -1038,6 +1038,6 @@ int libconfig_quagga_del_route(char *hash)
 		next = next->next;
 	}
 
-	libconfig_quagga_free_routes(route);
+	librouter_quagga_free_routes(route);
 	return 0;
 }

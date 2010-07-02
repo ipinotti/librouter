@@ -33,7 +33,7 @@
  * @param: void
  * @ret: 0 if success, -1 if failure
  */
-int libconfig_ppp_reload_backupd(void)
+int librouter_ppp_reload_backupd(void)
 {
 	FILE *f;
 	char buf[16];
@@ -55,7 +55,7 @@ int libconfig_ppp_reload_backupd(void)
 	return 0;
 }
 
-int libconfig_ppp_notify_systtyd(void)
+int librouter_ppp_notify_systtyd(void)
 {
 	FILE *F;
 	char buf[16];
@@ -76,7 +76,7 @@ int libconfig_ppp_notify_systtyd(void)
 	return 0;
 }
 
-int libconfig_ppp_notify_mgetty(int serial_no)
+int librouter_ppp_notify_mgetty(int serial_no)
 {
 	FILE *F;
 	char buf[32];
@@ -118,7 +118,7 @@ int libconfig_ppp_notify_mgetty(int serial_no)
 	return (-1);
 }
 
-int libconfig_ppp_get_config(int serial_no, ppp_config *cfg)
+int librouter_ppp_get_config(int serial_no, ppp_config *cfg)
 {
 	FILE *f;
 	char file[32];
@@ -127,7 +127,7 @@ int libconfig_ppp_get_config(int serial_no, ppp_config *cfg)
 	f = fopen(file, "rb");
 
 	if (!f) {
-		libconfig_ppp_set_defaults(serial_no, cfg);
+		librouter_ppp_set_defaults(serial_no, cfg);
 	} else {
 		fread(cfg, sizeof(ppp_config), 1, f);
 		fclose(f);
@@ -136,7 +136,7 @@ int libconfig_ppp_get_config(int serial_no, ppp_config *cfg)
 	return 0;
 }
 
-int libconfig_ppp_has_config(int serial_no)
+int librouter_ppp_has_config(int serial_no)
 {
 	FILE *f;
 	char file[32];
@@ -152,7 +152,7 @@ int libconfig_ppp_has_config(int serial_no)
 	return 0;
 }
 
-int libconfig_ppp_set_config(int serial_no, ppp_config *cfg)
+int librouter_ppp_set_config(int serial_no, ppp_config *cfg)
 {
 	FILE *f;
 	char file[32];
@@ -168,10 +168,10 @@ int libconfig_ppp_set_config(int serial_no, ppp_config *cfg)
 	fwrite(cfg, sizeof(ppp_config), 1, f);
 	fclose(f);
 
-	return libconfig_ppp_notify_systtyd();
+	return librouter_ppp_notify_systtyd();
 }
 
-void libconfig_ppp_set_defaults(int serial_no, ppp_config *cfg)
+void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg)
 {
 	int cfg_back = 0;
 
@@ -185,9 +185,9 @@ void libconfig_ppp_set_defaults(int serial_no, ppp_config *cfg)
 
 	cfg->unit = serial_no;
 
-	libconfig_modem3g_get_apn(cfg->apn, serial_no);
-	libconfig_modem3g_get_username(cfg->auth_user, serial_no);
-	libconfig_modem3g_get_password(cfg->auth_pass, serial_no);
+	librouter_modem3g_get_apn(cfg->apn, serial_no);
+	librouter_modem3g_get_username(cfg->auth_user, serial_no);
+	librouter_modem3g_get_password(cfg->auth_pass, serial_no);
 
 	cfg->ip_unnumbered = -1;
 
@@ -211,7 +211,7 @@ void libconfig_ppp_set_defaults(int serial_no, ppp_config *cfg)
  ABORT "Username/Password Incorrect"
  ""    ATZ
  */
-int libconfig_ppp_add_chat(char *chat_name, char *chat_str)
+int librouter_ppp_add_chat(char *chat_name, char *chat_str)
 {
 	FILE *f;
 	char file[50];
@@ -228,7 +228,7 @@ int libconfig_ppp_add_chat(char *chat_name, char *chat_str)
 	return 0;
 }
 
-int libconfig_ppp_del_chat(char *chat_name)
+int librouter_ppp_del_chat(char *chat_name)
 {
 	char file[50];
 
@@ -237,7 +237,7 @@ int libconfig_ppp_del_chat(char *chat_name)
 	return unlink(file); /* -1 on error */
 }
 
-char *libconfig_ppp_get_chat(char *chat_name)
+char *librouter_ppp_get_chat(char *chat_name)
 {
 	FILE *f;
 	char file[50];
@@ -272,7 +272,7 @@ char *libconfig_ppp_get_chat(char *chat_name)
 	return chat_str;
 }
 
-int libconfig_ppp_chat_exists(char *chat_name)
+int librouter_ppp_chat_exists(char *chat_name)
 {
 	FILE *f;
 	char file[50];
@@ -289,7 +289,7 @@ int libconfig_ppp_chat_exists(char *chat_name)
 	return 1;
 }
 
-int libconfig_ppp_get_state(int serial_no)
+int librouter_ppp_get_state(int serial_no)
 {
 	FILE *f;
 	char file[50];
@@ -309,7 +309,7 @@ int libconfig_ppp_get_state(int serial_no)
 	return 1;
 }
 
-int libconfig_ppp_is_pppd_running(int serial_no)
+int librouter_ppp_is_pppd_running(int serial_no)
 {
 	FILE *f;
 	char file[50];
@@ -332,7 +332,7 @@ int libconfig_ppp_is_pppd_running(int serial_no)
 	buf[31] = 0;
 	pid = atoi(buf);
 
-	if ((pid > 0) && (libconfig_process_pid_exists(pid)))
+	if ((pid > 0) && (librouter_process_pid_exists(pid)))
 		return pid;
 
 	return 0;
@@ -346,7 +346,7 @@ int libconfig_ppp_is_pppd_running(int serial_no)
  * @param serial_no
  * @return
  */
-char *libconfig_ppp_get_device(int serial_no)
+char *librouter_ppp_get_device(int serial_no)
 {
 	FILE *f;
 	char file[50];
@@ -380,7 +380,7 @@ char *libconfig_ppp_get_device(int serial_no)
 
 #define MKARG(s)  { arglist[n] = (char *)malloc(strlen(s)+1); strcpy(arglist[n], s); n++; }
 #define MKARGI(i) { arglist[n] = (char *)malloc(16); sprintf(arglist[n], "%d", i); n++; }
-void libconfig_ppp_pppd_arglist(char **arglist, ppp_config *cfg, int server)
+void librouter_ppp_pppd_arglist(char **arglist, ppp_config *cfg, int server)
 {
 	int n = 0;
 	char filename[100];
@@ -488,7 +488,7 @@ void libconfig_ppp_pppd_arglist(char **arglist, ppp_config *cfg, int server)
 		sprintf(ethernetdev, "ethernet%d", cfg->ip_unnumbered);
 
 		/* Captura o endereço e mascara da interface Ethernet */
-		libconfig_ip_ethernet_ip_addr(ethernetdev, addr, mask);
+		librouter_ip_ethernet_ip_addr(ethernetdev, addr, mask);
 
 		/* Atualiza cfg com os dados da ethernet */
 		strncpy(cfg->ip_addr, addr, 16);
@@ -660,7 +660,7 @@ void libconfig_ppp_pppd_arglist(char **arglist, ppp_config *cfg, int server)
 }
 
 #ifdef OPTION_IPSEC
-int libconfig_ppp_l2tp_get_config(char *name, ppp_config *cfg)
+int librouter_ppp_l2tp_get_config(char *name, ppp_config *cfg)
 {
 	FILE *f;
 	char file[50];
@@ -670,7 +670,7 @@ int libconfig_ppp_l2tp_get_config(char *name, ppp_config *cfg)
 	f = fopen(file, "rb");
 
 	if (!f) {
-		libconfig_ppp_l2tp_set_defaults(name, cfg);
+		librouter_ppp_l2tp_set_defaults(name, cfg);
 	} else {
 		fread(cfg, sizeof(ppp_config), 1, f);
 		fclose(f);
@@ -679,7 +679,7 @@ int libconfig_ppp_l2tp_get_config(char *name, ppp_config *cfg)
 	return 0;
 }
 
-int libconfig_ppp_l2tp_has_config(char *name)
+int librouter_ppp_l2tp_has_config(char *name)
 {
 	FILE *f;
 	char file[50];
@@ -696,7 +696,7 @@ int libconfig_ppp_l2tp_has_config(char *name)
 	return 0;
 }
 
-int libconfig_ppp_l2tp_set_config(char *name, ppp_config *cfg)
+int librouter_ppp_l2tp_set_config(char *name, ppp_config *cfg)
 {
 	FILE *f;
 	char file[50];
@@ -710,12 +710,12 @@ int libconfig_ppp_l2tp_set_config(char *name, ppp_config *cfg)
 	fwrite(cfg, sizeof(ppp_config), 1, f);
 	fclose(f);
 
-	libconfig_l2tp_exec(RESTART);
+	librouter_l2tp_exec(RESTART);
 
 	return 0;
 }
 
-void libconfig_ppp_l2tp_set_defaults(char *name, ppp_config *cfg)
+void librouter_ppp_l2tp_set_defaults(char *name, ppp_config *cfg)
 {
 	memset(cfg, 0, sizeof(ppp_config));
 

@@ -100,58 +100,58 @@ typedef enum {
 	IP_DEL_ADDR = 0, IP_ADD_ADDR, IP_DEL_SADDR, IP_ADD_SADDR
 } ip_addr_oper_t;
 
-int libconfig_ip_modify_addr(int add_del,
+int librouter_ip_modify_addr(int add_del,
                   struct ipaddr_table *data,
                   struct intf_info *info);
 
-int libconfig_ip_get_if_list(struct intf_info *info);
-void libconfig_ip_bitlen2mask(int bitlen, char *mask);
+int librouter_ip_get_if_list(struct intf_info *info);
+void librouter_ip_bitlen2mask(int bitlen, char *mask);
 
-int libconfig_ip_addr_add_del(ip_addr_oper_t add_del,
+int librouter_ip_addr_add_del(ip_addr_oper_t add_del,
                     char *ifname,
                     char *local_ip,
                     char *remote_ip,
                     char *netmask);
 
-#define ip_addr_del(a,b,c,d) libconfig_ip_addr_add_del(IP_DEL_ADDR,a,b,c,d)
-#define ip_addr_add(a,b,c,d) libconfig_ip_addr_add_del(IP_ADD_ADDR,a,b,c,d)
-#define ip_addr_del_secondary(a,b,c,d) libconfig_ip_addr_add_del(IP_DEL_SADDR,a,b,c,d)
-#define ip_addr_add_secondary(a,b,c,d) libconfig_ip_addr_add_del(IP_ADD_SADDR,a,b,c,d)
+#define ip_addr_del(a,b,c,d) librouter_ip_addr_add_del(IP_DEL_ADDR,a,b,c,d)
+#define ip_addr_add(a,b,c,d) librouter_ip_addr_add_del(IP_ADD_ADDR,a,b,c,d)
+#define ip_addr_del_secondary(a,b,c,d) librouter_ip_addr_add_del(IP_DEL_SADDR,a,b,c,d)
+#define ip_addr_add_secondary(a,b,c,d) librouter_ip_addr_add_del(IP_ADD_SADDR,a,b,c,d)
 
-int libconfig_ip_addr_flush(char *ifname);
-int libconfig_ip_get_mac(char *ifname, char *mac);
+int librouter_ip_addr_flush(char *ifname);
+int librouter_ip_get_mac(char *ifname, char *mac);
 
-const char *libconfig_ip_ciscomask(const char *mask);
-const char *libconfig_ip_extract_mask(char *cidrblock);
-int libconfig_ip_netmask2cidr(const char *netmask);
+const char *librouter_ip_ciscomask(const char *mask);
+const char *librouter_ip_extract_mask(char *cidrblock);
+int librouter_ip_netmask2cidr(const char *netmask);
 
 extern const char *masks[33];
 extern const char *rmasks[33];
 
-char *libconfig_ip_ethernet_get_dev(char *dev);
-void libconfig_ip_ethernet_set_addr(char *ifname, char *addr, char *mask);
-void libconfig_ip_ethernet_set_addr_secondary(char *ifname, char *addr, char *mask);
-void libconfig_ip_ethernet_set_no_addr(char *ifname);
-void libconfig_ip_ethernet_set_no_addr_secondary(char *ifname, char *addr, char *mask);
-int libconfig_ip_interface_get_info(char *ifname, IP *addr, IP *mask, IP *bc, IP *peer);
-void libconfig_ip_interface_get_ip_addr(char *ifname, char *addr_str, char *mask_str);
-void libconfig_ip_ethernet_ip_addr(char *ifname, char *addr_str, char *mask_str);
+char *librouter_ip_ethernet_get_dev(char *dev);
+void librouter_ip_ethernet_set_addr(char *ifname, char *addr, char *mask);
+void librouter_ip_ethernet_set_addr_secondary(char *ifname, char *addr, char *mask);
+void librouter_ip_ethernet_set_no_addr(char *ifname);
+void librouter_ip_ethernet_set_no_addr_secondary(char *ifname, char *addr, char *mask);
+int librouter_ip_interface_get_info(char *ifname, IP *addr, IP *mask, IP *bc, IP *peer);
+void librouter_ip_interface_get_ip_addr(char *ifname, char *addr_str, char *mask_str);
+void librouter_ip_ethernet_ip_addr(char *ifname, char *addr_str, char *mask_str);
 
-void libconfig_ip_interface_set_addr(char *ifname, char *addr, char *mask);
-void libconfig_ip_interface_set_addr_secondary(char *ifname, char *addr, char *mask);
-void libconfig_ip_interface_set_no_addr(char *ifname);
-void libconfig_ip_interface_set_no_addr_secondary(char *ifname, char *addr, char *mask);
-unsigned int libconfig_ip_is_valid_port(char *data);
-unsigned int libconfig_ip_is_valid_netmask(char *data);
-int libconfig_ip_iface_get_stats(char *ifname, void *store);
+void librouter_ip_interface_set_addr(char *ifname, char *addr, char *mask);
+void librouter_ip_interface_set_addr_secondary(char *ifname, char *addr, char *mask);
+void librouter_ip_interface_set_no_addr(char *ifname);
+void librouter_ip_interface_set_no_addr_secondary(char *ifname, char *addr, char *mask);
+unsigned int librouter_ip_is_valid_port(char *data);
+unsigned int librouter_ip_is_valid_netmask(char *data);
+int librouter_ip_iface_get_stats(char *ifname, void *store);
 
-int libconfig_ip_iface_get_config(char *interface, struct interface_conf *conf);
-void libconfig_ip_iface_free_config(struct interface_conf *conf);
+int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf);
+void librouter_ip_iface_free_config(struct interface_conf *conf);
 
 #ifdef OPTION_SHM_IP_TABLE
-int libconfig_ip_create_shm (int flags);
-int libconfig_ip_detach_shm (void);
-int libconfig_ip_modify_shm (int add_del, struct ipaddr_table *data);
+int librouter_ip_create_shm (int flags);
+int librouter_ip_detach_shm (void);
+int librouter_ip_modify_shm (int add_del, struct ipaddr_table *data);
 #endif
 
 #endif /* IP_H_ */

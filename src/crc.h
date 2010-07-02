@@ -15,6 +15,6 @@
 #define	CRC32_INIT       0xFFFFFFFFUL
 
 /* Function prototypes for CRC functions */
-u32 libconfig_calculate_crc32_checksum(unsigned char *dwStart, u32 dwSize);
+u32 librouter_calculate_crc32_checksum(unsigned char *dwStart, u32 dwSize);
 
 #endif /* CRC_H_ */

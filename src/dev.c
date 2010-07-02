@@ -37,7 +37,7 @@
 #include "error.h"
 #include "dev.h"
 
-static int _libconfig_dev_get_ctrlfd(void)
+static int _librouter_dev_get_ctrlfd(void)
 {
 	int s_errno;
 	int fd;
@@ -62,20 +62,20 @@ static int _libconfig_dev_get_ctrlfd(void)
 	return -1;
 }
 
-static int _libconfig_dev_chflags(char *dev, __u32 flags, __u32 mask)
+static int _librouter_dev_chflags(char *dev, __u32 flags, __u32 mask)
 {
 	struct ifreq ifr;
 	int fd;
 	int err;
 
 	strcpy(ifr.ifr_name, dev);
-	fd = _libconfig_dev_get_ctrlfd();
+	fd = _librouter_dev_get_ctrlfd();
 	if (fd < 0)
 		return -1;
 
 	err = ioctl(fd, SIOCGIFFLAGS, &ifr);
 	if (err) {
-		libconfig_pr_error(1, "do_chflags %s SIOCGIFFLAGS",
+		librouter_pr_error(1, "do_chflags %s SIOCGIFFLAGS",
 		                ifr.ifr_name);
 		close(fd);
 		return -1;
@@ -94,14 +94,14 @@ static int _libconfig_dev_chflags(char *dev, __u32 flags, __u32 mask)
 	return err;
 }
 
-int libconfig_dev_get_flags(char *dev, __u32 *flags)
+int librouter_dev_get_flags(char *dev, __u32 *flags)
 {
 	struct ifreq ifr;
 	int fd;
 	int err;
 
 	strcpy(ifr.ifr_name, dev);
-	fd = _libconfig_dev_get_ctrlfd();
+	fd = _librouter_dev_get_ctrlfd();
 
 	if (fd < 0)
 		return -1;
@@ -121,12 +121,12 @@ int libconfig_dev_get_flags(char *dev, __u32 *flags)
 
 //------------------------------------------------------------------------------
 
-int libconfig_dev_set_qlen(char *dev, int qlen)
+int librouter_dev_set_qlen(char *dev, int qlen)
 {
 	struct ifreq ifr;
 	int s;
 
-	s = _libconfig_dev_get_ctrlfd();
+	s = _librouter_dev_get_ctrlfd();
 	if (s < 0)
 		return -1;
 
@@ -145,7 +145,7 @@ int libconfig_dev_set_qlen(char *dev, int qlen)
 	return 0;
 }
 
-int libconfig_dev_get_qlen(char *dev)
+int librouter_dev_get_qlen(char *dev)
 {
 	struct ifreq ifr;
 	int s;
@@ -168,12 +168,12 @@ int libconfig_dev_get_qlen(char *dev)
 	return ifr.ifr_qlen;
 }
 
-int libconfig_dev_set_mtu(char *dev, int mtu)
+int librouter_dev_set_mtu(char *dev, int mtu)
 {
 	struct ifreq ifr;
 	int s;
 
-	s = _libconfig_dev_get_ctrlfd();
+	s = _librouter_dev_get_ctrlfd();
 	if (s < 0)
 		return -1;
 
@@ -192,12 +192,12 @@ int libconfig_dev_set_mtu(char *dev, int mtu)
 	return 0;
 }
 
-int libconfig_dev_get_mtu(char *dev)
+int librouter_dev_get_mtu(char *dev)
 {
 	struct ifreq ifr;
 	int s;
 
-	s = _libconfig_dev_get_ctrlfd();
+	s = _librouter_dev_get_ctrlfd();
 	if (s < 0)
 		return -1;
 
@@ -215,27 +215,27 @@ int libconfig_dev_get_mtu(char *dev)
 	return ifr.ifr_mtu;
 }
 
-int libconfig_dev_set_link_down(char *dev)
+int librouter_dev_set_link_down(char *dev)
 {
-	return _libconfig_dev_chflags(dev, 0, IFF_UP);
+	return _librouter_dev_chflags(dev, 0, IFF_UP);
 }
 
-int libconfig_dev_set_link_up(char *dev)
+int librouter_dev_set_link_up(char *dev)
 {
-	return _libconfig_dev_chflags(dev, IFF_UP, IFF_UP);
+	return _librouter_dev_chflags(dev, IFF_UP, IFF_UP);
 }
 
-int libconfig_dev_get_link(char *dev)
+int librouter_dev_get_link(char *dev)
 {
 	u32 flags;
 
-	if (libconfig_dev_get_flags(dev, &flags) < 0)
+	if (librouter_dev_get_flags(dev, &flags) < 0)
 		return (-1);
 
 	return (flags & IFF_UP);
 }
 
-int libconfig_dev_get_hwaddr(char *dev, unsigned char *hwaddr)
+int librouter_dev_get_hwaddr(char *dev, unsigned char *hwaddr)
 {
 	struct ifreq ifr;
 	int skfd;
@@ -245,7 +245,7 @@ int libconfig_dev_get_hwaddr(char *dev, unsigned char *hwaddr)
 
 	/* Create a socket to the INET kernel. */
 	if ((skfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		libconfig_pr_error(1, "socket");
+		librouter_pr_error(1, "socket");
 		return (-1);
 	}
 
@@ -262,14 +262,14 @@ int libconfig_dev_get_hwaddr(char *dev, unsigned char *hwaddr)
 	return 0;
 }
 
-int libconfig_dev_change_name(char *ifname, char *new_ifname)
+int librouter_dev_change_name(char *ifname, char *new_ifname)
 {
 	struct ifreq ifr;
 	int fd;
 
 	/* Create a socket to the INET kernel. */
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		libconfig_pr_error(1, "socket");
+		librouter_pr_error(1, "socket");
 		return (-1);
 	}
 
@@ -277,7 +277,7 @@ int libconfig_dev_change_name(char *ifname, char *new_ifname)
 	strcpy(ifr.ifr_newname, new_ifname);
 
 	if (ioctl(fd, SIOCSIFNAME, &ifr)) {
-		libconfig_pr_error(1, "%s: SIOCSIFNAME", ifname);
+		librouter_pr_error(1, "%s: SIOCSIFNAME", ifname);
 		close(fd);
 		return (-1);
 	}
@@ -287,14 +287,14 @@ int libconfig_dev_change_name(char *ifname, char *new_ifname)
 	return 0;
 }
 
-int libconfig_dev_exists(char *dev)
+int librouter_dev_exists(char *dev)
 {
 	struct ifreq ifr;
 	int fd, found;
 
 	/* Create a socket to the INET kernel. */
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		libconfig_pr_error(1, "socket");
+		librouter_pr_error(1, "socket");
 		return (0);
 	}
 
@@ -307,14 +307,14 @@ int libconfig_dev_exists(char *dev)
 	return found;
 }
 
-int libconfig_clear_interface_counters(char *dev)
+int librouter_clear_interface_counters(char *dev)
 {
 #if 0
 	struct ifreq ifr;
 	int fd, err;
 
 	if ((fd=socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		libconfig_pr_error(1, "socket");
+		librouter_pr_error(1, "socket");
 		return (0);
 	}
 
@@ -322,7 +322,7 @@ int libconfig_clear_interface_counters(char *dev)
 	err=ioctl(fd, SIOCCLRIFSTATS, &ifr);
 
 	if ((err < 0) && (errno != ENODEV)) {
-		libconfig_pr_error(1, "SIOCCLRIFSTATS");
+		librouter_pr_error(1, "SIOCCLRIFSTATS");
 	}
 
 	close(fd);
@@ -333,7 +333,7 @@ int libconfig_clear_interface_counters(char *dev)
 #endif
 }
 
-char *libconfig_dev_get_description(char *dev)
+char *librouter_dev_get_description(char *dev)
 {
 	FILE *f;
 	char file[240];
@@ -368,7 +368,7 @@ char *libconfig_dev_get_description(char *dev)
 	return description;
 }
 
-int libconfig_dev_add_description(char *dev, char *description)
+int librouter_dev_add_description(char *dev, char *description)
 {
 	FILE *f;
 	char file[50];
@@ -385,7 +385,7 @@ int libconfig_dev_add_description(char *dev, char *description)
 	return 0;
 }
 
-int libconfig_dev_del_description(char *dev)
+int librouter_dev_del_description(char *dev)
 {
 	char file[50];
 
@@ -410,7 +410,7 @@ int libconfig_dev_del_description(char *dev)
 
 /* Delete an entry from the ARP cache. */
 /* <ipaddress> */
-int libconfig_arp_del(char *host)
+int librouter_arp_del(char *host)
 {
 	struct arpreq req;
 	struct sockaddr sa;
@@ -475,7 +475,7 @@ int libconfig_arp_del(char *host)
 }
 
 /* Input an Ethernet address and convert to binary. */
-static int _libconfig_arp_in_ether(char *bufp, struct sockaddr *sap)
+static int _librouter_arp_in_ether(char *bufp, struct sockaddr *sap)
 {
 	unsigned char *ptr;
 	char c, *orig;
@@ -544,7 +544,7 @@ static int _libconfig_arp_in_ether(char *bufp, struct sockaddr *sap)
 
 /* Set an entry in the ARP cache. */
 /* <ipaddress> <mac> */
-int libconfig_arp_add(char *host, char *mac)
+int librouter_arp_add(char *host, char *mac)
 {
 	struct arpreq req;
 	struct sockaddr sa;
@@ -568,7 +568,7 @@ int libconfig_arp_add(char *host, char *mac)
 
 	memcpy((char *) &req.arp_pa, (char *) &sa, sizeof(struct sockaddr));
 
-	if (_libconfig_arp_in_ether(mac, &req.arp_ha) < 0) {
+	if (_librouter_arp_in_ether(mac, &req.arp_ha) < 0) {
 		printf("%% invalid hardware address\n");
 		return (-1);
 	}
@@ -602,7 +602,7 @@ int notify_driver_about_shutdown(char *dev)
 
 	/* Create a channel to the NET kernel. */
 	if( (sock=socket(PF_INET, SOCK_DGRAM, IPPROTO_IP)) < 0 ) {
-		libconfig_pr_error(1, "if_shutdown_alert: socket");
+		librouter_pr_error(1, "if_shutdown_alert: socket");
 		return (-1);
 	}
 
@@ -610,7 +610,7 @@ int notify_driver_about_shutdown(char *dev)
 
 	/* use linux/drivers/net/wan/hdlc_sppp.c */
 	if( ioctl(sock, SIOCWANDEV, &ifr) ) {
-		libconfig_pr_error(1, "if_shutdown_alert: ioctl");
+		librouter_pr_error(1, "if_shutdown_alert: ioctl");
 		return (-1);
 	}
 
@@ -623,7 +623,7 @@ int notify_driver_about_shutdown(char *dev)
 }
 
 #ifdef CONFIG_BUFFERS_USE_STATS
-int libconfig_dev_interface_get_buffers_use(char *dev,
+int librouter_dev_interface_get_buffers_use(char *dev,
                                             char *tx,
                                             char *rx,
                                             unsigned int len)
@@ -694,12 +694,12 @@ int libconfig_dev_interface_get_buffers_use(char *dev,
 #endif /* CONFIG_BUFFERS_USE_STATS */
 
 #ifdef CONFIG_DEVELOPMENT
-int libconfig_dev_set_rxring(char *dev, int size)
+int librouter_dev_set_rxring(char *dev, int size)
 {
 	int s;
 	struct ifreq ifr;
 
-	if ((s = _libconfig_dev_get_ctrlfd()) < 0)
+	if ((s = _librouter_dev_get_ctrlfd()) < 0)
 		return -1;
 
 	memset(&ifr, 0, sizeof(ifr));
@@ -726,7 +726,7 @@ int libconfig_dev_set_rxring(char *dev, int size)
 	return 0;
 }
 
-int libconfig_dev_get_rxring(char *dev)
+int librouter_dev_get_rxring(char *dev)
 {
 	int s;
 	struct ifreq ifr;
@@ -748,12 +748,12 @@ int libconfig_dev_get_rxring(char *dev)
 	return ifr.ifr_ifru.ifru_ivalue;
 }
 
-int libconfig_dev_set_txring(char *dev, int size)
+int librouter_dev_set_txring(char *dev, int size)
 {
 	int s;
 	struct ifreq ifr;
 
-	if ((s = _libconfig_dev_get_ctrlfd()) < 0)
+	if ((s = _librouter_dev_get_ctrlfd()) < 0)
 		return -1;
 
 	memset(&ifr, 0, sizeof(ifr));
@@ -780,7 +780,7 @@ int libconfig_dev_set_txring(char *dev, int size)
 	return 0;
 }
 
-int libconfig_dev_get_txring(char *dev)
+int librouter_dev_get_txring(char *dev)
 {
 	int s;
 	struct ifreq ifr;
@@ -802,12 +802,12 @@ int libconfig_dev_get_txring(char *dev)
 	return ifr.ifr_ifru.ifru_ivalue;
 }
 
-int libconfig_dev_set_weight(char *dev, int size)
+int librouter_dev_set_weight(char *dev, int size)
 {
 	int s;
 	struct ifreq ifr;
 
-	if ((s = _libconfig_dev_get_ctrlfd()) < 0)
+	if ((s = _librouter_dev_get_ctrlfd()) < 0)
 		return -1;
 
 	memset(&ifr, 0, sizeof(ifr));
@@ -825,7 +825,7 @@ int libconfig_dev_set_weight(char *dev, int size)
 	return 0;
 }
 
-int libconfig_dev_get_weight(char *dev)
+int librouter_dev_get_weight(char *dev)
 {
 	int s;
 	struct ifreq ifr;

@@ -14,7 +14,7 @@
 #define FILE_BOOT_IMG "/dev/uboot_image"
 #define FILE_SYSTEM_IMG "/dev/system_image"
 
-char *libconfig_get_system_version(void)
+char *librouter_get_system_version(void)
 {
 	FILE *f;
 	static char version[33];
@@ -41,7 +41,7 @@ char *libconfig_get_system_version(void)
 	return version;
 }
 
-char *libconfig_get_boot_version(void)
+char *librouter_get_boot_version(void)
 {
 	int i;
 	FILE *f;

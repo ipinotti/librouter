@@ -211,14 +211,14 @@ static int _ps_line(struct process_t *ps)
 }
 
 /**
- * libconfig_ps_get_info
+ * librouter_ps_get_info
  *
  * Search for running processes
  * lconfig_free_ps_info be called after usage
  *
  * @return linked list of running processes
  */
-struct process_t *libconfig_ps_get_info(void)
+struct process_t *librouter_ps_get_info(void)
 {
 	DIR *d;
 	struct dirent *de;
@@ -263,7 +263,7 @@ struct process_t *libconfig_ps_get_info(void)
  *
  * @param ps
  */
-void libconfig_ps_free_info (struct process_t *ps)
+void librouter_ps_free_info (struct process_t *ps)
 {
 	struct process_t *next;
 

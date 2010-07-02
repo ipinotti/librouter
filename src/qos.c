@@ -70,7 +70,7 @@ static struct ds_class
 	{ "EF",   0x2e }
 };
 
-unsigned int libconfig_qos_class_to_dscp(const char *name)
+unsigned int librouter_qos_class_to_dscp(const char *name)
 {
 	int i;
 
@@ -81,7 +81,7 @@ unsigned int libconfig_qos_class_to_dscp(const char *name)
 	return 0;
 }
 
-const char *libconfig_qos_dscp_to_name(unsigned int dscp)
+const char *librouter_qos_dscp_to_name(unsigned int dscp)
 {
 	int i;
 
@@ -95,7 +95,7 @@ const char *libconfig_qos_dscp_to_name(unsigned int dscp)
 /*******************************************************/
 /* Show functions */
 /*******************************************************/
-void libconfig_qos_dump_config(FILE *out)
+void librouter_qos_dump_config(FILE *out)
 {
 	struct dirent **namelist;
 	int n, i;
@@ -114,7 +114,7 @@ void libconfig_qos_dump_config(FILE *out)
 				pmap_cfg_t *pmap;
 
 				name[len - strlen(".policy")] = 0;
-				if (libconfig_qos_get_policymap(name, &pmap) > 0) {
+				if (librouter_qos_get_policymap(name, &pmap) > 0) {
 					fprintf(out, "policy-map %s\n", name);
 
 					if (pmap->description[0])
@@ -191,24 +191,24 @@ static void _qos_dump_interface(char *dev_name)
 	FILE *f;
 
 	/* Get config */
-	if (libconfig_qos_get_interface_config(dev_name, &intf_cfg) <= 0)
+	if (librouter_qos_get_interface_config(dev_name, &intf_cfg) <= 0)
 		return;
 
 	/* No policy-map applied */
 	if (intf_cfg->pname[0] == 0) {
-		libconfig_qos_release_config(intf_cfg);
+		librouter_qos_release_config(intf_cfg);
 		return;
 	}
 
-	if (libconfig_qos_get_policymap(intf_cfg->pname, &pmap) <= 0) {
-		libconfig_qos_release_config(intf_cfg);
+	if (librouter_qos_get_policymap(intf_cfg->pname, &pmap) <= 0) {
+		librouter_qos_release_config(intf_cfg);
 		return;
 	}
 
 	/* No mark configured */
 	if (!pmap->n_mark) {
-		libconfig_qos_free_policymap(pmap);
-		libconfig_qos_release_config(intf_cfg);
+		librouter_qos_free_policymap(pmap);
+		librouter_qos_release_config(intf_cfg);
 		return;
 	}
 
@@ -230,8 +230,8 @@ static void _qos_dump_interface(char *dev_name)
 	f = popen(buf, "r");
 	if (!f) {
 		printf("ERROR: Could not get tc configuration\n");
-		libconfig_qos_free_policymap(pmap);
-		libconfig_qos_release_config(intf_cfg);
+		librouter_qos_free_policymap(pmap);
+		librouter_qos_release_config(intf_cfg);
 		return;
 	}
 
@@ -254,7 +254,7 @@ static void _qos_dump_interface(char *dev_name)
 				while ((*p) && (*p == ' '))
 					p++;
 
-				args = libconfig_make_args(p);
+				args = librouter_make_args(p);
 				if (args->argc >= 7) {
 					strncpy(pkts, args->argv[3], 32);
 					pkts[31] = 0;
@@ -264,14 +264,14 @@ static void _qos_dump_interface(char *dev_name)
 					                args->argv[6]));
 				}
 
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 			} else if ((strncmp(buf, " rate", 5) == 0)) {
 
 				p = buf;
 				while ((*p) && (*p == ' '))
 					p++;
 
-				args = libconfig_make_args(p);
+				args = librouter_make_args(p);
 				if (args->argc >= 2) {
 					unsigned int rate_per_sec = atoi(args->argv[1]);
 					if (strstr(args->argv[1], "Mbit"))
@@ -281,7 +281,7 @@ static void _qos_dump_interface(char *dev_name)
 					else
 						sprintf(rate, "%dbit", rate_per_sec);
 				}
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 			} else {
 				printf(" \t\tSent %s bytes %s pkts, dropped %s pkts", bytes, pkts, dropped);
 
@@ -361,11 +361,11 @@ static void _qos_dump_interface(char *dev_name)
 
 	pclose(f);
 
-	libconfig_qos_free_policymap(pmap);
-	libconfig_qos_release_config(intf_cfg);
+	librouter_qos_free_policymap(pmap);
+	librouter_qos_release_config(intf_cfg);
 }
 
-void libconfig_qos_dump_interfaces(void)
+void librouter_qos_dump_interfaces(void)
 {
 	struct dirent **namelist;
 	int n;
@@ -393,7 +393,7 @@ void libconfig_qos_dump_interfaces(void)
 /********************************************************************************/
 /* tc related functions */
 /********************************************************************************/
-int libconfig_qos_tc_insert_all(char *dev_name)
+int librouter_qos_tc_insert_all(char *dev_name)
 {
 	FILE *f;
 	char filename[64];
@@ -406,7 +406,7 @@ int libconfig_qos_tc_insert_all(char *dev_name)
 	int run_tc_now = 0;
 	int raw_bw = 0, available_bw = 0, remain_bw = 0;
 
-	libconfig_qos_tc_remove_all(dev_name); /* clear rules... */
+	librouter_qos_tc_remove_all(dev_name); /* clear rules... */
 
 	sprintf(filename, FILE_QOS_SCRIPT, dev_name);
 	f = fopen(filename, "wt");
@@ -414,24 +414,24 @@ int libconfig_qos_tc_insert_all(char *dev_name)
 		return -1;
 
 	/* Get status from interfaces */
-	if ((fam = libconfig_device_get_family(dev_name)) == NULL)
+	if ((fam = librouter_device_get_family(dev_name)) == NULL)
 		return -1;
 
 	major = atoi(dev_name + strlen(fam->cish_string));
 
 	//	if (fam->type == mobile ) {  --> situação anterior a implementação do 3G
 	if (fam->type == ppp) {
-		if (libconfig_ppp_get_state(major))
+		if (librouter_ppp_get_state(major))
 			run_tc_now = 1; /* wait for ppp */
 	} else if (fam->type == eth) {
-		if (libconfig_dev_get_link(dev_name))
+		if (librouter_dev_get_link(dev_name))
 			run_tc_now = 1;
 	}
 
 	/* Check if qos config exists */
-	if (libconfig_qos_get_interface_config(dev_name, &intf_cfg) > 0) {
+	if (librouter_qos_get_interface_config(dev_name, &intf_cfg) > 0) {
 		if (intf_cfg->pname[0] != 0) {
-			if (libconfig_qos_get_policymap(intf_cfg->pname, &pmap) <= 0) {
+			if (librouter_qos_get_policymap(intf_cfg->pname, &pmap) <= 0) {
 				printf("ERROR: Could not get policy-map %s configuration\n",
 					intf_cfg->pname);
 				fclose(f);
@@ -540,20 +540,20 @@ int libconfig_qos_tc_insert_all(char *dev_name)
 				fprintf(f, "filter add dev %s parent 2: protocol ip prio 1 handle 0x%x fw flowid 2:%d\n",
 				                dev_name, cfg[i].mark, 10 + cfg[i].mark);
 			}
-			libconfig_qos_free_policymap(pmap);
+			librouter_qos_free_policymap(pmap);
 		}
-		libconfig_qos_release_config(intf_cfg);
+		librouter_qos_release_config(intf_cfg);
 	}
 
 	fclose(f);
 
 	if (run_tc_now)
-		return libconfig_exec_prog(1, "/bin/tc", "-batch", filename, NULL);
+		return librouter_exec_prog(1, "/bin/tc", "-batch", filename, NULL);
 
 	return 0;
 }
 
-int libconfig_qos_tc_remove_all(char *dev_name)
+int librouter_qos_tc_remove_all(char *dev_name)
 {
 	FILE *f;
 
@@ -569,13 +569,13 @@ int libconfig_qos_tc_remove_all(char *dev_name)
 
 	fclose(f);
 
-	return libconfig_exec_prog(1, "/bin/tc", "-batch", FILE_TMP_QOS_DOWN, NULL);
+	return librouter_exec_prog(1, "/bin/tc", "-batch", FILE_TMP_QOS_DOWN, NULL);
 }
 /**************************************************************************/
 /* Policy-map functions */
 /**************************************************************************/
 
-int libconfig_qos_delete_policy_mark(char *name, int mark)
+int librouter_qos_delete_policy_mark(char *name, int mark)
 {
 	FILE *in, *out;
 	char filename_in[64], filename_out[64];
@@ -622,7 +622,7 @@ int libconfig_qos_delete_policy_mark(char *name, int mark)
 	return 0;
 }
 
-int libconfig_qos_add_policy_mark(char *name, int mark)
+int librouter_qos_add_policy_mark(char *name, int mark)
 {
 	FILE *f;
 	char file_path[64];
@@ -663,7 +663,7 @@ int libconfig_qos_add_policy_mark(char *name, int mark)
 
 	return 0;
 }
-int libconfig_qos_create_policymap(char *policy)
+int librouter_qos_create_policymap(char *policy)
 {
 	int fd;
 	char file_path[64];
@@ -688,7 +688,7 @@ int libconfig_qos_create_policymap(char *policy)
 	return 0;
 }
 
-int libconfig_qos_get_policymap(char *policy, pmap_cfg_t **pmap)
+int librouter_qos_get_policymap(char *policy, pmap_cfg_t **pmap)
 {
 	int fd;
 	char file_path[64];
@@ -718,7 +718,7 @@ int libconfig_qos_get_policymap(char *policy, pmap_cfg_t **pmap)
 		(*pmap)->n_mark = (st.st_size) / sizeof(pmark_cfg_t);
 		(*pmap)->description[0] = 0; /* clean description */
 
-		libconfig_qos_get_policymap_desc(policy, *pmap);
+		librouter_qos_get_policymap_desc(policy, *pmap);
 
 		return 1;
 	}
@@ -726,7 +726,7 @@ int libconfig_qos_get_policymap(char *policy, pmap_cfg_t **pmap)
 	return 0;
 }
 
-void libconfig_qos_destroy_policymap(char *policy)
+void librouter_qos_destroy_policymap(char *policy)
 {
 	char file_path[64];
 
@@ -736,7 +736,7 @@ void libconfig_qos_destroy_policymap(char *policy)
 		printf("%% Policy %s does not exist", policy);
 }
 
-int libconfig_qos_get_mark_index(int mark, pmap_cfg_t *pmap)
+int librouter_qos_get_mark_index(int mark, pmap_cfg_t *pmap)
 {
 	int i;
 
@@ -754,7 +754,7 @@ int libconfig_qos_get_mark_index(int mark, pmap_cfg_t *pmap)
 	return i;
 }
 
-void libconfig_qos_free_policymap(pmap_cfg_t *pmap)
+void librouter_qos_free_policymap(pmap_cfg_t *pmap)
 {
 	if (pmap && (pmap != (pmap_cfg_t *) -1)) {
 		if (pmap->pmark && (pmap->pmark != (pmark_cfg_t *) -1))
@@ -765,7 +765,7 @@ void libconfig_qos_free_policymap(pmap_cfg_t *pmap)
 	}
 }
 
-int libconfig_qos_save_policymap_desc(char *name, pmap_cfg_t *pmap)
+int librouter_qos_save_policymap_desc(char *name, pmap_cfg_t *pmap)
 {
 	char file_name[128];
 	FILE *f;
@@ -782,7 +782,7 @@ int libconfig_qos_save_policymap_desc(char *name, pmap_cfg_t *pmap)
 	return 0;
 }
 
-int libconfig_qos_get_policymap_desc(char *name, pmap_cfg_t *pmap)
+int librouter_qos_get_policymap_desc(char *name, pmap_cfg_t *pmap)
 {
 	char file_name[128];
 	FILE *f;
@@ -799,7 +799,7 @@ int libconfig_qos_get_policymap_desc(char *name, pmap_cfg_t *pmap)
 	return 0;
 }
 
-void libconfig_qos_destroy_policymap_desc(char *name)
+void librouter_qos_destroy_policymap_desc(char *name)
 {
 	char file_name[128];
 
@@ -810,7 +810,7 @@ void libconfig_qos_destroy_policymap_desc(char *name)
 /* Service-policy functions */
 /*********************************************************************/
 
-void libconfig_qos_clean_config(char *dev_name)
+void librouter_qos_clean_config(char *dev_name)
 {
 	int n;
 	char filename[64], cleaname[64];
@@ -854,7 +854,7 @@ void libconfig_qos_clean_config(char *dev_name)
 	free(namelist);
 }
 
-int libconfig_qos_create_interface_config(char *dev)
+int librouter_qos_create_interface_config(char *dev)
 {
 	char file_path[64];
 	int fd;
@@ -899,7 +899,7 @@ int libconfig_qos_create_interface_config(char *dev)
 	return 0;
 }
 
-void libconfig_qos_release_config(intf_qos_cfg_t *intf_cfg)
+void librouter_qos_release_config(intf_qos_cfg_t *intf_cfg)
 {
 	if (intf_cfg && (intf_cfg != (intf_qos_cfg_t *) -1))
 		munmap(intf_cfg, sizeof(intf_qos_cfg_t));
@@ -911,7 +911,7 @@ void libconfig_qos_release_config(intf_qos_cfg_t *intf_cfg)
  * @param policy
  * @return
  */
-char *libconfig_qos_check_active_policy(char *policy)
+char *librouter_qos_check_active_policy(char *policy)
 {
 	struct dirent **namelist;
 	int n;
@@ -931,7 +931,7 @@ char *libconfig_qos_check_active_policy(char *policy)
 
 			if (len > 15) {
 				name[len - 15] = 0;
-				if (libconfig_qos_get_interface_config(name, &intf_cfg) > 0) {
+				if (librouter_qos_get_interface_config(name, &intf_cfg) > 0) {
 					if (!strcmp(policy, intf_cfg->pname)) {
 						dev = (char *) malloc(strlen(name + 1));
 						strcpy(dev, name);
@@ -954,7 +954,7 @@ char *libconfig_qos_check_active_policy(char *policy)
  * @param intf_cfg
  * @return
  */
-int libconfig_qos_get_interface_config(char *dev, intf_qos_cfg_t **intf_cfg)
+int librouter_qos_get_interface_config(char *dev, intf_qos_cfg_t **intf_cfg)
 {
 	char file_path[64];
 	int fd;
@@ -977,7 +977,7 @@ int libconfig_qos_get_interface_config(char *dev, intf_qos_cfg_t **intf_cfg)
  * @param dev
  * @param policymap
  */
-void libconfig_qos_apply_policy(char *dev, char *policymap)
+void librouter_qos_apply_policy(char *dev, char *policymap)
 {
 	int fd;
 	intf_qos_cfg_t *intf_cfg = NULL;
@@ -989,9 +989,9 @@ void libconfig_qos_apply_policy(char *dev, char *policymap)
 	const int log = 1;
 
 	/* Get configuration file. If it does not exist it must be created. */
-	if (libconfig_qos_get_interface_config(dev, &intf_cfg) <= 0) {
-		libconfig_qos_create_interface_config(dev);
-		if (libconfig_qos_get_interface_config(dev, &intf_cfg) <= 0) {
+	if (librouter_qos_get_interface_config(dev, &intf_cfg) <= 0) {
+		librouter_qos_create_interface_config(dev);
+		if (librouter_qos_get_interface_config(dev, &intf_cfg) <= 0) {
 			printf("%% Could not get %s configuration file.\n", dev);
 			goto apply_policy_err;
 		}
@@ -1009,7 +1009,7 @@ void libconfig_qos_apply_policy(char *dev, char *policymap)
 	}
 
 	/* Step 2: Get policy-map configuration */
-	if (libconfig_qos_get_policymap(policymap, &pmap) <= 0) {
+	if (librouter_qos_get_policymap(policymap, &pmap) <= 0) {
 		printf("%%Could not get Policy-map configuration\n");
 		goto apply_policy_err;
 	}
@@ -1192,23 +1192,23 @@ void libconfig_qos_apply_policy(char *dev, char *policymap)
 
 	/* Reaching this point means configuration is consistent */
 	strncpy(intf_cfg->pname, policymap, 31);
-	libconfig_qos_tc_insert_all(dev);
+	librouter_qos_tc_insert_all(dev);
 
 apply_policy_err:
 
-	libconfig_qos_free_policymap(pmap);
-	libconfig_qos_release_config(intf_cfg);
+	librouter_qos_free_policymap(pmap);
+	librouter_qos_release_config(intf_cfg);
 
 	return;
 }
 
-void libconfig_qos_config_reserved_bw(char *dev, int reserved_bw)
+void librouter_qos_config_reserved_bw(char *dev, int reserved_bw)
 {
 	intf_qos_cfg_t *intf_cfg = NULL;
 
-	if (libconfig_qos_get_interface_config(dev, &intf_cfg) <= 0) {
-		libconfig_qos_create_interface_config(dev);
-		if (libconfig_qos_get_interface_config(dev, &intf_cfg) <= 0) {
+	if (librouter_qos_get_interface_config(dev, &intf_cfg) <= 0) {
+		librouter_qos_create_interface_config(dev);
+		if (librouter_qos_get_interface_config(dev, &intf_cfg) <= 0) {
 			printf("%% Could not get qos config for %s\n", dev);
 			return;
 		}
@@ -1220,16 +1220,16 @@ void libconfig_qos_config_reserved_bw(char *dev, int reserved_bw)
 		printf("Policy-map %s applied to interface %s. Please disable it before configuring.\n",
 		                intf_cfg->pname, dev);
 
-	libconfig_qos_release_config(intf_cfg);
+	librouter_qos_release_config(intf_cfg);
 }
 
-void libconfig_qos_config_interface_bw(char *dev, int bw)
+void librouter_qos_config_interface_bw(char *dev, int bw)
 {
 	intf_qos_cfg_t *intf_cfg = NULL;
 
-	if (libconfig_qos_get_interface_config(dev, &intf_cfg) <= 0) {
-		libconfig_qos_create_interface_config(dev);
-		if (libconfig_qos_get_interface_config(dev, &intf_cfg) <= 0) {
+	if (librouter_qos_get_interface_config(dev, &intf_cfg) <= 0) {
+		librouter_qos_create_interface_config(dev);
+		if (librouter_qos_get_interface_config(dev, &intf_cfg) <= 0) {
 			printf("%% Could not get qos config for %s\n", dev);
 			return;
 		}
@@ -1241,10 +1241,10 @@ void libconfig_qos_config_interface_bw(char *dev, int bw)
 		printf("Policy-map %s applied to interface %s. Please disable it before configuring.\n",
 		                intf_cfg->pname, dev);
 
-	libconfig_qos_release_config(intf_cfg);
+	librouter_qos_release_config(intf_cfg);
 }
 
-int libconfig_qos_get_frts_config(char *dev_name, frts_cfg_t **cfg)
+int librouter_qos_get_frts_config(char *dev_name, frts_cfg_t **cfg)
 {
 	int fd;
 	frts_cfg_t *p;
@@ -1270,12 +1270,12 @@ int libconfig_qos_get_frts_config(char *dev_name, frts_cfg_t **cfg)
 	return (st.st_size / sizeof(frts_cfg_t));
 }
 
-int libconfig_qos_release_frts_config(frts_cfg_t *cfg, int n)
+int librouter_qos_release_frts_config(frts_cfg_t *cfg, int n)
 {
 	return munmap(cfg, sizeof(frts_cfg_t) * n);
 }
 
-int libconfig_qos_add_frts_config(char *dev_name, frts_cfg_t *cfg)
+int librouter_qos_add_frts_config(char *dev_name, frts_cfg_t *cfg)
 {
 	FILE *f;
 	char filename[64];
@@ -1293,7 +1293,7 @@ int libconfig_qos_add_frts_config(char *dev_name, frts_cfg_t *cfg)
 	return 0;
 }
 
-int libconfig_qos_del_frts_config(char *dev_name)
+int librouter_qos_del_frts_config(char *dev_name)
 {
 	char filename[64];
 
@@ -1312,7 +1312,7 @@ int libconfig_qos_del_frts_config(char *dev_name)
  * @param mark
  * @return
  */
-int libconfig_qos_get_stats_by_devmark(char *dev_name, int mark)
+int librouter_qos_get_stats_by_devmark(char *dev_name, int mark)
 {
 	FILE *f;
 	char *p, buf[256];
@@ -1323,27 +1323,27 @@ int libconfig_qos_get_stats_by_devmark(char *dev_name, int mark)
 	pmap_cfg_t *pmap;
 
 	/* Get config */
-	if (libconfig_qos_get_interface_config(dev_name, &intf_cfg) <= 0)
+	if (librouter_qos_get_interface_config(dev_name, &intf_cfg) <= 0)
 		return ret;
 
 	if (intf_cfg->pname[0] == 0) {
-		libconfig_qos_release_config(intf_cfg);
+		librouter_qos_release_config(intf_cfg);
 		return ret;
 	}
 
-	if (libconfig_qos_get_policymap(intf_cfg->pname, &pmap) <= 0) {
-		libconfig_qos_release_config(intf_cfg);
+	if (librouter_qos_get_policymap(intf_cfg->pname, &pmap) <= 0) {
+		librouter_qos_release_config(intf_cfg);
 		return ret;
 	}
 
 	if (!pmap->n_mark) {
-		libconfig_qos_free_policymap(pmap);
-		libconfig_qos_release_config(intf_cfg);
+		librouter_qos_free_policymap(pmap);
+		librouter_qos_release_config(intf_cfg);
 		return ret;
 	}
 
-	libconfig_qos_free_policymap(pmap);
-	libconfig_qos_release_config(intf_cfg);
+	librouter_qos_free_policymap(pmap);
+	librouter_qos_release_config(intf_cfg);
 
 	sprintf(buf, "/bin/tc -s class ls dev %s 2> /dev/null", dev_name);
 
@@ -1358,7 +1358,7 @@ int libconfig_qos_get_stats_by_devmark(char *dev_name, int mark)
 		if (feof(f))
 			break;
 
-		if (libconfig_parse_args_din(buf, &argl) >= 3) {
+		if (librouter_parse_args_din(buf, &argl) >= 3) {
 
 			if ((strcasecmp(argl[0], "class") == 0) && (strcasecmp(argl[1], "hfsc") == 0)) {
 
@@ -1367,7 +1367,7 @@ int libconfig_qos_get_stats_by_devmark(char *dev_name, int mark)
 					*p = 0;
 					n1 = atoi(p + 1);
 
-					libconfig_destroy_args_din(&argl);
+					librouter_destroy_args_din(&argl);
 
 					if ((n1 - 10) == mark) {
 						/* Skip Sent 0 bytes 0 pkts (dropped 0, overlimits 0)*/
@@ -1391,7 +1391,7 @@ int libconfig_qos_get_stats_by_devmark(char *dev_name, int mark)
 			}
 		}
 
-		libconfig_destroy_args_din(&argl);
+		librouter_destroy_args_din(&argl);
 	}
 
 	pclose(f);

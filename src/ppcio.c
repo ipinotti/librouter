@@ -23,14 +23,14 @@
 
 #define DEV_PPCIO "/dev/ppcio"
 
-int libconfig_ppcio_read(ppcio_data *pd)
+int librouter_ppcio_read(ppcio_data *pd)
 {
 	int fd, ret;
 
 	fd = open(DEV_PPCIO, O_RDONLY);
 
 	if (fd < 0) {
-		libconfig_pr_error(1, "can't open %s", DEV_PPCIO);
+		librouter_pr_error(1, "can't open %s", DEV_PPCIO);
 		return (-1);
 	}
 #if 0
@@ -41,14 +41,14 @@ int libconfig_ppcio_read(ppcio_data *pd)
 	return ret;
 }
 
-int libconfig_ppcio_write(ppcio_data *pd)
+int librouter_ppcio_write(ppcio_data *pd)
 {
 	int fd, ret;
 
 	fd = open(DEV_PPCIO, O_RDONLY);
 
 	if (fd < 0) {
-		libconfig_pr_error(1, "can't open %s", DEV_PPCIO);
+		librouter_pr_error(1, "can't open %s", DEV_PPCIO);
 		return (-1);
 	}
 #if 0

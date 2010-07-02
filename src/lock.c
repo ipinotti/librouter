@@ -57,7 +57,7 @@ static int _get_sem_id(unsigned int key, int *sem_id)
 	return 1;
 }
 
-int libconfig_lock_rmon_config_access(void)
+int librouter_lock_rmon_config_access(void)
 {
 	int count, sem_id;
 
@@ -76,7 +76,7 @@ int libconfig_lock_rmon_config_access(void)
 	return 0;
 }
 
-int libconfig_unlock_rmon_config_access(void)
+int librouter_unlock_rmon_config_access(void)
 {
 	int count, sem_id;
 
@@ -99,7 +99,7 @@ int libconfig_unlock_rmon_config_access(void)
 	return 0;
 }
 
-int libconfig_lock_snmp_tree_access(void)
+int librouter_lock_snmp_tree_access(void)
 {
 	int count, sem_id;
 
@@ -117,7 +117,7 @@ int libconfig_lock_snmp_tree_access(void)
 	return 0;
 }
 
-int libconfig_unlock_snmp_tree_access(void)
+int librouter_unlock_snmp_tree_access(void)
 {
 	int count, sem_id;
 
@@ -141,7 +141,7 @@ int libconfig_unlock_snmp_tree_access(void)
  *  @wait_time: especifica o tempo maximo de espera para conseguir pegar o semaforo
  * Se o argumento for zero e o semaforo estiver com outro processo, retorna imediatamente.
  */
-int libconfig_lock_del_mod_access(unsigned int wait_time)
+int librouter_lock_del_mod_access(unsigned int wait_time)
 {
 	int count, sem_id;
 
@@ -167,7 +167,7 @@ int libconfig_lock_del_mod_access(unsigned int wait_time)
 	return _semaphore_state(sem_id, 'p');
 }
 
-int libconfig_unlock_del_mod_access(void)
+int librouter_unlock_del_mod_access(void)
 {
 	int count, sem_id;
 

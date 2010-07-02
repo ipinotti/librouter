@@ -32,7 +32,7 @@ dev_family _devices[] = {
  * @param name
  * @return
  */
-dev_family *libconfig_device_get_family(const char *name)
+dev_family *librouter_device_get_family(const char *name)
 {
 	int crsr;
 	for (crsr = 0; _devices[crsr].cish_string != NULL; crsr++) {
@@ -53,12 +53,12 @@ dev_family *libconfig_device_get_family(const char *name)
  * @param minor
  * @return
  */
-char *libconfig_device_convert(const char *device, int major, int minor)
+char *librouter_device_convert(const char *device, int major, int minor)
 {
 	//função modificada, onde a variavel linux_string era anteriormente cish_string
 
 	char *result;
-	dev_family *fam = libconfig_device_get_family(device);
+	dev_family *fam = librouter_device_get_family(device);
 
 	if (fam) {
 		switch (fam->type) {
@@ -98,7 +98,7 @@ char *libconfig_device_convert(const char *device, int major, int minor)
  * @param mode
  * @return
  */
-char *libconfig_device_convert_os(const char *osdev, int mode)
+char *librouter_device_convert_os(const char *osdev, int mode)
 {
 	static char dev[64];
 	char odev[16];
@@ -134,7 +134,7 @@ char *libconfig_device_convert_os(const char *osdev, int mode)
 		if ((f = fopen(filename, "r")) != NULL) {
 			fgets(iface, 16, f);
 			fclose(f);
-			libconfig_str_striplf(iface);
+			librouter_str_striplf(iface);
 			crsr = 0;
 			while ((crsr < 8) && (iface[crsr] > 32) && (!isdigit(
 			                iface[crsr])))
@@ -164,7 +164,7 @@ char *libconfig_device_convert_os(const char *osdev, int mode)
  * @param cmdline
  * @return
  */
-char *libconfig_device_to_linux_cmdline(char *cmdline)
+char *librouter_device_to_linux_cmdline(char *cmdline)
 {
 	static char new_cmdline[2048];
 	arglist *args;
@@ -172,9 +172,9 @@ char *libconfig_device_to_linux_cmdline(char *cmdline)
 	dev_family *fam;
 
 	new_cmdline[0] = 0;
-	args = libconfig_make_args(cmdline);
+	args = librouter_make_args(cmdline);
 	for (i = 0; i < args->argc; i++) {
-		fam = libconfig_device_get_family(args->argv[i]);
+		fam = librouter_device_get_family(args->argv[i]);
 		if (fam) {
 			//			strcat(new_cmdline, fam->cish_string);
 			strcat(new_cmdline, fam->linux_string);
@@ -185,7 +185,7 @@ char *libconfig_device_to_linux_cmdline(char *cmdline)
 		strcat(new_cmdline, args->argv[i]);
 		strcat(new_cmdline, " ");
 	}
-	libconfig_destroy_args(args);
+	librouter_destroy_args(args);
 	return new_cmdline;
 }
 
@@ -197,7 +197,7 @@ char *libconfig_device_to_linux_cmdline(char *cmdline)
  * @param cmdline
  * @return
  */
-char *libconfig_device_from_linux_cmdline(char *cmdline)
+char *librouter_device_from_linux_cmdline(char *cmdline)
 {
 	static char new_cmdline[2048];
 	arglist *args;
@@ -205,18 +205,18 @@ char *libconfig_device_from_linux_cmdline(char *cmdline)
 	char *dev;
 
 	new_cmdline[0] = 0;
-	if (libconfig_str_is_empty(cmdline))
+	if (librouter_str_is_empty(cmdline))
 		return new_cmdline;
-	args = libconfig_make_args(cmdline);
+	args = librouter_make_args(cmdline);
 	for (i = 0; i < args->argc; i++) {
-		dev = libconfig_device_convert_os(args->argv[i], 0);
+		dev = librouter_device_convert_os(args->argv[i], 0);
 		if (dev)
 			strcat(new_cmdline, dev);
 		else
 			strcat(new_cmdline, args->argv[i]);
 		strcat(new_cmdline, " ");
 	}
-	libconfig_destroy_args(args);
+	librouter_destroy_args(args);
 	return new_cmdline;
 }
 
@@ -229,7 +229,7 @@ char *libconfig_device_from_linux_cmdline(char *cmdline)
  * @param cmdline
  * @return
  */
-char *libconfig_zebra_to_linux_cmdline(char *cmdline)
+char *librouter_zebra_to_linux_cmdline(char *cmdline)
 {
 	static char new_cmdline[2048];
 	arglist *args;
@@ -237,20 +237,20 @@ char *libconfig_zebra_to_linux_cmdline(char *cmdline)
 	char addr_net[64];
 
 	new_cmdline[0] = 0;
-	if (libconfig_str_is_empty(cmdline))
+	if (librouter_str_is_empty(cmdline))
 		return new_cmdline;
 
-	args = libconfig_make_args(cmdline);
+	args = librouter_make_args(cmdline);
 
 	for (i = 0; i < args->argc; i++) {
-		if (libconfig_quagga_cidr_to_classic(args->argv[i], addr_net) == 0)
+		if (librouter_quagga_cidr_to_classic(args->argv[i], addr_net) == 0)
 			strcat(new_cmdline, addr_net);
 		else
 			strcat(new_cmdline, args->argv[i]);
 		strcat(new_cmdline, " ");
 	}
 
-	libconfig_destroy_args(args);
+	librouter_destroy_args(args);
 	return new_cmdline;
 }
 
@@ -262,7 +262,7 @@ char *libconfig_zebra_to_linux_cmdline(char *cmdline)
  * @param cmdline
  * @return
  */
-char *libconfig_zebra_from_linux_cmdline(char *cmdline)
+char *librouter_zebra_from_linux_cmdline(char *cmdline)
 {
 	static char new_cmdline[2048];
 	arglist *args;
@@ -270,13 +270,13 @@ char *libconfig_zebra_from_linux_cmdline(char *cmdline)
 	char buf[64];
 
 	new_cmdline[0] = 0;
-	if (libconfig_str_is_empty(cmdline))
+	if (librouter_str_is_empty(cmdline))
 		return new_cmdline;
 
-	args = libconfig_make_args(cmdline);
+	args = librouter_make_args(cmdline);
 
 	for (i = 0; i < (args->argc - 1); i++) {
-		if ((libconfig_quagga_validate_ip(args->argv[i]) == 0) && (libconfig_quagga_classic_to_cidr(
+		if ((librouter_quagga_validate_ip(args->argv[i]) == 0) && (librouter_quagga_classic_to_cidr(
 		                args->argv[i], args->argv[i + 1], buf) == 0)) {
 			strcat(new_cmdline, buf);
 			i++;
@@ -288,6 +288,6 @@ char *libconfig_zebra_from_linux_cmdline(char *cmdline)
 	if (i < args->argc)
 		strcat(new_cmdline, args->argv[i]);
 
-	libconfig_destroy_args(args);
+	librouter_destroy_args(args);
 	return new_cmdline;
 }

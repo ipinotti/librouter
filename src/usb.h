@@ -24,10 +24,10 @@ typedef struct {
 	char product_str[256];
 	char manufacture_str[256];
 
-} libconfig_usb_dev;
+} librouter_usb_dev;
 
-int libconfig_usb_device_is_connected(int port);
-int libconfig_usb_get_descriptor(libconfig_usb_dev * usb);
-int libconfig_usb_device_is_modem(int port);
+int librouter_usb_device_is_connected(int port);
+int librouter_usb_get_descriptor(librouter_usb_dev * usb);
+int librouter_usb_device_is_modem(int port);
 
 #endif /* USB_H_ */

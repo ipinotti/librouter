@@ -73,20 +73,20 @@ static int _get_procip_val(const char *parm)
 /***********************/
 /* Main dump functions */
 /***********************/
-void libconfig_config_dump_version(FILE *f, cish_config *cish_cfg)
+void librouter_config_dump_version(FILE *f, cish_config *cish_cfg)
 {
-	fprintf(f, "version %s\n", libconfig_get_system_version());
+	fprintf(f, "version %s\n", librouter_get_system_version());
 	fprintf(f, "!\n");
 }
 
-void libconfig_config_dump_terminal(FILE *f, cish_config *cish_cfg)
+void librouter_config_dump_terminal(FILE *f, cish_config *cish_cfg)
 {
 	fprintf(f, "terminal length %d\n", cish_cfg->terminal_lines);
 	fprintf(f, "terminal timeout %d\n", cish_cfg->terminal_timeout);
 	fprintf(f, "!\n");
 }
 
-void libconfig_config_dump_secret(FILE *f, cish_config *cish_cfg)
+void librouter_config_dump_secret(FILE *f, cish_config *cish_cfg)
 {
 	int printed_something = 0;
 
@@ -104,7 +104,7 @@ void libconfig_config_dump_secret(FILE *f, cish_config *cish_cfg)
 		fprintf(f, "!\n");
 }
 
-void libconfig_config_dump_aaa(FILE *f, cish_config *cish_cfg)
+void librouter_config_dump_aaa(FILE *f, cish_config *cish_cfg)
 {
 	int i;
 	FILE *passwd;
@@ -141,7 +141,7 @@ void libconfig_config_dump_aaa(FILE *f, cish_config *cish_cfg)
 	}
 
 	/* Dump aaa authentication login mode */
-	switch (libconfig_pam_get_current_mode(FILE_PAM_GENERIC)) {
+	switch (librouter_pam_get_current_mode(FILE_PAM_GENERIC)) {
 	case AAA_AUTH_NONE:
 		fprintf(f, "aaa authentication login default none\n");
 		break;
@@ -166,7 +166,7 @@ void libconfig_config_dump_aaa(FILE *f, cish_config *cish_cfg)
 	}
 
 	/* Dump aaa authentication web mode */
-	switch (libconfig_pam_get_current_mode(FILE_PAM_WEB)) {
+	switch (librouter_pam_get_current_mode(FILE_PAM_WEB)) {
 	case AAA_AUTH_NONE:
 		fprintf(f, "aaa authentication web default none\n");
 		break;
@@ -191,7 +191,7 @@ void libconfig_config_dump_aaa(FILE *f, cish_config *cish_cfg)
 	}
 
 	/* Dump aaa authorization mode */
-	switch (libconfig_pam_get_current_author_mode(FILE_PAM_GENERIC)) {
+	switch (librouter_pam_get_current_author_mode(FILE_PAM_GENERIC)) {
 	case AAA_AUTHOR_NONE:
 		fprintf(f, "aaa authorization exec default none\n");
 		break;
@@ -204,7 +204,7 @@ void libconfig_config_dump_aaa(FILE *f, cish_config *cish_cfg)
 	}
 
 	/* Dump aaa accounting mode */
-	switch (libconfig_pam_get_current_acct_mode(FILE_PAM_GENERIC)) {
+	switch (librouter_pam_get_current_acct_mode(FILE_PAM_GENERIC)) {
 	case AAA_ACCT_NONE:
 		fprintf(f, "aaa accounting exec default none\n");
 		break;
@@ -213,7 +213,7 @@ void libconfig_config_dump_aaa(FILE *f, cish_config *cish_cfg)
 		break;
 	}
 
-	switch (libconfig_pam_get_current_acct_cmd_mode(FILE_PAM_GENERIC)) {
+	switch (librouter_pam_get_current_acct_cmd_mode(FILE_PAM_GENERIC)) {
 	case AAA_ACCT_TACACS_CMD_NONE:
 		break;
 	case AAA_ACCT_TACACS_CMD_1:
@@ -245,7 +245,7 @@ void libconfig_config_dump_aaa(FILE *f, cish_config *cish_cfg)
 	fprintf(f, "!\n");
 }
 
-void libconfig_config_dump_hostname(FILE *f)
+void librouter_config_dump_hostname(FILE *f)
 {
 	char buf[64];
 
@@ -255,24 +255,24 @@ void libconfig_config_dump_hostname(FILE *f)
 	fprintf(f, "hostname %s\n!\n", buf);
 }
 
-void libconfig_config_dump_log(FILE *f)
+void librouter_config_dump_log(FILE *f)
 {
 	char buf[16];
 
-	if (libconfig_exec_get_init_option_value(PROG_SYSLOGD, "-R", buf, 16) >= 0)
+	if (librouter_exec_get_init_option_value(PROG_SYSLOGD, "-R", buf, 16) >= 0)
 		fprintf(f, "logging remote %s\n!\n", buf);
 }
 
-void libconfig_config_bgp_dump_router(FILE *f, int main_nip)
+void librouter_config_bgp_dump_router(FILE *f, int main_nip)
 {
 	FILE *fd;
 	char buf[1024];
 
-	if (!libconfig_quagga_bgpd_is_running())
+	if (!librouter_quagga_bgpd_is_running())
 		return;
 
 	/* dump router bgp info */
-	fd = libconfig_quagga_bgp_get_conf(main_nip);
+	fd = librouter_quagga_bgp_get_conf(main_nip);
 	if (fd) {
 		while (!feof(fd)) {
 			fgets(buf, 1024, fd);
@@ -280,8 +280,8 @@ void libconfig_config_bgp_dump_router(FILE *f, int main_nip)
 			if (buf[0] == '!')
 				break;
 
-			libconfig_str_striplf(buf);
-			fprintf(f, "%s\n", libconfig_device_from_linux_cmdline(libconfig_zebra_to_linux_cmdline(buf)));
+			librouter_str_striplf(buf);
+			fprintf(f, "%s\n", librouter_device_from_linux_cmdline(librouter_zebra_to_linux_cmdline(buf)));
 		}
 
 		fclose(fd);
@@ -290,7 +290,7 @@ void libconfig_config_bgp_dump_router(FILE *f, int main_nip)
 	fprintf(f, "!\n");
 }
 
-void libconfig_config_dump_ip(FILE *f, int conf_format)
+void librouter_config_dump_ip(FILE *f, int conf_format)
 {
 	int val;
 
@@ -352,24 +352,24 @@ void libconfig_config_dump_ip(FILE *f, int conf_format)
 	fprintf(f, "!\n");
 }
 
-void libconfig_config_dump_snmp(FILE *f, int conf_format)
+void librouter_config_dump_snmp(FILE *f, int conf_format)
 {
 	int print = 0;
 	int len;
 	char **sinks;
 	char buf[512];
 
-	if (libconfig_snmp_get_contact(buf, 511) == 0) {
+	if (librouter_snmp_get_contact(buf, 511) == 0) {
 		print = 1;
 		fprintf(f, "snmp-server contact %s\n", buf);
 	}
 
-	if (libconfig_snmp_get_location(buf, 511) == 0) {
+	if (librouter_snmp_get_location(buf, 511) == 0) {
 		print = 1;
 		fprintf(f, "snmp-server location %s\n", buf);
 	}
 
-	if ((len = libconfig_snmp_get_trapsinks(&sinks)) > 0) {
+	if ((len = librouter_snmp_get_trapsinks(&sinks)) > 0) {
 		if (sinks) {
 			int i;
 
@@ -384,12 +384,12 @@ void libconfig_config_dump_snmp(FILE *f, int conf_format)
 		}
 	}
 
-	if (libconfig_snmp_dump_communities(f) > 0)
+	if (librouter_snmp_dump_communities(f) > 0)
 		print = 1;
 
-	if (libconfig_snmp_is_running()) {
+	if (librouter_snmp_is_running()) {
 		print = 1;
-		libconfig_snmp_dump_versions(f);
+		librouter_snmp_dump_versions(f);
 	}
 
 	if (print)
@@ -397,13 +397,13 @@ void libconfig_config_dump_snmp(FILE *f, int conf_format)
 }
 
 #ifdef OPTION_RMON
-void libconfig_config_dump_rmon(FILE *f)
+void librouter_config_dump_rmon(FILE *f)
 {
 	int i, k;
 	struct rmon_config *shm_rmon_p;
 	char tp[10], result[MAX_OID_LEN * 10];
 
-	if (libconfig_snmp_rmon_get_access_cfg(&shm_rmon_p) == 1) {
+	if (librouter_snmp_rmon_get_access_cfg(&shm_rmon_p) == 1) {
 		for (i = 0; i < NUM_EVENTS; i++) {
 			if (shm_rmon_p->events[i].index > 0) {
 				fprintf(f, "rmon event %d",shm_rmon_p->events[i].index);
@@ -482,10 +482,10 @@ void libconfig_config_dump_rmon(FILE *f)
 			}
 		}
 
-		libconfig_snmp_rmon_free_access_cfg(&shm_rmon_p);
+		librouter_snmp_rmon_free_access_cfg(&shm_rmon_p);
 	}
 
-	if (libconfig_exec_check_daemon(RMON_DAEMON))
+	if (librouter_exec_check_daemon(RMON_DAEMON))
 		fprintf(f, "rmon agent\n");
 	else
 		fprintf(f, "no rmon agent\n");
@@ -494,7 +494,7 @@ void libconfig_config_dump_rmon(FILE *f)
 }
 #endif
 
-void libconfig_config_dump_chatscripts(FILE *f)
+void librouter_config_dump_chatscripts(FILE *f)
 {
 	FILE *fd;
 	int printed_something = 0;
@@ -534,18 +534,18 @@ void libconfig_config_dump_chatscripts(FILE *f)
 		fprintf(f, "!\n");
 }
 
-void libconfig_config_ospf_dump_router(FILE *out)
+void librouter_config_ospf_dump_router(FILE *out)
 {
 	FILE *f;
 	char buf[1024];
 
-	if (!libconfig_quagga_ospfd_is_running())
+	if (!librouter_quagga_ospfd_is_running())
 		return;
 
 	/* if config not written */
 	fprintf(out, "router ospf\n");
 
-	f = libconfig_quagga_ospf_get_conf(1, NULL);
+	f = librouter_quagga_ospf_get_conf(1, NULL);
 
 	if (f) {
 		/* skip line */
@@ -557,9 +557,9 @@ void libconfig_config_ospf_dump_router(FILE *out)
 			if (buf[0] == '!')
 				break;
 
-			libconfig_str_striplf(buf);
+			librouter_str_striplf(buf);
 			fprintf(out, "%s\n",
-			                libconfig_device_from_linux_cmdline(libconfig_zebra_to_linux_cmdline(buf)));
+			                librouter_device_from_linux_cmdline(librouter_zebra_to_linux_cmdline(buf)));
 		}
 
 		fclose(f);
@@ -568,15 +568,15 @@ void libconfig_config_ospf_dump_router(FILE *out)
 	fprintf(out, "!\n");
 }
 
-void libconfig_config_ospf_dump_interface(FILE *out, char *intf)
+void librouter_config_ospf_dump_interface(FILE *out, char *intf)
 {
 	FILE *f;
 	char buf[1024];
 
-	if (!libconfig_quagga_ospfd_is_running())
+	if (!librouter_quagga_ospfd_is_running())
 		return;
 
-	f = libconfig_quagga_ospf_get_conf(0, intf);
+	f = librouter_quagga_ospf_get_conf(0, intf);
 
 	if (!f)
 		return;
@@ -589,29 +589,29 @@ void libconfig_config_ospf_dump_interface(FILE *out, char *intf)
 		if (buf[0] == '!')
 			break;
 
-		libconfig_str_striplf(buf);
+		librouter_str_striplf(buf);
 
-		fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(libconfig_zebra_to_linux_cmdline(buf)));
+		fprintf(out, "%s\n", librouter_device_from_linux_cmdline(librouter_zebra_to_linux_cmdline(buf)));
 	}
 
 	fclose(f);
 }
 
-void libconfig_config_rip_dump_router(FILE *out)
+void librouter_config_rip_dump_router(FILE *out)
 {
 	FILE *f;
 	int end;
 	char buf[1024];
 	char keychain[] = "key chain";
 
-	if (!libconfig_quagga_ripd_is_running())
+	if (!librouter_quagga_ripd_is_running())
 		return;
 
 	/* dump router rip info */
 	/* if config not written */
 	fprintf(out, "router rip\n");
 
-	f = libconfig_quagga_rip_get_conf(1, NULL);
+	f = librouter_quagga_rip_get_conf(1, NULL);
 
 	if (f) {
 		/* skip line */
@@ -624,10 +624,10 @@ void libconfig_config_rip_dump_router(FILE *out)
 			if (buf[0] == '!')
 				break;
 
-			libconfig_str_striplf(buf);
+			librouter_str_striplf(buf);
 			fprintf(out," %s\n",
-			                libconfig_device_from_linux_cmdline(
-			                                libconfig_zebra_to_linux_cmdline(buf)));
+			                librouter_device_from_linux_cmdline(
+			                                librouter_zebra_to_linux_cmdline(buf)));
 		}
 
 		fclose(f);
@@ -636,7 +636,7 @@ void libconfig_config_rip_dump_router(FILE *out)
 	fprintf(out, "!\n");
 
 	/* dump key info (after router rip!) */
-	f = libconfig_quagga_get_conf(RIPD_CONF, keychain);
+	f = librouter_quagga_get_conf(RIPD_CONF, keychain);
 
 	if (f) {
 		end = 0;
@@ -652,7 +652,7 @@ void libconfig_config_rip_dump_router(FILE *out)
 			if (buf[0] == '!')
 				end = 1;
 
-			libconfig_str_striplf(buf);
+			librouter_str_striplf(buf);
 
 			fprintf(out, "%s\n", buf);
 		}
@@ -660,15 +660,15 @@ void libconfig_config_rip_dump_router(FILE *out)
 	}
 }
 
-void libconfig_config_rip_dump_interface(FILE *out, char *intf)
+void librouter_config_rip_dump_interface(FILE *out, char *intf)
 {
 	FILE *f;
 	char buf[1024];
 
-	if (!libconfig_quagga_ripd_is_running())
+	if (!librouter_quagga_ripd_is_running())
 		return;
 
-	f = libconfig_quagga_rip_get_conf(0, intf);
+	f = librouter_quagga_rip_get_conf(0, intf);
 
 	if (!f)
 		return;
@@ -683,20 +683,20 @@ void libconfig_config_rip_dump_interface(FILE *out, char *intf)
 		if (buf[0] == '!')
 			break;
 
-		libconfig_str_striplf(buf);
-		fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(
-		                libconfig_zebra_to_linux_cmdline(buf)));
+		librouter_str_striplf(buf);
+		fprintf(out, "%s\n", librouter_device_from_linux_cmdline(
+		                librouter_zebra_to_linux_cmdline(buf)));
 	}
 
 	fclose(f);
 }
 
-void libconfig_config_dump_routing(FILE *f)
+void librouter_config_dump_routing(FILE *f)
 {
-	libconfig_quagga_zebra_dump_static_routes(f);
+	librouter_quagga_zebra_dump_static_routes(f);
 }
 
-void libconfig_config_clock_dump(FILE *out)
+void librouter_config_clock_dump(FILE *out)
 {
 	int hours, mins;
 	char name[16];
@@ -713,20 +713,20 @@ void libconfig_config_clock_dump(FILE *out)
 	}
 }
 
-void libconfig_config_ip_dump_servers(FILE *out)
+void librouter_config_ip_dump_servers(FILE *out)
 {
 	char buf[2048];
 	int dhcp;
 
-	dhcp = libconfig_dhcp_get_status();
+	dhcp = librouter_dhcp_get_status();
 
 	if (dhcp == DHCP_SERVER) {
-		if (libconfig_dhcp_get_server(buf) == 0) {
+		if (librouter_dhcp_get_server(buf) == 0) {
 			fprintf(out, "%s\n", buf);
 			fprintf(out, "no ip dhcp relay\n");
 		}
 	} else if (dhcp == DHCP_RELAY) {
-		if (libconfig_dhcp_get_relay(buf) == 0) {
+		if (librouter_dhcp_get_relay(buf) == 0) {
 			fprintf(out, "no ip dhcp server\n");
 			fprintf(out, "ip dhcp relay %s\n", buf);
 		}
@@ -736,36 +736,36 @@ void libconfig_config_ip_dump_servers(FILE *out)
 	}
 
 	fprintf(out, "%sip dns relay\n",
-	                libconfig_exec_check_daemon(DNS_DAEMON) ? "" : "no ");
+	                librouter_exec_check_daemon(DNS_DAEMON) ? "" : "no ");
 
 	fprintf(out, "%sip domain lookup\n",
-	                libconfig_dns_domain_lookup_enabled() ? "" : "no ");
+	                librouter_dns_domain_lookup_enabled() ? "" : "no ");
 
-	libconfig_dns_dump_nameservers(out);
+	librouter_dns_dump_nameservers(out);
 
 #ifdef OPTION_HTTP
-	fprintf(out, "%sip http server\n", libconfig_exec_check_daemon(HTTP_DAEMON) ? "" : "no ");
+	fprintf(out, "%sip http server\n", librouter_exec_check_daemon(HTTP_DAEMON) ? "" : "no ");
 #endif
 
 #ifdef OPTION_HTTPS
-	fprintf(out, "%sip https server\n", libconfig_exec_check_daemon(HTTPS_DAEMON) ? "" : "no ");
+	fprintf(out, "%sip https server\n", librouter_exec_check_daemon(HTTPS_DAEMON) ? "" : "no ");
 #endif
 
 #ifdef OPTION_PIMD
-	libconfig_pim_dump(out);
+	librouter_pim_dump(out);
 #endif
 
 #ifdef OPTION_OPENSSH
-	fprintf(out, "%sip ssh server\n", libconfig_exec_check_daemon(SSH_DAEMON) ? "" : "no ");
+	fprintf(out, "%sip ssh server\n", librouter_exec_check_daemon(SSH_DAEMON) ? "" : "no ");
 #else
-	fprintf (out, "%sip ssh server\n", libconfig_exec_get_inetd_program(SSH_DAEMON) ? "" : "no ");
+	fprintf (out, "%sip ssh server\n", librouter_exec_get_inetd_program(SSH_DAEMON) ? "" : "no ");
 #endif
 
-	fprintf(out, "%sip telnet server\n", libconfig_exec_get_inetd_program(TELNET_DAEMON) ? "" : "no ");
+	fprintf(out, "%sip telnet server\n", librouter_exec_get_inetd_program(TELNET_DAEMON) ? "" : "no ");
 	fprintf(out, "!\n");
 }
 
-void libconfig_config_arp_dump(FILE *out)
+void librouter_config_arp_dump(FILE *out)
 {
 	FILE *F;
 	char *ipaddr;
@@ -794,9 +794,9 @@ void libconfig_config_arp_dump(FILE *out)
 
 		tbuf[127] = 0;
 
-		libconfig_str_striplf(tbuf);
+		librouter_str_striplf(tbuf);
 
-		args = libconfig_make_args(tbuf);
+		args = librouter_make_args(tbuf);
 		if (args->argc >= 6) {
 			ipaddr = args->argv[0];
 			hwaddr = args->argv[3];
@@ -811,7 +811,7 @@ void libconfig_config_arp_dump(FILE *out)
 			}
 		}
 
-		libconfig_destroy_args(args);
+		librouter_destroy_args(args);
 	}
 
 	if (print_something)
@@ -831,9 +831,9 @@ static void _dump_policy_interface(FILE *out, char *intf)
 		return;
 
 	/* If qos file does not exist, create one and show default values*/
-	if (libconfig_qos_get_interface_config(intf, &cfg) <= 0) {
-		libconfig_qos_create_interface_config(intf);
-		if (libconfig_qos_get_interface_config(intf, &cfg) <= 0)
+	if (librouter_qos_get_interface_config(intf, &cfg) <= 0) {
+		librouter_qos_create_interface_config(intf);
+		if (librouter_qos_get_interface_config(intf, &cfg) <= 0)
 			return;
 	}
 
@@ -844,7 +844,7 @@ static void _dump_policy_interface(FILE *out, char *intf)
 		if (cfg->pname[0] != 0)
 			fprintf(out, " service-policy %s\n", cfg->pname);
 
-		libconfig_qos_release_config(cfg);
+		librouter_qos_release_config(cfg);
 	}
 }
 
@@ -926,17 +926,17 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	_dump_intf_iptables_config(out, conf);
 
 #ifdef OPTION_PIMD
-	libconfig_pim_dump_interface(out, osdev);
+	librouter_pim_dump_interface(out, osdev);
 #endif
 	/* Dump QoS */
 	_dump_policy_interface(out, osdev);
 
 	/* Dump Quagga */
-	libconfig_config_rip_dump_interface(out, osdev);
-	libconfig_config_ospf_dump_interface(out, osdev);
+	librouter_config_rip_dump_interface(out, osdev);
+	librouter_config_ospf_dump_interface(out, osdev);
 
 	/* Print main IP address */
-	if (strlen(daemon_dhcpc) && libconfig_exec_check_daemon(daemon_dhcpc))
+	if (strlen(daemon_dhcpc) && librouter_exec_check_daemon(daemon_dhcpc))
 		fprintf(out, " ip address dhcp\n");
 	else
 		_dump_intf_ipaddr_config(out, conf);
@@ -966,7 +966,7 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	if (strchr(osdev, '.') == NULL) {
 		int bmcr;
 
-		bmcr = libconfig_lan_get_phy_reg(osdev, MII_BMCR);
+		bmcr = librouter_lan_get_phy_reg(osdev, MII_BMCR);
 
 		if (bmcr & BMCR_ANENABLE)
 			fprintf(out, " speed auto\n");
@@ -1009,8 +1009,8 @@ static void _dump_tunnel_config(FILE *out, struct interface_conf *conf)
 	/* Dump iptables configuration */
 	_dump_intf_iptables_config(out, conf);
 
-	libconfig_config_rip_dump_interface(out, osdev);
-	libconfig_config_ospf_dump_interface(out, osdev);
+	librouter_config_rip_dump_interface(out, osdev);
+	librouter_config_ospf_dump_interface(out, osdev);
 
 	_dump_intf_ipaddr_config(out, conf);
 
@@ -1023,7 +1023,7 @@ static void _dump_tunnel_config(FILE *out, struct interface_conf *conf)
 	if (conf->txqueue)
 		fprintf(out, " txqueuelen %d\n", conf->txqueue);
 
-	libconfig_tunnel_dump_interface(out, 1, osdev);
+	librouter_tunnel_dump_interface(out, 1, osdev);
 
 	fprintf(out, " %sshutdown\n", conf->up ? "no " : "");
 }
@@ -1041,13 +1041,13 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 	/* Get interface index */
 	serial_no = atoi(osdev + strlen(PPPDEV));
 
-	libconfig_ppp_get_config(serial_no, &cfg);
+	librouter_ppp_get_config(serial_no, &cfg);
 
 	_dump_intf_iptables_config(out, conf);
 	_dump_policy_interface(out, osdev);
 
-	libconfig_config_rip_dump_interface(out, osdev);
-	libconfig_config_ospf_dump_interface(out, osdev);
+	librouter_config_rip_dump_interface(out, osdev);
+	librouter_config_ospf_dump_interface(out, osdev);
 
 	fprintf(out, " apn set %s\n", cfg.apn);
 	fprintf(out, " username set %s\n", cfg.auth_user);
@@ -1063,7 +1063,7 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
  * @param out File descriptor to be written
  * @param conf Interface information
  */
-static void libconfig_config_dump_interface(FILE *out, struct interface_conf *conf)
+static void librouter_config_dump_interface(FILE *out, struct interface_conf *conf)
 {
 	struct iptables_t ipt;
 	char *description;
@@ -1072,18 +1072,18 @@ static void libconfig_config_dump_interface(FILE *out, struct interface_conf *co
 	/* Get iptables config */
 	memset(&ipt, 0, sizeof(struct iptables_t));
 
-	libconfig_acl_get_iface_rules(conf->name, ipt.in_acl, ipt.out_acl);
-	libconfig_mangle_get_iface_rules(conf->name, ipt.in_mangle, ipt.out_mangle);
-	libconfig_nat_get_iface_rules(conf->name, ipt.in_nat, ipt.out_nat);
+	librouter_acl_get_iface_rules(conf->name, ipt.in_acl, ipt.out_acl);
+	librouter_mangle_get_iface_rules(conf->name, ipt.in_mangle, ipt.out_mangle);
+	librouter_nat_get_iface_rules(conf->name, ipt.in_nat, ipt.out_nat);
 
-	cish_dev = libconfig_device_convert_os(conf->name, 0);
+	cish_dev = librouter_device_convert_os(conf->name, 0);
 
 	/* skip ipsec ones... */
 	if (conf->linktype == ARPHRD_TUNNEL6)
 		return;
 
 	fprintf(out, "interface %s\n", cish_dev);
-	description = libconfig_dev_get_description(conf->name);
+	description = librouter_dev_get_description(conf->name);
 
 	if (description)
 		fprintf(out, " description %s\n", description);
@@ -1112,14 +1112,14 @@ static void libconfig_config_dump_interface(FILE *out, struct interface_conf *co
 	}
 
 	/*  Generates configuration about the send of traps for every interface */
-	if (libconfig_snmp_itf_should_sendtrap(conf->name))
+	if (librouter_snmp_itf_should_sendtrap(conf->name))
 		fprintf(out, " snmp trap link-status\n");
 
 	/* End of interface configuration */
 	fprintf(out, "!\n");
 }
 
-void libconfig_config_interfaces_dump(FILE *out)
+void librouter_config_interfaces_dump(FILE *out)
 {
 	int i, ret;
 	struct ip_t ip;
@@ -1139,12 +1139,12 @@ void libconfig_config_interfaces_dump(FILE *out)
 
 	for (i = 0; intf_list[i][0] != '\0'; i++) {
 
-		if (libconfig_ip_iface_get_config(intf_list[i], &conf) < 0)
+		if (librouter_ip_iface_get_config(intf_list[i], &conf) < 0)
 			continue;
 
 		st = conf.stats;
 
-		cish_dev = libconfig_device_convert_os(conf.name, 1);
+		cish_dev = librouter_device_convert_os(conf.name, 1);
 
 		/* Ignore if device is not recognized by CISH */
 		if (cish_dev == NULL)
@@ -1158,12 +1158,12 @@ void libconfig_config_interfaces_dump(FILE *out)
 #if 0
 		switch (conf.linktype) {
 		case ARPHRD_ETHER:
-			phy_status = libconfig_lan_get_status(conf.name);
+			phy_status = librouter_lan_get_status(conf.name);
 			/* vlan: interface must be up */
 			running = (up && (phy_status & PHY_STAT_LINK) ? 1 : 0);
 			/* VLAN */
 			if (!strncmp(conf.name,"ethernet",8) && strstr(conf.name,"."))
-				vlan_cos = libconfig_vlan_get_cos(conf.name);
+				vlan_cos = librouter_vlan_get_cos(conf.name);
 			else
 				vlan_cos = NONE_TO_COS;
 			break;
@@ -1180,9 +1180,9 @@ void libconfig_config_interfaces_dump(FILE *out)
 			continue;
 
 		/* Start dumping information */
-		libconfig_config_dump_interface(out, &conf);
+		librouter_config_dump_interface(out, &conf);
 
-		libconfig_ip_iface_free_config(&conf);
+		librouter_ip_iface_free_config(&conf);
 	}
 }
 
@@ -1199,7 +1199,7 @@ void libconfig_config_interfaces_dump(FILE *out)
  * @param cish_cfg Cish configuration struct
  * @return
  */
-int libconfig_config_write(char *filename, cish_config *cish_cfg)
+int librouter_config_write(char *filename, cish_config *cish_cfg)
 {
 	FILE * f;
 
@@ -1208,55 +1208,55 @@ int libconfig_config_write(char *filename, cish_config *cish_cfg)
 		return -1;
 
 	fprintf(f, "!\n");
-	libconfig_config_dump_version(f, cish_cfg);
-	libconfig_config_dump_terminal(f, cish_cfg);
-	libconfig_config_dump_secret(f, cish_cfg);
-	libconfig_config_dump_aaa(f, cish_cfg);
-	libconfig_config_dump_hostname(f);
-	libconfig_config_dump_log(f);
+	librouter_config_dump_version(f, cish_cfg);
+	librouter_config_dump_terminal(f, cish_cfg);
+	librouter_config_dump_secret(f, cish_cfg);
+	librouter_config_dump_aaa(f, cish_cfg);
+	librouter_config_dump_hostname(f);
+	librouter_config_dump_log(f);
 #ifdef OPTION_BGP
-	libconfig_config_bgp_dump_router(f, 0);
+	librouter_config_bgp_dump_router(f, 0);
 #endif
-	libconfig_config_dump_ip(f, 1);
+	librouter_config_dump_ip(f, 1);
 
 	/* SNMP */
-	libconfig_config_dump_snmp(f, 1);
+	librouter_config_dump_snmp(f, 1);
 #ifdef OPTION_RMON
-	libconfig_config_dump_rmon(f);
+	librouter_config_dump_rmon(f);
 #endif
 
-	libconfig_config_dump_chatscripts(f);
+	librouter_config_dump_chatscripts(f);
 
 	/* iptables */
-	libconfig_acl_dump_policy(f);
-	libconfig_acl_dump(0, f, 1);
-	libconfig_nat_dump(0, f, 1);
-	libconfig_mangle_dump(0, f, 1);
+	librouter_acl_dump_policy(f);
+	librouter_acl_dump(0, f, 1);
+	librouter_nat_dump(0, f, 1);
+	librouter_mangle_dump(0, f, 1);
 
 	/* qos */
-	libconfig_qos_dump_config(f);
+	librouter_qos_dump_config(f);
 
-	libconfig_nat_dump_helper(f, cish_cfg);
+	librouter_nat_dump_helper(f, cish_cfg);
 
 	/* Quagga */
-	libconfig_config_rip_dump_router(f);
-	libconfig_config_ospf_dump_router(f);
+	librouter_config_rip_dump_router(f);
+	librouter_config_ospf_dump_router(f);
 #ifdef OPTION_BGP
-	libconfig_config_bgp_dump_router(f, 1);
+	librouter_config_bgp_dump_router(f, 1);
 #endif
-	libconfig_config_dump_routing(f);
+	librouter_config_dump_routing(f);
 
 	/* Multicast */
 #ifdef OPTION_SMCROUTE
-	libconfig_smc_route_dump(f);
+	librouter_smc_route_dump(f);
 #endif
-	libconfig_config_interfaces_dump(f);
-	libconfig_config_clock_dump(f);
-	libconfig_ntp_dump(f);
-	libconfig_config_ip_dump_servers(f);
-	libconfig_config_arp_dump(f);
+	librouter_config_interfaces_dump(f);
+	librouter_config_clock_dump(f);
+	librouter_ntp_dump(f);
+	librouter_config_ip_dump_servers(f);
+	librouter_config_arp_dump(f);
 #ifdef OPTION_IPSEC
-	libconfig_ipsec_dump(f);
+	librouter_ipsec_dump(f);
 #endif
 
 	fclose(f);
@@ -1272,7 +1272,7 @@ static int _set_default_cfg(void)
 	f = fopen(CISH_CFG_FILE, "wb");
 
 	if (!f) {
-		libconfig_pr_error(1, "Can't write configuration");
+		librouter_pr_error(1, "Can't write configuration");
 		return (-1);
 	}
 
@@ -1292,7 +1292,7 @@ static int _check_cfg(void)
 	return 0;
 }
 
-cish_config* libconfig_config_mmap_cfg(void)
+cish_config* librouter_config_mmap_cfg(void)
 {
 	int fd;
 	cish_config *cish_cfg = NULL;
@@ -1300,26 +1300,26 @@ cish_config* libconfig_config_mmap_cfg(void)
 	_check_cfg();
 
 	if ((fd = open(CISH_CFG_FILE, O_RDWR)) < 0) {
-		libconfig_pr_error(1, "Could not open configuration");
+		librouter_pr_error(1, "Could not open configuration");
 		return NULL;
 	}
 
 	cish_cfg = mmap(NULL, sizeof(cish_config), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
 	if (cish_cfg == ((void *) -1)) {
-		libconfig_pr_error(1, "Could not open configuration");
+		librouter_pr_error(1, "Could not open configuration");
 		return NULL;
 	}
 
 	close(fd);
 
 	/* debug persistent */
-	libconfig_debug_recover_all();
+	librouter_debug_recover_all();
 
 	return cish_cfg;
 }
 
-int libconfig_config_munmap_cfg(cish_config *cish_cfg)
+int librouter_config_munmap_cfg(cish_config *cish_cfg)
 {
 	return (munmap(cish_cfg, sizeof(cish_config)) < 0);
 }

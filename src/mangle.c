@@ -48,11 +48,11 @@ static void print_mangle (const char *action,
 	src_ports[0] = 0;
 	dst_ports[0] = 0;
 
-	src_netmask = libconfig_ip_extract_mask (_src);
-	dst_netmask = libconfig_ip_extract_mask (_dst);
+	src_netmask = librouter_ip_extract_mask (_src);
+	dst_netmask = librouter_ip_extract_mask (_dst);
 
-	libconfig_acl_set_ports (sports, src_ports);
-	libconfig_acl_set_ports (dports, dst_ports);
+	librouter_acl_set_ports (sports, src_ports);
+	librouter_acl_set_ports (dports, dst_ports);
 
 	if (conf_format)
 		fprintf (out, "mark-rule ");
@@ -63,7 +63,7 @@ static void print_mangle (const char *action,
 		fprintf (out, "    ");
 
 	if (strcmp (action, "DSCP") == 0 && dscp) {
-		dscp_class = libconfig_qos_dscp_to_name (strtol (dscp, NULL, 16));
+		dscp_class = librouter_qos_dscp_to_name (strtol (dscp, NULL, 16));
 
 		if (dscp_class)
 			fprintf (out, "dscp class %s ", dscp_class);
@@ -95,7 +95,7 @@ static void print_mangle (const char *action,
 	else if (strcmp (src_netmask, "255.255.255.255") == 0)
 		fprintf (out, "host %s ", _src);
 	else
-		fprintf (out, "%s %s ", _src, libconfig_ip_ciscomask (src_netmask));
+		fprintf (out, "%s %s ", _src, librouter_ip_ciscomask (src_netmask));
 
 	if (*src_ports)
 		fprintf (out, "%s ", src_ports);
@@ -105,7 +105,7 @@ static void print_mangle (const char *action,
 	else if (strcmp (dst_netmask, "255.255.255.255") == 0)
 		fprintf (out, "host %s ", _dst);
 	else
-		fprintf (out, "%s %s ", _dst, libconfig_ip_ciscomask (dst_netmask));
+		fprintf (out, "%s %s ", _dst, librouter_ip_ciscomask (dst_netmask));
 
 	if (*dst_ports)
 		fprintf (out, "%s ", dst_ports);
@@ -117,11 +117,11 @@ static void print_mangle (const char *action,
 			t = strtok (flags, "/");
 			if (t != NULL) {
 				fprintf (out, "flags ");
-				libconfig_acl_print_flags (out, t);
+				librouter_acl_print_flags (out, t);
 
 				fprintf (out, "/");
 				t = strtok (NULL, "/");
-				libconfig_acl_print_flags (out, t);
+				librouter_acl_print_flags (out, t);
 
 				fprintf (out, " ");
 			}
@@ -134,7 +134,7 @@ static void print_mangle (const char *action,
 		fprintf (out, "tos %ld ", strtol (tos, NULL, 16));
 
 	if (dscp_match) {
-		dscp_class = libconfig_qos_dscp_to_name (strtol (dscp_match, NULL, 16));
+		dscp_class = librouter_qos_dscp_to_name (strtol (dscp_match, NULL, 16));
 
 		if (dscp_class)
 			fprintf (out, "dscp class %s ", dscp_class);
@@ -168,7 +168,7 @@ static void print_mangle (const char *action,
  * 	0     0 MARK       all  --  *      *       0.0.0.0/0            0.0.0.0/0           DSCP match 0x01 MARK set 0x2
  */
 #define trimcolumn(x) tmp=strchr(x, ' '); if (tmp != NULL) *tmp=0;
-void libconfig_mangle_dump(char *xmangle, FILE *F, int conf_format)
+void librouter_mangle_dump(char *xmangle, FILE *F, int conf_format)
 {
 	FILE *ipc;
 	char *tmp;
@@ -233,9 +233,9 @@ void libconfig_mangle_dump(char *xmangle, FILE *F, int conf_format)
 				while ((*p) && (*p == ' '))
 					p++;
 
-				args = libconfig_make_args(p);
+				args = librouter_make_args(p);
 				if (args->argc < 9) {
-					libconfig_destroy_args(args);
+					librouter_destroy_args(args);
 					continue;
 				}
 
@@ -360,7 +360,7 @@ void libconfig_mangle_dump(char *xmangle, FILE *F, int conf_format)
 						}
 					}
 				}
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 			}
 		}
 	}
@@ -372,7 +372,7 @@ void libconfig_mangle_dump(char *xmangle, FILE *F, int conf_format)
 		fprintf(F, "!\n");
 }
 
-int libconfig_mangle_get_iface_rules(char *iface,
+int librouter_mangle_get_iface_rules(char *iface,
                                      char *in_mangle,
                                      char *out_mangle)
 {
@@ -407,7 +407,7 @@ int libconfig_mangle_get_iface_rules(char *iface,
 
 		buf[255] = 0;
 
-		libconfig_str_striplf(buf);
+		librouter_str_striplf(buf);
 
 		if (strncmp(buf, "Chain ", 6) == 0) {
 			if (strncmp(buf + 6, "INPUT", 5) == 0)
@@ -424,10 +424,10 @@ int libconfig_mangle_get_iface_rules(char *iface,
 			while ((*p) && (*p == ' '))
 				p++;
 
-			args = libconfig_make_args(p);
+			args = librouter_make_args(p);
 
 			if (args->argc < 7) {
-				libconfig_destroy_args(args);
+				librouter_destroy_args(args);
 				continue;
 			}
 
@@ -450,7 +450,7 @@ int libconfig_mangle_get_iface_rules(char *iface,
 			if (mangle_in && mangle_out)
 				break;
 
-			libconfig_destroy_args(args);
+			librouter_destroy_args(args);
 		}
 	}
 

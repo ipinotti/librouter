@@ -16,8 +16,8 @@ struct smc_route_database {
 	char origin[16], group[16], in[16], out[16];
 };
 
-void libconfig_smc_route_hup(void);
-int libconfig_smc_route(int add, char *origin, char *group, char *in, char *out);
-void libconfig_smc_route_dump(FILE *out);
+void librouter_smc_route_hup(void);
+int librouter_smc_route(int add, char *origin, char *group, char *in, char *out);
+void librouter_smc_route_dump(FILE *out);
 
 #endif /* CONFIG_SMCROUTE_H_ */

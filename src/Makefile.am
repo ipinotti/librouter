@@ -1,6 +1,6 @@
 SUBDIRS = libnetlink
-lib_LTLIBRARIES = libconfig.la libconfigsnmp.la
-libconfig_la_SOURCES = \
+lib_LTLIBRARIES = librouter.la libroutersnmp.la
+librouter_la_SOURCES = \
 	acl.c \
 	args.c \
 	crc32.c \
@@ -46,19 +46,19 @@ libconfig_la_SOURCES = \
 	usb.c \
 	vlan.c 
 
-libconfig_la_LIBADD = $(top_builddir)/src/libnetlink/libnetlink.la
+librouter_la_LIBADD = $(top_builddir)/src/libnetlink/libnetlink.la
 
 
-libconfigsnmp_la_SOURCES = \
+libroutersnmp_la_SOURCES = \
 	snmp.c
 
-libconfigsnmp_ladir = $(includedir)/libconfig
+libroutersnmp_ladir = $(includedir)/libconfig
 
-libconfigsnmp_la_HEADERS = \
+libroutersnmp_la_HEADERS = \
 	snmp.h
 
-libconfig_ladir = $(includedir)/libconfig
-libconfig_la_HEADERS = \
+librouter_ladir = $(includedir)/libconfig
+librouter_la_HEADERS = \
 	acl.h \
 	args.h \
 	cish_defines.h \

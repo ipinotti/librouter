@@ -35,7 +35,7 @@
 #include "ppcio.h"
 #include "lan.h"
 
-int libconfig_lan_get_status(char *ifname)
+int librouter_lan_get_status(char *ifname)
 {
 	int fd, err; //, status;
 	char *p;
@@ -43,7 +43,7 @@ int libconfig_lan_get_status(char *ifname)
 
 	/* Create a socket to the INET kernel. */
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		libconfig_pr_error(1, "lan_get_status: socket");
+		librouter_pr_error(1, "lan_get_status: socket");
 		return (-1);
 	}
 
@@ -62,14 +62,14 @@ int libconfig_lan_get_status(char *ifname)
 		if (errno != ENODEV)
 			return 0;
 
-		libconfig_pr_error(1, "SIOCGPHYSTATUS");
+		librouter_pr_error(1, "SIOCGPHYSTATUS");
 		return(-1);
 	}
 #endif
 	return ifr.ifr_ifru.ifru_ivalue;
 }
 
-int libconfig_lan_get_phy_reg(char *ifname, u16 regnum)
+int librouter_lan_get_phy_reg(char *ifname, u16 regnum)
 {
 	int fd;
 	char *p;
@@ -78,7 +78,7 @@ int libconfig_lan_get_phy_reg(char *ifname, u16 regnum)
 
 	/* Create a socket to the INET kernel. */
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		libconfig_pr_error(1, "lan_get_phy_reg: socket");
+		librouter_pr_error(1, "lan_get_phy_reg: socket");
 		return -1;
 	}
 
@@ -94,7 +94,7 @@ int libconfig_lan_get_phy_reg(char *ifname, u16 regnum)
 
 	if (ioctl(fd, SIOCGMIIPHY, &ifr) < 0) {
 		close(fd);
-		libconfig_pr_error(1, "lan_get_phy_reg: SIOCGMIIPHY");
+		librouter_pr_error(1, "lan_get_phy_reg: SIOCGMIIPHY");
 		return -1;
 	}
 #if 0
@@ -105,7 +105,7 @@ int libconfig_lan_get_phy_reg(char *ifname, u16 regnum)
 	return (mii.val_out);
 }
 
-int libconfig_lan_set_phy_reg(char *ifname, u16 regnum, u16 data)
+int librouter_lan_set_phy_reg(char *ifname, u16 regnum, u16 data)
 {
 	int fd;
 	char *p;
@@ -114,7 +114,7 @@ int libconfig_lan_set_phy_reg(char *ifname, u16 regnum, u16 data)
 
 	/* Create a socket to the INET kernel. */
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		libconfig_pr_error(1, "lan_set_phy_reg: socket");
+		librouter_pr_error(1, "lan_set_phy_reg: socket");
 		return -1;
 	}
 
@@ -130,7 +130,7 @@ int libconfig_lan_set_phy_reg(char *ifname, u16 regnum, u16 data)
 
 	if (ioctl(fd, SIOCGMIIPHY, &ifr) < 0) {
 		close(fd);
-		libconfig_pr_error(1, "lan_set_phy_reg: SIOCGMIIPHY");
+		librouter_pr_error(1, "lan_set_phy_reg: SIOCGMIIPHY");
 		return -1;
 	}
 
@@ -138,7 +138,7 @@ int libconfig_lan_set_phy_reg(char *ifname, u16 regnum, u16 data)
 
 	if (ioctl(fd, SIOCSMIIREG, &ifr) < 0) {
 		close(fd);
-		libconfig_pr_error(1, "lan_set_phy_reg: SIOCSMIIREG");
+		librouter_pr_error(1, "lan_set_phy_reg: SIOCSMIIREG");
 		return -1;
 	}
 
@@ -151,17 +151,17 @@ static void _configure_auto_mdix(char *dev)
 {
 	int gpcr;
 
-	if ((gpcr = libconfig_lan_get_phy_reg(dev, MII_ADM7001_GPCR)) < 0)
+	if ((gpcr = librouter_lan_get_phy_reg(dev, MII_ADM7001_GPCR)) < 0)
 		return;
 
 	gpcr |= MII_ADM7001_GPCR_XOVEN;
-	libconfig_lan_set_phy_reg(dev, MII_ADM7001_GPCR, gpcr);
+	librouter_lan_set_phy_reg(dev, MII_ADM7001_GPCR, gpcr);
 }
 #endif
 
 #undef ADVERTISE
 
-int libconfig_fec_autonegotiate_link(char *dev)
+int librouter_fec_autonegotiate_link(char *dev)
 {
 	int bmcr;
 #ifdef ADVERTISE
@@ -172,19 +172,19 @@ int libconfig_fec_autonegotiate_link(char *dev)
 	_configure_auto_mdix(dev);
 #endif
 #ifdef ADVERTISE
-	if ((advertise = libconfig_lan_get_phy_reg(dev, MII_ADVERTISE)) < 0)
+	if ((advertise = librouter_lan_get_phy_reg(dev, MII_ADVERTISE)) < 0)
 		return -1;
 
 	advertise |= (ADVERTISE_10HALF | ADVERTISE_10FULL | ADVERTISE_100HALF | ADVERTISE_100FULL);
 
-	libconfig_lan_set_phy_reg(dev, MII_ADVERTISE, advertise);
+	librouter_lan_set_phy_reg(dev, MII_ADVERTISE, advertise);
 #endif
-	if ((bmcr = libconfig_lan_get_phy_reg(dev, MII_BMCR)) < 0)
+	if ((bmcr = librouter_lan_get_phy_reg(dev, MII_BMCR)) < 0)
 		return -1;
 
 	bmcr |= (BMCR_ANENABLE | BMCR_ANRESTART);
 
-	if (libconfig_lan_set_phy_reg(dev, MII_BMCR, bmcr) < 0)
+	if (librouter_lan_set_phy_reg(dev, MII_BMCR, bmcr) < 0)
 		return -1;
 
 	return 0;
@@ -192,7 +192,7 @@ int libconfig_fec_autonegotiate_link(char *dev)
 
 #undef VERIFY_LP
 
-int libconfig_fec_config_link(char *dev, int speed100, int duplex)
+int librouter_fec_config_link(char *dev, int speed100, int duplex)
 {
 	int bmcr;
 #ifdef VERIFY_LP
@@ -204,7 +204,7 @@ int libconfig_fec_config_link(char *dev, int speed100, int duplex)
 #endif
 #ifdef VERIFY_LP
 	/* Verify link partner */
-	if ((lpa = libconfig_lan_get_phy_reg(dev, MII_LPA)) < 0)
+	if ((lpa = librouter_lan_get_phy_reg(dev, MII_LPA)) < 0)
 		return -1;
 
 	if (speed100) {
@@ -228,39 +228,39 @@ int libconfig_fec_config_link(char *dev, int speed100, int duplex)
 		printf("%% Forcing mode anyway\n");
 	}
 #endif
-	if ((bmcr = libconfig_lan_get_phy_reg(dev, MII_BMCR)) < 0)
+	if ((bmcr = librouter_lan_get_phy_reg(dev, MII_BMCR)) < 0)
 		return -1;
 
 	if (!(bmcr & BMCR_PDOWN)) {
 		/* backups */
 		int advertise, icsr;
 
-		if ((advertise = libconfig_lan_get_phy_reg(dev, MII_ADVERTISE)) < 0)
+		if ((advertise = librouter_lan_get_phy_reg(dev, MII_ADVERTISE)) < 0)
 			return -1;
 
-		if ((icsr = libconfig_lan_get_phy_reg(dev, 0x1b)) < 0)
+		if ((icsr = librouter_lan_get_phy_reg(dev, 0x1b)) < 0)
 			return -1;
 
 		/* alert partner! */
 		bmcr |= BMCR_PDOWN;
 
-		if (libconfig_lan_set_phy_reg(dev, MII_BMCR, bmcr) < 0)
+		if (librouter_lan_set_phy_reg(dev, MII_BMCR, bmcr) < 0)
 			return -1;
 
 		sleep(1);
 		bmcr &= (~BMCR_PDOWN);
 
 		/* wake-up! (delay!) */
-		if (libconfig_lan_set_phy_reg(dev, MII_BMCR, bmcr) < 0)
+		if (librouter_lan_set_phy_reg(dev, MII_BMCR, bmcr) < 0)
 			return -1;
 
 		/* KS8721 re-sample io pins! */
 		/* restore! */
-		if (libconfig_lan_set_phy_reg(dev, 0x1b, icsr) < 0)
+		if (librouter_lan_set_phy_reg(dev, 0x1b, icsr) < 0)
 			return -1;
 
 		/* restore! */
-		if (libconfig_lan_set_phy_reg(dev, MII_ADVERTISE, advertise) < 0)
+		if (librouter_lan_set_phy_reg(dev, MII_ADVERTISE, advertise) < 0)
 			return -1;
 	}
 
@@ -277,7 +277,7 @@ int libconfig_fec_config_link(char *dev, int speed100, int duplex)
 	else
 		bmcr &= (~BMCR_FULLDPLX);
 
-	if (libconfig_lan_set_phy_reg(dev, MII_BMCR, bmcr) < 0)
+	if (librouter_lan_set_phy_reg(dev, MII_BMCR, bmcr) < 0)
 		return -1;
 
 	return 0;

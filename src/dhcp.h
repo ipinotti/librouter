@@ -37,23 +37,23 @@ enum {
 #define DHCRELAY_DAEMON "dhcrelay"
 #define DHCPC_DAEMON "udhcpc -i %s"
 
-int libconfig_udhcpd_reload(int eth);
-int libconfig_udhcpd_kick_by_eth(int eth);
-int libconfig_udhcpd_kick_by_name(char *iface);
-int libconfig_dhcpd_set_status(int on_off, int eth);
-int libconfig_dhcp_get_status(void);
-int libconfig_dhcp_set_none(void);
-int libconfig_dhcp_set_no_server(void);
-int libconfig_dhcp_set_no_relay(void);
-int libconfig_dhcp_set_server(int save_dns, char *cmdline);
-int libconfig_dhcp_get_server(char *buf);
-int libconfig_dhcp_check_server(char *ifname);
-int libconfig_dhcp_set_relay(char *servers);
-int libconfig_dhcp_get_relay(char *buf);
-int libconfig_dhcp_l2tp_get_interface(void);
-int libconfig_dhcpd_set_local(int on_off);
-int libconfig_dhcp_get_local(void);
-int libconfig_dhcp_set_server_local(int save_dns, char *cmdline);
-int libconfig_dhcp_get_server_local(char *buf);
+int librouter_udhcpd_reload(int eth);
+int librouter_udhcpd_kick_by_eth(int eth);
+int librouter_udhcpd_kick_by_name(char *iface);
+int librouter_dhcpd_set_status(int on_off, int eth);
+int librouter_dhcp_get_status(void);
+int librouter_dhcp_set_none(void);
+int librouter_dhcp_set_no_server(void);
+int librouter_dhcp_set_no_relay(void);
+int librouter_dhcp_set_server(int save_dns, char *cmdline);
+int librouter_dhcp_get_server(char *buf);
+int librouter_dhcp_check_server(char *ifname);
+int librouter_dhcp_set_relay(char *servers);
+int librouter_dhcp_get_relay(char *buf);
+int librouter_dhcp_l2tp_get_interface(void);
+int librouter_dhcpd_set_local(int on_off);
+int librouter_dhcp_get_local(void);
+int librouter_dhcp_set_server_local(int save_dns, char *cmdline);
+int librouter_dhcp_get_server_local(char *buf);
 
 #endif /* DHCP_H_ */

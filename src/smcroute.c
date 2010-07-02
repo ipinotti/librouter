@@ -31,7 +31,7 @@
 
 #ifdef OPTION_SMCROUTE
 
-void libconfig_smc_route_hup(void)
+void librouter_smc_route_hup(void)
 {
 	FILE *F;
 	char buf[32];
@@ -44,7 +44,7 @@ void libconfig_smc_route_hup(void)
 	}
 }
 
-int libconfig_smc_route(int add, char *origin, char *group, char *in, char *out)
+int librouter_smc_route(int add, char *origin, char *group, char *in, char *out)
 {
 	FILE *f;
 	int i, n, t;
@@ -86,7 +86,7 @@ int libconfig_smc_route(int add, char *origin, char *group, char *in, char *out)
 			strcpy(database[t].in, in);
 			strcpy(database[t].out, out);
 		} else {
-			libconfig_pr_error(0, "mroute table full");
+			librouter_pr_error(0, "mroute table full");
 			return (-1);
 		}
 	} else {
@@ -94,7 +94,7 @@ int libconfig_smc_route(int add, char *origin, char *group, char *in, char *out)
 			memset(&database[n], 0,
 			                sizeof(struct smc_route_database)); /* del */
 		} else {
-			libconfig_pr_error(0, "mroute not found");
+			librouter_pr_error(0, "mroute not found");
 			return (-1);
 		}
 	}
@@ -111,10 +111,10 @@ int libconfig_smc_route(int add, char *origin, char *group, char *in, char *out)
 			break;
 
 	if (i == SMC_ROUTE_MAX) {
-		libconfig_exec_init_program(0, SMC_DAEMON);
+		librouter_exec_init_program(0, SMC_DAEMON);
 	} else {
-		if (!libconfig_exec_check_daemon(SMC_DAEMON)) {
-			libconfig_exec_init_program(1, SMC_DAEMON);
+		if (!librouter_exec_check_daemon(SMC_DAEMON)) {
+			librouter_exec_init_program(1, SMC_DAEMON);
 			sleep(1);
 		}
 
@@ -129,7 +129,7 @@ int libconfig_smc_route(int add, char *origin, char *group, char *in, char *out)
 	return 0;
 }
 
-void libconfig_smc_route_dump(FILE *out)
+void librouter_smc_route_dump(FILE *out)
 {
 	int i, print = 0;
 	struct smc_route_database database[SMC_ROUTE_MAX];
@@ -150,7 +150,7 @@ void libconfig_smc_route_dump(FILE *out)
 			sprintf(buf, "ip mroute %s %s in %s out %s",
 			                database[i].origin, database[i].group,
 			                database[i].in, database[i].out);
-			fprintf(out, "%s\n", libconfig_device_from_linux_cmdline(buf));
+			fprintf(out, "%s\n", librouter_device_from_linux_cmdline(buf));
 			print = 1;
 		}
 	}
