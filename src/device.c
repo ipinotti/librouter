@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <stddef.h>
 
 #include "options.h"
 #include "defines.h"
@@ -15,36 +16,108 @@
 #include "args.h"
 #include "str.h"
 
-/* type, cish_string, linux_string */
+//#define DEBUG
+
+/* type, cish_string, linux_string, web_string */
 dev_family _devices[] = {
-	{ eth, "ethernet", "ethernet" },
-	{ lo, "loopback", "loopback" },
-	{ tun, "tun", "tun" },
-	{ ipsec, "ipsec", "ipsec" },
-	{ ppp, "m3G", "ppp" },
-	{ none, NULL, NULL }
+	{ eth, "ethernet", "ethernet", "Ethernet" },
+	{ lo, "loopback", "loopback", "Loopback" },
+	{ tun, "tun", "tun", "Tunnel" },
+	{ ipsec, "ipsec", "ipsec", "IPSec" },
+	{ ppp, "m3G", "ppp", "3GModem" },
+	{ none, NULL, NULL, NULL }
 };
 
 /**
- * ex.: name = 'ethernet'
- * retorna (device_family *){ethernet, "eth", "ethernet"},
+ * libconfig_device_get_family	Discover family based on name
+ *
  *
  * @param name
- * @return
+ * @param type
+ * @return pointer to family struct if success, NULL otherwise.
  */
-dev_family *libconfig_device_get_family(const char *name)
+dev_family *libconfig_device_get_family_by_name(const char *name, string_type type)
 {
-	int crsr;
-	for (crsr = 0; _devices[crsr].cish_string != NULL; crsr++) {
-		if (strncasecmp(_devices[crsr].cish_string, name, strlen(
-		                _devices[crsr].cish_string)) == 0) {
-			return &_devices[crsr];
-		}
+	int i;
+
+	char *string;
+	char offset = 0;
+	dev_family *fam = _devices;
+
+	/* Discover the offset inside the family structure */
+	switch(type) {
+	case str_cish:
+		offset = offsetof(dev_family, cish_string);
+		break;
+	case str_linux:
+		offset = offsetof(dev_family, linux_string);
+		break;
+	case str_web:
+		offset = offsetof(dev_family, web_string);
+		break;
+	default:
+		break;
 	}
+
+	/* Use the offset to access the desired string */
+	for (; *(char **)(((void *)fam) + offset) != NULL; fam++) {
+		char *string = *(char **)(((void *)fam) + offset);
+
+		if (!strncmp(name, string, strlen(string)))
+			return fam;
+	}
+
 	return NULL;
 }
 
 /**
+ * libconfig_device_get_family_by_type	Discover family based on type
+ *
+ * @param type
+ * @return pointer to family structure, NULL if not found
+ */
+dev_family *libconfig_device_get_family_by_type(device_type type)
+{
+	int i;
+
+
+	for (i = 0; _devices[i].type != none; i++) {
+		if (type == _devices[i].type)
+			return &_devices[i];
+	}
+
+	return NULL;
+}
+
+/**
+ * libconfig_device_get_major	Get Major number from interface name
+ * e.g. : ethernet0 -> 0
+ *
+ * @param name
+ * @param type
+ * @return interface major number or -1 if failure
+ */
+int libconfig_device_get_major(const char *name, string_type type)
+{
+	int major;
+	dev_family *fam = libconfig_device_get_family_by_name(name, type);
+	int len;
+
+	if (fam == NULL)
+		return -1;
+
+	len = strlen(fam->linux_string);
+	major = atoi(&name[len]);
+
+	return major;
+}
+
+/**
+ * libconfig_device_convert	Convert a cish interface string to linux interface string
+ *
+ * FIXME: Maybe the function name should indicate that it is a cish to
+ * linux name convertion.
+ *
  * ex.: device = 'serial', major = 0, minor = 16
  * retorna 'serial0.16'
  *
@@ -55,10 +128,8 @@ dev_family *libconfig_device_get_family(const char *name)
  */
 char *libconfig_device_convert(const char *device, int major, int minor)
 {
-	//função modificada, onde a variavel linux_string era anteriormente cish_string
-
 	char *result;
-	dev_family *fam = libconfig_device_get_family(device);
+	dev_family *fam = libconfig_device_get_family_by_name(device, str_cish);
 
 	if (fam) {
 		switch (fam->type) {
@@ -69,16 +140,12 @@ char *libconfig_device_convert(const char *device, int major, int minor)
 		case ppp:
 		default:
 			if (minor >= 0) {
-				result = (char *) malloc(strlen(
-				                fam->linux_string) + 12);
-				sprintf(result, "%s%i.%i", fam->linux_string,
-				                major, minor);
+				result = (char *) malloc(strlen(fam->linux_string) + 12);
+				sprintf(result, "%s%i.%i", fam->linux_string, major, minor);
 				return result;
 			} else {
-				result = (char *) malloc(strlen(
-				                fam->linux_string) + 6);
-				sprintf(result, "%s%i", fam->linux_string,
-				                major);
+				result = (char *) malloc(strlen(fam->linux_string) + 6);
+				sprintf(result, "%s%i", fam->linux_string, major);
 				return result;
 			}
 			break;
@@ -90,6 +157,11 @@ char *libconfig_device_convert(const char *device, int major, int minor)
 }
 
 /**
+ * libconfig_device_convert_os	Convert a linux string to cish string
+ *
+ * FIXME: Maybe the function name should indicate that it is a cish to
+ * linux name convertion.
+ *
  * ex.: osdev = 'serial0.16'
  * retorna 'serial 0.16' se mode=0,
  * ou      'serial0.16'  se mode=1.
@@ -173,10 +245,10 @@ char *libconfig_device_to_linux_cmdline(char *cmdline)
 
 	new_cmdline[0] = 0;
 	args = libconfig_make_args(cmdline);
+
 	for (i = 0; i < args->argc; i++) {
-		fam = libconfig_device_get_family(args->argv[i]);
+		fam = libconfig_device_get_family_by_name(args->argv[i], str_cish);
 		if (fam) {
-			//			strcat(new_cmdline, fam->cish_string);
 			strcat(new_cmdline, fam->linux_string);
 			i++;
 			if (i >= args->argc)
@@ -185,6 +257,7 @@ char *libconfig_device_to_linux_cmdline(char *cmdline)
 		strcat(new_cmdline, args->argv[i]);
 		strcat(new_cmdline, " ");
 	}
+
 	libconfig_destroy_args(args);
 	return new_cmdline;
 }
@@ -276,8 +349,9 @@ char *libconfig_zebra_from_linux_cmdline(char *cmdline)
 	args = libconfig_make_args(cmdline);
 
 	for (i = 0; i < (args->argc - 1); i++) {
-		if ((libconfig_quagga_validate_ip(args->argv[i]) == 0) && (libconfig_quagga_classic_to_cidr(
-		                args->argv[i], args->argv[i + 1], buf) == 0)) {
+		if ((libconfig_quagga_validate_ip(args->argv[i]) == 0)
+		                && (libconfig_quagga_classic_to_cidr(args->argv[i], args->argv[i
+		                                + 1], buf) == 0)) {
 			strcat(new_cmdline, buf);
 			i++;
 		} else {
