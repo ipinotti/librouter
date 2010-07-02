@@ -29,98 +29,91 @@
  * Adquire o APN - Acess Point Name, no arquivo de script - ARQ1,
  * através da função find_string_in_file_nl, descrita em str.c
  *
- * Retorna APN por parâmetro e retorna 1 se sucesso.
+ * Retorna APN por parâmetro e retorna 0 se sucesso.
  * Caso ocorra problema, é retornado -1 e controle de erros referente a função descrita em str.c
  *
  * @param apn
- * @return
+ * @param devcish
+ * @return 0 if OK, -1 if not
  */
-int librouter_modem3g_get_apn (char * apn, int devcish)
+int librouter_modem3g_get_apn(char * apn, int devcish)
 {
-	int check=0,length=0,i=0;
+	int check = -1, length = 0, i = 0;
 	char file[100] = MODEM3G_CHAT_FILE;
 	char device[10];
 	char key[] = "\"IP\",";
 
-	snprintf(device,10,"%d",devcish);
-	strcat(file,device);
+	snprintf(device, 10, "%d", devcish);
+	strcat(file, device);
 
-	check = librouter_str_find_string_in_file (file, key, apn, 100);
+	check = librouter_str_find_string_in_file(file, key, apn, 100);
 	length = strlen(apn);
 
-	for (i = 1; i < (length-1); ++i)
-		apn[i-1] = apn[i];
+	for (i = 1; i < (length - 1); ++i)
+		apn[i - 1] = apn[i];
 
-	apn[length-3]='\0';
+	/* retira aspas e demais no final do APN */
+	apn[length - 3] = '\0';
 
-	if (check == 0)
-		return 1;
-	else
-		return -1;
+	return check;
 
 }
-
 
 /**
  * Grava o APN - Acess Point Name, no arquivo de script - ARQ1,
  * através da função replace_string_in_file_nl, descrita em str.c.
  * APN é passado por parâmetro.
  *
- * Retorna 1 se sucesso.
+ * Retorna 0 se sucesso.
  * Caso ocorra problema, é retornado -1 e controle de erros referente a função descrita em str.c
  *
  * @param apn
- * @return
+ * @param devcish
+ * @return 0 if OK, -1 if not
  */
-int librouter_modem3g_set_apn (char * apn, int devcish)
+int librouter_modem3g_set_apn(char * apn, int devcish)
 {
-	//arq1 == "chat-modem-3g-";
-
-	int check=0;
+	int check = -1;
 	char file[100] = MODEM3G_CHAT_FILE;
 	char device[10];
 	char key[] = "\"IP\",";
+	char buffer_apn[256] = "\"";
+	char plus[] = "\"'";
 
-	snprintf(device,10,"%d",devcish);
-	strcat(file,device);
+	strcat(buffer_apn, apn);
+	strcat(buffer_apn, plus);
 
-	check = librouter_str_replace_string_in_file (file, key, apn);
+	snprintf(device, 10, "%d", devcish);
+	strcat(file, device);
 
-	if (check == 0)
-		return 1;
-	else
-		return -1;
+	check = librouter_str_replace_string_in_file(file, key, buffer_apn);
+
+	return check;
 }
 
 /**
  * Adquire o USERNAME, no arquivo de script - ARQ2,
  * através da função find_string_in_file_nl, descrita em str.c
  *
- * Retorna USERNAME por parâmetro e retorna 1 se sucesso.
+ * Retorna USERNAME por parâmetro e retorna 0 se sucesso.
  * Caso ocorra problema, é retornado -1 e controle de erros referente a função descrita em str.c
  *
  * @param username
- * @return
+ * @return 0 if OK, -1 if not
  */
-int librouter_modem3g_get_username (char * username, int devcish)
+int librouter_modem3g_get_username(char * username, int devcish)
 {
-	//arq2 == "modem-3g-";
-
-	int check=0;
+	int check = -1;
 	char file[100] = MODEM3G_PEERS_FILE;
 	char device[10];
 	char key[] = "user";
 
-	snprintf(device,10,"%d",devcish);
-	strcat(file,device);
+	snprintf(device, 10, "%d", devcish);
+	strcat(file, device);
 
-	check = librouter_str_find_string_in_file (file, key, username, 100);
+	check = librouter_str_find_string_in_file(file, key, username, 100);
 
-	if (check == 0)
-		return 1;
-	else
-		return -1;
-
+	return check;
 }
 
 /**
@@ -128,60 +121,53 @@ int librouter_modem3g_get_username (char * username, int devcish)
  * através da função replace_string_in_file_nl, descrita em str.c.
  * USERNAME é passado por parâmetro.
  *
- * Retorna 1 se sucesso.
+ * Retorna 0 se sucesso.
  * Caso ocorra problema, é retornado -1 e controle de erros referente a função descrita em str.c
  *
  * @param username
- * @return
+ * @param devcish
+ * @return 0 if OK, -1 if not
  */
-int librouter_modem3g_set_username (char * username, int devcish)
+int librouter_modem3g_set_username(char * username, int devcish)
 {
-	//arq2 == "modem-3g-";
-
-	int check=0;
-	char file [100] = MODEM3G_PEERS_FILE;
+	int check = -1;
+	char file[100] = MODEM3G_PEERS_FILE;
 	char device[10];
 	char key[] = "user";
 
-	snprintf(device,10,"%d",devcish);
-	strcat(file,device);
+	snprintf(device, 10, "%d", devcish);
+	strcat(file, device);
 
-	check = librouter_str_replace_string_in_file (file, key, username);
+	check = librouter_str_replace_string_in_file(file, key, username);
 
-	if (check == 0)
-		return 1;
-	else
-		return -1;
+	return check;
 }
 
 /**
  * Adquire o PASSWORD, no arquivo de script - ARQ2,
  * através da função find_string_in_file_nl, descrita em str.c
  *
- * Retorna PASSWORD por parâmetro e retorna 1 se sucesso.
- * Caso ocorra problema, é retornado -1 e controle de erros referente a função descrita em str.c
+ * Retorna PASSWORD por parâmetro e retorna 0 se sucesso.
+ * Caso ocorra problema, é retornado -1 e controle de erros
+ * referente a função descrita em str.c
  *
  * @param password
- * @return
+ * @param devcish
+ * @return 0 if OK, -1 if not
  */
-int librouter_modem3g_get_password (char * password, int devcish)
+int librouter_modem3g_get_password(char * password, int devcish)
 {
-	//arq2 == "modem-3g-";
-
-	int check=0;
-	char file [100] = MODEM3G_PEERS_FILE;
+	int check = -1;
+	char file[100] = MODEM3G_PEERS_FILE;
 	char device[10];
 	char key[] = "password";
 
-	snprintf(device,10,"%d",devcish);
-	strcat(file,device);
+	snprintf(device, 10, "%d", devcish);
+	strcat(file, device);
 
-	check = librouter_str_find_string_in_file (file, key, password, 100);
+	check = librouter_str_find_string_in_file(file, key, password, 100);
 
-	if (check == 0)
-		return 1;
-	else
-		return -1;
+	return check;
 }
 
 /**
@@ -189,28 +175,25 @@ int librouter_modem3g_get_password (char * password, int devcish)
  * através da função replace_string_in_file_nl, descrita em str.c.
  * PASSWORD é passado por parâmetro.
  *
- * Retorna 1 se sucesso.
- * Caso ocorra problema, é retornado -1 e controle de erros referente a função descrita em str.c
+ * Retorna 0 se sucesso.
+ * Caso ocorra problema, é retornado -1 e controle de erros
+ * referente a função descrita em str.c
  *
  * @param password
- * @return
+ * @param devcish
+ * @return 0 if OK, -1 if not
  */
-int librouter_modem3g_set_password (char * password, int devcish)
+int librouter_modem3g_set_password(char * password, int devcish)
 {
-	//arq2 == "modem-3g-";
-
-	int check=0;
-	char file [100] = MODEM3G_PEERS_FILE;
+	int check = -1;
+	char file[100] = MODEM3G_PEERS_FILE;
 	char device[10];
 	char key[] = "password";
 
-	snprintf(device,10,"%d",devcish);
-	strcat(file,device);
+	snprintf(device, 10, "%d", devcish);
+	strcat(file, device);
 
-	check = librouter_str_replace_string_in_file (file, key, password);
+	check = librouter_str_replace_string_in_file(file, key, password);
 
-	if (check == 0)
-		return 1;
-	else
-		return -1;
+	return check;
 }

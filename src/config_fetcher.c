@@ -1030,6 +1030,14 @@ static void _dump_tunnel_config(FILE *out, struct interface_conf *conf)
 #endif
 
 #ifdef OPTION_PPP
+
+
+
+
+
+
+
+
 static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 {
 	ppp_config cfg;

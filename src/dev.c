@@ -36,6 +36,7 @@
 #include "ip.h"
 #include "error.h"
 #include "dev.h"
+#include "device.h"
 
 static int _librouter_dev_get_ctrlfd(void)
 {
@@ -587,6 +588,37 @@ int librouter_arp_add(char *host, char *mac)
 	}
 
 	return (0);
+}
+
+int librouter_dev_shutdown(char *dev)
+{
+	librouter_qos_tc_remove_all(dev);
+	librouter_dev_set_link_down(dev);
+	return 0;
+}
+
+int librouter_dev_noshutdown(char *dev)
+{
+	dev_family *fam = librouter_device_get_family_by_name(dev, str_linux);
+
+	if (librouter_dev_set_link_up(dev) < 0)
+		return -1;
+
+	if (fam) {
+		int major = librouter_device_get_major(dev, str_linux);
+		switch (fam->type) {
+		case eth:
+			librouter_udhcpd_reload(major); /* dhcp integration! force reload ethernet address */
+			librouter_qos_tc_insert_all(dev);
+			break;
+		default:
+			break;
+		}
+	}
+#ifdef OPTION_SMCROUTE
+	librouter_smc_route_hup();
+#endif
+	return 0;
 }
 
 int notify_driver_about_shutdown(char *dev)

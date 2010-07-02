@@ -414,7 +414,7 @@ int librouter_qos_tc_insert_all(char *dev_name)
 		return -1;
 
 	/* Get status from interfaces */
-	if ((fam = librouter_device_get_family(dev_name)) == NULL)
+	if ((fam = librouter_device_get_family_by_name(dev_name, str_linux)) == NULL)
 		return -1;
 
 	major = atoi(dev_name + strlen(fam->cish_string));

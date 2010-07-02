@@ -23,6 +23,120 @@
 #include "ipsec.h"
 #include "ip.h"
 #include "pam.h"
+#include "../../cish/util/backupd.h"
+
+
+
+/**
+ * Verifica a existencia de um parametro desejavel no arquivo de conf. do backupd
+ * BACKUPD_CONF_FILE-> "/etc/backupd/backupd.conf"
+ *
+ * @param field
+ * @param value
+ * @param intf_return
+ * @return 1 and the interface aimed if (field+value) is in file, 0 if not
+ */
+int librouter_ppp_verif_param_backupd(char *field, char *value, char * intf_return){
+
+	FILE *fd;
+	char line[128] = {(int)NULL};
+	char fvalue[32], intf_ref[32], interface[24];
+	int verif = 0;
+
+	snprintf(fvalue,32,"%s%s\n",field, value);
+
+	if ((fd = fopen(BACKUPD_CONF_FILE, "r")) == NULL) {
+		syslog(LOG_ERR, "Could not open configuration file\n");
+		return;
+	}
+
+	while (fgets(line, sizeof(line), fd) != NULL) {
+		if (!strncmp(line, INTF_STR, INTF_STR_LEN)) {
+			strcpy(intf_return, line+INTF_STR_LEN);
+			while( (fgets(line, sizeof(line), fd) != NULL) && (strcmp(line, "\n") != 0) ){
+				if (!strncmp(line, fvalue, strlen(fvalue))){
+					verif = 1;
+					goto end;
+				}
+			}
+		}
+	}
+
+	if (!verif)
+		strcpy(intf_return,"##");
+
+end:
+	fclose(fd);
+
+	return verif;
+
+}
+
+
+/**
+ * Grava os parâmetros desejados no arquivo de configurações do backupd,
+ * BACKUPD_CONF_FILE-> "/etc/backupd/backupd.conf"
+ *
+ * Necessita a interface PPP a ser modifica, o campo desejado, e o valor.
+ *
+ * @param intf
+ * @param field
+ * @param value
+ * @return 0 if sucess, -1 if it had problems with the file
+ */
+int librouter_ppp_set_param_backupd(char * intf, char * field, char *value)
+{
+	FILE *fd;
+	char line[128] = {(int)NULL};
+	char buff[384] = {(int)NULL}; /*buff de tamanho determinado para 3 conex PPP */
+	char filename_new[64], fvalue[32], intf_ref[32];
+
+	snprintf(intf_ref,32,"%s%s",INTF_STR,intf);
+	snprintf(fvalue,32,"%s%s\n",field, value);
+
+	if ((fd = fopen(BACKUPD_CONF_FILE, "r")) == NULL) {
+		syslog(LOG_ERR, "Could not open configuration file\n");
+		return -1;
+	}
+
+	while (fgets(line, sizeof(line), fd) != NULL) {
+		if (!strncmp(line, intf_ref, strlen(intf_ref))) {
+			strcat(buff, (const char *)line);
+			while(fgets(line, sizeof(line), fd) != NULL){
+				if (!strncmp(line, field, strlen(field))){
+					strcat(buff, (const char *)fvalue);
+					break;
+				}
+				else
+					strcat(buff,(const char *)line);
+			}
+			continue;
+		}
+		strcat(buff, (const char *)line);
+	}
+
+	fclose(fd);
+
+	strncpy(filename_new, BACKUPD_CONF_FILE, 63);
+	filename_new[63] = 0;
+	strcat(filename_new, ".new");
+
+	if ((fd = fopen((const char *)filename_new,"w+")) < 0) {
+		syslog(LOG_ERR, "Could not open configuration file\n");
+		return -1;
+	}
+
+	fputs((const char *)buff,fd);
+
+	fclose(fd);
+
+	unlink(BACKUPD_CONF_FILE);
+	rename(filename_new, BACKUPD_CONF_FILE);
+
+	return 0;
+
+}
+
 
 /**
  * ppp_reload_backupd - signal backupd to reload configuration

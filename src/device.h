@@ -11,15 +11,21 @@ typedef enum {
 	none, eth, lo, ppp, tun, ipsec
 } device_type;
 
+typedef enum {
+	str_linux, str_cish, str_web
+} string_type;
+
 typedef struct {
 	device_type type;
-	const char *cish_string;
-	const char *linux_string;
+	const char *cish_string; /* Interface name as shown in CISH */
+	const char *linux_string; /* Interface name in the linux kernel */
+	const char *web_string; /* Interface name as shown in the web browser */
 } dev_family;
 
 extern dev_family _devices[];
 
-dev_family *librouter_device_get_family(const char *name);
+dev_family *librouter_device_get_family_by_name(const char *name, string_type type);
+dev_family *librouter_device_get_family_by_type(device_type type);
 char *librouter_device_convert(const char *device, int major, int minor);
 char *librouter_device_convert_os(const char *osdev, int mode);
 char *librouter_device_to_linux_cmdline(char *cmdline);
