@@ -37,6 +37,8 @@
 #include "error.h"
 #include "dev.h"
 #include "device.h"
+#include "../../cish/util/backupd.h" /*FIXME*/
+
 
 static int _librouter_dev_get_ctrlfd(void)
 {
@@ -218,12 +220,39 @@ int librouter_dev_get_mtu(char *dev)
 
 int librouter_dev_set_link_down(char *dev)
 {
-	return _librouter_dev_chflags(dev, 0, IFF_UP);
+	int ret = 0;
+	dev_family *fam = librouter_device_get_family_by_name(dev, str_linux);
+
+	switch (fam->type) {
+	case ppp:
+		librouter_ppp_set_param_backupd(dev,SHUTD_STR,"yes");
+		ret = librouter_ppp_reload_backupd();
+		break;
+	default:
+		ret = _librouter_dev_chflags(dev, 0, IFF_UP);
+		break;
+	}
+
+	return ret;
+
 }
 
 int librouter_dev_set_link_up(char *dev)
 {
-	return _librouter_dev_chflags(dev, IFF_UP, IFF_UP);
+	int ret = 0;
+	dev_family *fam = librouter_device_get_family_by_name(dev, str_linux);
+
+	switch (fam->type) {
+	case ppp:
+		librouter_ppp_set_param_backupd(dev,SHUTD_STR,"no");
+		librouter_ppp_reload_backupd();
+		break;
+	default:
+		ret = _librouter_dev_chflags(dev, IFF_UP, IFF_UP);
+		break;
+	}
+
+	return ret;
 }
 
 int librouter_dev_get_link(char *dev)
@@ -595,26 +624,31 @@ int librouter_dev_shutdown(char *dev)
 	librouter_qos_tc_remove_all(dev);
 	librouter_dev_set_link_down(dev);
 	return 0;
+
 }
 
 int librouter_dev_noshutdown(char *dev)
 {
+	int major=0;
 	dev_family *fam = librouter_device_get_family_by_name(dev, str_linux);
 
 	if (librouter_dev_set_link_up(dev) < 0)
 		return -1;
 
-	if (fam) {
-		int major = librouter_device_get_major(dev, str_linux);
-		switch (fam->type) {
-		case eth:
-			librouter_udhcpd_reload(major); /* dhcp integration! force reload ethernet address */
-			librouter_qos_tc_insert_all(dev);
-			break;
-		default:
-			break;
-		}
+	if (fam == NULL)
+		return 0;
+
+	major = librouter_device_get_major(dev, str_linux);
+
+	switch (fam->type) {
+	case eth:
+		librouter_udhcpd_reload(major); /* dhcp integration! force reload ethernet address */
+		librouter_qos_tc_insert_all(dev);
+		break;
+	default:
+		break;
 	}
+
 #ifdef OPTION_SMCROUTE
 	librouter_smc_route_hup();
 #endif
