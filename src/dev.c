@@ -36,6 +36,7 @@
 #include "ip.h"
 #include "error.h"
 #include "dev.h"
+#include "device.h"
 
 static int _libconfig_dev_get_ctrlfd(void)
 {
@@ -587,6 +588,37 @@ int libconfig_arp_add(char *host, char *mac)
 	}
 
 	return (0);
+}
+
+int libconfig_dev_shutdown(char *dev)
+{
+	libconfig_qos_tc_remove_all(dev);
+	libconfig_dev_set_link_down(dev);
+	return 0;
+}
+
+int libconfig_dev_noshutdown(char *dev)
+{
+	dev_family *fam = libconfig_device_get_family_by_name(dev, str_linux);
+
+	if (libconfig_dev_set_link_up(dev) < 0)
+		return -1;
+
+	if (fam) {
+		int major = libconfig_device_get_major(dev, str_linux);
+		switch (fam->type) {
+		case eth:
+			libconfig_udhcpd_reload(major); /* dhcp integration! force reload ethernet address */
+			libconfig_qos_tc_insert_all(dev);
+			break;
+		default:
+			break;
+		}
+	}
+#ifdef OPTION_SMCROUTE
+	libconfig_smc_route_hup();
+#endif
+	return 0;
 }
 
 int notify_driver_about_shutdown(char *dev)
