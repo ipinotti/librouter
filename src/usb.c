@@ -32,7 +32,7 @@
  * criados segundo a porta do HUB_USB, apontado pelo ADDR_USB
  *
  * @param port
- * @return
+ * @return 1 if device is connected, 0 if not
  */
 int librouter_usb_device_is_connected(int port)
 {
@@ -64,7 +64,7 @@ int librouter_usb_device_is_connected(int port)
  * OBS: a verificação da existencia de disp. USB conectado é feita através da análise de diretórios
  * criados segundo a porta do HUB_USB
  * @param port
- * @return
+ * @return 1 if device is a modem, 0 if not
  */
 int librouter_usb_device_is_modem(int port)
 {
@@ -100,10 +100,10 @@ res:
  * É passado por parâmetro uma struct (lusb_dev), a qual é preenchida com informações retiradas do
  * dispositivo USB através da libusb
  *
- * Retorna 1 se a função conseguiu adquirir as informações da porta USB apontada
+ * Retorna 0 se a função conseguiu adquirir as informações da porta USB apontada
  * Retorna -1 caso não consiga adquirir as informações, devido a inexistencia do dispositivo apontado
  * @param usb
- * @return
+ * @return 0 if OK, -1 if not
  */
 int librouter_usb_get_descriptor(librouter_usb_dev * usb)
 {
@@ -183,7 +183,7 @@ int librouter_usb_get_descriptor(librouter_usb_dev * usb)
 			libusb_close(handle);
 			libusb_free_device_list(devs, 1);
 			libusb_exit(NULL);
-			return 1;
+			return 0;
 		}
 	}
 
