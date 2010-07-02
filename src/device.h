@@ -26,6 +26,7 @@ extern dev_family _devices[];
 
 dev_family *librouter_device_get_family_by_name(const char *name, string_type type);
 dev_family *librouter_device_get_family_by_type(device_type type);
+int librouter_device_get_major(const char *name, string_type type);
 char *librouter_device_convert(const char *device, int major, int minor);
 char *librouter_device_convert_os(const char *osdev, int mode);
 char *librouter_device_to_linux_cmdline(char *cmdline);
