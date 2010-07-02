@@ -37,6 +37,8 @@
 #include "error.h"
 #include "dev.h"
 #include "device.h"
+#include "../../cish/util/backupd.h" /*FIXME*/
+
 
 static int _libconfig_dev_get_ctrlfd(void)
 {
@@ -218,12 +220,39 @@ int libconfig_dev_get_mtu(char *dev)
 
 int libconfig_dev_set_link_down(char *dev)
 {
-	return _libconfig_dev_chflags(dev, 0, IFF_UP);
+	int ret = 0;
+	dev_family *fam = libconfig_device_get_family_by_name(dev, str_linux);
+
+	switch (fam->type) {
+	case ppp:
+		libconfig_ppp_set_param_backupd(dev,SHUTD_STR,"yes");
+		ret = libconfig_ppp_reload_backupd();
+		break;
+	default:
+		ret = _libconfig_dev_chflags(dev, 0, IFF_UP);
+		break;
+	}
+
+	return ret;
+
 }
 
 int libconfig_dev_set_link_up(char *dev)
 {
-	return _libconfig_dev_chflags(dev, IFF_UP, IFF_UP);
+	int ret = 0;
+	dev_family *fam = libconfig_device_get_family_by_name(dev, str_linux);
+
+	switch (fam->type) {
+	case ppp:
+		libconfig_ppp_set_param_backupd(dev,SHUTD_STR,"no");
+		libconfig_ppp_reload_backupd();
+		break;
+	default:
+		ret = _libconfig_dev_chflags(dev, IFF_UP, IFF_UP);
+		break;
+	}
+
+	return ret;
 }
 
 int libconfig_dev_get_link(char *dev)
@@ -595,26 +624,31 @@ int libconfig_dev_shutdown(char *dev)
 	libconfig_qos_tc_remove_all(dev);
 	libconfig_dev_set_link_down(dev);
 	return 0;
+
 }
 
 int libconfig_dev_noshutdown(char *dev)
 {
+	int major=0;
 	dev_family *fam = libconfig_device_get_family_by_name(dev, str_linux);
 
 	if (libconfig_dev_set_link_up(dev) < 0)
 		return -1;
 
-	if (fam) {
-		int major = libconfig_device_get_major(dev, str_linux);
-		switch (fam->type) {
-		case eth:
-			libconfig_udhcpd_reload(major); /* dhcp integration! force reload ethernet address */
-			libconfig_qos_tc_insert_all(dev);
-			break;
-		default:
-			break;
-		}
+	if (fam == NULL)
+		return 0;
+
+	major = libconfig_device_get_major(dev, str_linux);
+
+	switch (fam->type) {
+	case eth:
+		libconfig_udhcpd_reload(major); /* dhcp integration! force reload ethernet address */
+		libconfig_qos_tc_insert_all(dev);
+		break;
+	default:
+		break;
 	}
+
 #ifdef OPTION_SMCROUTE
 	libconfig_smc_route_hup();
 #endif

@@ -23,7 +23,7 @@
 #include "ipsec.h"
 #include "ip.h"
 #include "pam.h"
-#include "../../cish/util/backupd.h"
+#include "../../cish/util/backupd.h" /*FIXME*/
 
 
 
@@ -82,7 +82,7 @@ end:
  * @param intf
  * @param field
  * @param value
- * @return 0 if sucess, -1 if it had problems with the file
+ * @return 0 if success, -1 if it had problems with the file
  */
 int libconfig_ppp_set_param_backupd(char * intf, char * field, char *value)
 {
