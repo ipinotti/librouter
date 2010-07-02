@@ -138,5 +138,10 @@ int libconfig_ppp_l2tp_set_config(char *name, ppp_config *cfg);
 void libconfig_ppp_l2tp_set_defaults(char *name, ppp_config *cfg);
 
 int libconfig_ppp_reload_backupd(void);
+int libconfig_ppp_set_param_backupd(char * intf, char * field, char *value);
+int libconfig_ppp_verif_param_backupd(char * intf, char *field, char *value);
+
+
+
 
 #endif /* PPP_H_ */
