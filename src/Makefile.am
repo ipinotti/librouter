@@ -52,12 +52,12 @@ librouter_la_LIBADD = $(top_builddir)/src/libnetlink/libnetlink.la
 libroutersnmp_la_SOURCES = \
 	snmp.c
 
-libroutersnmp_ladir = $(includedir)/libconfig
+libroutersnmp_ladir = $(includedir)/librouter
 
 libroutersnmp_la_HEADERS = \
 	snmp.h
 
-librouter_ladir = $(includedir)/libconfig
+librouter_ladir = $(includedir)/librouter
 librouter_la_HEADERS = \
 	acl.h \
 	args.h \
