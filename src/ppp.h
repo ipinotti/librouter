@@ -8,6 +8,8 @@
 #define PPP_H_
 
 #include <linux/config.h>
+#include "../../cish/util/backupd.h" /*FIXME*/
+
 
 /* 0 1 2 */
 #define PPP_CFG_FILE "/var/run/serial%d.config"
@@ -111,6 +113,7 @@ typedef struct {
 	int multilink;
 	int debug;
 	char apn[MAX_PPP_APN];
+	struct bckp_conf_t bckp_conf;
 #ifdef CONFIG_HDLC_SPPP_LFI
 int fragment_size;
 int priomarks[CONFIG_MAX_LFI_PRIORITY_MARKS];
@@ -138,7 +141,9 @@ int librouter_ppp_l2tp_set_config(char *name, ppp_config *cfg);
 void librouter_ppp_l2tp_set_defaults(char *name, ppp_config *cfg);
 
 int librouter_ppp_reload_backupd(void);
-int librouter_ppp_set_param_backupd(char * intf, char * field, char *value);
-int librouter_ppp_verif_param_backupd(char * intf, char *field, char *value);
+int librouter_ppp_set_param_infile_backupd(char * intf, char * field, char *value);
+int librouter_ppp_verif_param_infile_backupd(char * intf, char *field, char *value);
+int librouter_ppp_verif_param_byintf_infile_backupd(char * intf, char *field, char *value);
+
 
 #endif /* PPP_H_ */
