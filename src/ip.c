@@ -853,6 +853,11 @@ int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf)
 	int ret = -1;
 	int i;
 	char daemon_dhcpc[32];
+	int is_sub_iface = 0;
+
+	if (strstr(interface, ".") != NULL) /* Is sub-interface? */
+		is_sub_iface = 1;
+
 
 	memset(&info, 0, sizeof(struct intf_info));
 	memset(conf, 0, sizeof(struct interface_conf));
@@ -891,6 +896,10 @@ int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf)
 		conf->stats = &info.link[i].stats;
 		conf->linktype = info.link[i].type;
 		conf->mac[0] = 0;
+
+		/* FIXME Do we really need this? For now,
+		 * we use this information to find sub-interfaces */
+		conf->info = &info;
 
 		/* Get ethernet 0 MAC if not an ethernet interface */
 		if (librouter_ip_get_mac(

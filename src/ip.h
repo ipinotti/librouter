@@ -24,8 +24,7 @@ typedef struct in_addr IP;
 //#define DEBUG
 #ifdef DEBUG
 #define ip_dbg(x,...) \
-	printf("%s : %d => ", __FUNCTION__, __LINE__); \
-	printf(x,##__VA_ARGS__)
+	printf("%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 #else
 #define ip_dbg(x,...)
 #endif
@@ -62,9 +61,7 @@ struct interface_conf {
 	struct ip_t main_ip;
 	struct ip_t sec_ip[MAX_NUM_IPS];
 	int dhcpc; /* DHCP Client running ? */
-	enum dump_type {
-		DUMP_INTF_CONFIG, DUMP_INTF_STATUS
-	} type;
+	struct intf_info *info;
 };
 
 struct ipaddr_table {
