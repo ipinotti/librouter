@@ -138,12 +138,10 @@ int librouter_str_replace_string_in_file(char *filename, char *key, char *value)
 	unlink(filename);
 	rename(filename_new, filename);
 	ret = 0;
-end:
-	if (buf)
+	end: if (buf)
 		free(buf);
 	return ret;
-error:
-	if (fd)
+	error: if (fd)
 		close(fd);
 	goto end;
 }
@@ -165,10 +163,7 @@ error:
  * @param len
  * @return
  */
-int librouter_str_find_string_in_file(char *filename,
-                                      char *key,
-                                      char *buffer,
-                                      int len)
+int librouter_str_find_string_in_file(char *filename, char *key, char *buffer, int len)
 {
 	int fd = 0, size;
 	char *buf = NULL, *p, *p2;
@@ -209,12 +204,10 @@ int librouter_str_find_string_in_file(char *filename,
 	memcpy(buffer, p, size);
 	buffer[size] = 0;
 	ret = 0;
-end:
-	if (buf)
+	end: if (buf)
 		free(buf);
 	return ret;
-error:
-	if (fd)
+	error: if (fd)
 		close(fd);
 	goto end;
 }
@@ -289,13 +282,11 @@ int librouter_str_replace_exact_string(char *filename, char *key, char *value)
 	close(fd);
 	ret = 0;
 
-end:
-	if (buf)
+	end: if (buf)
 		free(buf);
 	return ret;
 
-error:
-	if (fd)
+	error: if (fd)
 		close(fd);
 	goto end;
 }
@@ -364,3 +355,77 @@ unsigned int librouter_str_read_password(int echo_on, char *store, unsigned int 
 	return len;
 }
 
+/**
+ * librouter_str_add_line_to_file	Add line to end of file
+ *
+ * @param filename
+ * @param line
+ * @return 0 if success, -1 otherwise
+ */
+int librouter_str_add_line_to_file(char *filename, char *line)
+{
+	FILE *f;
+
+	f = fopen(filename, "r+");
+	if (f == NULL)
+		return -1;
+
+	if (fseek(f, 0, SEEK_END) < 0) {
+		fclose(f);
+		return -1;
+	}
+
+	fwrite(line, strlen(line), 1, f);
+
+	fclose(f);
+	return 0;
+}
+
+/**
+ * librouter_str_del_line_in_file	Delete line in file
+ *
+ * @param filename
+ * @param line
+ * @return 0 if success, -1 otherwise
+ */
+int librouter_str_del_line_in_file(char *filename, char *key)
+{
+	FILE *f, *fn;
+	struct stat st;
+	char new_filename[64];
+	char line[128];
+
+	f = fopen(filename, "r");
+	if (f == NULL) {
+		librouter_pr_error(1, "could not open %s", filename);
+		return -1;
+	}
+
+
+	snprintf(new_filename, sizeof(new_filename), "%s.new", filename);
+	fn = fopen(new_filename, "w");
+	if (fn == NULL) {
+		librouter_pr_error(1, "could not open %s", new_filename);
+		fclose(f);
+		return -1;
+	}
+
+	while (fgets(line, sizeof(line), f) != NULL) {
+		if (strstr(line, key))
+			continue; /* Found key, ignore this line */
+		if (fwrite(line, strlen(line), 1, fn) < 0) {
+			librouter_pr_error(1, "could not write to %s", new_filename);
+			fclose(f);
+			fclose(fn);
+			return -1;
+		}
+	}
+
+	fclose(f);
+	fclose(fn);
+
+	unlink(filename);
+	rename(new_filename, filename);
+
+	return 0;
+}

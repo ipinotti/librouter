@@ -22,4 +22,7 @@ unsigned int librouter_str_read_password(int echo_on,
                                          char *store,
                                          unsigned int max_len);
 
+int librouter_str_add_line_to_file(char *filename, char *line);
+int librouter_str_del_line_in_file(char *filename, char *key);
+
 #endif /* STR_H_ */
