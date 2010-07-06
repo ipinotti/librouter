@@ -6,7 +6,6 @@
 
 #ifndef OPTIONS_H_
 #define OPTIONS_H_
-/* #include <linux/config.h> */
 
 /*****************************************************************************/
 /* Defines for Digistar Models ***********************************************/
@@ -36,6 +35,8 @@
 #undef OPTION_VRRP
 #define OPTION_HTTP
 #define OPTION_HTTPS
+
+#undef OPTION_DHCP_NETBIOS
 
 /* HTTP Server */
 #define HTTP_DAEMON		"wnsd"
