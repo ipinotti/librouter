@@ -7,6 +7,25 @@
 #ifndef DHCP_H_
 #define DHCP_H_
 
+#define DHCP_DEBUG
+#ifdef DHCP_DEBUG
+#define dhcp_dbg(x,...) \
+	printf("%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#else
+#define dhcp_dbg(x,...)
+#endif
+
+struct dhcp_server_conf_t {
+	char *pool_start;
+	char *pool_end;
+	char *default_router;
+	char *domain;
+	char *dnsserver;
+	int default_lease_time;
+	int max_lease_time;
+	int enable;
+};
+
 #define UDHCPD
 
 enum {
@@ -19,11 +38,11 @@ enum {
 #define DHCP_INTF_FILE "/var/run/l2tp_dhcp.interface"
 
 #ifdef UDHCPD
-#define DHCPD_DAEMON_LOCAL "/sbin/udhcpd /etc/udhcpd.loopback0.conf"
+#define DHCPD_DAEMON_LOCAL "/sbin/udhcpd -f -S /etc/udhcpd.loopback0.conf"
 #define FILE_DHCPDCONF_LOCAL "/etc/udhcpd.loopback0.conf"
 #define FILE_DHCPDLEASES_LOCAL "/etc/udhcpd.loopback0.leases"
 #define FILE_DHCPDPID_LOCAL "/var/run/udhcpd.loopback0.pid"
-#define DHCPD_DAEMON "/sbin/udhcpd /etc/udhcpd.ethernet%d.conf"
+#define DHCPD_DAEMON "/sbin/udhcpd -f -S /etc/udhcpd.ethernet%d.conf"
 #define FILE_DHCPDCONF "/etc/udhcpd.ethernet%d.conf"
 #define FILE_DHCPDLEASES "/etc/udhcpd.ethernet%d.leases"
 #define FILE_DHCPD_PID_ETH "/var/run/udhcpd.ethernet%d.pid"
@@ -37,6 +56,8 @@ enum {
 #define DHCRELAY_DAEMON "dhcrelay"
 #define DHCPC_DAEMON "udhcpc -i %s"
 
+#define DHCPD_CONFIG_FILE "/etc/dhcpd.conf"
+
 int librouter_udhcpd_reload(int eth);
 int librouter_udhcpd_kick_by_eth(int eth);
 int librouter_udhcpd_kick_by_name(char *iface);
@@ -45,8 +66,28 @@ int librouter_dhcp_get_status(void);
 int librouter_dhcp_set_none(void);
 int librouter_dhcp_set_no_server(void);
 int librouter_dhcp_set_no_relay(void);
+
 int librouter_dhcp_set_server(int save_dns, char *cmdline);
 int librouter_dhcp_get_server(char *buf);
+
+
+int librouter_dhcp_server_set_dnsserver(char *dns);
+int librouter_dhcp_server_set_leasetime(int time);
+int librouter_dhcp_server_set_maxleasetime(int time);
+int librouter_dhcp_server_set_domain(char *domain);
+int librouter_dhcp_server_set_nbns(char *ns);
+int librouter_dhcp_server_set_nbdd(char *dd);
+int librouter_dhcp_server_set_nbnt(int nt);
+int librouter_dhcp_server_set_router(char *router);
+int librouter_dhcp_server_set_network(char *network, char *mask);
+int librouter_dhcp_server_set_pool(char *start, char *end);
+int librouter_dhcp_server_set(int enable);
+
+
+
+
+
+
 int librouter_dhcp_check_server(char *ifname);
 int librouter_dhcp_set_relay(char *servers);
 int librouter_dhcp_get_relay(char *buf);

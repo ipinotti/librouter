@@ -713,27 +713,71 @@ void librouter_config_clock_dump(FILE *out)
 	}
 }
 
+static void _dump_dhcp_server(FILE *out)
+{
+	struct dhcp_server_conf_t dhcp;
+
+	librouter_dhcp_server_get_config(&dhcp);
+
+	fprintf(out, "ip dhcp server\n");
+
+	if (dhcp.pool_start && dhcp.pool_end)
+		fprintf(out, " pool %s %s\n", dhcp.pool_start, dhcp.pool_end);
+
+	if (dhcp.dnsserver)
+		fprintf(out, " dns %s\n", dhcp.dnsserver);
+	if (dhcp.domain)
+		fprintf(out, " domain-name %s\n", dhcp.domain);
+
+	if (dhcp.default_lease_time) {
+		int days = dhcp.default_lease_time/(24*3600);
+		dhcp.default_lease_time -= days*24*3600;
+		int hours = dhcp.default_lease_time/3600;
+		dhcp.default_lease_time -= hours*3600;
+		int minutes = dhcp.default_lease_time/60;
+		dhcp.default_lease_time -= minutes*60;
+		int seconds = dhcp.default_lease_time;
+		fprintf(out, " default-lease-time %d %d %d %d\n",
+		        days, hours, minutes, seconds);
+	}
+
+	if (dhcp.max_lease_time) {
+		int days = dhcp.max_lease_time/(24*3600);
+		dhcp.max_lease_time -= days*24*3600;
+		int hours = dhcp.max_lease_time/3600;
+		dhcp.max_lease_time -= hours*3600;
+		int minutes = dhcp.max_lease_time/60;
+		dhcp.max_lease_time -= minutes*60;
+		int seconds = dhcp.max_lease_time;
+		fprintf(out, " max-lease-time %d %d %d %d\n",
+		        days, hours, minutes, seconds);
+	}
+
+	if (dhcp.default_router)
+		fprintf(out, " router %s\n", dhcp.default_router);
+
+	if (dhcp.enable)
+		fprintf(out, " enable\n");
+	else
+		fprintf(out, " no enable\n");
+
+	librouter_dhcp_server_free_config(&dhcp);
+	fprintf(out, "!\n");
+}
+
 void librouter_config_ip_dump_servers(FILE *out)
 {
 	char buf[2048];
-	int dhcp;
+	int dhcp_mode = librouter_dhcp_get_status();
 
-	dhcp = librouter_dhcp_get_status();
+	_dump_dhcp_server(out);
 
-	if (dhcp == DHCP_SERVER) {
-		if (librouter_dhcp_get_server(buf) == 0) {
-			fprintf(out, "%s\n", buf);
-			fprintf(out, "no ip dhcp relay\n");
-		}
-	} else if (dhcp == DHCP_RELAY) {
-		if (librouter_dhcp_get_relay(buf) == 0) {
-			fprintf(out, "no ip dhcp server\n");
+	if (dhcp_mode == DHCP_RELAY) {
+		if (librouter_dhcp_get_relay(buf) == 0)
 			fprintf(out, "ip dhcp relay %s\n", buf);
-		}
-	} else {
-		fprintf(out, "no ip dhcp server\n");
+	} else
 		fprintf(out, "no ip dhcp relay\n");
-	}
+
 
 	fprintf(out, "%sip dns relay\n",
 	                librouter_exec_check_daemon(DNS_DAEMON) ? "" : "no ");
@@ -897,6 +941,23 @@ static void _dump_intf_ipaddr_config(FILE *out, struct interface_conf *conf)
 		fprintf(out, " no ip address\n");
 }
 
+static void _dump_vlans(FILE *out, struct interface_conf *conf)
+{
+	char *osdev = conf->name;
+	char devtmp[32];
+	int i;
+
+	/* search for VLAN */
+	strncpy(devtmp, osdev, 14);
+	strcat(devtmp, ".");
+	for (i = 0; i < MAX_NUM_LINKS; i++) {
+		if (strncmp(conf->info->link[i].ifname, devtmp, strlen(devtmp)) == 0) {
+			fprintf(out, " vlan %s\n", conf->info->link[i].ifname
+					+ strlen(devtmp));
+		}
+	}
+}
+
 static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 {
 	/* Interface name (linux name) */
@@ -950,17 +1011,8 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	if (conf->txqueue)
 		fprintf(out, " txqueuelen %d\n", conf->txqueue);
 
-#if 0
-	/* search for VLAN */
-	strncpy(devtmp, osdev, 14);
-	strcat(devtmp, ".");
-	for (i = 0; i < MAX_NUM_LINKS; i++) {
-		if (strncmp(conf->info->link[i].ifname, devtmp, strlen(devtmp)) == 0) {
-			fprintf(out, " vlan %s\n", conf->info->link[i].ifname
-					+ strlen(devtmp));
-		}
-	}
-#endif
+
+	_dump_vlans(out, conf);
 
 	/* Show line status if main interface. Avoid VLANs ... */
 	if (strchr(osdev, '.') == NULL) {
@@ -1030,14 +1082,6 @@ static void _dump_tunnel_config(FILE *out, struct interface_conf *conf)
 #endif
 
 #ifdef OPTION_PPP
-
-
-
-
-
-
-
-
 static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 {
 	ppp_config cfg;
@@ -1137,9 +1181,18 @@ void librouter_config_interfaces_dump(FILE *out)
 	struct net_device_stats *st;
 
 	struct interface_conf conf;
+	struct intf_info info;
 
-	char intf_list[32][16] = { "ethernet0", "ethernet1", "loopback0",
-	                "ppp0", "ppp1", "ppp2", "\0" };
+	//char intf_list[32][16] = { "ethernet0", "ethernet1", "loopback0",
+	//                "ppp0", "ppp1", "ppp2", "\0" };
+
+	char *intf_list[MAX_NUM_LINKS];
+
+	/* Get interface names */
+	ret = librouter_ip_get_if_list(&info);
+	for (i = 0; i < MAX_NUM_LINKS; i++) {
+		intf_list[i] = info.link[i].ifname;
+	}
 
 #if 0
 	int vlan_cos=NONE_TO_COS;

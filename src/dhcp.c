@@ -112,11 +112,11 @@ int librouter_udhcpd_kick_by_name(char *ifname)
 int librouter_dhcp_get_status(void)
 {
 	int ret = DHCP_NONE;
-	char daemon0[64];
+	char dhcp_server[64];
 
-	sprintf(daemon0, DHCPD_DAEMON, 0);
+	sprintf(dhcp_server, DHCPD_DAEMON, 0);
 
-	if (librouter_exec_check_daemon(daemon0))
+	if (librouter_exec_check_daemon(dhcp_server))
 		return DHCP_SERVER;
 
 	if (librouter_exec_check_daemon(DHCRELAY_DAEMON))
@@ -195,13 +195,13 @@ int librouter_dhcp_set_no_relay(void)
 
 #define NEED_ETHERNET_SUBNET /* verifica se a rede/mascara eh a da ethernet */
 /* ip dhcp server NETWORK MASK POOL-START POOL-END [dns-server DNS1 dns-server DNS2 router ROUTER domain-name DOMAIN default-lease-time D H M S max-lease-time D H M S] */
+
 int librouter_dhcp_set_server(int save_dns, char *cmdline)
 {
 	int i, eth;
-	char *network = NULL, *mask = NULL, *pool_start = NULL, *pool_end =
-	                NULL, *dns1 = NULL, *dns2 = NULL, *router = NULL,
-	                *domain_name = NULL, *netbios_name_server = NULL,
-	                *netbios_dd_server = NULL;
+	char *network = NULL, *mask = NULL, *pool_start = NULL, *pool_end = NULL, *dns1 = NULL,
+	                *dns2 = NULL, *router = NULL, *domain_name = NULL, *netbios_name_server =
+	                                NULL, *netbios_dd_server = NULL;
 	char *p;
 	int netbios_node_type = 0;
 	unsigned long default_lease_time = 0L, max_lease_time = 0L;
@@ -231,10 +231,8 @@ int librouter_dhcp_set_server(int save_dns, char *cmdline)
 	eth_network.s_addr = eth_addr.s_addr & eth_mask.s_addr;
 	inet_aton(network, &dhcp_network);
 	inet_aton(mask, &dhcp_mask);
-	if ((dhcp_network.s_addr != eth_network.s_addr) || (dhcp_mask.s_addr
-	                != eth_mask.s_addr)) {
-		librouter_pr_error(0,
-		                "network segment not in ethernet segment address");
+	if ((dhcp_network.s_addr != eth_network.s_addr) || (dhcp_mask.s_addr != eth_mask.s_addr)) {
+		librouter_pr_error(0, "network segment not in ethernet segment address");
 		librouter_destroy_args(args);
 		return (-1);
 	} else {
@@ -315,7 +313,6 @@ int librouter_dhcp_set_server(int save_dns, char *cmdline)
 
 	fprintf(file, "#%s\n", cmdline);
 
-#ifdef UDHCPD
 	fprintf(file, "interface ethernet%d\n", eth);
 	fprintf(file, "lease_file "FILE_DHCPDLEASES"\n", eth);
 	fprintf(file, "pidfile "FILE_DHCPD_PID_ETH"\n", eth);
@@ -352,36 +349,7 @@ int librouter_dhcp_set_server(int save_dns, char *cmdline)
 
 	if (netbios_node_type)
 		fprintf(file, "opt winsnode %d\n", netbios_node_type);
-#else
-	fprintf(file, "ddns-update-style none;\n");
-	fprintf(file, "subnet %s netmask %s\n", network, mask);
-	fprintf(file, "{\n");
-	fprintf(file, " range %s %s;\n", pool_start, pool_end);
-	fprintf(file, " default-lease-time %lu;\n", default_lease_time ? default_lease_time : 300L);
-	fprintf(file, " max-lease-time %lu;\n", max_lease_time ? max_lease_time : 300L);
 
-	if (dns1) {
-		fprintf(file, " option domain-name-servers %s", dns1);
-		if (dns2) fprintf(file, ",%s;\n", dns2); else fprintf(file, ";\n");
-	}
-
-	if (router)
-		fprintf(file, " option routers %s;\n", router);
-
-	if (domain_name)
-		fprintf(file, " option domain-name \"%s\";\n", domain_name);
-
-	if (netbios_name_server)
-		fprintf(file, " option netbios-name-servers %s;\n", netbios_name_server);
-
-	if (netbios_dd_server)
-		fprintf(file, " option netbios-dd-server %s;\n", netbios_dd_server);
-
-	if (netbios_node_type)
-		fprintf(file, " option netbios-node-type %d;\n", netbios_node_type);
-
-	fprintf(file, "}\n");
-#endif
 	fclose(file);
 	librouter_destroy_args(args);
 
@@ -401,6 +369,383 @@ int librouter_dhcp_set_server(int save_dns, char *cmdline)
 
 	/* poe o dhcpd para rodar */
 	return librouter_dhcpd_set_status(1, eth);
+}
+
+int librouter_dhcp_server_set_dnsserver(char *dns)
+{
+	char buf[32];
+	char filename[32];
+
+	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+
+	if (dns != NULL) {
+		snprintf(buf, sizeof(buf), "%s", dns);
+		if (librouter_str_replace_string_in_file(filename, "opt dns ", buf) == 0)
+			return 0; /* Done */
+
+		snprintf(buf, sizeof(buf), "opt dns %s\n", dns);
+		librouter_str_add_line_to_file(filename, buf);
+	} else
+		librouter_str_del_line_in_file(filename, "opt dns");
+	return 0;
+}
+
+int librouter_dhcp_server_get_dnsserver(char **dns)
+{
+	char buf[64];
+	char filename[32];
+
+	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+
+	memset(buf, 0, sizeof(buf));
+
+	librouter_str_find_string_in_file(filename, "opt dns", buf, sizeof(buf));
+
+	if (buf[0])
+		*dns = strdup(buf);
+	else
+		*dns = NULL;
+
+	return 0;
+}
+
+int librouter_dhcp_server_set_leasetime(int time)
+{
+	char buf[32];
+	char filename[32];
+
+	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+
+	memset(buf, 0, sizeof(buf));
+	if (time > 0) {
+		snprintf(buf, sizeof(buf), "%d", time);
+		if (librouter_str_replace_string_in_file(filename, "opt lease ", buf) == 0)
+			return 0; /* Done */
+
+		snprintf(buf, sizeof(buf), "opt lease %d\n", time);
+		librouter_str_add_line_to_file(filename, buf);
+	} else
+		librouter_str_del_line_in_file(filename, "opt lease");
+	return 0;
+}
+
+int librouter_dhcp_server_get_leasetime(int *time)
+{
+	char buf[64];
+	char filename[32];
+
+	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+
+	memset(buf, 0, sizeof(buf));
+
+	librouter_str_find_string_in_file(filename, "opt lease", buf, sizeof(buf));
+
+	if (buf[0])
+		*time = atoi(buf);
+	else
+		*time = 0;
+
+	return 0;
+}
+
+int librouter_dhcp_server_set_maxleasetime(int time)
+{
+	char buf[32];
+	char filename[32];
+
+	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+
+	if (time > 0) {
+		snprintf(buf, sizeof(buf), "%d", time);
+		if (librouter_str_replace_string_in_file(filename, "decline_time ", buf)
+		                == 0)
+			return 0; /* Done */
+
+		snprintf(buf, sizeof(buf), "decline_time %d\n", time);
+		librouter_str_add_line_to_file(filename, buf);
+	} else
+		librouter_str_del_line_in_file(filename, "decline_time");
+
+	return 0;
+}
+
+int librouter_dhcp_server_get_maxleasetime(int *time)
+{
+	char buf[64];
+	char filename[32];
+
+	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+
+	memset(buf, 0, sizeof(buf));
+
+	librouter_str_find_string_in_file(filename, "decline_time", buf, sizeof(buf));
+
+	if (buf[0])
+		*time = atoi(buf);
+	else
+		*time = 0;
+
+	return 0;
+}
+
+int librouter_dhcp_server_set_domain(char *domain)
+{
+	char buf[64];
+	char filename[32];
+
+	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+
+	if (domain != NULL) {
+		snprintf(buf, sizeof(buf), "%s", domain);
+		if (librouter_str_replace_string_in_file(filename, "opt domain ", buf)
+		                == 0)
+			return 0; /* Done */
+
+		snprintf(buf, sizeof(buf), "opt domain %s\n", domain);
+		librouter_str_add_line_to_file(filename, buf);
+	} else
+		librouter_str_del_line_in_file(filename, "opt domain");
+	return 0;
+}
+
+int librouter_dhcp_server_get_domain(char **domain)
+{
+	char buf[64];
+	char filename[32];
+
+	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+
+	memset(buf, 0, sizeof(buf));
+
+	librouter_str_find_string_in_file(filename, "opt domain", buf, sizeof(buf));
+
+	if (buf[0])
+		*domain = strdup(buf);
+	else
+		*domain = NULL;
+
+	return 0;
+}
+
+#ifdef OPTION_DHCP_NETBIOS
+int librouter_dhcp_server_set_nbns(char *ns)
+{
+	char buf[64];
+
+	snprintf(buf, sizeof(buf), "%s", ns);
+	if (librouter_str_replace_string_in_file(filename,
+					"opt wins ", buf) == 0)
+	return 0; /* Done */
+
+	snprintf(buf, sizeof(buf), "opt wins %s\n", ns);
+	librouter_str_add_line_to_file(filename, buf);
+	return 0;
+}
+
+int librouter_dhcp_server_set_nbdd(char *dd)
+{
+	char buf[64];
+
+	snprintf(buf, sizeof(buf), "%s", dd);
+	if (librouter_str_replace_string_in_file(filename,
+					"opt winsdd ", buf) == 0)
+	return 0; /* Done */
+
+	snprintf(buf, sizeof(buf), "opt winsdd %s\n", dd);
+	librouter_str_add_line_to_file(filename, buf);
+	return 0;
+}
+
+int librouter_dhcp_server_set_nbnt(int nt)
+{
+	char buf[16];
+
+	snprintf(buf, sizeof(buf), "%d", nt);
+	if (librouter_str_replace_string_in_file(filename,
+					"opt lease ", buf) == 0)
+	return 0; /* Done */
+
+	snprintf(buf, sizeof(buf), "opt lease %d\n", nt);
+	librouter_str_add_line_to_file(filename, buf);
+	return 0;
+}
+#endif /* OPTION_DHCP_NETBIOS */
+
+int librouter_dhcp_server_set_router(char *router)
+{
+	char buf[64];
+	char filename[32];
+
+	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+
+	if (router != NULL) {
+		snprintf(buf, sizeof(buf), "%s", router);
+		if (librouter_str_replace_string_in_file(filename, "opt router ", buf)
+		                == 0)
+			return 0; /* Done */
+
+		snprintf(buf, sizeof(buf), "opt router %s\n", router);
+		librouter_str_add_line_to_file(filename, buf);
+	} else
+		librouter_str_del_line_in_file(filename, "opt router");
+
+	return 0;
+}
+
+int librouter_dhcp_server_get_router(char **router)
+{
+	char buf[64];
+	char filename[32];
+
+	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+
+	memset(buf, 0, sizeof(buf));
+
+	librouter_str_find_string_in_file(filename, "opt router", buf, sizeof(buf));
+
+	if (buf[0])
+		*router = strdup(buf);
+	else
+		*router = NULL;
+
+	return 0;
+}
+
+int librouter_dhcp_server_set_network(char *network, char *mask)
+{
+	return 0;
+}
+
+int librouter_dhcp_server_get_network(char **network, char **mask)
+{
+	return 0;
+}
+
+int librouter_dhcp_server_set_pool(char *start, char *end)
+{
+	char filename[32];
+	char buf[32];
+
+	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+	if (start != NULL) {
+		if (librouter_str_replace_string_in_file(filename, "start", start) < 0) {
+			snprintf(buf, sizeof(buf), "start %s\n", start);
+			librouter_str_add_line_to_file(filename, buf);
+		}
+	}
+	if (end != NULL) {
+		if (librouter_str_replace_string_in_file(filename, "end", end) < 0) {
+			snprintf(buf, sizeof(buf), "end %s\n", end);
+			librouter_str_add_line_to_file(filename, buf);
+		}
+	}
+
+	return 0;
+}
+
+int librouter_dhcp_server_get_pool(char **start, char **end)
+{
+	char buf[64];
+	char filename[32];
+
+	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+
+	memset(buf, 0, sizeof(buf));
+	librouter_str_find_string_in_file(filename, "start", buf, sizeof(buf));
+	if (buf[0])
+		*start = strdup(buf);
+	else
+		*start = NULL;
+
+	memset(buf, 0, sizeof(buf));
+	librouter_str_find_string_in_file(filename, "end", buf, sizeof(buf));
+	if (buf[0])
+		*end = strdup(buf);
+	else
+		*end = NULL;
+
+	return 0;
+}
+
+int librouter_dhcp_server_set(int enable)
+{
+	if (enable) {
+		char filename[64];
+		FILE *file;
+
+		sprintf(filename, FILE_DHCPDLEASES, 0); /* FIXME ONLY ETHERNET 0 */
+		file = fopen(filename, "r");
+
+		if (!file) {
+			/* cria o arquivo de leases em branco */
+			file = fopen(filename, "w");
+		}
+
+		fclose(file);
+		/* se o dhcrelay estiver rodando, tira do ar! */
+		if (librouter_dhcp_get_status() == DHCP_RELAY)
+			librouter_dhcp_set_no_relay();
+
+		/* poe o dhcpd para rodar */
+		return librouter_dhcpd_set_status(1, 0);
+	} else
+		return librouter_dhcpd_set_status(0, 0);
+}
+
+/**
+ * librouter_dhcp_server_set_config 	Configure DHCP Server
+ *
+ * @param dhcp
+ * @return 0 if success, -1 otherwise
+ */
+int librouter_dhcp_server_set_config(struct dhcp_server_conf_t *dhcp)
+{
+	librouter_dhcp_server_set_pool(dhcp->pool_start, dhcp->pool_end);
+	librouter_dhcp_server_set_dnsserver(dhcp->dnsserver);
+	librouter_dhcp_server_set_domain(dhcp->domain);
+	librouter_dhcp_server_set_leasetime(dhcp->default_lease_time);
+	librouter_dhcp_server_set_maxleasetime(dhcp->max_lease_time);
+	librouter_dhcp_server_set_router(dhcp->default_router);
+	librouter_dhcp_server_set(dhcp->enable);
+
+	return 0;
+}
+
+/**
+ * librouter_dhcp_server_get_config	Get DHCP Server configuration
+ *
+ * @param dhcp
+ * @return
+ */
+int librouter_dhcp_server_get_config(struct dhcp_server_conf_t *dhcp)
+{
+	librouter_dhcp_server_get_pool(&dhcp->pool_start, &dhcp->pool_end);
+	librouter_dhcp_server_get_dnsserver(&dhcp->dnsserver);
+	librouter_dhcp_server_get_domain(&dhcp->domain);
+	librouter_dhcp_server_get_leasetime(&dhcp->default_lease_time);
+	librouter_dhcp_server_get_maxleasetime(&dhcp->max_lease_time);
+	librouter_dhcp_server_get_router(&dhcp->default_router);
+
+	if (librouter_dhcp_get_status() == DHCP_SERVER)
+		dhcp->enable = 1;
+	else
+		dhcp->enable = 0;
+
+	return 0;
+}
+
+int librouter_dhcp_server_free_config(struct dhcp_server_conf_t *dhcp)
+{
+	if (dhcp->pool_start)
+		free(dhcp->pool_start);
+	if (dhcp->pool_end)
+		free(dhcp->pool_end);
+	if (dhcp->default_router)
+		free(dhcp->default_router);
+	if (dhcp->domain)
+		free(dhcp->domain);
+	if (dhcp->dnsserver)
+		free(dhcp->dnsserver);
 }
 
 int librouter_dhcp_get_server(char *buf)
@@ -461,14 +806,14 @@ int librouter_dhcp_check_server(char *ifname)
 		inet_aton(args->argv[4], &dhcp_mask);
 		librouter_destroy_args(args);
 
-		librouter_ip_interface_get_info(librouter_ip_ethernet_get_dev(ifname), &eth_addr, &eth_mask, 0, 0);
+		librouter_ip_interface_get_info(librouter_ip_ethernet_get_dev(ifname), &eth_addr,
+		                &eth_mask, 0, 0);
 		eth_network.s_addr = eth_addr.s_addr & eth_mask.s_addr;
 
-		if ((dhcp_network.s_addr != eth_network.s_addr) ||
-			(dhcp_mask.s_addr != eth_mask.s_addr)) {
+		if ((dhcp_network.s_addr != eth_network.s_addr) || (dhcp_mask.s_addr
+		                != eth_mask.s_addr)) {
 
-			fprintf(stderr, "%% disabling dhcp server on %s\n",
-			                ifname);
+			fprintf(stderr, "%% disabling dhcp server on %s\n", ifname);
 			unlink(filename);
 			sprintf(filename, DHCPD_DAEMON, eth);
 
@@ -574,8 +919,7 @@ int librouter_dhcp_l2tp_get_interface(void)
 	fd = open(DHCP_INTF_FILE, O_RDWR);
 	if (fd < 0)
 		return DHCP_INTF_ETHERNET_0;
-	eth_number = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE,
-	                MAP_SHARED, fd, 0);
+	eth_number = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	close(fd);
 	if (*eth_number == 1)
 		return DHCP_INTF_ETHERNET_1;
@@ -590,9 +934,9 @@ int librouter_dhcp_l2tp_get_interface(void)
 int librouter_dhcp_set_server_local(int save_dns, char *cmdline)
 {
 	int i = 3;
-	char *mask = NULL, *pool_start = NULL, *pool_end = NULL, *dns1 = NULL,
-	                *dns2 = NULL, *router = NULL, *domain_name = NULL,
-	                *netbios_name_server = NULL, *netbios_dd_server = NULL;
+	char *mask = NULL, *pool_start = NULL, *pool_end = NULL, *dns1 = NULL, *dns2 = NULL,
+	                *router = NULL, *domain_name = NULL, *netbios_name_server = NULL,
+	                *netbios_dd_server = NULL;
 	char *p;
 	int netbios_node_type = 0;
 	unsigned long default_lease_time = 0L, max_lease_time = 0L;
