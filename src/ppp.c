@@ -23,7 +23,147 @@
 #include "ipsec.h"
 #include "ip.h"
 #include "pam.h"
-#include "../../cish/util/backupd.h" /*FIXME*/
+
+
+/**
+ * Faz a leitura do arquivo de config. do backupd, carregando as infos. referentes
+ * ao serial number(ex:serial number == 0  --> ppp0)
+ * As infos. são passada por parâmetro (struct bckp_conf_t)
+ *
+ * @param serial_num
+ * @param back_conf
+ * @return 0 if OK, -1 if not
+ */
+int librouter_ppp_get_config_backupd (int serial_num, struct bckp_conf_t * back_conf){
+
+	FILE *fd;
+	char line[128] = {(int)NULL};
+	char intf_ref[32];
+	char *p;
+	snprintf(intf_ref,32,"%sppp%d\n",INTF_STR, serial_num);
+
+	if ((fd = fopen(BACKUPD_CONF_FILE, "r")) == NULL) {
+		syslog(LOG_ERR, "Could not open configuration file\n");
+		return -1;
+	}
+
+	while (fgets(line, sizeof(line), fd) != NULL) {
+		if (!strncmp(line, intf_ref, strlen(intf_ref))) {
+
+			/* Interface string */
+			memset(back_conf, 0, sizeof(struct bckp_conf_t));
+			strcpy(back_conf->intf_name, line + INTF_STR_LEN);
+
+			/* Remove any line break */
+			for (p = back_conf->intf_name; *p != '\0'; p++) {
+				if (*p == '\n')
+					*p = '\0';
+			}
+
+			while( (fgets(line, sizeof(line), fd) != NULL) && (strcmp(line, "\n") != 0) ){
+
+				/* Shutdown field */
+				if (!strncmp(line, SHUTD_STR, SHUTD_STR_LEN)) {
+					if (strstr(line, "yes"))
+						back_conf->shutdown = 1;
+					continue;
+				}
+
+				/* Is backup field */
+				if (!strncmp(line, BCKUP_STR, BCKUP_STR_LEN)) {
+					if (strstr(line, "yes"))
+						back_conf->is_backup = 1;
+					continue;
+				}
+
+				/* Main interface field */
+				if (!strncmp(line, MAIN_INTF_STR, MAIN_INTF_STR_LEN)) {
+					strcpy(back_conf->main_intf_name, line + MAIN_INTF_STR_LEN);
+
+					/* Remove any line break */
+					for (p = back_conf->main_intf_name; *p != '\0'; p++) {
+						if (*p == '\n')
+							*p = '\0';
+					}
+					continue;
+				}
+
+				/* Which method */
+				if (!strncmp(line, METHOD_STR, METHOD_STR_LEN)) {
+					if (strstr(line, "link"))
+						back_conf->method = BCKP_METHOD_LINK;
+					else
+						back_conf->method = BCKP_METHOD_PING;
+					continue;
+				}
+
+				/* Is backup field */
+				if (!strncmp(line, PING_ADDR_STR, PING_ADDR_STR_LEN)) {
+					strcpy(back_conf->ping_address, line + PING_ADDR_STR_LEN);
+
+					/* Remove any line break */
+					for (p = back_conf->ping_address; *p != '\0'; p++) {
+						if (*p == '\n')
+							*p = '\0';
+					}
+					continue;
+				}
+			}
+		goto end;
+		}
+
+	}
+
+end:
+	fclose(fd);
+	return 0;
+}
+
+/**
+ * Verifica a existencia de um parametro em uma dada interface, no arquivo de conf. do backupd
+ * BACKUPD_CONF_FILE-> "/etc/backupd/backupd.conf"
+ *
+ * @param intf
+ * @param field
+ * @param value
+ * @return 1 if (field+value) on a given interface is in file, 0 if not
+ */
+int librouter_ppp_verif_param_byintf_infile_backupd(char * intf, char *field, char *value){
+
+	FILE *fd;
+	char line[128] = {(int)NULL};
+	char fvalue[32], intf_ref[32];
+	int verif = 0;
+
+
+	snprintf(intf_ref,32,"%s%s\n",INTF_STR, intf);
+
+	snprintf(fvalue,32,"%s%s\n",field, value);
+
+	if ((fd = fopen(BACKUPD_CONF_FILE, "r")) == NULL) {
+		syslog(LOG_ERR, "Could not open configuration file\n");
+		return;
+	}
+
+	while (fgets(line, sizeof(line), fd) != NULL) {
+		if (!strncmp(line, intf_ref, strlen(intf_ref))) {
+			while( (fgets(line, sizeof(line), fd) != NULL) && (strcmp(line, "\n") != 0) ){
+				if (!strncmp(line, fvalue, strlen(fvalue))){
+					verif = 1;
+					goto end;
+				}
+			}
+			goto end;
+		}
+	}
+
+
+end:
+	fclose(fd);
+
+	return verif;
+
+}
 
 
 
@@ -36,7 +176,7 @@
  * @param intf_return
  * @return 1 and the interface aimed if (field+value) is in file, 0 if not
  */
-int librouter_ppp_verif_param_backupd(char *field, char *value, char * intf_return){
+int librouter_ppp_verif_param_infile_backupd(char *field, char *value, char * intf_return){
 
 	FILE *fd;
 	char line[128] = {(int)NULL};
@@ -84,7 +224,7 @@ end:
  * @param value
  * @return 0 if success, -1 if it had problems with the file
  */
-int librouter_ppp_set_param_backupd(char * intf, char * field, char *value)
+int librouter_ppp_set_param_infile_backupd(char * intf, char * field, char *value)
 {
 	FILE *fd;
 	char line[128] = {(int)NULL};
@@ -285,17 +425,20 @@ int librouter_ppp_set_config(int serial_no, ppp_config *cfg)
 	return librouter_ppp_notify_systtyd();
 }
 
-void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg)
-{
-	int cfg_back = 0;
+void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg){
 
-	/* FIXME */
-	cfg_back = cfg->up;
+	/*
+	 * FIXME
+	 * int cfg_back = 0;
+	 * cfg_back = cfg->up;
+	 */
+
 
 	/* Clean memory! */
 	memset(cfg, 0, sizeof(ppp_config));
-
 	snprintf(cfg->osdevice, 16, "ttyU%d", serial_no);
+
+	librouter_ppp_get_config_backupd(serial_no,&cfg->bckp_conf);
 
 	cfg->unit = serial_no;
 
@@ -305,11 +448,12 @@ void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg)
 
 	cfg->ip_unnumbered = -1;
 
-	/* FIXME */
-	cfg->up = cfg_back;
+	cfg->up = !cfg->bckp_conf.shutdown;
+
 
 	/*
 	 * FIXME
+	 * cfg->up = cfg_back;
 	 * cfg->up = ppp_is_pppd_running(serial_no);
 	 * cfg->backup = -1;
 	 * cfg->novj = 1;

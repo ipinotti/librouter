@@ -1044,8 +1044,6 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 	char *osdev = conf->name;
 	int serial_no;
 
-	cfg.up = conf->up;
-
 	/* Get interface index */
 	serial_no = atoi(osdev + strlen(PPPDEV));
 
@@ -1057,11 +1055,19 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 	librouter_config_rip_dump_interface(out, osdev);
 	librouter_config_ospf_dump_interface(out, osdev);
 
+
 	fprintf(out, " apn set %s\n", cfg.apn);
 	fprintf(out, " username set %s\n", cfg.auth_user);
 	fprintf(out, " password set %s\n", cfg.auth_pass);
 	fprintf(out, " %sshutdown\n", cfg.up ? "no " : "");
-
+	if (cfg.bckp_conf.method == BCKP_METHOD_LINK)
+		fprintf(out, " backup-method link\n");
+	else
+		fprintf(out, " backup-method ping %s\n",cfg.bckp_conf.ping_address);
+	if (cfg.bckp_conf.is_backup)
+		fprintf(out, " backup-interface %8.8s %c\n", cfg.bckp_conf.main_intf_name, cfg.bckp_conf.main_intf_name[8]);
+	else
+		fprintf(out, " no backup-interface\n");
 }
 #endif
 
