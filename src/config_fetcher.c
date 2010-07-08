@@ -1195,7 +1195,7 @@ void librouter_config_interfaces_dump(FILE *out)
 	char *intf_list[MAX_NUM_LINKS];
 
 	/* Get interface names */
-	ret = librouter_ip_get_if_list(&info);
+	librouter_ip_get_if_list(&info);
 	for (i = 0; i < MAX_NUM_LINKS; i++) {
 		intf_list[i] = info.link[i].ifname;
 	}
@@ -1206,7 +1206,7 @@ void librouter_config_interfaces_dump(FILE *out)
 
 	for (i = 0; intf_list[i][0] != '\0'; i++) {
 
-		if (librouter_ip_iface_get_config(intf_list[i], &conf) < 0)
+		if (librouter_ip_iface_get_config(intf_list[i], &conf, &info) < 0)
 			continue;
 
 		st = conf.stats;

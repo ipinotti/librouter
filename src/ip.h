@@ -142,7 +142,7 @@ unsigned int librouter_ip_is_valid_port(char *data);
 unsigned int librouter_ip_is_valid_netmask(char *data);
 int librouter_ip_iface_get_stats(char *ifname, void *store);
 
-int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf);
+int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf, struct intf_info *info);
 void librouter_ip_iface_free_config(struct interface_conf *conf);
 
 #ifdef OPTION_SHM_IP_TABLE
