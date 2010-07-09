@@ -1189,9 +1189,6 @@ void librouter_config_interfaces_dump(FILE *out)
 	struct interface_conf conf;
 	struct intf_info info;
 
-	//char intf_list[32][16] = { "ethernet0", "ethernet1", "loopback0",
-	//                "ppp0", "ppp1", "ppp2", "\0" };
-
 	char *intf_list[MAX_NUM_LINKS];
 
 	/* Get interface names */
