@@ -1103,7 +1103,6 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 	fprintf(out, " apn set %s\n", cfg.apn);
 	fprintf(out, " username set %s\n", cfg.auth_user);
 	fprintf(out, " password set %s\n", cfg.auth_pass);
-	fprintf(out, " %sshutdown\n", cfg.up ? "no " : "");
 	if (cfg.bckp_conf.method == BCKP_METHOD_LINK)
 		fprintf(out, " backup-method link\n");
 	else
@@ -1112,6 +1111,7 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 		fprintf(out, " backup-interface %8.8s %c\n", cfg.bckp_conf.main_intf_name, cfg.bckp_conf.main_intf_name[8]);
 	else
 		fprintf(out, " no backup-interface\n");
+	fprintf(out, " %sshutdown\n", cfg.up ? "no " : "");
 }
 #endif
 
@@ -1213,6 +1213,9 @@ void librouter_config_interfaces_dump(FILE *out)
 
 		cish_dev = librouter_device_convert_os(conf.name, 1);
 
+		printf("INTERFACE APONTADA -> %s  || %s\n\n",conf.name, cish_dev);
+
+
 		/* Ignore if device is not recognized by CISH */
 		if (cish_dev == NULL)
 			continue;
@@ -1245,6 +1248,7 @@ void librouter_config_interfaces_dump(FILE *out)
 		/* Ignore loopbacks that are down */
 		if (conf.linktype == ARPHRD_LOOPBACK && !conf.running)
 			continue;
+
 
 		/* Start dumping information */
 		librouter_config_dump_interface(out, &conf);

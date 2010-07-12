@@ -306,6 +306,7 @@ int librouter_ppp_reload_backupd(void)
 		return (-1);
 	}
 
+
 	return 0;
 }
 
