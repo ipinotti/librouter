@@ -1210,9 +1210,6 @@ void librouter_config_interfaces_dump(FILE *out)
 
 		cish_dev = librouter_device_convert_os(conf.name, 1);
 
-		printf("INTERFACE APONTADA -> %s  || %s\n\n",conf.name, cish_dev);
-
-
 		/* Ignore if device is not recognized by CISH */
 		if (cish_dev == NULL)
 			continue;
