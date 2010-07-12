@@ -46,11 +46,7 @@ static struct {
 #ifdef OPTION_BGP
                 { "bgpd", "BGP Server" },
 #endif
-#ifdef UDHCPD
                 { "udhcpd", "DHCP Server" },
-#else
-                { "dhcpd", "DHCP Server"},
-#endif
                 { "dhcrelay", "DHCP Relay" },
                 { "rfc1356", "RFC1356 Tunnel" },
                 { "dnsmasq", "DNS Relay" },

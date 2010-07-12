@@ -82,10 +82,9 @@ int librouter_dhcp_server_set_router(char *router);
 int librouter_dhcp_server_set_network(char *network, char *mask);
 int librouter_dhcp_server_set_pool(char *start, char *end);
 int librouter_dhcp_server_set(int enable);
-
-
-
-
+int librouter_dhcp_server_get_config(struct dhcp_server_conf_t *dhcp);
+int librouter_dhcp_server_set_config(struct dhcp_server_conf_t *dhcp);
+int librouter_dhcp_server_free_config(struct dhcp_server_conf_t *dhcp);
 
 
 int librouter_dhcp_check_server(char *ifname);

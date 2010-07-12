@@ -7,6 +7,8 @@
 #ifndef PAM_H_
 #define PAM_H_
 
+#include "cish_defines.h"
+
 #define FILE_PASSWD "/etc/passwd"
 #define FILE_RADDB_SERVER "/etc/raddb/server"
 #define FILE_TACDB_SERVER "/etc/tacdb/server"

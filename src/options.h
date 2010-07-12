@@ -14,6 +14,7 @@
 
 /* MODEM3G */
 #define OPTION_MODEM3G
+#define NUM_3G_INTFS	3
 
 /* BGP */
 #define OPTION_BGP

@@ -36,6 +36,7 @@
 #include "libnetlink/libnetlink.h"
 #include "libnetlink/ll_map.h"
 
+#include "options.h"
 #include "typedefs.h"
 #include "defines.h"
 #include "args.h"
@@ -333,9 +334,24 @@ static int _get_linkinfo(struct nlmsghdr *n, struct link_table *link)
 	return 0;
 }
 
+static int _has_ppp_intf(int index, struct intf_info *info)
+{
+	char intf[8];
+	int i;
+
+	sprintf(intf, "ppp%d", index);
+
+	for (i=0; info->link[i].ifname[0] != 0; i++) {
+		if (!strcmp(info->link[i].ifname, intf))
+			return 1; /* Found */
+	}
+
+	return 0; /* Not found */
+}
+
 int librouter_ip_get_if_list(struct intf_info *info)
 {
-	int link_index, ip_index;
+	int link_index, ip_index, i;
 	struct link_table *link = &info->link[0];
 	struct ipaddr_table *ipaddr = &info->ipaddr[0];
 	struct rtnl_handle rth;
@@ -366,9 +382,8 @@ int librouter_ip_get_if_list(struct intf_info *info)
 	link_index = 0;
 	ip_index = 0;
 
-	/* Parse link information stored in netlink "packets".
-	 *
-	 *
+	/*
+	 * Parse link information stored in netlink "packets".
 	 */
 	for (l = linfo; l;) {
 		/* Update link pointer if __get_linkinfo succeeds */
@@ -378,6 +393,21 @@ int librouter_ip_get_if_list(struct intf_info *info)
 		l = l->next;
 		free(tmp);
 	}
+
+#ifdef OPTION_MODEM3G
+	/*
+	 * Search for 3G Interfaces. They may not exist in the kernel,
+	 * since PPP interfaces are created dinamically.
+	 * So we need to create some here.
+	 */
+	for (i=0; i < NUM_3G_INTFS; i++) {
+		if (!_has_ppp_intf(i, info)) {
+			sprintf(link->ifname, "ppp%d", i);
+			link->type = ARPHRD_PPP;
+			link++;
+		}
+	}
+#endif
 
 	for (a = ainfo; a;) {
 		/* Update ipaddr pointer if __get_addrinfo succeeds */
@@ -845,9 +875,9 @@ int librouter_ip_iface_get_stats(char *ifname, void *store)
 	return -1;
 }
 
-int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf)
+int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf,
+                                  struct intf_info *info)
 {
-	struct intf_info info;
 	char mac_bin[6];
 	char name[16];
 	int ret = -1;
@@ -855,20 +885,27 @@ int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf)
 	char daemon_dhcpc[32];
 	int is_sub_iface = 0;
 
+	ip_dbg("Getting config for interface %s\n", interface);
+
 	if (strstr(interface, ".") != NULL) /* Is sub-interface? */
 		is_sub_iface = 1;
 
-
-	memset(&info, 0, sizeof(struct intf_info));
 	memset(conf, 0, sizeof(struct interface_conf));
 
-	/* Get all information */
-	ret = librouter_ip_get_if_list(&info);
+	/* Get all information if it hasn't been passed to us */
+	if (info == NULL) {
+		struct intf_info tmp_info;
 
-	if (ret < 0) {
-		printf("%% ERROR : Could not get interfaces information\n");
-		return ret;
+		memset(&tmp_info, 0, sizeof(struct intf_info));
+		ret = librouter_ip_get_if_list(&tmp_info);
+
+		if (ret < 0) {
+			printf("%% ERROR : Could not get interfaces information\n");
+			return ret;
+		}
+		info = &tmp_info;
 	}
+
 	/* Start searching for the desired interface,
 	 * if not found return negative value */
 	ret = -1;
@@ -879,27 +916,27 @@ int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf)
 		int j;
 
 		/* Test if it has a valid name */
-		if (info.link[i].ifname[0] == 0)
+		if (info->link[i].ifname[0] == 0)
 			break;
 
 		/* Check if this is the interface we are looking for */
-		if (strcmp(info.link[i].ifname, interface))
+		if (strcmp(info->link[i].ifname, interface))
 			continue;
 
 		ret = 0; /* Found the interface */
 
 		/* Fill in the configuration structure */
-		conf->name = info.link[i].ifname;
-		conf->flags = info.link[i].flags;
-		conf->up = (info.link[i].flags & IFF_UP) ? 1 : 0;
-		conf->mtu = info.link[i].mtu;
-		conf->stats = &info.link[i].stats;
-		conf->linktype = info.link[i].type;
+		conf->name = info->link[i].ifname;
+		conf->flags = info->link[i].flags;
+		conf->up = (info->link[i].flags & IFF_UP) ? 1 : 0;
+		conf->mtu = info->link[i].mtu;
+		conf->stats = &info->link[i].stats;
+		conf->linktype = info->link[i].type;
 		conf->mac[0] = 0;
 
 		/* FIXME Do we really need this? For now,
 		 * we use this information to find sub-interfaces */
-		conf->info = &info;
+		conf->info = info;
 
 		/* Get ethernet 0 MAC if not an ethernet interface */
 		if (librouter_ip_get_mac(
@@ -910,7 +947,7 @@ int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf)
 			                mac_bin[3], mac_bin[4], mac_bin[5]);
 
 		/* Search for main IP address */
-		ipaddr = &info.ipaddr[0];
+		ipaddr = &info->ipaddr[0];
 		main_ip = &conf->main_ip;
 
 		for (j = 0; j < MAX_NUM_IPS; j++, ipaddr++) {
@@ -933,7 +970,7 @@ int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf)
 		strcat(name, ":0");
 
 		/* Go through IP configuration */
-		ipaddr = &info.ipaddr[0];
+		ipaddr = &info->ipaddr[0];
 		sec_ip = &conf->sec_ip[0];
 		for (j = 0; j < MAX_NUM_IPS; j++, ipaddr++) {
 
@@ -949,20 +986,13 @@ int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf)
 
 	}
 
-	/* Check if IP was configured by DHCP */
-	if (conf->linktype == ARPHRD_ETHER) {
+	/* Check if IP was configured by DHCP on ethernet interfaces */
+	if (conf->linktype == ARPHRD_ETHER &&
+			strstr(interface, "eth") &&
+			!is_sub_iface) {
 		sprintf(daemon_dhcpc, DHCPC_DAEMON, interface);
 		if (librouter_exec_check_daemon(daemon_dhcpc))
 			conf->dhcpc = 1;
-	}
-
-
-	/* If it is a PPP device, it may not exist, but it is
-	 * still needed that we show some configuration */
-	if ((ret < 0) && (!strncmp(interface, "ppp", 3))) {
-		conf->name = strdup(interface);
-		conf->linktype = ARPHRD_PPP;
-		ret = 0;
 	}
 
 	return ret;
@@ -973,7 +1003,8 @@ void librouter_ip_iface_free_config(struct interface_conf *conf)
 	if (conf == NULL)
 		return;
 
-	/* TODO What to free ? */
+//	if (conf->name)
+//		free(conf->name);
 
 	return;
 }
