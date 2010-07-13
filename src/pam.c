@@ -152,8 +152,15 @@ int librouter_pam_web_authenticate(char *user, char *pass)
 	static struct pam_conv null_conv = { _pam_null_conv, NULL };
 	struct web_auth_data web_data;
 
-	web_data.user = strdup(user);
-	web_data.pass = strdup(pass);
+	if (user != NULL)
+		web_data.user = strdup(user);
+	else
+		web_data.user = NULL;
+
+	if (pass != NULL)
+		web_data.pass = strdup(pass);
+	else
+		web_data.pass = NULL;
 
 	fpam_conv.conv = librouter_pam_web_conv;
 	fpam_conv.appdata_ptr = &web_data;
