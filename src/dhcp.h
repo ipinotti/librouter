@@ -67,10 +67,7 @@ int librouter_dhcp_set_none(void);
 int librouter_dhcp_set_no_server(void);
 int librouter_dhcp_set_no_relay(void);
 
-int librouter_dhcp_set_server(int save_dns, char *cmdline);
 int librouter_dhcp_get_server(char *buf);
-
-
 int librouter_dhcp_server_set_dnsserver(char *dns);
 int librouter_dhcp_server_set_leasetime(int time);
 int librouter_dhcp_server_set_maxleasetime(int time);
@@ -85,7 +82,7 @@ int librouter_dhcp_server_set(int enable);
 int librouter_dhcp_server_get_config(struct dhcp_server_conf_t *dhcp);
 int librouter_dhcp_server_set_config(struct dhcp_server_conf_t *dhcp);
 int librouter_dhcp_server_free_config(struct dhcp_server_conf_t *dhcp);
-
+int librouter_dhcp_server_dumpleases(char *buf);
 
 int librouter_dhcp_check_server(char *ifname);
 int librouter_dhcp_set_relay(char *servers);

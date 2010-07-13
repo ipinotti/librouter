@@ -6,17 +6,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-/*#include <linux/config.h>*/
+
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <linux/route.h>
@@ -196,179 +195,26 @@ int librouter_dhcp_set_no_relay(void)
 #define NEED_ETHERNET_SUBNET /* verifica se a rede/mascara eh a da ethernet */
 /* ip dhcp server NETWORK MASK POOL-START POOL-END [dns-server DNS1 dns-server DNS2 router ROUTER domain-name DOMAIN default-lease-time D H M S max-lease-time D H M S] */
 
-int librouter_dhcp_set_server(int save_dns, char *cmdline)
+static int _check_subnet(int intf_idx, char *network, char *mask)
 {
-	int i, eth;
-	char *network = NULL, *mask = NULL, *pool_start = NULL, *pool_end = NULL, *dns1 = NULL,
-	                *dns2 = NULL, *router = NULL, *domain_name = NULL, *netbios_name_server =
-	                                NULL, *netbios_dd_server = NULL;
-	char *p;
-	int netbios_node_type = 0;
-	unsigned long default_lease_time = 0L, max_lease_time = 0L;
-	arglist *args;
-	FILE *file;
-	char filename[64];
-#ifdef NEED_ETHERNET_SUBNET
 	IP eth_addr, eth_mask, eth_network;
 	IP dhcp_network, dhcp_mask;
-#endif
+	char interface[32];
 
-	args = librouter_make_args(cmdline);
-	if (args->argc < 7) {
-		librouter_destroy_args(args);
-		return (-1);
-	}
+	sprintf(interface, "ethernet%d",  intf_idx);
 
-	i = 3;
-	network = args->argv[i++];
-	mask = args->argv[i++];
-	pool_start = args->argv[i++];
-	pool_end = args->argv[i++];
-
-#ifdef NEED_ETHERNET_SUBNET
-	librouter_ip_interface_get_info(librouter_ip_ethernet_get_dev("ethernet0"), &eth_addr,
-	                &eth_mask, 0, 0);
+	librouter_ip_interface_get_info(librouter_ip_ethernet_get_dev(interface),
+	                                &eth_addr, &eth_mask, 0, 0);
 	eth_network.s_addr = eth_addr.s_addr & eth_mask.s_addr;
 	inet_aton(network, &dhcp_network);
 	inet_aton(mask, &dhcp_mask);
+
 	if ((dhcp_network.s_addr != eth_network.s_addr) || (dhcp_mask.s_addr != eth_mask.s_addr)) {
 		librouter_pr_error(0, "network segment not in ethernet segment address");
-		librouter_destroy_args(args);
-		return (-1);
-	} else {
-		eth = 0;
-	}
-#endif
-
-	while (i < args->argc) {
-		if (strcmp(args->argv[i], "dns-server") == 0) {
-			i++;
-			if (dns1)
-				dns2 = args->argv[i];
-			else
-				dns1 = args->argv[i];
-
-		} else if (strcmp(args->argv[i], "router") == 0) {
-			router = args->argv[++i];
-
-		} else if (strcmp(args->argv[i], "domain-name") == 0) {
-			domain_name = args->argv[++i];
-
-		} else if (strcmp(args->argv[i], "default-lease-time") == 0) {
-			default_lease_time = atoi(args->argv[++i]) * 86400;
-			default_lease_time += atoi(args->argv[++i]) * 3600;
-			default_lease_time += atoi(args->argv[++i]) * 60;
-			default_lease_time += atoi(args->argv[++i]);
-
-		} else if (strcmp(args->argv[i], "max-lease-time") == 0) {
-			max_lease_time = atoi(args->argv[++i]) * 86400;
-			max_lease_time += atoi(args->argv[++i]) * 3600;
-			max_lease_time += atoi(args->argv[++i]) * 60;
-			max_lease_time += atoi(args->argv[++i]);
-
-		} else if (strcmp(args->argv[i], "netbios-name-server") == 0) {
-			netbios_name_server = args->argv[++i];
-
-		} else if (strcmp(args->argv[i], "netbios-dd-server") == 0) {
-			netbios_dd_server = args->argv[++i];
-
-		} else if (strcmp(args->argv[i], "netbios-node-type") == 0) {
-			switch (args->argv[++i][0]) {
-			case 'B':
-				netbios_node_type = 1;
-				break;
-			case 'P':
-				netbios_node_type = 2;
-				break;
-			case 'M':
-				netbios_node_type = 4;
-				break;
-			case 'H':
-				netbios_node_type = 8;
-				break;
-			}
-
-		} else {
-			librouter_destroy_args(args);
-			return (-1);
-		}
-		i++;
+		return -1;
 	}
 
-	/* cria o arquivo de configuracao */
-	sprintf(filename, FILE_DHCPDCONF, eth);
-	if ((file = fopen(filename, "w")) == NULL) {
-		librouter_pr_error(1, "could not create %s", filename);
-		librouter_destroy_args(args);
-		return (-1);
-	}
-
-	/* salva a configuracao de forma simplificado como um comentario na primeira
-	 * linha (para facilitar a leitura posterior por get_dhcp_server).
-	 */
-	if (!save_dns) {
-		if ((p = strstr(cmdline, "dns-server")) != NULL)
-			*p = 0; /* cut dns configuration */
-	}
-
-	fprintf(file, "#%s\n", cmdline);
-
-	fprintf(file, "interface ethernet%d\n", eth);
-	fprintf(file, "lease_file "FILE_DHCPDLEASES"\n", eth);
-	fprintf(file, "pidfile "FILE_DHCPD_PID_ETH"\n", eth);
-	fprintf(file, "start %s\n", pool_start);
-	fprintf(file, "end %s\n", pool_end);
-
-	if (max_lease_time)
-		fprintf(file, "decline_time %lu\n", max_lease_time);
-
-	if (default_lease_time)
-		fprintf(file, "opt lease %lu\n", default_lease_time);
-
-	fprintf(file, "opt subnet %s\n", mask);
-
-	if (dns1) {
-		fprintf(file, "opt dns %s", dns1);
-		if (dns2)
-			fprintf(file, " %s\n", dns2);
-		else
-			fprintf(file, "\n");
-	}
-
-	if (router)
-		fprintf(file, "opt router %s\n", router);
-
-	if (domain_name)
-		fprintf(file, "opt domain %s\n", domain_name);
-
-	if (netbios_name_server)
-		fprintf(file, "opt wins %s\n", netbios_name_server);
-
-	if (netbios_dd_server)
-		fprintf(file, "opt winsdd %s\n", netbios_dd_server);
-
-	if (netbios_node_type)
-		fprintf(file, "opt winsnode %d\n", netbios_node_type);
-
-	fclose(file);
-	librouter_destroy_args(args);
-
-	sprintf(filename, FILE_DHCPDLEASES, eth);
-	file = fopen(filename, "r");
-
-	if (!file) {
-		/* cria o arquivo de leases em branco */
-		file = fopen(filename, "w");
-	}
-
-	fclose(file);
-
-	/* se o dhcrelay estiver rodando, tira do ar! */
-	if (librouter_dhcp_get_status() == DHCP_RELAY)
-		librouter_dhcp_set_no_relay();
-
-	/* poe o dhcpd para rodar */
-	return librouter_dhcpd_set_status(1, eth);
+	return 0;
 }
 
 int librouter_dhcp_server_set_dnsserver(char *dns)
@@ -746,6 +592,35 @@ int librouter_dhcp_server_free_config(struct dhcp_server_conf_t *dhcp)
 		free(dhcp->domain);
 	if (dhcp->dnsserver)
 		free(dhcp->dnsserver);
+}
+
+int librouter_dhcp_server_dumpleases(char *buf)
+{
+	int i;
+	char filename[64];
+	char line[128];
+	FILE *f;
+
+	for (i = 0; i < MAX_LAN_INTF; i++) {
+		if (librouter_udhcpd_kick_by_eth(i) == 0) {
+			sprintf(filename, FILE_DHCPDLEASES, i);
+			f = fopen(filename, "r");
+			if (!f)
+				continue;
+			fclose(f);
+			sprintf(filename, "/bin/dumpleases -f "FILE_DHCPDLEASES, i);
+			f = popen(filename, "r");
+
+			if (f) {
+				sprintf(buf, "interface ethernet%d\n", i);
+				while (fgets(line, sizeof(line), f) != NULL)
+					sprintf(buf, "%s", line);
+				pclose(f);
+			}
+		}
+	}
+
+	dhcp_dbg(" Dumping leases : %s\n", buf);
 }
 
 int librouter_dhcp_get_server(char *buf)
