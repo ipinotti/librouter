@@ -7,13 +7,36 @@
 #ifndef DHCP_H_
 #define DHCP_H_
 
-#define DHCP_DEBUG
+#include <stdint.h>
+
+//#define DHCP_DEBUG
 #ifdef DHCP_DEBUG
 #define dhcp_dbg(x,...) \
-	printf("%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+	syslog(LOG_INFO, "%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 #else
 #define dhcp_dbg(x,...)
 #endif
+
+#define DHCP_MAX_NUM_LEASES	128
+
+/* Taken from udhcpd code */
+struct dyn_lease {
+	/* "nip": IP in network order */
+	/* Unix time when lease expires. Kept in memory in host order.
+	 * When written to file, converted to network order
+	 * and adjusted (current time subtracted) */
+	uint32_t expires;
+	uint32_t lease_nip;
+	/* We use lease_mac[6], since e.g. ARP probing uses
+	 * only 6 first bytes anyway. We check received dhcp packets
+	 * that their hlen == 6 and thus chaddr has only 6 significant bytes
+	 * (dhcp packet has chaddr[16], not [6])
+	 */
+	uint8_t lease_mac[6];
+	char hostname[20];
+	uint8_t pad[2];
+	/* total size is a multiply of 4 */
+} PACKED;
 
 struct dhcp_server_conf_t {
 	char *pool_start;
@@ -24,6 +47,12 @@ struct dhcp_server_conf_t {
 	int default_lease_time;
 	int max_lease_time;
 	int enable;
+};
+
+struct dhcp_lease_t {
+	char *mac;
+	char *ipaddr;
+	char *lease_time;
 };
 
 #define UDHCPD
@@ -82,7 +111,8 @@ int librouter_dhcp_server_set(int enable);
 int librouter_dhcp_server_get_config(struct dhcp_server_conf_t *dhcp);
 int librouter_dhcp_server_set_config(struct dhcp_server_conf_t *dhcp);
 int librouter_dhcp_server_free_config(struct dhcp_server_conf_t *dhcp);
-int librouter_dhcp_server_dumpleases(char *buf);
+int librouter_dhcp_server_get_leases(struct dhcp_lease_t *leases);
+int librouter_dhcp_server_free_leases(struct dhcp_lease_t *leases);
 
 int librouter_dhcp_check_server(char *ifname);
 int librouter_dhcp_set_relay(char *servers);

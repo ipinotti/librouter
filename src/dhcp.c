@@ -30,12 +30,12 @@
 #include "exec.h"
 #include "defines.h"
 #include "dev.h"
-#include "dhcp.h"
 #include "ip.h"
 #include "ipsec.h"
 #include "process.h"
 #include "str.h"
 #include "typedefs.h"
+#include "dhcp.h"
 
 #ifdef UDHCPD
 pid_t librouter_udhcpd_pid_by_eth(int eth)
@@ -226,7 +226,7 @@ int librouter_dhcp_server_set_dnsserver(char *dns)
 
 	if (dns != NULL) {
 		snprintf(buf, sizeof(buf), "%s", dns);
-		if (librouter_str_replace_string_in_file(filename, "opt dns ", buf) == 0)
+		if (librouter_str_replace_string_in_file(filename, "opt dns", buf) == 0)
 			return 0; /* Done */
 
 		snprintf(buf, sizeof(buf), "opt dns %s\n", dns);
@@ -343,7 +343,7 @@ int librouter_dhcp_server_set_domain(char *domain)
 
 	if (domain != NULL) {
 		snprintf(buf, sizeof(buf), "%s", domain);
-		if (librouter_str_replace_string_in_file(filename, "opt domain ", buf)
+		if (librouter_str_replace_string_in_file(filename, "opt domain", buf)
 		                == 0)
 			return 0; /* Done */
 
@@ -426,7 +426,7 @@ int librouter_dhcp_server_set_router(char *router)
 
 	if (router != NULL) {
 		snprintf(buf, sizeof(buf), "%s", router);
-		if (librouter_str_replace_string_in_file(filename, "opt router ", buf)
+		if (librouter_str_replace_string_in_file(filename, "opt router", buf)
 		                == 0)
 			return 0; /* Done */
 
@@ -594,33 +594,105 @@ int librouter_dhcp_server_free_config(struct dhcp_server_conf_t *dhcp)
 		free(dhcp->dnsserver);
 }
 
-int librouter_dhcp_server_dumpleases(char *buf)
+int _getleases(struct dhcp_lease_t *leases, int intf_index)
+{
+	int fd;
+	int i;
+	struct dyn_lease lease;
+	struct in_addr addr;
+	unsigned d, h, m;
+	int64_t written_at, curr, expires_abs;
+	char line[128];
+	char file[32];
+	unsigned expires;
+
+	sprintf(file, "/etc/udhcpd.ethernet%d.leases", intf_index);
+	fd = open(file, O_RDONLY);
+
+	if (read(fd, &written_at, sizeof(written_at)) != sizeof(written_at))
+		return 0;
+
+	//written_at = ntoh64(written_at); /* FIXME Doesn't work for little endian */
+	curr = time(NULL);
+	if (curr < written_at)
+		written_at = curr; /* lease file from future! :) */
+
+	while (read(fd, &lease, sizeof(lease)) == sizeof(lease)) {
+		sprintf(line, "%02x:%02x:%02x:%02x:%02x:%02x",
+				lease.lease_mac[0], lease.lease_mac[1], lease.lease_mac[2],
+				lease.lease_mac[3], lease.lease_mac[4], lease.lease_mac[5]);
+		leases->mac = strdup(line);
+		dhcp_dbg("MAC : %s\n", leases->mac);
+
+		addr.s_addr = lease.lease_nip;
+		/* actually, 15+1 and 19+1, +1 is a space between columns */
+		/* lease.hostname is char[20] and is always NUL terminated */
+		sprintf(line, " %-16s%-20s", inet_ntoa(addr), lease.hostname);
+		leases->ipaddr = strdup(line);
+		dhcp_dbg("IP : %s\n", leases->ipaddr);
+
+		expires_abs = ntohl(lease.expires) + written_at;
+		if (expires_abs <= curr) {
+			sprintf(line, "expired");
+			leases->lease_time = strdup(line);
+			continue;
+		}
+		expires = expires_abs - curr;
+		d = expires / (24*60*60); expires %= (24*60*60);
+		h = expires / (60*60); expires %= (60*60);
+		m = expires / 60; expires %= 60;
+
+		if (d) {
+			sprintf(line, "%u days %02u:%02u:%02u\n", d, h, m, (unsigned)expires);
+		} else {
+			sprintf(line, "%02u:%02u:%02u\n", h, m, (unsigned)expires);
+		}
+		leases->lease_time = strdup(line);
+		leases++;
+	}
+
+	return 0;
+}
+
+int librouter_dhcp_server_get_leases(struct dhcp_lease_t *leases)
 {
 	int i;
 	char filename[64];
-	char line[128];
 	FILE *f;
 
 	for (i = 0; i < MAX_LAN_INTF; i++) {
-		if (librouter_udhcpd_kick_by_eth(i) == 0) {
+		if (librouter_udhcpd_kick_by_eth(i) == 0) { /* Upgrade leases file */
 			sprintf(filename, FILE_DHCPDLEASES, i);
 			f = fopen(filename, "r");
 			if (!f)
 				continue;
 			fclose(f);
-			sprintf(filename, "/bin/dumpleases -f "FILE_DHCPDLEASES, i);
-			f = popen(filename, "r");
 
-			if (f) {
-				sprintf(buf, "interface ethernet%d\n", i);
-				while (fgets(line, sizeof(line), f) != NULL)
-					sprintf(buf, "%s", line);
-				pclose(f);
-			}
+			_getleases(leases, i);
 		}
 	}
 
-	dhcp_dbg(" Dumping leases : %s\n", buf);
+	return 0;
+}
+
+int librouter_dhcp_server_free_leases(struct dhcp_lease_t *leases)
+{
+	int i;
+
+	if (leases == NULL)
+		return 0;
+
+	for (i=0; i < DHCP_MAX_NUM_LEASES; i++) {
+		if (leases->mac != NULL)
+			free(leases->mac);
+		if (leases->ipaddr != NULL)
+			free(leases->ipaddr);
+		if (leases->lease_time != NULL)
+			free(leases->lease_time);
+		leases++;
+	}
+
+	return 0;
 }
 
 int librouter_dhcp_get_server(char *buf)
