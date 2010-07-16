@@ -20,8 +20,8 @@
 
 /* type, cish_string, linux_string, web_string */
 dev_family _devices[] = {
-	{ eth, "ethernet", "eth", "Ethernet" },
-	{ lo, "loopback", "lo", "Loopback" },
+	{ eth, "ethernet", "ethernet", "Ethernet" },
+	{ lo, "loopback", "loopback", "Loopback" },
 	{ tun, "tun", "tun", "Tunnel" },
 	{ ipsec, "ipsec", "ipsec", "IPSec" },
 	{ ppp, "m3G", "ppp", "3GModem" },
