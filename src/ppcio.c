@@ -23,7 +23,7 @@
 
 #define DEV_PPCIO "/dev/ppcio"
 
-int librouter_ppcio_read(ppcio_data *pd)
+int librouter_ppcio_read(struct powerpc_gpio *gpio)
 {
 	int fd, ret;
 
@@ -33,27 +33,27 @@ int librouter_ppcio_read(ppcio_data *pd)
 		librouter_pr_error(1, "can't open %s", DEV_PPCIO);
 		return (-1);
 	}
-#if 0
-	ret=ioctl(fd, PPCIO_READ, pd);
-#endif
+
+	ret = ioctl(fd, PPCIO_READ, gpio);
+
 	close(fd);
 
 	return ret;
 }
 
-int librouter_ppcio_write(ppcio_data *pd)
+int librouter_ppcio_write(struct powerpc_gpio *gpio)
 {
 	int fd, ret;
 
-	fd = open(DEV_PPCIO, O_RDONLY);
+	fd = open(DEV_PPCIO, O_WRONLY);
 
 	if (fd < 0) {
 		librouter_pr_error(1, "can't open %s", DEV_PPCIO);
 		return (-1);
 	}
-#if 0
-	ret=ioctl(fd, PPCIO_WRITE, pd);
-#endif
+
+	ret = write(fd, (void *)gpio, sizeof(struct powerpc_gpio));
+
 	close(fd);
 
 	return ret;

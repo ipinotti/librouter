@@ -7,11 +7,9 @@
 #ifndef PPCIO_H_
 #define PPCIO_H_
 
-typedef struct {
-	unsigned char led_sys;
-} ppcio_data;
+#include <linux/asm/ppc_io.h>
 
-int librouter_ppcio_read(ppcio_data *pd);
-int librouter_ppcio_write(ppcio_data *pd);
+int librouter_ppcio_read(struct powerpc_gpio *gpio);
+int librouter_ppcio_write(struct powerpc_gpio *gpio);
 
 #endif /* PPCIO_H_ */
