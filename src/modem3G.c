@@ -17,13 +17,199 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <termios.h>
+#include <syslog.h>
 
 #include "str.h"
 #include "error.h"
 #include "modem3G.h"
 
-#define MODEM3G_CHAT_FILE "/etc/ppp/chat-modem-3g-"
-#define MODEM3G_PEERS_FILE "/etc/ppp/peers/modem-3g-"
+
+/**
+ * Função grava informações referentes as configurações do SIM card no arquivo apontado por MODEM3G_SIM_INFO_FILE.
+ * É necessário passar por parâmetro o número do cartão (0 ou 1), o campo da configuração e o valor desejado.
+ * @param sim
+ * @param field
+ * @param info
+ * @return 0 if ok, -1 if not
+ */
+int librouter_modem3g_sim_set_info_infile(int sim, char * field, char * info){
+	FILE *fd;
+	char line[128] = {(int)NULL};
+	char buff[220] = {(int)NULL};
+	char filenamesim_new[64], fvalue[32], sim_ref[32];
+
+	snprintf(sim_ref,32,"%s%d",SIMCARD_STR,sim);
+	snprintf(fvalue,32,"%s=%s\n",field, info);
+
+	if ((fd = fopen(MODEM3G_SIM_INFO_FILE, "r")) == NULL) {
+		syslog(LOG_ERR, "Could not open configuration file\n");
+		return -1;
+	}
+
+	while (fgets(line, sizeof(line), fd) != NULL) {
+		if (!strncmp(line, sim_ref, strlen(sim_ref))) {
+			strcat(buff, (const char *)line);
+			while( (fgets(line, sizeof(line), fd) != NULL) && (strcmp(line, "\n") != 0) ){
+				if (!strncmp(line, field, strlen(field))){
+					strcat(buff, (const char *)fvalue);
+					break;
+				}
+				else
+					strcat(buff,(const char *)line);
+			}
+			continue;
+		}
+		strcat(buff, (const char *)line);
+	}
+
+	fclose(fd);
+
+	strncpy(filenamesim_new, MODEM3G_SIM_INFO_FILE, 63);
+	filenamesim_new[63] = 0;
+	strcat(filenamesim_new, ".new");
+
+	if ((fd = fopen((const char *)filenamesim_new,"w+")) < 0) {
+		syslog(LOG_ERR, "Could not open configuration file\n");
+		return -1;
+	}
+
+	fputs((const char *)buff,fd);
+
+	fclose(fd);
+
+	unlink(MODEM3G_SIM_INFO_FILE);
+	rename(filenamesim_new, MODEM3G_SIM_INFO_FILE);
+
+	return 0;
+
+}
+
+/**
+ * Função recupera informações do SIM card desejado, passado por parâmetro, que estão gravadas no arquivo apontado por MODEM3G_SIM_INFO_FILE.
+ * É passado por parâmetro a struct sim_conf, sendo necessário informar nesta struct, qual SIM card desejado (0 ou 1).
+ * @param sim_card
+ * @return 0 if ok, -1 if not.
+ */
+int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card){
+	FILE *fd;
+	char line[128] = {(int)NULL};
+	char sim_ref[32];
+	char *p;
+	snprintf(sim_ref,32,"%s%d\n",SIMCARD_STR, sim_card->sim_num);
+
+	if ((fd = fopen(MODEM3G_SIM_INFO_FILE, "r")) == NULL) {
+		syslog(LOG_ERR, "Could not open configuration file\n");
+		return -1;
+	}
+
+	while (fgets(line, sizeof(line), fd) != NULL) {
+		if (!strncmp(line, sim_ref, strlen(sim_ref))) {
+			while( (fgets(line, sizeof(line), fd) != NULL) && (strcmp(line, "\n") != 0) ){
+
+				if (!strncmp(line, APN_STR, APN_STR_LEN)) {
+					strcpy(sim_card->apn, line + APN_STR_LEN);
+
+					/* Remove any line break */
+					for (p = sim_card->apn; *p != '\0'; p++) {
+						if (*p == '\n')
+							*p = '\0';
+					}
+					continue;
+				}
+
+				if (!strncmp(line, USERN_STR, USERN_STR_LEN)){
+					strcpy(sim_card->username, line + USERN_STR_LEN);
+
+					/* Remove any line break */
+					for (p = sim_card->apn; *p != '\0'; p++) {
+						if (*p == '\n')
+							*p = '\0';
+					}
+					continue;
+				}
+
+				if (!strncmp(line, PASSW_STR, PASSW_STR_LEN)){
+					strcpy(sim_card->password, line + PASSW_STR_LEN);
+
+					/* Remove any line break */
+					for (p = sim_card->apn; *p != '\0'; p++) {
+						if (*p == '\n')
+							*p = '\0';
+					}
+					continue;
+				}
+			}
+			break;
+		}
+	}
+
+	fclose(fd);
+	return 0;
+
+}
+
+
+/**
+ * Grava o main SIM CARD no arquivo apontado por MODEM3G_SIM_ORDER_FILE
+ * SIM CARDS --> 0 ou 1
+ * @param sim
+ * @return 0 if ok, -1 if not
+ */
+int librouter_modem3g_sim_set_order(int sim){
+
+	FILE * file;
+
+	if (sim != 0 || sim != 1)
+		return -1;
+
+	file = fopen(MODEM3G_SIM_ORDER_FILE, "w+");
+	if (!file)
+		return -1;
+
+	fputc(sim,file);
+	fclose(file);
+
+	return 0;
+}
+
+/**
+ * Recupera o main SIM CARD armazenado no arquivo apontador por MODEM3G_SIM_ORDER_FILE
+ * @return Number of the main SIM
+ */
+int librouter_modem3g_sim_get_order(){
+
+	FILE * file;
+	int ret = -1;
+	file = fopen(MODEM3G_SIM_ORDER_FILE, "r");
+	if (!file)
+		return -1;
+
+	ret = fgetc(file);
+
+	fclose(file);
+
+	return ret;
+}
+
+
+
+/**
+ * Função relacionada a seleção do SIM CARD pelo HW.
+ * @return
+ */
+int librouter_modem3g_sim_set_card(int sim){
+
+}
+
+/**
+ * Função relacionada a seleção do SIM CARD pelo Hw.
+ * @return
+ */
+int librouter_modem3g_sim_get_card(){
+
+}
+
+
 
 /**
  * Adquire o APN - Acess Point Name, no arquivo de script - ARQ1,
