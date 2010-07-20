@@ -121,7 +121,7 @@ int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card){
 					strcpy(sim_card->username, line + USERN_STR_LEN);
 
 					/* Remove any line break */
-					for (p = sim_card->apn; *p != '\0'; p++) {
+					for (p = sim_card->username; *p != '\0'; p++) {
 						if (*p == '\n')
 							*p = '\0';
 					}
@@ -132,7 +132,7 @@ int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card){
 					strcpy(sim_card->password, line + PASSW_STR_LEN);
 
 					/* Remove any line break */
-					for (p = sim_card->apn; *p != '\0'; p++) {
+					for (p = sim_card->password; *p != '\0'; p++) {
 						if (*p == '\n')
 							*p = '\0';
 					}
@@ -158,16 +158,21 @@ int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card){
 int librouter_modem3g_sim_set_order(int sim){
 
 	FILE * file;
+	char * card = malloc(2);
 
-	if (sim != 0 || sim != 1)
+	if ( !(sim == 0 || sim == 1) )
 		return -1;
+
+	sprintf(card,"%d", sim);
 
 	file = fopen(MODEM3G_SIM_ORDER_FILE, "w+");
 	if (!file)
 		return -1;
 
-	fputc(sim,file);
+	fputs((const char *)card,file);
+
 	fclose(file);
+	free(card);
 
 	return 0;
 }
@@ -199,6 +204,7 @@ int librouter_modem3g_sim_get_order(){
  */
 int librouter_modem3g_sim_set_card(int sim){
 
+	return 0;
 }
 
 /**
@@ -207,6 +213,7 @@ int librouter_modem3g_sim_set_card(int sim){
  */
 int librouter_modem3g_sim_get_card(){
 
+	return 0;
 }
 
 
@@ -381,5 +388,40 @@ int librouter_modem3g_set_password(char * password, int devcish)
 
 	check = librouter_str_replace_string_in_file(file, key, password);
 
+	return check;
+}
+
+/**
+ * Função grava APN, username e password referentes ao CHAT-PPP do modem3G,
+ * através da struct sim_conf.
+ *
+ * @param sim
+ * @param devcish
+ * @return 0 if ok, -1 if not
+ */
+int librouter_modem3g_set_all_info(struct sim_conf * sim, int devcish){
+	int check = -1;
+	char key_apn[] = "\"IP\",";
+	char key_user[] = "user";
+	char key_pass[] = "password";
+	char buffer_apn[256] = {(int)NULL};
+	char file[100] = {(int)NULL};
+
+	snprintf(buffer_apn,256,"\"%s\"'",sim->apn);
+	snprintf(file,100,"%s%d",MODEM3G_CHAT_FILE,devcish);
+
+	check = librouter_str_replace_string_in_file(file, key_apn, buffer_apn);
+	if (check < 0)
+		goto end;
+
+	snprintf(file,100,"%s%d",MODEM3G_PEERS_FILE,devcish);
+
+	check = librouter_str_replace_string_in_file(file, key_user, sim->username);
+	if (check < 0)
+		goto end;
+
+	check = librouter_str_replace_string_in_file(file, key_pass, sim->password);
+
+end:
 	return check;
 }
