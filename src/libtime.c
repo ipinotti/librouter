@@ -8,9 +8,11 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
-#include <linux/config.h>
+
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
+#include <linux/rtc.h>
+
 #include "options.h"
 #include "error.h"
 
@@ -229,37 +231,12 @@ struct rtc_ds1338_regs
 	unsigned char ram[56];
 };
 
-#define USE_DEV_RTC
-#ifdef USE_DEV_RTC
-#include <linux/rtc.h>
-#endif
-
-#ifndef USE_DEV_RTC
-static unsigned char bin2bcd(unsigned int n)
-{
-	return (((n / 10) << 4) | (n % 10));
-}
-#endif
-
 int set_date(int day, int mon, int year, int hour, int min, int sec)
 {
 	time_t tm;
 	struct tm tm_time;
 	int fd, err, ret=0;
-#ifdef USE_DEV_RTC
-#if defined(CONFIG_DEVFS_FS)
-	char device[] = "/dev/misc/rtc";
-#else
-	char device[] = "/dev/rtc";
-#endif
-#else
-	struct rtc_ds1338_regs ds1338;
-#if defined(CONFIG_DEVFS_FS)
-	char device[] = "/dev/i2c/0";
-#else
-	char device[] = "/dev/i2c-0";
-#endif
-#endif
+	char device[] = "/dev/rtc0";
 
 	/* local time */
 	tm_time.tm_year = (year >= 1900 ? year-1900 : year%100); /* since 1900 */
@@ -273,20 +250,6 @@ int set_date(int day, int mon, int year, int hour, int min, int sec)
 		return -1;
 	/* UCT time */
 	gmtime_r(&tm, &tm_time);
-#ifndef USE_DEV_RTC
-	ds1338.seconds=bin2bcd(tm_time.tm_sec);
-	ds1338.minutes=bin2bcd(tm_time.tm_min);
-	ds1338.hour=bin2bcd(tm_time.tm_hour);
-	ds1338.day=bin2bcd(tm_time.tm_wday+1);
-	ds1338.date=bin2bcd(tm_time.tm_mday);
-	ds1338.month=bin2bcd(tm_time.tm_mon+1); /* 1-12 */
-	ds1338.year=bin2bcd(tm_time.tm_year % 100); /* 00-99 */
-#if 1
-	ds1338.control=0;
-#else /* ds1338 x m41t11 */
-	ds1338.control=RTC_CTL_BIT_RS0|RTC_CTL_BIT_RS1;
-#endif
-#endif
 	
 	/* Sets the system's time and date */
 	err = stime(&tm);
@@ -294,17 +257,13 @@ int set_date(int day, int mon, int year, int hour, int min, int sec)
 	/* Set RTC! */
 	if ((fd = open(device, O_RDWR)) < 0)
 		return -1;
-	if (err < 0)
-	{
+
+	if (err < 0) {
 		librouter_pr_error(1, "cannot set date");
 	}
-	else
-	{	
-#ifdef USE_DEV_RTC
-		if (ioctl(fd, RTC_SET_TIME, &tm_time) < 0) goto error;
-#else
-		if (i2c_write_block_data(fd, I2C_RTC_ADDR, 0x00, 8, (__u8 *)&ds1338) < 0) goto error;
-#endif
+	else {
+		if (ioctl(fd, RTC_SET_TIME, &tm_time) < 0)
+			goto error;
 	}
 exit_now:
 	close(fd);
@@ -315,44 +274,22 @@ error:
 }
 
 #ifdef OPTION_NTPD
-int set_rtc_with_system_date(void)
+int librouter_time_system_to_rtc(void)
 {
 	time_t tm;
 	struct tm tm_time;
 	int fd, ret=0;
-#ifdef USE_DEV_RTC
-	char device[] = "/dev/rtc";
-#else
-	struct rtc_ds1338_regs ds1338;
-	char device[] = "/dev/i2c/0";
-#endif
+	char device[] = "/dev/rtc0";
 
 	time(&tm);
 	gmtime_r(&tm, &tm_time);
-#ifndef USE_DEV_RTC
-	ds1338.seconds=bin2bcd(tm_time.tm_sec);
-	ds1338.minutes=bin2bcd(tm_time.tm_min);
-	ds1338.hour=bin2bcd(tm_time.tm_hour);
-	ds1338.day=bin2bcd(tm_time.tm_wday+1);
-	ds1338.date=bin2bcd(tm_time.tm_mday);
-	ds1338.month=bin2bcd(tm_time.tm_mon+1); /* 1-12 */
-	ds1338.year=bin2bcd(tm_time.tm_year % 100); /* 00-99 */
-#if 1
-	ds1338.control=0;
-#else /* ds1338 x m41t11 */
-	ds1338.control=RTC_CTL_BIT_RS0|RTC_CTL_BIT_RS1;
-#endif
-#endif
+
 	/* Set RTC! */
 	if ((fd = open(device, O_RDWR)) < 0)
 		return -1;
-#ifdef USE_DEV_RTC
+
 	if (ioctl(fd, RTC_SET_TIME, &tm_time) < 0)
 		goto error;
-#else
-	if (i2c_write_block_data(fd, I2C_RTC_ADDR, 0x00, 8, (__u8 *)&ds1338) < 0)
-		goto error;
-#endif
 exit_now:
 	close(fd);
 	return ret;

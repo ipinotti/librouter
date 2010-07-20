@@ -29,4 +29,8 @@ int librouter_ntp_set_key(char *key_num, char *value);
 
 void librouter_ntp_dump(FILE *out);
 
+int librouter_ntp_get_servers(char *servers);
+int librouter_ntp_set_daemon(int enable);
+int librouter_ntp_get_daemon(void);
+
 #endif /* NTP_H_ */

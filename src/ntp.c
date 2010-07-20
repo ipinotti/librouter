@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -376,10 +377,7 @@ int librouter_ntp_server(char *server, char *key_num)
 
 	fclose(f);
 
-	if (!librouter_exec_check_daemon(NTP_DAEMON))
-		librouter_exec_daemon(NTP_DAEMON);
-	else
-		librouter_ntp_hup();
+	librouter_ntp_hup();
 
 	return 0;
 }
@@ -647,10 +645,26 @@ int librouter_ntp_exclude_server(char *addr)
 
 	free(local);
 
-	if (!servers && librouter_exec_check_daemon(NTP_DAEMON))
-		librouter_kill_daemon(NTP_DAEMON);
-	else
-		librouter_ntp_hup();
+	librouter_ntp_hup();
+
+	return 0;
+}
+
+int librouter_ntp_set_daemon(int enable)
+{
+	if (enable) {
+		if (!librouter_exec_check_daemon(NTP_DAEMON))
+				librouter_exec_daemon(NTP_DAEMON);
+	} else {
+		if (librouter_exec_check_daemon(NTP_DAEMON))
+			librouter_kill_daemon(NTP_DAEMON);
+	}
+}
+
+int librouter_ntp_get_daemon(void)
+{
+	if (librouter_exec_check_daemon(NTP_DAEMON))
+		return 1;
 
 	return 0;
 }
@@ -827,7 +841,7 @@ int librouter_ntp_set_key(char *key_num, char *value)
 	return 0;
 }
 
-#else
+#else /* OPTION_NTPD*/
 
 int librouter_ntp_set(int timeout, char *ip)
 {
@@ -878,6 +892,32 @@ int librouter_ntp_get(int *timeout, char *ip)
 }
 #endif
 
+struct ntp_settings_t {
+	char *servers;
+};
+
+int librouter_ntp_get_servers(char *servers)
+{
+	FILE *f;
+	char line[128];
+	arglist *args;
+
+	f = fopen(FILE_NTP_CONF, "r");
+	if (f == NULL)
+		return -1;
+
+	while (fgets(line, sizeof(line), f)) {
+		if (!strncmp(line, "server", 6)) {
+			args = librouter_make_args(line);
+			strcat(servers, args->argv[1]);
+			strcat(servers, " ");
+			librouter_destroy_args(args);
+		}
+	}
+
+	fclose(f);
+}
+
 void librouter_ntp_dump(FILE *out)
 {
 	int i, printed_something = 0;
@@ -889,6 +929,11 @@ void librouter_ntp_dump(FILE *out)
 	if (librouter_ntp_is_auth_used()) fprintf(out, "ntp authenticate\n");
 	else fprintf(out, "no ntp authenticate\n");
 #endif
+
+	if (librouter_ntp_get_daemon())
+		fprintf(out, "ntp enable\n");
+	else
+		fprintf(out, "no ntp enable\n");
 
 	if ((f = fopen(FILE_NTP_CONF, "r"))) {
 		while (fgets(line, 200, f)) {
