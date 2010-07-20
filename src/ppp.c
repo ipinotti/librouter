@@ -34,7 +34,7 @@
  * @param back_conf
  * @return 0 if OK, -1 if not
  */
-int librouter_ppp_get_config_backupd (int serial_num, struct bckp_conf_t * back_conf){
+int librouter_ppp_backupd_get_config(int serial_num, struct bckp_conf_t * back_conf){
 
 	FILE *fd;
 	char line[128] = {(int)NULL};
@@ -128,7 +128,7 @@ end:
  * @param value
  * @return 1 if (field+value) on a given interface is in file, 0 if not
  */
-int librouter_ppp_verif_param_byintf_infile_backupd(char * intf, char *field, char *value){
+int librouter_ppp_backupd_verif_param_byintf_infile(char * intf, char *field, char *value){
 
 	FILE *fd;
 	char line[128] = {(int)NULL};
@@ -176,7 +176,7 @@ end:
  * @param intf_return
  * @return 1 and the interface aimed if (field+value) is in file, 0 if not
  */
-int librouter_ppp_verif_param_infile_backupd(char *field, char *value, char * intf_return){
+int librouter_ppp_backupd_verif_param_infile(char *field, char *value, char * intf_return){
 
 	FILE *fd;
 	char line[128] = {(int)NULL};
@@ -224,7 +224,7 @@ end:
  * @param value
  * @return 0 if success, -1 if it had problems with the file
  */
-int librouter_ppp_set_param_infile_backupd(char * intf, char * field, char *value)
+int librouter_ppp_backupd_set_param_infile(char * intf, char * field, char *value)
 {
 	FILE *fd;
 	char line[128] = {(int)NULL};
@@ -439,7 +439,7 @@ void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg){
 	memset(cfg, 0, sizeof(ppp_config));
 	snprintf(cfg->osdevice, 16, "ttyU%d", serial_no);
 
-	librouter_ppp_get_config_backupd(serial_no,&cfg->bckp_conf);
+	librouter_ppp_backupd_get_config(serial_no,&cfg->bckp_conf);
 
 	cfg->unit = serial_no;
 

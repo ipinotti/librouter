@@ -141,9 +141,9 @@ int librouter_ppp_l2tp_set_config(char *name, ppp_config *cfg);
 void librouter_ppp_l2tp_set_defaults(char *name, ppp_config *cfg);
 
 int librouter_ppp_reload_backupd(void);
-int librouter_ppp_set_param_infile_backupd(char * intf, char * field, char *value);
-int librouter_ppp_verif_param_infile_backupd(char * intf, char *field, char *value);
-int librouter_ppp_verif_param_byintf_infile_backupd(char * intf, char *field, char *value);
+int librouter_ppp_backupd_set_param_infile(char * intf, char * field, char *value);
+int librouter_ppp_backupd_verif_param_infile(char * intf, char *field, char *value);
+int librouter_ppp_backupd_verif_param_byintf_infile(char * intf, char *field, char *value);
 
 
 #endif /* PPP_H_ */
