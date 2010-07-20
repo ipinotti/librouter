@@ -225,7 +225,7 @@ int librouter_dev_set_link_down(char *dev)
 
 	switch (fam->type) {
 	case ppp:
-		librouter_ppp_set_param_infile_backupd(dev,SHUTD_STR,"yes");
+		librouter_ppp_backupd_set_param_infile(dev,SHUTD_STR,"yes");
 		ret = librouter_ppp_reload_backupd();
 		break;
 	default:
@@ -244,7 +244,7 @@ int librouter_dev_set_link_up(char *dev)
 
 	switch (fam->type) {
 	case ppp:
-		librouter_ppp_set_param_infile_backupd(dev,SHUTD_STR,"no");
+		librouter_ppp_backupd_set_param_infile(dev,SHUTD_STR,"no");
 		ret = librouter_ppp_reload_backupd();
 		break;
 	default:
