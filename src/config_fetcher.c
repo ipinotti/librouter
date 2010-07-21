@@ -1105,12 +1105,12 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 		fprintf(out, " password set %s\n", cfg.sim_main.password);
 	}
 	else{
-		fprintf(out, " sim 0 apn set %s\n", cfg.sim_main.apn);
-		fprintf(out, " sim 0 username set %s\n", cfg.sim_main.username);
-		fprintf(out, " sim 0 password set %s\n", cfg.sim_main.password);
-		fprintf(out, " sim 1 apn set %s\n", cfg.sim_backup.apn);
-		fprintf(out, " sim 1 username set %s\n", cfg.sim_backup.username);
-		fprintf(out, " sim 1 password set %s\n", cfg.sim_backup.password);
+		fprintf(out, " sim %d apn set %s\n", cfg.sim_main.sim_num, cfg.sim_main.apn);
+		fprintf(out, " sim %d username set %s\n", cfg.sim_main.sim_num, cfg.sim_main.username);
+		fprintf(out, " sim %d password set %s\n", cfg.sim_main.sim_num, cfg.sim_main.password);
+		fprintf(out, " sim %d apn set %s\n", cfg.sim_backup.sim_num, cfg.sim_backup.apn);
+		fprintf(out, " sim %d username set %s\n", cfg.sim_backup.sim_num, cfg.sim_backup.username);
+		fprintf(out, " sim %d password set %s\n", cfg.sim_backup.sim_num, cfg.sim_backup.password);
 		fprintf(out, " sim-order %d %d\n", librouter_modem3g_sim_get_order(),!librouter_modem3g_sim_get_order());
 	}
 
