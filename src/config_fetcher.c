@@ -1099,10 +1099,21 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 	librouter_config_rip_dump_interface(out, osdev);
 	librouter_config_ospf_dump_interface(out, osdev);
 
+	if (serial_no != 0){
+		fprintf(out, " apn set %s\n", cfg.sim_main.apn);
+		fprintf(out, " username set %s\n", cfg.sim_main.username);
+		fprintf(out, " password set %s\n", cfg.sim_main.password);
+	}
+	else{
+		fprintf(out, " sim 0 apn set %s\n", cfg.sim_main.apn);
+		fprintf(out, " sim 0 username set %s\n", cfg.sim_main.username);
+		fprintf(out, " sim 0 password set %s\n", cfg.sim_main.password);
+		fprintf(out, " sim 1 apn set %s\n", cfg.sim_backup.apn);
+		fprintf(out, " sim 1 username set %s\n", cfg.sim_backup.username);
+		fprintf(out, " sim 1 password set %s\n", cfg.sim_backup.password);
+		fprintf(out, " sim-order %d %d\n", librouter_modem3g_sim_get_order(),!librouter_modem3g_sim_get_order());
+	}
 
-	fprintf(out, " apn set %s\n", cfg.apn);
-	fprintf(out, " username set %s\n", cfg.auth_user);
-	fprintf(out, " password set %s\n", cfg.auth_pass);
 	if (cfg.bckp_conf.method == BCKP_METHOD_LINK)
 		fprintf(out, " backup-method link\n");
 	else

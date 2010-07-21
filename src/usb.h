@@ -15,14 +15,15 @@
 #define ADDR_teste "/sys/bus/usb/devices/2-1/idProduct"
 
 #define IDVENDOR_LINUX_HUB 7531
+#define USB_STR_SIZE 256
 
 typedef struct {
 	int port;
 	int bus;
 	uint16_t vendor_id;
 	uint16_t product_id;
-	char product_str[256];
-	char manufacture_str[256];
+	char product_str[USB_STR_SIZE];
+	char manufacture_str[USB_STR_SIZE];
 
 } librouter_usb_dev;
 

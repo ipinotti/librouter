@@ -443,14 +443,23 @@ void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg){
 
 	cfg->unit = serial_no;
 
-	librouter_modem3g_get_apn(cfg->apn, serial_no);
-	librouter_modem3g_get_username(cfg->auth_user, serial_no);
-	librouter_modem3g_get_password(cfg->auth_pass, serial_no);
+	librouter_modem3g_get_apn(cfg->sim_main.apn, serial_no);
+	librouter_modem3g_get_username(cfg->sim_main.username, serial_no);
+	librouter_modem3g_get_password(cfg->sim_main.password, serial_no);
+
+	if (serial_no == 0){
+		cfg->sim_main.sim_num = librouter_modem3g_sim_get_order();
+		cfg->sim_backup.sim_num = !librouter_modem3g_sim_get_order();
+		librouter_modem3g_sim_get_info_fromfile(&cfg->sim_backup);
+
+	}
+	else
+		cfg->sim_main.sim_num = 0;
+
 
 	cfg->ip_unnumbered = -1;
 
 	cfg->up = !cfg->bckp_conf.shutdown;
-
 
 	/*
 	 * FIXME

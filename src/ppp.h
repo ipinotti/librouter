@@ -9,6 +9,7 @@
 
 #include <linux/config.h>
 #include "../../cish/util/backupd.h" /*FIXME*/
+#include "modem3G.h"
 
 
 /* 0 1 2 */
@@ -112,7 +113,10 @@ typedef struct {
 	/* Enable multilink (mp) option */
 	int multilink;
 	int debug;
+	/* apn -> Não utilizado no momento, substituido por sim_main & sim_backup para modem3g */
 	char apn[MAX_PPP_APN];
+	struct sim_conf sim_main;
+	struct sim_conf sim_backup;
 	struct bckp_conf_t bckp_conf;
 #ifdef CONFIG_HDLC_SPPP_LFI
 int fragment_size;
