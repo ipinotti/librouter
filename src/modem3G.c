@@ -185,13 +185,17 @@ int librouter_modem3g_sim_get_order(){
 
 	FILE * file;
 	int ret = -1;
+	char * card = malloc(2);
+
 	file = fopen(MODEM3G_SIM_ORDER_FILE, "r");
 	if (!file)
 		return -1;
 
-	ret = fgetc(file);
+	fgets(card,sizeof(card),file);
+	ret = atoi((const char *)card);
 
 	fclose(file);
+	free(card);
 
 	return ret;
 }
