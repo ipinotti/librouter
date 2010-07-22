@@ -271,14 +271,14 @@ int librouter_modem3g_sim_card_get(){
 int librouter_modem3g_get_apn(char * apn, int devcish)
 {
 	int check = -1, length = 0, i = 0;
-	char file[100] = MODEM3G_CHAT_FILE;
-	char device[10];
+	char file[48] = MODEM3G_CHAT_FILE;
+	char device[2];
 	char key[] = "\"IP\",";
 
-	snprintf(device, 10, "%d", devcish);
+	snprintf(device, 2, "%d", devcish);
 	strcat(file, device);
 
-	check = librouter_str_find_string_in_file(file, key, apn, 100);
+	check = librouter_str_find_string_in_file(file, key, apn, SIZE_FIELDS_STRUCT);
 	length = strlen(apn);
 
 	for (i = 1; i < (length - 1); ++i)
@@ -306,16 +306,16 @@ int librouter_modem3g_get_apn(char * apn, int devcish)
 int librouter_modem3g_set_apn(char * apn, int devcish)
 {
 	int check = -1;
-	char file[100] = MODEM3G_CHAT_FILE;
-	char device[10];
+	char file[48] = MODEM3G_CHAT_FILE;
+	char device[2];
 	char key[] = "\"IP\",";
-	char buffer_apn[256] = "\"";
+	char buffer_apn[SIZE_FIELDS_STRUCT] = "\"";
 	char plus[] = "\"'";
 
 	strcat(buffer_apn, apn);
 	strcat(buffer_apn, plus);
 
-	snprintf(device, 10, "%d", devcish);
+	snprintf(device, 2, "%d", devcish);
 	strcat(file, device);
 
 	check = librouter_str_replace_string_in_file(file, key, buffer_apn);
@@ -336,14 +336,14 @@ int librouter_modem3g_set_apn(char * apn, int devcish)
 int librouter_modem3g_get_username(char * username, int devcish)
 {
 	int check = -1;
-	char file[100] = MODEM3G_PEERS_FILE;
-	char device[10];
+	char file[48] = MODEM3G_PEERS_FILE;
+	char device[2];
 	char key[] = "user";
 
-	snprintf(device, 10, "%d", devcish);
+	snprintf(device, 2, "%d", devcish);
 	strcat(file, device);
 
-	check = librouter_str_find_string_in_file(file, key, username, 100);
+	check = librouter_str_find_string_in_file(file, key, username, SIZE_FIELDS_STRUCT);
 
 	return check;
 }
@@ -363,11 +363,11 @@ int librouter_modem3g_get_username(char * username, int devcish)
 int librouter_modem3g_set_username(char * username, int devcish)
 {
 	int check = -1;
-	char file[100] = MODEM3G_PEERS_FILE;
-	char device[10];
+	char file[48] = MODEM3G_PEERS_FILE;
+	char device[2];
 	char key[] = "user";
 
-	snprintf(device, 10, "%d", devcish);
+	snprintf(device, 2, "%d", devcish);
 	strcat(file, device);
 
 	check = librouter_str_replace_string_in_file(file, key, username);
@@ -390,14 +390,14 @@ int librouter_modem3g_set_username(char * username, int devcish)
 int librouter_modem3g_get_password(char * password, int devcish)
 {
 	int check = -1;
-	char file[100] = MODEM3G_PEERS_FILE;
-	char device[10];
+	char file[48] = MODEM3G_PEERS_FILE;
+	char device[2];
 	char key[] = "password";
 
-	snprintf(device, 10, "%d", devcish);
+	snprintf(device, 2, "%d", devcish);
 	strcat(file, device);
 
-	check = librouter_str_find_string_in_file(file, key, password, 100);
+	check = librouter_str_find_string_in_file(file, key, password, SIZE_FIELDS_STRUCT);
 
 	return check;
 }
@@ -418,11 +418,11 @@ int librouter_modem3g_get_password(char * password, int devcish)
 int librouter_modem3g_set_password(char * password, int devcish)
 {
 	int check = -1;
-	char file[100] = MODEM3G_PEERS_FILE;
-	char device[10];
+	char file[48] = MODEM3G_PEERS_FILE;
+	char device[2];
 	char key[] = "password";
 
-	snprintf(device, 10, "%d", devcish);
+	snprintf(device, 2, "%d", devcish);
 	strcat(file, device);
 
 	check = librouter_str_replace_string_in_file(file, key, password);
@@ -443,17 +443,17 @@ int librouter_modem3g_set_all_info(struct sim_conf * sim, int devcish){
 	char key_apn[] = "\"IP\",";
 	char key_user[] = "user";
 	char key_pass[] = "password";
-	char buffer_apn[256] = {(int)NULL};
-	char file[100] = {(int)NULL};
+	char buffer_apn[SIZE_FIELDS_STRUCT] = {(int)NULL};
+	char file[56] = {(int)NULL};
 
-	snprintf(buffer_apn,256,"\"%s\"'",sim->apn);
-	snprintf(file,100,"%s%d",MODEM3G_CHAT_FILE,devcish);
+	snprintf(buffer_apn,SIZE_FIELDS_STRUCT,"\"%s\"'",sim->apn);
+	snprintf(file,56,"%s%d",MODEM3G_CHAT_FILE,devcish);
 
 	check = librouter_str_replace_string_in_file(file, key_apn, buffer_apn);
 	if (check < 0)
 		goto end;
 
-	snprintf(file,100,"%s%d",MODEM3G_PEERS_FILE,devcish);
+	snprintf(file,56,"%s%d",MODEM3G_PEERS_FILE,devcish);
 
 	check = librouter_str_replace_string_in_file(file, key_user, sim->username);
 	if (check < 0)
