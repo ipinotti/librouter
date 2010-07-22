@@ -448,8 +448,8 @@ void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg){
 	librouter_modem3g_get_password(cfg->sim_main.password, serial_no);
 
 	if (serial_no == 0){
-		cfg->sim_main.sim_num = librouter_modem3g_sim_get_order();
-		cfg->sim_backup.sim_num = !librouter_modem3g_sim_get_order();
+		cfg->sim_main.sim_num = librouter_modem3g_sim_order_get_mainsim();
+		cfg->sim_backup.sim_num = !librouter_modem3g_sim_order_get_mainsim();
 		librouter_modem3g_sim_get_info_fromfile(&cfg->sim_backup);
 
 	}

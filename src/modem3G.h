@@ -25,6 +25,12 @@
 #define USERN_STR_LEN 		strlen(USERN_STR)
 #define PASSW_STR_LEN 		strlen(PASSW_STR)
 
+#define MAINSIM_STR		"mainsim="
+#define SIMORDER_ENABLE_STR	"simorder_enable="
+
+#define MAINSIM_STR_LEN		strlen(MAINSIM_STR)
+#define SIMORDER_ENABLE_STR_LEN	strlen(SIMORDER_ENABLE_STR)
+
 struct sim_conf {
 	int sim_num;
 	char apn[SIZE_FIELDS_STRUCT];
@@ -41,10 +47,13 @@ int librouter_modem3g_set_password (char * password, int devcish);
 int librouter_modem3g_set_all_info(struct sim_conf * sim, int devcish);
 int librouter_modem3g_sim_set_info_infile(int sim, char * field, char * info);
 int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card);
-int librouter_modem3g_sim_set_order(int sim);
-int librouter_modem3g_sim_get_order();
-int librouter_modem3g_sim_set_card(int sim);
-int librouter_modem3g_sim_get_card();
+int librouter_modem3g_sim_order_set_mainsim(int sim);
+int librouter_modem3g_sim_order_get_mainsim();
+int librouter_modem3g_sim_card_set(int sim);
+int librouter_modem3g_sim_card_get();
+int librouter_modem3g_sim_order_set_enable(int value);
+int librouter_modem3g_sim_order_is_enable();
+
 
 
 
