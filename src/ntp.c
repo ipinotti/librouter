@@ -281,6 +281,8 @@ int librouter_ntp_server(char *server, char *key_num)
 	struct stat st;
 	int fd, found = 0;
 	char *p, *local, line[200];
+	int num_servers = 0;
+	int ret = 0;
 
 #ifdef OPTION_NTPD_authenticate
 	int auth=librouter_ntp_is_auth_used();
@@ -319,6 +321,9 @@ int librouter_ntp_server(char *server, char *key_num)
 		if (strlen(line)) {
 			args = librouter_make_args(line);
 
+			if (!strcmp(args->argv[0], "server"))
+				num_servers++;
+
 			/* server <ipaddr> iburst key 1-16 */
 			if (!found &&
 				args->argc >= 2 &&
@@ -343,6 +348,14 @@ int librouter_ntp_server(char *server, char *key_num)
 	}
 
 	fclose(f);
+
+	/* Maximum of 3 servers */
+	if (num_servers == MAX_NTP_SERVERS) {
+		librouter_pr_error(0, "Maximum number of servers reached\n");
+		librouter_destroy_args(args);
+		free(local);
+		return -1;
+	}
 
 	if (!(f = fopen(FILE_NTP_CONF, "w"))) {
 		librouter_pr_error(0, "Could not write NTP configuration (fopen)");
@@ -379,7 +392,7 @@ int librouter_ntp_server(char *server, char *key_num)
 
 	librouter_ntp_hup();
 
-	return 0;
+	return ret;
 }
 
 int librouter_ntp_trust_on_key(char *num)

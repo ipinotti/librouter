@@ -10,8 +10,9 @@
 #define NTP_DAEMON "ntpd"
 #define NTP_PID "/var/run/ntpd.pid"
 #define NTP_KEY_FILE "/etc/ntp.keys"
-
 #define NTP_CFG_FILE "/var/run/ntp.config"
+
+#define MAX_NTP_SERVERS 	3 /* Maximum number of configured servers */
 
 int librouter_ntp_set(int timeout, char *ip);
 int librouter_ntp_get(int *timeout, char *ip);

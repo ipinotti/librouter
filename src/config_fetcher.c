@@ -701,7 +701,7 @@ void librouter_config_clock_dump(FILE *out)
 	int hours, mins;
 	char name[16];
 
-	if (get_timezone(name, &hours, &mins) == 0) {
+	if (librouter_time_get_timezone(name, &hours, &mins) == 0) {
 		fprintf(out, "clock timezone %s %d", name, hours);
 
 		if (mins > 0)
