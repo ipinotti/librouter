@@ -56,7 +56,7 @@ struct tzhead {
 
 #define TZFILE "/etc/localtime"
 
-int set_timezone(char *name, int hours, int mins)
+int librouter_time_set_timezone(char *name, int hours, int mins)
 {
 	struct tzhead h;
 	long offset;
@@ -104,7 +104,7 @@ int set_timezone(char *name, int hours, int mins)
 	return 0;
 }
 
-int get_timezone(char *name, int *hours, int *mins)
+int librouter_time_get_timezone(char *name, int *hours, int *mins)
 {
 	long offset;
 	int fd, len;
@@ -186,7 +186,7 @@ int parse_time(char *time, int *h, int *m, int *s)
 	return 0;
 }
 
-int get_date(char *buf, int size)
+int librouter_time_get_date(char *buf, int size)
 {
 	time_t tm;
 	struct tm tm_time;
@@ -198,40 +198,7 @@ int get_date(char *buf, int size)
 	return 0;
 }
 
-#define	I2C_RTC_ADDR		0x68
-
-#define RTC_SEC_REG_ADDR	0x00
-#define RTC_MIN_REG_ADDR	0x01
-#define RTC_HR_REG_ADDR		0x02
-#define RTC_DAY_REG_ADDR	0x03
-#define RTC_DATE_REG_ADDR	0x04
-#define RTC_MON_REG_ADDR	0x05
-#define RTC_YR_REG_ADDR		0x06
-#define RTC_CTL_REG_ADDR	0x07
-
-#define RTC_SEC_BIT_CH		0x80	/* Clock Halt (in Register 0) */
-
-/* DS1338 Register 7 (Control) */
-#define RTC_CTL_BIT_RS0		0x01	/* Rate select 0 */
-#define RTC_CTL_BIT_RS1		0x02	/* Rate select 1 */
-#define RTC_CTL_BIT_SQWE	0x10	/* Square Wave Enable */
-#define RTC_CTL_BIT_OSF		0x20	/* Oscillator Stop Flag (Only on DS1338 !!!) */
-#define RTC_CTL_BIT_OUT		0x80	/* Output Control */
-
-struct rtc_ds1338_regs
-{
-	unsigned char seconds;
-	unsigned char minutes;
-	unsigned char hour;
-	unsigned char day;
-	unsigned char date;
-	unsigned char month;
-	unsigned char year;
-	unsigned char control;
-	unsigned char ram[56];
-};
-
-int set_date(int day, int mon, int year, int hour, int min, int sec)
+int librouter_time_set_date(int day, int mon, int year, int hour, int min, int sec)
 {
 	time_t tm;
 	struct tm tm_time;
