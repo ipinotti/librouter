@@ -155,58 +155,93 @@ int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card){
  * @param sim
  * @return 0 if ok, -1 if not
  */
-int librouter_modem3g_sim_set_order(int sim){
+int librouter_modem3g_sim_order_set_mainsim(int sim){
 
-	FILE * file;
+	char file[] = MODEM3G_SIM_ORDER_FILE;
 	char * card = malloc(2);
+	int ret = -1;
 
 	if ( !(sim == 0 || sim == 1) )
-		return -1;
+		goto end;
 
 	sprintf(card,"%d", sim);
 
-	file = fopen(MODEM3G_SIM_ORDER_FILE, "w+");
-	if (!file)
-		return -1;
+	ret = librouter_str_replace_string_in_file(file,MAINSIM_STR,card);
 
-	fputs((const char *)card,file);
-
-	fclose(file);
+end:
 	free(card);
-
-	return 0;
+	return ret;
 }
 
 /**
  * Recupera o main SIM CARD armazenado no arquivo apontador por MODEM3G_SIM_ORDER_FILE
  * @return Number of the main SIM
  */
-int librouter_modem3g_sim_get_order(){
+int librouter_modem3g_sim_order_get_mainsim(){
 
-	FILE * file;
-	int ret = -1;
+	char file[] = MODEM3G_SIM_ORDER_FILE;
 	char * card = malloc(2);
+	int card_int = -1;
 
-	file = fopen(MODEM3G_SIM_ORDER_FILE, "r");
-	if (!file)
-		return -1;
+	if (librouter_str_find_string_in_file(file,MAINSIM_STR,card,sizeof(card)) < 0)
+		goto end;
 
-	fgets(card,sizeof(card),file);
-	ret = atoi((const char *)card);
+	card_int = atoi(card);
 
-	fclose(file);
+end:
 	free(card);
+	return card_int;
+}
 
+/**
+ * Habilita(1) ou desabilita(0) suporte de backup do MAIN SIM pelo BACKUP SIM
+ *
+ * @param value
+ * @return 0 if ok, -1 if not
+ */
+int librouter_modem3g_sim_order_set_enable(int value){
+
+	char file[] = MODEM3G_SIM_ORDER_FILE;
+	char * enable = malloc(2);
+	int ret = -1;
+
+	if ( !(value == 0 || value == 1) )
+		goto end;
+
+	sprintf(enable,"%d", value);
+
+	ret = librouter_str_replace_string_in_file(file,SIMORDER_ENABLE_STR,enable);
+
+end:
+	free(enable);
 	return ret;
 }
 
+/**
+ * Recupera estado do sim_order (se está ativo o sistema de backup do MAIN SIM)
+ * @return 1 if enable, 0 if not, -1 if a problem occurred
+ */
+int librouter_modem3g_sim_order_is_enable(){
 
+	char file[] = MODEM3G_SIM_ORDER_FILE;
+	char * enable = malloc(2);
+	int result = -1;
+
+	if (librouter_str_find_string_in_file(file,SIMORDER_ENABLE_STR,enable,sizeof(enable)) < 0)
+		goto end;
+
+	result = atoi(enable);
+
+end:
+	free(enable);
+	return result;
+}
 
 /**
  * Função relacionada a seleção do SIM CARD pelo HW.
  * @return
  */
-int librouter_modem3g_sim_set_card(int sim){
+int librouter_modem3g_sim_card_set(int sim){
 
 	return 0;
 }
@@ -215,7 +250,7 @@ int librouter_modem3g_sim_set_card(int sim){
  * Função relacionada a seleção do SIM CARD pelo Hw.
  * @return
  */
-int librouter_modem3g_sim_get_card(){
+int librouter_modem3g_sim_card_get(){
 
 	return 0;
 }

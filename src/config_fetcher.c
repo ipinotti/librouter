@@ -1120,8 +1120,11 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 			fprintf(out, " sim %d username set %s\n", cfg.sim_backup.sim_num, cfg.sim_backup.username);
 		if (strcmp(cfg.sim_backup.password, "") != 0)
 			fprintf(out, " sim %d password set %s\n", cfg.sim_backup.sim_num, cfg.sim_backup.password);
-		if ( (strcmp(cfg.sim_main.apn, "") != 0) && (strcmp(cfg.sim_backup.apn, "") != 0) )
-			fprintf(out, " sim-order %d %d\n", librouter_modem3g_sim_get_order(),!librouter_modem3g_sim_get_order());
+		if (strcmp(cfg.sim_main.apn, "") != 0)
+			if (librouter_modem3g_sim_order_is_enable())
+				fprintf(out, " sim-order %d %d\n", librouter_modem3g_sim_order_get_mainsim(),!librouter_modem3g_sim_order_get_mainsim());
+			else
+				fprintf(out, " sim-order %d\n", librouter_modem3g_sim_order_get_mainsim());
 	}
 
 	if (cfg.bckp_conf.method == BCKP_METHOD_LINK)
