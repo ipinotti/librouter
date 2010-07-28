@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 #include <security/pam_appl.h>
 #include <security/pam_misc.h>
@@ -749,3 +751,69 @@ int librouter_pam_get_auth_type(char *device)
 	return AUTH_TYPE_NONE;
 }
 
+int librouter_pam_get_users(char *users)
+{
+	FILE *f;
+	/* Dump users */
+	if ((f = fopen(FILE_PASSWD, "r"))) {
+		struct passwd *pw;
+
+		while ((pw = fgetpwent(f))) {
+			if (pw->pw_uid > 500 && !strncmp(pw->pw_gecos, "Local", 5)) {
+				strcat(users, pw->pw_name);
+				strcat(users, " ");
+			}
+		}
+
+		fclose(f);
+	}
+	return 0;
+}
+
+
+static int _validate_username(char *username)
+{
+	int i;
+	const char *users[7] = { "root", "admin", "ppp", "uucp", "upload", "nobody", NULL };
+
+	for (i = 0; users[i]; i++) {
+		if (strcmp(users[i], username) == 0) {
+			syslog(LOG_ERR, "%% Cannot configure %s user!\n", username);
+			printf("%% Cannot configure %s user!\n", username);
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+int librouter_pam_add_user(char *user, char *pw)
+{
+	char buf[256];
+
+	if (user == NULL || pw == NULL)
+		return -1;
+
+	if (_validate_username(user) < 0)
+		return -1;
+
+	librouter_exec_prog(0, "/bin/deluser", user, NULL);
+	librouter_exec_prog(0, "/bin/adduser", user, "-p", pw, NULL);
+
+	return 0;
+}
+
+int librouter_pam_del_user(char *user)
+{
+	char buf[256];
+
+	if (user == NULL)
+		return -1;
+
+	if (_validate_username(user) < 0)
+		return -1;
+
+	librouter_exec_prog(0, "/bin/deluser", user, NULL);
+
+	return 0;
+}
