@@ -68,5 +68,8 @@ int librouter_pam_config_mode(cish_config *cish_cfg,
                   char *pam_file);
 
 int librouter_pam_get_auth_type(char *device);
+int librouter_pam_get_users(char *users);
+int librouter_pam_del_user(char *user);
+int librouter_pam_add_user(char *user, char *pw);
 
 #endif /* PAM_H_ */

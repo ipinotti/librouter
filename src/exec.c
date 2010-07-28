@@ -136,34 +136,32 @@ int librouter_exec_prog(int no_out, char *path, ...)
 
 	pid = fork();
 	switch (pid) {
-	case 0: // child - execute program
+	case 0: /* child */
 		if (no_out) {
 			close(1); // close stdout
 			close(2); // close stderr
 		}
 		ret = execv(path, argv);
-		librouter_pr_error(1, "unable to execute %s", path);
-		return (-1);
-		break;
-
+		librouter_logerr("%s : unable to execute %s ", strerror(errno), path);
+		exit(-1);
 	case -1:
-		librouter_pr_error(1, "could not fork");
+		librouter_logerr("could not fork");
 		return (-1);
 		break;
 
-	default: // parent - wait until child finishes
+	default: /* parent */
 	{
 		int status;
 		if (waitpid(pid, &status, 0) < 0) {
-			librouter_pr_error(1, "waitpid");
+			librouter_logerr("waitpid");
 			return (-1);
 		}
 		if (!WIFEXITED(status)) {
-			librouter_pr_error(0, "child did not exited normally");
+			librouter_logerr("child did not exited normally");
 			return (-1);
 		}
 		if (WEXITSTATUS(status) < 0) {
-			librouter_pr_error(0, "child exit status = %d %s",
+			librouter_logerr("child exit status = %d %s",
 			                WEXITSTATUS(status), path);
 			return (-1);
 		}
