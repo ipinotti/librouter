@@ -44,7 +44,7 @@ int librouter_modem3g_get_username (char * username, int devcish);
 int librouter_modem3g_set_username (char * username, int devcish);
 int librouter_modem3g_get_password (char * password, int devcish);
 int librouter_modem3g_set_password (char * password, int devcish);
-int librouter_modem3g_set_all_info(struct sim_conf * sim, int devcish);
+int librouter_modem3g_set_all_info_inchat(struct sim_conf * sim, int devcish);
 int librouter_modem3g_sim_set_info_infile(int sim, char * field, char * info);
 int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card);
 int librouter_modem3g_sim_order_set_mainsim(int sim);
@@ -53,9 +53,6 @@ int librouter_modem3g_sim_card_set(int sim);
 int librouter_modem3g_sim_card_get();
 int librouter_modem3g_sim_order_set_enable(int value);
 int librouter_modem3g_sim_order_is_enable();
-
-
-
-
+int librouter_modem3g_sim_set_all_info_inchat(int simcard, int m3g);
 
 #endif

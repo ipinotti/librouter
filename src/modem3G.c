@@ -25,7 +25,7 @@
 
 
 /**
- * Função grava informações referentes as configurações do SIM card no arquivo apontado por MODEM3G_SIM_INFO_FILE.
+ * Função grava informações referentes as configurações do SIM card (M3G0) no arquivo apontado por MODEM3G_SIM_INFO_FILE.
  * É necessário passar por parâmetro o número do cartão (0 ou 1), o campo da configuração e o valor desejado.
  * @param sim
  * @param field
@@ -85,7 +85,7 @@ int librouter_modem3g_sim_set_info_infile(int sim, char * field, char * info){
 }
 
 /**
- * Função recupera informações do SIM card desejado, passado por parâmetro, que estão gravadas no arquivo apontado por MODEM3G_SIM_INFO_FILE.
+ * Função recupera informações do SIM card (M3G0) desejado, passado por parâmetro, que estão gravadas no arquivo apontado por MODEM3G_SIM_INFO_FILE.
  * É passado por parâmetro a struct sim_conf, sendo necessário informar nesta struct, qual SIM card desejado (0 ou 1).
  * @param sim_card
  * @return 0 if ok, -1 if not.
@@ -438,7 +438,7 @@ int librouter_modem3g_set_password(char * password, int devcish)
  * @param devcish
  * @return 0 if ok, -1 if not
  */
-int librouter_modem3g_set_all_info(struct sim_conf * sim, int devcish){
+int librouter_modem3g_set_all_info_inchat(struct sim_conf * sim, int devcish){
 	int check = -1;
 	char key_apn[] = "\"IP\",";
 	char key_user[] = "user";
@@ -463,4 +463,34 @@ int librouter_modem3g_set_all_info(struct sim_conf * sim, int devcish){
 
 end:
 	return check;
+}
+
+/**
+ * Função permite setar informações do SIM Card 0 e 1 da M3G0 para o chat-script
+ *
+ * É necessário passar por parâmetro o número do SIM Card desejado, e a interface M3G, no momento, somente
+ * a interfacae M3G0 possui DUAL SIM.
+ * @param simcard
+ * @param devcish -> must be 0 for now
+ * @return 0 if ok, -1 if not
+ */
+int librouter_modem3g_sim_set_all_info_inchat(int simcard, int m3g){
+	struct sim_conf * sim = malloc(sizeof(struct sim_conf));
+
+	sim->sim_num = simcard;
+
+	if (librouter_modem3g_sim_get_info_fromfile(sim) < 0 ){
+		free(sim);
+		return -1;
+
+	}
+
+	if (librouter_modem3g_set_all_info_inchat(sim,m3g) < 0){
+		free(sim);
+		return -1;
+	}
+
+	free (sim);
+	return 0;
+
 }

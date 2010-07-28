@@ -428,13 +428,6 @@ int librouter_ppp_set_config(int serial_no, ppp_config *cfg)
 
 void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg){
 
-	/*
-	 * FIXME
-	 * int cfg_back = 0;
-	 * cfg_back = cfg->up;
-	 */
-
-
 	/* Clean memory! */
 	memset(cfg, 0, sizeof(ppp_config));
 	snprintf(cfg->osdevice, 16, "ttyU%d", serial_no);
@@ -443,19 +436,18 @@ void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg){
 
 	cfg->unit = serial_no;
 
-	librouter_modem3g_get_apn(cfg->sim_main.apn, serial_no);
-	librouter_modem3g_get_username(cfg->sim_main.username, serial_no);
-	librouter_modem3g_get_password(cfg->sim_main.password, serial_no);
-
 	if (serial_no == 0){
 		cfg->sim_main.sim_num = librouter_modem3g_sim_order_get_mainsim();
 		cfg->sim_backup.sim_num = !librouter_modem3g_sim_order_get_mainsim();
+		librouter_modem3g_sim_get_info_fromfile(&cfg->sim_main);
 		librouter_modem3g_sim_get_info_fromfile(&cfg->sim_backup);
-
 	}
-	else
+	else{
 		cfg->sim_main.sim_num = 0;
-
+		librouter_modem3g_get_apn(cfg->sim_main.apn, serial_no);
+		librouter_modem3g_get_username(cfg->sim_main.username, serial_no);
+		librouter_modem3g_get_password(cfg->sim_main.password, serial_no);
+	}
 
 	cfg->ip_unnumbered = -1;
 
@@ -463,9 +455,6 @@ void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg){
 
 	/*
 	 * FIXME
-	 * cfg->up = cfg_back;
-	 * cfg->up = ppp_is_pppd_running(serial_no);
-	 * cfg->backup = -1;
 	 * cfg->novj = 1;
 	 */
 }
