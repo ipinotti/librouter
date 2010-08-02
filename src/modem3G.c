@@ -21,8 +21,8 @@
 
 #include "str.h"
 #include "error.h"
+#include "ppcio.h"
 #include "modem3G.h"
-
 
 /**
  * Função grava informações referentes as configurações do SIM card (M3G0) no arquivo apontado por MODEM3G_SIM_INFO_FILE.
@@ -32,14 +32,15 @@
  * @param info
  * @return 0 if ok, -1 if not
  */
-int librouter_modem3g_sim_set_info_infile(int sim, char * field, char * info){
+int librouter_modem3g_sim_set_info_infile(int sim, char * field, char * info)
+{
 	FILE *fd;
-	char line[128] = {(int)NULL};
-	char buff[220] = {(int)NULL};
+	char line[128] = { (int) NULL };
+	char buff[220] = { (int) NULL };
 	char filenamesim_new[64], fvalue[32], sim_ref[32];
 
-	snprintf(sim_ref,32,"%s%d",SIMCARD_STR,sim);
-	snprintf(fvalue,32,"%s=%s\n",field, info);
+	snprintf(sim_ref, 32, "%s%d", SIMCARD_STR, sim);
+	snprintf(fvalue, 32, "%s=%s\n", field, info);
 
 	if ((fd = fopen(MODEM3G_SIM_INFO_FILE, "r")) == NULL) {
 		syslog(LOG_ERR, "Could not open configuration file\n");
@@ -48,18 +49,17 @@ int librouter_modem3g_sim_set_info_infile(int sim, char * field, char * info){
 
 	while (fgets(line, sizeof(line), fd) != NULL) {
 		if (!strncmp(line, sim_ref, strlen(sim_ref))) {
-			strcat(buff, (const char *)line);
-			while( (fgets(line, sizeof(line), fd) != NULL) && (strcmp(line, "\n") != 0) ){
-				if (!strncmp(line, field, strlen(field))){
-					strcat(buff, (const char *)fvalue);
+			strcat(buff, (const char *) line);
+			while ((fgets(line, sizeof(line), fd) != NULL) && (strcmp(line, "\n") != 0)) {
+				if (!strncmp(line, field, strlen(field))) {
+					strcat(buff, (const char *) fvalue);
 					break;
-				}
-				else
-					strcat(buff,(const char *)line);
+				} else
+					strcat(buff, (const char *) line);
 			}
 			continue;
 		}
-		strcat(buff, (const char *)line);
+		strcat(buff, (const char *) line);
 	}
 
 	fclose(fd);
@@ -68,12 +68,12 @@ int librouter_modem3g_sim_set_info_infile(int sim, char * field, char * info){
 	filenamesim_new[63] = 0;
 	strcat(filenamesim_new, ".new");
 
-	if ((fd = fopen((const char *)filenamesim_new,"w+")) < 0) {
+	if ((fd = fopen((const char *) filenamesim_new, "w+")) < 0) {
 		syslog(LOG_ERR, "Could not open configuration file\n");
 		return -1;
 	}
 
-	fputs((const char *)buff,fd);
+	fputs((const char *) buff, fd);
 
 	fclose(fd);
 
@@ -90,12 +90,13 @@ int librouter_modem3g_sim_set_info_infile(int sim, char * field, char * info){
  * @param sim_card
  * @return 0 if ok, -1 if not.
  */
-int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card){
+int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card)
+{
 	FILE *fd;
-	char line[128] = {(int)NULL};
+	char line[128] = { (int) NULL };
 	char sim_ref[32];
 	char *p;
-	snprintf(sim_ref,32,"%s%d\n",SIMCARD_STR, sim_card->sim_num);
+	snprintf(sim_ref, 32, "%s%d\n", SIMCARD_STR, sim_card->sim_num);
 
 	if ((fd = fopen(MODEM3G_SIM_INFO_FILE, "r")) == NULL) {
 		syslog(LOG_ERR, "Could not open configuration file\n");
@@ -104,7 +105,7 @@ int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card){
 
 	while (fgets(line, sizeof(line), fd) != NULL) {
 		if (!strncmp(line, sim_ref, strlen(sim_ref))) {
-			while( (fgets(line, sizeof(line), fd) != NULL) && (strcmp(line, "\n") != 0) ){
+			while ((fgets(line, sizeof(line), fd) != NULL) && (strcmp(line, "\n") != 0)) {
 
 				if (!strncmp(line, APN_STR, APN_STR_LEN)) {
 					strcpy(sim_card->apn, line + APN_STR_LEN);
@@ -117,7 +118,7 @@ int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card){
 					continue;
 				}
 
-				if (!strncmp(line, USERN_STR, USERN_STR_LEN)){
+				if (!strncmp(line, USERN_STR, USERN_STR_LEN)) {
 					strcpy(sim_card->username, line + USERN_STR_LEN);
 
 					/* Remove any line break */
@@ -128,7 +129,7 @@ int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card){
 					continue;
 				}
 
-				if (!strncmp(line, PASSW_STR, PASSW_STR_LEN)){
+				if (!strncmp(line, PASSW_STR, PASSW_STR_LEN)) {
 					strcpy(sim_card->password, line + PASSW_STR_LEN);
 
 					/* Remove any line break */
@@ -148,28 +149,27 @@ int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card){
 
 }
 
-
 /**
  * Grava o main SIM CARD no arquivo apontado por MODEM3G_SIM_ORDER_FILE
  * SIM CARDS --> 0 ou 1
  * @param sim
  * @return 0 if ok, -1 if not
  */
-int librouter_modem3g_sim_order_set_mainsim(int sim){
+int librouter_modem3g_sim_order_set_mainsim(int sim)
+{
 
 	char file[] = MODEM3G_SIM_ORDER_FILE;
 	char * card = malloc(2);
 	int ret = -1;
 
-	if ( !(sim == 0 || sim == 1) )
+	if (!(sim == 0 || sim == 1))
 		goto end;
 
-	sprintf(card,"%d", sim);
+	sprintf(card, "%d", sim);
 
-	ret = librouter_str_replace_string_in_file(file,MAINSIM_STR,card);
+	ret = librouter_str_replace_string_in_file(file, MAINSIM_STR, card);
 
-end:
-	free(card);
+	end: free(card);
 	return ret;
 }
 
@@ -177,19 +177,19 @@ end:
  * Recupera o main SIM CARD armazenado no arquivo apontador por MODEM3G_SIM_ORDER_FILE
  * @return Number of the main SIM
  */
-int librouter_modem3g_sim_order_get_mainsim(){
+int librouter_modem3g_sim_order_get_mainsim(void)
+{
 
 	char file[] = MODEM3G_SIM_ORDER_FILE;
 	char * card = malloc(2);
 	int card_int = -1;
 
-	if (librouter_str_find_string_in_file(file,MAINSIM_STR,card,sizeof(card)) < 0)
+	if (librouter_str_find_string_in_file(file, MAINSIM_STR, card, sizeof(card)) < 0)
 		goto end;
 
 	card_int = atoi(card);
 
-end:
-	free(card);
+	end: free(card);
 	return card_int;
 }
 
@@ -199,21 +199,21 @@ end:
  * @param value
  * @return 0 if ok, -1 if not
  */
-int librouter_modem3g_sim_order_set_enable(int value){
+int librouter_modem3g_sim_order_set_enable(int value)
+{
 
 	char file[] = MODEM3G_SIM_ORDER_FILE;
 	char * enable = malloc(2);
 	int ret = -1;
 
-	if ( !(value == 0 || value == 1) )
+	if (!(value == 0 || value == 1))
 		goto end;
 
-	sprintf(enable,"%d", value);
+	sprintf(enable, "%d", value);
 
-	ret = librouter_str_replace_string_in_file(file,SIMORDER_ENABLE_STR,enable);
+	ret = librouter_str_replace_string_in_file(file, SIMORDER_ENABLE_STR, enable);
 
-end:
-	free(enable);
+	end: free(enable);
 	return ret;
 }
 
@@ -221,27 +221,40 @@ end:
  * Recupera estado do sim_order (se está ativo o sistema de backup do MAIN SIM)
  * @return 1 if enable, 0 if not, -1 if a problem occurred
  */
-int librouter_modem3g_sim_order_is_enable(){
+int librouter_modem3g_sim_order_is_enable(void)
+{
 
 	char file[] = MODEM3G_SIM_ORDER_FILE;
 	char * enable = malloc(2);
 	int result = -1;
 
-	if (librouter_str_find_string_in_file(file,SIMORDER_ENABLE_STR,enable,sizeof(enable)) < 0)
+	if (librouter_str_find_string_in_file(file, SIMORDER_ENABLE_STR, enable, sizeof(enable))
+	                < 0)
 		goto end;
 
 	result = atoi(enable);
 
-end:
-	free(enable);
+	end: free(enable);
 	return result;
 }
+
+
+#define GPIO_SIM_SELECT_PIN	1
+#define GPIO_SIM_SELECT_PORT	1
 
 /**
  * Função relacionada a seleção do SIM CARD pelo HW.
  * @return
  */
-int librouter_modem3g_sim_card_set(int sim){
+int librouter_modem3g_sim_card_set(int sim)
+{
+	struct powerpc_gpio gpio;
+
+	gpio.pin = GPIO_SIM_SELECT_PIN;
+	gpio.port = GPIO_SIM_SELECT_PORT;
+	gpio.value = sim;
+
+	librouter_ppcio_write(&gpio);
 
 	return 0;
 }
@@ -250,12 +263,11 @@ int librouter_modem3g_sim_card_set(int sim){
  * Função relacionada a seleção do SIM CARD pelo Hw.
  * @return
  */
-int librouter_modem3g_sim_card_get(){
+int librouter_modem3g_sim_card_get(void)
+{
 
 	return 0;
 }
-
-
 
 /**
  * Adquire o APN - Acess Point Name, no arquivo de script - ARQ1,
@@ -438,22 +450,23 @@ int librouter_modem3g_set_password(char * password, int devcish)
  * @param devcish
  * @return 0 if ok, -1 if not
  */
-int librouter_modem3g_set_all_info_inchat(struct sim_conf * sim, int devcish){
+int librouter_modem3g_set_all_info_inchat(struct sim_conf * sim, int devcish)
+{
 	int check = -1;
 	char key_apn[] = "\"IP\",";
 	char key_user[] = "user";
 	char key_pass[] = "password";
-	char buffer_apn[SIZE_FIELDS_STRUCT] = {(int)NULL};
-	char file[56] = {(int)NULL};
+	char buffer_apn[SIZE_FIELDS_STRUCT] = { (int) NULL };
+	char file[56] = { (int) NULL };
 
-	snprintf(buffer_apn,SIZE_FIELDS_STRUCT,"\"%s\"'",sim->apn);
-	snprintf(file,56,"%s%d",MODEM3G_CHAT_FILE,devcish);
+	snprintf(buffer_apn, SIZE_FIELDS_STRUCT, "\"%s\"'", sim->apn);
+	snprintf(file, 56, "%s%d", MODEM3G_CHAT_FILE, devcish);
 
 	check = librouter_str_replace_string_in_file(file, key_apn, buffer_apn);
 	if (check < 0)
 		goto end;
 
-	snprintf(file,56,"%s%d",MODEM3G_PEERS_FILE,devcish);
+	snprintf(file, 56, "%s%d", MODEM3G_PEERS_FILE, devcish);
 
 	check = librouter_str_replace_string_in_file(file, key_user, sim->username);
 	if (check < 0)
@@ -461,8 +474,7 @@ int librouter_modem3g_set_all_info_inchat(struct sim_conf * sim, int devcish){
 
 	check = librouter_str_replace_string_in_file(file, key_pass, sim->password);
 
-end:
-	return check;
+	end: return check;
 }
 
 /**
@@ -474,23 +486,24 @@ end:
  * @param devcish -> must be 0 for now
  * @return 0 if ok, -1 if not
  */
-int librouter_modem3g_sim_set_all_info_inchat(int simcard, int m3g){
+int librouter_modem3g_sim_set_all_info_inchat(int simcard, int m3g)
+{
 	struct sim_conf * sim = malloc(sizeof(struct sim_conf));
 
 	sim->sim_num = simcard;
 
-	if (librouter_modem3g_sim_get_info_fromfile(sim) < 0 ){
+	if (librouter_modem3g_sim_get_info_fromfile(sim) < 0) {
 		free(sim);
 		return -1;
 
 	}
 
-	if (librouter_modem3g_set_all_info_inchat(sim,m3g) < 0){
+	if (librouter_modem3g_set_all_info_inchat(sim, m3g) < 0) {
 		free(sim);
 		return -1;
 	}
 
-	free (sim);
+	free(sim);
 	return 0;
 
 }
