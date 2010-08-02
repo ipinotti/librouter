@@ -2,6 +2,7 @@
  * ppcio.c
  *
  *  Created on: Jun 24, 2010
+ *  Author: Thomás Alimena Del Grande (tgrande@pd3.com.br)
  */
 
 #include <sys/types.h>
