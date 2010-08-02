@@ -35,30 +35,25 @@
 
 /* New modes must be added to this global variable */
 #define MAX_AAA_TYPES 32
-static const aaa_config_t aaa_config[MAX_AAA_TYPES] = {
-	/* Authentication */
-	{AAA_AUTH, AAA_AUTH_NONE},
-	{AAA_AUTH, AAA_AUTH_NONE},
-	{AAA_AUTH, AAA_AUTH_LOCAL},
-	{AAA_AUTH, AAA_AUTH_RADIUS},
-	{AAA_AUTH, AAA_AUTH_RADIUS_LOCAL},
-	{AAA_AUTH, AAA_AUTH_TACACS},
-	{AAA_AUTH, AAA_AUTH_TACACS_LOCAL},
-	/* Authorization */
-	{AAA_AUTHOR, AAA_AUTHOR_NONE},
-	{AAA_AUTHOR, AAA_AUTHOR_TACACS},
-	{AAA_AUTHOR,AAA_AUTHOR_TACACS_LOCAL},
-	/* Accounting */
-	{AAA_ACCT, AAA_ACCT_NONE},
-	{AAA_ACCT, AAA_ACCT_TACACS},
-	/* Command Accounting */
-	{AAA_ACCT_CMD, AAA_ACCT_TACACS_CMD_NONE},
-	{AAA_ACCT_CMD, AAA_ACCT_TACACS_NO_CMD_1},
-	{AAA_ACCT_CMD, AAA_ACCT_TACACS_CMD_1},
-	{AAA_ACCT_CMD, AAA_ACCT_TACACS_NO_CMD_15},
-	{AAA_ACCT_CMD, AAA_ACCT_TACACS_CMD_15},
-	{AAA_ACCT_CMD, AAA_ACCT_TACACS_CMD_ALL}
-};
+static const aaa_config_t
+                aaa_config[MAX_AAA_TYPES] = {
+                /* Authentication */
+                { AAA_AUTH, AAA_AUTH_NONE }, { AAA_AUTH, AAA_AUTH_NONE }, { AAA_AUTH,
+                                AAA_AUTH_LOCAL }, { AAA_AUTH, AAA_AUTH_RADIUS }, { AAA_AUTH,
+                                AAA_AUTH_RADIUS_LOCAL }, { AAA_AUTH, AAA_AUTH_TACACS }, { AAA_AUTH,
+                                AAA_AUTH_TACACS_LOCAL },
+                /* Authorization */
+                { AAA_AUTHOR, AAA_AUTHOR_NONE }, { AAA_AUTHOR, AAA_AUTHOR_TACACS }, { AAA_AUTHOR,
+                                AAA_AUTHOR_TACACS_LOCAL },
+                /* Accounting */
+                { AAA_ACCT, AAA_ACCT_NONE }, { AAA_ACCT, AAA_ACCT_TACACS },
+                /* Command Accounting */
+                { AAA_ACCT_CMD, AAA_ACCT_TACACS_CMD_NONE }, { AAA_ACCT_CMD,
+                                AAA_ACCT_TACACS_NO_CMD_1 },
+                                { AAA_ACCT_CMD, AAA_ACCT_TACACS_CMD_1 }, { AAA_ACCT_CMD,
+                                                AAA_ACCT_TACACS_NO_CMD_15 }, { AAA_ACCT_CMD,
+                                                AAA_ACCT_TACACS_CMD_15 }, { AAA_ACCT_CMD,
+                                                AAA_ACCT_TACACS_CMD_ALL } };
 
 struct web_auth_data {
 	char *user;
@@ -66,9 +61,9 @@ struct web_auth_data {
 };
 
 static int _pam_null_conv(int n,
-                         const struct pam_message **msg,
-                         struct pam_response **resp,
-                         void *data)
+                          const struct pam_message **msg,
+                          struct pam_response **resp,
+                          void *data)
 {
 	return (PAM_CONV_ERR);
 }
@@ -86,13 +81,13 @@ static int _pam_null_conv(int n,
  * @return
  */
 static int librouter_pam_web_conv(int num_msg,
-                    const struct pam_message **msgm,
-                    struct pam_response **response,
-                    void *appdata_ptr)
+                                  const struct pam_message **msgm,
+                                  struct pam_response **response,
+                                  void *appdata_ptr)
 {
 	int count = 0;
 	struct pam_response *reply;
-	struct web_auth_data *web_data = (struct web_auth_data *)appdata_ptr;
+	struct web_auth_data *web_data = (struct web_auth_data *) appdata_ptr;
 
 	if (num_msg <= 0)
 		return PAM_CONV_ERR;
@@ -170,7 +165,8 @@ int librouter_pam_web_authenticate(char *user, char *pass)
 	if ((pam_err = pam_start("web", NULL, &null_conv, &pam_handle)) != PAM_SUCCESS)
 		goto web_auth_err;
 
-	if ((pam_err = pam_set_item(pam_handle, PAM_CONV, (const void *) &fpam_conv)) != PAM_SUCCESS)
+	if ((pam_err = pam_set_item(pam_handle, PAM_CONV, (const void *) &fpam_conv))
+	                != PAM_SUCCESS)
 		goto web_auth_err;
 
 	if ((pam_err = pam_authenticate(pam_handle, 0)) != PAM_SUCCESS)
@@ -198,8 +194,7 @@ int librouter_pam_web_authenticate(char *user, char *pass)
 
 	ret = AUTH_OK;
 
-web_auth_err:
-	if (pam_handle != NULL)
+	web_auth_err: if (pam_handle != NULL)
 		pam_end(pam_handle, pam_err);
 	pam_handle = NULL;
 
@@ -575,7 +570,6 @@ int pam_set_mode(char *src, char *dest, int mode, char *pam_file)
 
 		return 1;
 
-
 	} else if (strstr(src, "author_current_mode") && family == AAA_AUTHOR) {
 		/* Authorization */
 		if (mode == AAA_AUTHOR_TACACS)
@@ -594,7 +588,6 @@ int pam_set_mode(char *src, char *dest, int mode, char *pam_file)
 		else
 			strcat(dest, "#acct_current_mode=AAA_ACCT_NONE\n");
 		return 1;
-
 
 	} else if (strstr(src, "acct_current_command_mode") && family == AAA_ACCT_CMD) {
 		/* Command accounting */
@@ -615,12 +608,14 @@ int pam_set_mode(char *src, char *dest, int mode, char *pam_file)
 			if (current_acct == AAA_ACCT_TACACS_CMD_ALL)
 				strcat(dest, "#acct_current_command_mode=AAA_ACCT_TACACS_CMD_1\n");
 			else
-				strcat(dest, "#acct_current_command_mode=AAA_ACCT_TACACS_CMD_NONE\n");
+				strcat(dest,
+				                "#acct_current_command_mode=AAA_ACCT_TACACS_CMD_NONE\n");
 		} else if (mode == AAA_ACCT_TACACS_NO_CMD_1) {
 			if (current_acct == AAA_ACCT_TACACS_CMD_ALL)
 				strcat(dest, "#acct_current_command_mode=AAA_ACCT_TACACS_CMD_15\n");
 			else
-				strcat(dest, "#acct_current_command_mode=AAA_ACCT_TACACS_CMD_NONE\n");
+				strcat(dest,
+				                "#acct_current_command_mode=AAA_ACCT_TACACS_CMD_NONE\n");
 		}
 		/*
 		 * else if (mode == AAA_ACCT_TACACS_CMD_ALL) {
@@ -639,16 +634,11 @@ int pam_set_mode(char *src, char *dest, int mode, char *pam_file)
 /**
  * Configure PAM mode in configuration file
  *
- * @param cish_cfg
  * @param mode mode to be configured
- * @param change_active_mode ativar este modo
  * @param pam_file
  * @return 1 when success, 0 otherwise
  */
-int librouter_pam_config_mode(cish_config *cish_cfg,
-                  int mode,
-                  int change_active_mode,
-                  char *pam_file)
+int librouter_pam_config_mode(int mode, char *pam_file)
 {
 	FILE *f;
 	struct stat st;
@@ -672,43 +662,41 @@ int librouter_pam_config_mode(cish_config *cish_cfg,
 	if (!(buffer = malloc(2 * st.st_size)))
 		return 0;
 
-	if (change_active_mode) {
-		/* Primeira varredura pelo arquivo: ligar ou desligar modo */
-		_librouter_pam_disable_mode(mode, pam_file);
+	/* Primeira varredura pelo arquivo: ligar ou desligar modo */
+	_librouter_pam_disable_mode(mode, pam_file);
 
-		buffer[0] = '\0';
-		if (!(f = fopen(pam_file, "r"))) {
-			free(buffer);
-			return 0;
+	buffer[0] = '\0';
+	if (!(f = fopen(pam_file, "r"))) {
+		free(buffer);
+		return 0;
+	}
+
+	while (fgets(buf, sizeof(buf) - 1, f)) {
+		if (pam_set_mode(buf, buffer, mode, pam_file)) {
+			/* When 1 is returned, then line was changed */
+			continue;
+		} else if (_librouter_pam_uncomment_line(buf, mode)) {
+			p = buf;
+
+			/* remove commentary! */
+			if (*p == '#')
+				p++;
+
+			/* removes eventual spaces */
+			for (; *p == ' '; p++)
+				;
+
+			strcat(buffer, p);
+		} else {
+			strcat(buffer, buf);
 		}
+	}
 
-		while (fgets(buf, sizeof(buf) - 1, f)) {
-			if (pam_set_mode(buf, buffer, mode, pam_file)) {
-				/* When 1 is returned, then line was changed */
-				continue;
-			} else if (_librouter_pam_uncomment_line(buf, mode)) {
-				p = buf;
+	fclose(f);
 
-				/* remove commentary! */
-				if (*p == '#')
-					p++;
-
-				/* removes eventual spaces */
-				for (; *p == ' '; p++)
-					;
-
-				strcat(buffer, p);
-			} else {
-				strcat(buffer, buf);
-			}
-		}
-
+	if ((f = fopen(pam_file, "w"))) {
+		fwrite(buffer, 1, strlen(buffer), f);
 		fclose(f);
-
-		if ((f = fopen(pam_file, "w"))) {
-			fwrite(buffer, 1, strlen(buffer), f);
-			fclose(f);
-		}
 	}
 
 	free(buffer);
@@ -770,7 +758,6 @@ int librouter_pam_get_users(char *users)
 	return 0;
 }
 
-
 static int _validate_username(char *username)
 {
 	int i;
@@ -817,3 +804,135 @@ int librouter_pam_del_user(char *user)
 
 	return 0;
 }
+
+int librouter_pam_get_tacacs_servers(struct auth_server *server)
+{
+	FILE *f;
+	arglist *args;
+	char line[128];
+
+	f = fopen(FILE_TACDB_SERVER, "r");
+	if (f == NULL)
+		return -1;
+
+	while (fgets(line, sizeof(line), f) != NULL) {
+		args = librouter_make_args(line);
+		server->ipaddr = strdup(args->argv[0]);
+		if (args->argc == 3) {
+			server->key = strdup(args->argv[1]);
+			server->timeout = atoi(args->argv[2]);
+		}
+		librouter_destroy_args(args);
+		server++;
+	}
+
+	fclose(f);
+	return 0;
+}
+
+void librouter_pam_free_servers(int num_servers, struct auth_server *server)
+{
+	int i;
+
+	if (server == NULL)
+		return;
+
+	for (i=0; i< num_servers; i++) {
+		if (server->ipaddr)
+			free(server->ipaddr);
+		if (server->key)
+			free(server->key);
+		server++;
+	}
+}
+
+static int _add_servers_to_file(char *filename, struct auth_server *servers)
+{
+	FILE *f;
+	int i;
+
+	f = fopen(filename, "w");
+
+	if (f == NULL)
+		return -1;
+
+	for (i = 0; i < MAX_SERVERS; i++) {
+		if (servers[i].ipaddr) {
+			if (servers[i].key)
+				fprintf(f, "%s\t%s\t%d\n", servers[i].ipaddr,
+						servers[i].key, servers[i].timeout);
+			else
+				fprintf(f, "%s\n", servers[i].ipaddr);
+		}
+	}
+
+	return 0;
+}
+
+int librouter_pam_add_tacacs_server(struct auth_server *server)
+{
+	FILE *f;
+	int i;
+	struct auth_server current_servers[MAX_SERVERS];
+
+	memset(current_servers, 0, sizeof(struct auth_server) * MAX_SERVERS);
+
+	librouter_pam_get_tacacs_servers(current_servers);
+
+	for (i=0; i<MAX_SERVERS; i++) {
+		if (!strcmp(server->ipaddr, current_servers[i].ipaddr)) {
+			memcpy(&current_servers[i], server, sizeof(struct auth_server));
+		}
+	}
+
+	f = fopen(FILE_TACDB_SERVER, "w");
+
+	if (f == NULL)
+		return -1;
+
+	for (i = 0; i < MAX_SERVERS; i++) {
+		if (current_servers[i].ipaddr) {
+			if (current_servers[i].key)
+				fprintf(f, "%s\t%s\t%d\n", current_servers[i].ipaddr,
+						current_servers[i].key,
+						current_servers[i].timeout);
+			else
+				fprintf(f, "%s\n", current_servers[i].ipaddr);
+		}
+	}
+
+	fclose(f);
+
+	return 0;
+}
+
+int librouter_pam_del_tacacs_server(struct auth_server *server)
+{
+	int i;
+	FILE *f;
+	struct auth_server current[MAX_SERVERS];
+
+	memset(current, 0, sizeof(current));
+
+	if (librouter_pam_get_tacacs_servers(current) < 0) {
+		librouter_logerr("Could not fetch server info\n");
+		return -1;
+	}
+
+	/* Search if requested server exists*/
+	for (i = 0; i < MAX_SERVERS; i++) {
+		if (!strcmp(server->ipaddr, current[i].ipaddr)) {
+			break;
+		}
+	}
+
+	if (i == MAX_SERVERS)
+		return 0;
+
+	f = fopen(FILE_TACDB_SERVER, "w");
+
+	fclose(f);
+
+	return 0;
+}
+

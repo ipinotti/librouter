@@ -54,19 +54,19 @@ typedef struct {
 	enum aaa_modes mode;
 } aaa_config_t;
 
+struct auth_server {
+	char *ipaddr;
+	char *key;
+	int timeout;
+};
+
 /* Prototypes */
 int librouter_pam_web_authenticate(char *user, char *pass);
-
 int librouter_pam_get_current_mode(char *file_name);
 int librouter_pam_get_current_author_mode(char *file_name);
 int librouter_pam_get_current_acct_mode(char *file_name);
 int librouter_pam_get_current_acct_cmd_mode(char *file_name);
-
-int librouter_pam_config_mode(cish_config *cish_cfg,
-                  int mode,
-                  int change_active_mode,
-                  char *pam_file);
-
+int librouter_pam_config_mode(int mode, char *pam_file);
 int librouter_pam_get_auth_type(char *device);
 int librouter_pam_get_users(char *users);
 int librouter_pam_del_user(char *user);
