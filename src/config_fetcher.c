@@ -108,37 +108,48 @@ void librouter_config_dump_aaa(FILE *f, cish_config *cish_cfg)
 {
 	int i;
 	FILE *passwd;
+	struct auth_server tacacs_server[MAX_SERVERS];
+	struct auth_server radius_server[MAX_SERVERS];
+
+	memset(tacacs_server, 0, sizeof(tacacs_server));
+	memset(radius_server, 0, sizeof(radius_server));
+
+	librouter_pam_get_radius_servers(radius_server);
+	librouter_pam_get_tacacs_servers(tacacs_server);
 
 	/* Dump RADIUS & TACACS servers */
 	for (i = 0; i < MAX_SERVERS; i++) {
-		if (cish_cfg->radius[i].ip_addr[0]) {
+		if (radius_server[i].ipaddr) {
 
-			fprintf(f, "radius-server host %s", cish_cfg->radius[i].ip_addr);
+			fprintf(f, "radius-server host %s", radius_server[i].ipaddr);
 
-			if (cish_cfg->radius[i].authkey[0])
-				fprintf(f, " key %s", cish_cfg->radius[i].authkey);
+			if (radius_server[i].key)
+				fprintf(f, " key %s", radius_server[i].key);
 
-			if (cish_cfg->radius[i].timeout)
-				fprintf(f, " timeout %d", cish_cfg->radius[i].timeout);
+			if (radius_server[i].timeout)
+				fprintf(f, " timeout %d", radius_server[i].timeout);
 
 			fprintf(f, "\n");
 		}
 	}
 
 	for (i = 0; i < MAX_SERVERS; i++) {
-		if (cish_cfg->tacacs[i].ip_addr[0]) {
+		if (tacacs_server[i].ipaddr) {
 
-			fprintf(f, "tacacs-server host %s", cish_cfg->tacacs[i].ip_addr);
+			fprintf(f, "tacacs-server host %s", tacacs_server[i].ipaddr);
 
-			if (cish_cfg->tacacs[i].authkey[0])
-				fprintf(f, " key %s", cish_cfg->tacacs[i].authkey);
+			if (tacacs_server[i].key)
+				fprintf(f, " key %s", tacacs_server[i].key);
 
-			if (cish_cfg->tacacs[i].timeout)
-				fprintf(f, " timeout %d", cish_cfg->tacacs[i].timeout);
+			if (tacacs_server[i].timeout)
+				fprintf(f, " timeout %d", tacacs_server[i].timeout);
 
 			fprintf(f, "\n");
 		}
 	}
+
+	librouter_pam_free_servers(MAX_SERVERS, tacacs_server);
+	librouter_pam_free_servers(MAX_SERVERS, radius_server);
 
 	/* Dump aaa authentication login mode */
 	switch (librouter_pam_get_current_mode(FILE_PAM_GENERIC)) {
@@ -1291,17 +1302,24 @@ void librouter_config_interfaces_dump(FILE *out)
 int librouter_config_write(char *filename, cish_config *cish_cfg)
 {
 	FILE * f;
+	printf("Writing config\n");
 
 	f = fopen(filename, "wt");
 	if (!f)
 		return -1;
 
+	printf("%s : %d\n", __FUNCTION__, __LINE__);
 	fprintf(f, "!\n");
 	librouter_config_dump_version(f, cish_cfg);
+	printf("%s : %d\n", __FUNCTION__, __LINE__);
 	librouter_config_dump_terminal(f, cish_cfg);
+	printf("%s : %d\n", __FUNCTION__, __LINE__);
 	librouter_config_dump_secret(f, cish_cfg);
+	printf("%s : %d\n", __FUNCTION__, __LINE__);
 	librouter_config_dump_aaa(f, cish_cfg);
+	printf("%s : %d\n", __FUNCTION__, __LINE__);
 	librouter_config_dump_hostname(f);
+	printf("%s : %d\n", __FUNCTION__, __LINE__);
 	librouter_config_dump_log(f);
 #ifdef OPTION_BGP
 	librouter_config_bgp_dump_router(f, 0);
