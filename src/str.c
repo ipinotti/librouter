@@ -212,11 +212,16 @@ int librouter_str_find_string_in_file(char *filename, char *key, char *buffer, i
 	goto end;
 }
 
+/**
+ * librouter_str_striplf	Removes line feed from string
+ *
+ * @param string
+ */
 void librouter_str_striplf(char *string)
 {
-	int ln; /* string length tempvar */
+	int ln = strlen(string);; /* string length */
 
-	ln = strlen(string);
+	/* Removes anything below 32 (ascii) */
 	while ((ln > 0) && (string[ln - 1] < 32))
 		string[--ln] = 0;
 }
