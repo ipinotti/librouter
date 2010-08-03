@@ -1007,8 +1007,6 @@ int librouter_pam_del_tacacs_server(struct auth_server *server)
 	FILE *f;
 	struct auth_server current[AUTH_MAX_SERVERS];
 
-	printf("%s\n", __FUNCTION__);
-
 	memset(current, 0, sizeof(current));
 
 	/* delete all servers ? */
