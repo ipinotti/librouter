@@ -19,7 +19,6 @@
 #include <security/pam_misc.h>
 
 #include "args.h"
-#include "cish_defines.h"
 #include "defines.h"
 #include "ssh.h"
 #include "typedefs.h"
@@ -921,7 +920,7 @@ static int _add_servers_to_file(char *filename, struct auth_server *servers)
 	if (f == NULL)
 		return -1;
 
-	for (i = 0; i < MAX_SERVERS; i++) {
+	for (i = 0; i < AUTH_MAX_SERVERS; i++) {
 		if (servers[i].ipaddr) {
 			if (servers[i].key)
 				fprintf(f, "%s\t%s\t%d\n", servers[i].ipaddr, servers[i].key,
@@ -965,14 +964,14 @@ int librouter_pam_add_tacacs_server(struct auth_server *server)
 {
 	FILE *f;
 	int i;
-	struct auth_server current_servers[MAX_SERVERS];
+	struct auth_server current_servers[AUTH_MAX_SERVERS];
 
 	memset(current_servers, 0, sizeof(current_servers));
 
 	librouter_pam_get_tacacs_servers(current_servers);
 
 	/* Check if server already exists */
-	for (i = 0; i < MAX_SERVERS; i++) {
+	for (i = 0; i < AUTH_MAX_SERVERS; i++) {
 		if (current_servers[i].ipaddr == NULL) {  /* Empty field, use it */
 			_dup_server(&current_servers[i], server);
 			break;
@@ -982,14 +981,14 @@ int librouter_pam_add_tacacs_server(struct auth_server *server)
 		}
 	}
 
-	if (i == MAX_SERVERS) {/* No room for another server */
-		librouter_pam_free_servers(MAX_SERVERS, current_servers);
+	if (i == AUTH_MAX_SERVERS) {/* No room for another server */
+		librouter_pam_free_servers(AUTH_MAX_SERVERS, current_servers);
 		return -1;
 	}
 
 
 	_add_servers_to_file(FILE_TACDB_SERVER, current_servers);
-	librouter_pam_free_servers(MAX_SERVERS, current_servers);
+	librouter_pam_free_servers(AUTH_MAX_SERVERS, current_servers);
 
 	return 0;
 }
@@ -1006,7 +1005,7 @@ int librouter_pam_del_tacacs_server(struct auth_server *server)
 {
 	int i;
 	FILE *f;
-	struct auth_server current[MAX_SERVERS];
+	struct auth_server current[AUTH_MAX_SERVERS];
 
 	printf("%s\n", __FUNCTION__);
 
@@ -1024,7 +1023,7 @@ int librouter_pam_del_tacacs_server(struct auth_server *server)
 	}
 
 	/* Search if requested server exists*/
-	for (i = 0; i < MAX_SERVERS; i++) {
+	for (i = 0; i < AUTH_MAX_SERVERS; i++) {
 		if (!strcmp(server->ipaddr, current[i].ipaddr)) {
 			librouter_pam_free_servers(1, &current[i]); /* Delete it! */
 			break;
@@ -1033,7 +1032,7 @@ int librouter_pam_del_tacacs_server(struct auth_server *server)
 
 	_add_servers_to_file(FILE_TACDB_SERVER, current);
 
-	librouter_pam_free_servers(MAX_SERVERS, current);
+	librouter_pam_free_servers(AUTH_MAX_SERVERS, current);
 
 	return 0;
 }
@@ -1048,14 +1047,14 @@ int librouter_pam_add_radius_server(struct auth_server *server)
 {
 	FILE *f;
 	int i;
-	struct auth_server current_servers[MAX_SERVERS];
+	struct auth_server current_servers[AUTH_MAX_SERVERS];
 
 	memset(current_servers, 0, sizeof(current_servers));
 
 	librouter_pam_get_radius_servers(current_servers);
 
 	/* Check if server already exists */
-	for (i = 0; i < MAX_SERVERS; i++) {
+	for (i = 0; i < AUTH_MAX_SERVERS; i++) {
 		if ((current_servers[i].ipaddr == NULL) || /* Empty field, use it */
 		!strcmp(server->ipaddr, current_servers[i].ipaddr)) {
 			_dup_server(&current_servers[i], server);
@@ -1063,13 +1062,13 @@ int librouter_pam_add_radius_server(struct auth_server *server)
 		}
 	}
 
-	if (i == MAX_SERVERS) {/* No room for another server */
-		librouter_pam_free_servers(MAX_SERVERS, current_servers);
+	if (i == AUTH_MAX_SERVERS) {/* No room for another server */
+		librouter_pam_free_servers(AUTH_MAX_SERVERS, current_servers);
 		return -1;
 	}
 
 	_add_servers_to_file(FILE_RADDB_SERVER, current_servers);
-	librouter_pam_free_servers(MAX_SERVERS, current_servers);
+	librouter_pam_free_servers(AUTH_MAX_SERVERS, current_servers);
 
 	return 0;
 }
@@ -1086,7 +1085,7 @@ int librouter_pam_del_radius_server(struct auth_server *server)
 {
 	int i;
 	FILE *f;
-	struct auth_server current[MAX_SERVERS];
+	struct auth_server current[AUTH_MAX_SERVERS];
 
 	memset(current, 0, sizeof(current));
 
@@ -1102,7 +1101,7 @@ int librouter_pam_del_radius_server(struct auth_server *server)
 	}
 
 	/* Search if requested server exists*/
-	for (i = 0; i < MAX_SERVERS; i++) {
+	for (i = 0; i < AUTH_MAX_SERVERS; i++) {
 		if (!strcmp(server->ipaddr, current[i].ipaddr)) {
 			librouter_pam_free_servers(1, &current[i]); /* Delete it! */
 			break;
@@ -1111,7 +1110,7 @@ int librouter_pam_del_radius_server(struct auth_server *server)
 
 	_add_servers_to_file(FILE_RADDB_SERVER, current);
 
-	librouter_pam_free_servers(MAX_SERVERS, current);
+	librouter_pam_free_servers(AUTH_MAX_SERVERS, current);
 
 	return 0;
 }

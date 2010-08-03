@@ -7,8 +7,6 @@
 #ifndef PAM_H_
 #define PAM_H_
 
-#include "cish_defines.h"
-
 #define FILE_PASSWD "/etc/passwd"
 #define FILE_RADDB_SERVER "/etc/raddb/server"
 #define FILE_TACDB_SERVER "/etc/tacdb/server"
@@ -16,6 +14,9 @@
 #define	AUTH_NOK		0
 #define	AUTH_OK			1
 #define	AUTH_FACTORY		2
+
+#define AUTH_MAX_SERVERS	3
+#define MAX_AUTH_SERVER_KEY	256
 
 enum {
 	AUTH_TYPE_NONE = 0, AUTH_TYPE_PAP, AUTH_TYPE_CHAP

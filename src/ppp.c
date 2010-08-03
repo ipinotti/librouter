@@ -15,7 +15,6 @@
 #include <linux/autoconf.h>
 
 #include "options.h"
-#include "cish_defines.h"
 #include "defines.h"
 #include "nv.h"
 #include "ppp.h"

@@ -12,7 +12,6 @@
 #include <arpa/inet.h>
 
 #include "args.h"
-#include "cish_defines.h"
 #include "nat.h"
 #include "ip.h"
 
@@ -311,22 +310,22 @@ void librouter_nat_dump(char *xacl, FILE *F, int conf_format)
 	pclose(ipc);
 }
 
-void librouter_nat_dump_helper(FILE *f, cish_config *cish_cfg)
+void librouter_nat_dump_helper(FILE *f, struct router_config *cfg)
 {
-	if (cish_cfg->nat_helper_ftp_ports[0]) {
-		fprintf(f, "ip nat helper ftp ports %s\n", cish_cfg->nat_helper_ftp_ports);
+	if (cfg->nat_helper_ftp_ports[0]) {
+		fprintf(f, "ip nat helper ftp ports %s\n", cfg->nat_helper_ftp_ports);
 	} else {
 		fprintf(f, "no ip nat helper ftp\n");
 	}
 
-	if (cish_cfg->nat_helper_irc_ports[0]) {
-		fprintf(f, "ip nat helper irc ports %s\n", cish_cfg->nat_helper_irc_ports);
+	if (cfg->nat_helper_irc_ports[0]) {
+		fprintf(f, "ip nat helper irc ports %s\n", cfg->nat_helper_irc_ports);
 	} else {
 		fprintf(f, "no ip nat helper irc\n");
 	}
 
-	if (cish_cfg->nat_helper_tftp_ports[0]) {
-		fprintf(f, "ip nat helper tftp ports %s\n", cish_cfg->nat_helper_tftp_ports);
+	if (cfg->nat_helper_tftp_ports[0]) {
+		fprintf(f, "ip nat helper tftp ports %s\n", cfg->nat_helper_tftp_ports);
 	} else {
 		fprintf(f, "no ip nat helper tftp\n");
 	}
