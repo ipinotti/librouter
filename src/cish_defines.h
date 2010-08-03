@@ -23,11 +23,7 @@ typedef struct
 	char enable_secret[15];
 	int terminal_lines;
 	int terminal_timeout;
-
 	int debug[20]; /* debug persistent !!! Check debug.c */
-
-	server_config radius[MAX_SERVERS]; /* !!! find new location! */
-	server_config tacacs[MAX_SERVERS]; /* !!! find new location! */
 
 	/* 11111,22222,33333,44444,55555,66666,77777,88888 */
 	char nat_helper_ftp_ports[48]; /* !!! find new location! */
