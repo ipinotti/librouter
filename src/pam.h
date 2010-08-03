@@ -72,4 +72,14 @@ int librouter_pam_get_users(char *users);
 int librouter_pam_del_user(char *user);
 int librouter_pam_add_user(char *user, char *pw);
 
+int librouter_pam_add_tacacs_server(struct auth_server *server);
+int librouter_pam_del_tacacs_server(struct auth_server *server);
+int librouter_pam_get_tacacs_servers(struct auth_server *server);
+
+int librouter_pam_add_radius_server(struct auth_server *server);
+int librouter_pam_del_radius_server(struct auth_server *server);
+int librouter_pam_get_radius_servers(struct auth_server *server);
+
+void librouter_pam_free_servers(int num_servers, struct auth_server *server);
+
 #endif /* PAM_H_ */

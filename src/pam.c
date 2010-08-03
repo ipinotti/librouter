@@ -805,6 +805,15 @@ int librouter_pam_del_user(char *user)
 	return 0;
 }
 
+/**
+ * librouter_pam_get_tacacs_servers
+ *
+ * Read configuration from TACACS+ file and fills in array supplied by caller.
+ * Caller must free alloc'ed data.
+ *
+ * @param server
+ * @return 0 if success
+ */
 int librouter_pam_get_tacacs_servers(struct auth_server *server)
 {
 	FILE *f;
@@ -816,6 +825,7 @@ int librouter_pam_get_tacacs_servers(struct auth_server *server)
 		return -1;
 
 	while (fgets(line, sizeof(line), f) != NULL) {
+		librouter_str_striplf(line); /* Remove line feed */
 		args = librouter_make_args(line);
 		server->ipaddr = strdup(args->argv[0]);
 		if (args->argc == 3) {
@@ -830,6 +840,49 @@ int librouter_pam_get_tacacs_servers(struct auth_server *server)
 	return 0;
 }
 
+/**
+ * librouter_pam_get_radius_servers
+ *
+ * Read configuration from RADIUS file and fills in array supplied by caller.
+ * Caller must free alloc'ed data.
+ *
+ * @param server
+ * @return 0 if success
+ */
+int librouter_pam_get_radius_servers(struct auth_server *server)
+{
+	FILE *f;
+	arglist *args;
+	char line[128];
+
+	f = fopen(FILE_RADDB_SERVER, "r");
+	if (f == NULL)
+		return -1;
+
+	while (fgets(line, sizeof(line), f) != NULL) {
+		librouter_str_striplf(line); /* Remove line feed */
+		args = librouter_make_args(line);
+		server->ipaddr = strdup(args->argv[0]);
+		if (args->argc == 3) {
+			server->key = strdup(args->argv[1]);
+			server->timeout = atoi(args->argv[2]);
+		}
+		librouter_destroy_args(args);
+		server++;
+	}
+
+	fclose(f);
+	return 0;
+}
+
+/**
+ * librouter_pam_free_servers
+ *
+ * Free fields for authentication server in array supplied by caller
+ *
+ * @param num_servers
+ * @param server
+ */
 void librouter_pam_free_servers(int num_servers, struct auth_server *server)
 {
 	int i;
@@ -838,14 +891,26 @@ void librouter_pam_free_servers(int num_servers, struct auth_server *server)
 		return;
 
 	for (i=0; i< num_servers; i++) {
-		if (server->ipaddr)
+		if (server->ipaddr) {
 			free(server->ipaddr);
-		if (server->key)
+			server->ipaddr = NULL;
+		}
+
+		if (server->key) {
 			free(server->key);
+			server->key = NULL;
+		}
 		server++;
 	}
 }
 
+/**
+ * _add_servers_to_file		Write server information to file
+ *
+ * @param filename
+ * @param servers
+ * @return 0 when success
+ */
 static int _add_servers_to_file(char *filename, struct auth_server *servers)
 {
 	FILE *f;
@@ -859,45 +924,10 @@ static int _add_servers_to_file(char *filename, struct auth_server *servers)
 	for (i = 0; i < MAX_SERVERS; i++) {
 		if (servers[i].ipaddr) {
 			if (servers[i].key)
-				fprintf(f, "%s\t%s\t%d\n", servers[i].ipaddr,
-						servers[i].key, servers[i].timeout);
+				fprintf(f, "%s\t%s\t%d\n", servers[i].ipaddr, servers[i].key,
+				                servers[i].timeout);
 			else
 				fprintf(f, "%s\n", servers[i].ipaddr);
-		}
-	}
-
-	return 0;
-}
-
-int librouter_pam_add_tacacs_server(struct auth_server *server)
-{
-	FILE *f;
-	int i;
-	struct auth_server current_servers[MAX_SERVERS];
-
-	memset(current_servers, 0, sizeof(struct auth_server) * MAX_SERVERS);
-
-	librouter_pam_get_tacacs_servers(current_servers);
-
-	for (i=0; i<MAX_SERVERS; i++) {
-		if (!strcmp(server->ipaddr, current_servers[i].ipaddr)) {
-			memcpy(&current_servers[i], server, sizeof(struct auth_server));
-		}
-	}
-
-	f = fopen(FILE_TACDB_SERVER, "w");
-
-	if (f == NULL)
-		return -1;
-
-	for (i = 0; i < MAX_SERVERS; i++) {
-		if (current_servers[i].ipaddr) {
-			if (current_servers[i].key)
-				fprintf(f, "%s\t%s\t%d\n", current_servers[i].ipaddr,
-						current_servers[i].key,
-						current_servers[i].timeout);
-			else
-				fprintf(f, "%s\n", current_servers[i].ipaddr);
 		}
 	}
 
@@ -906,13 +936,87 @@ int librouter_pam_add_tacacs_server(struct auth_server *server)
 	return 0;
 }
 
+/**
+ * _dup_server	Copies server information from orig to dest
+ *
+ * @param dest
+ * @param orig
+ */
+static void _dup_server(struct auth_server *dest, struct auth_server *orig)
+{
+	memset(dest, 0, sizeof(struct auth_server));
+
+	if (orig->ipaddr)
+		dest->ipaddr = strdup(orig->ipaddr);
+
+	if (orig->key)
+		dest->key = strdup(orig->key);
+
+	dest->timeout = orig->timeout;
+}
+
+/**
+ * librouter_pam_add_tacacs_server	Add TACACS+ server to the system
+ *
+ * @param server
+ * @return 0 when success, -1 when maximum number of servers reached
+ */
+int librouter_pam_add_tacacs_server(struct auth_server *server)
+{
+	FILE *f;
+	int i;
+	struct auth_server current_servers[MAX_SERVERS];
+
+	memset(current_servers, 0, sizeof(current_servers));
+
+	librouter_pam_get_tacacs_servers(current_servers);
+
+	/* Check if server already exists */
+	for (i = 0; i < MAX_SERVERS; i++) {
+		if (current_servers[i].ipaddr == NULL) {  /* Empty field, use it */
+			_dup_server(&current_servers[i], server);
+			break;
+		} else if (!strcmp(server->ipaddr, current_servers[i].ipaddr)) { /* Match! */
+			_dup_server(&current_servers[i], server);
+			break;
+		}
+	}
+
+	if (i == MAX_SERVERS) {/* No room for another server */
+		librouter_pam_free_servers(MAX_SERVERS, current_servers);
+		return -1;
+	}
+
+
+	_add_servers_to_file(FILE_TACDB_SERVER, current_servers);
+	librouter_pam_free_servers(MAX_SERVERS, current_servers);
+
+	return 0;
+}
+
+/**
+ * librouter_pam_del_tacacs_server	Delete server in system
+ *
+ * If parameter passed is NULL, all servers will be deleted
+ *
+ * @param server
+ * @return 0 when success
+ */
 int librouter_pam_del_tacacs_server(struct auth_server *server)
 {
 	int i;
 	FILE *f;
 	struct auth_server current[MAX_SERVERS];
 
+	printf("%s\n", __FUNCTION__);
+
 	memset(current, 0, sizeof(current));
+
+	/* delete all servers ? */
+	if (server == NULL) {
+		_add_servers_to_file(FILE_TACDB_SERVER, current);
+		return 0;
+	}
 
 	if (librouter_pam_get_tacacs_servers(current) < 0) {
 		librouter_logerr("Could not fetch server info\n");
@@ -922,16 +1026,92 @@ int librouter_pam_del_tacacs_server(struct auth_server *server)
 	/* Search if requested server exists*/
 	for (i = 0; i < MAX_SERVERS; i++) {
 		if (!strcmp(server->ipaddr, current[i].ipaddr)) {
+			librouter_pam_free_servers(1, &current[i]); /* Delete it! */
 			break;
 		}
 	}
 
-	if (i == MAX_SERVERS)
+	_add_servers_to_file(FILE_TACDB_SERVER, current);
+
+	librouter_pam_free_servers(MAX_SERVERS, current);
+
+	return 0;
+}
+
+/**
+ * librouter_pam_add_radius_server	Add RADIUS server to the system
+ *
+ * @param server
+ * @return 0 when success
+ */
+int librouter_pam_add_radius_server(struct auth_server *server)
+{
+	FILE *f;
+	int i;
+	struct auth_server current_servers[MAX_SERVERS];
+
+	memset(current_servers, 0, sizeof(current_servers));
+
+	librouter_pam_get_radius_servers(current_servers);
+
+	/* Check if server already exists */
+	for (i = 0; i < MAX_SERVERS; i++) {
+		if ((current_servers[i].ipaddr == NULL) || /* Empty field, use it */
+		!strcmp(server->ipaddr, current_servers[i].ipaddr)) {
+			_dup_server(&current_servers[i], server);
+			break;
+		}
+	}
+
+	if (i == MAX_SERVERS) {/* No room for another server */
+		librouter_pam_free_servers(MAX_SERVERS, current_servers);
+		return -1;
+	}
+
+	_add_servers_to_file(FILE_RADDB_SERVER, current_servers);
+	librouter_pam_free_servers(MAX_SERVERS, current_servers);
+
+	return 0;
+}
+
+/**
+ * librouter_pam_del_radius_server	Delete server in system
+ *
+ * If parameter passed is NULL, all servers will be deleted
+ *
+ * @param server
+ * @return 0 when success
+ */
+int librouter_pam_del_radius_server(struct auth_server *server)
+{
+	int i;
+	FILE *f;
+	struct auth_server current[MAX_SERVERS];
+
+	memset(current, 0, sizeof(current));
+
+	/* delete all servers ? */
+	if (server == NULL) {
+		_add_servers_to_file(FILE_RADDB_SERVER, current);
 		return 0;
+	}
 
-	f = fopen(FILE_TACDB_SERVER, "w");
+	if (librouter_pam_get_tacacs_servers(current) < 0) {
+		librouter_logerr("Could not fetch server info\n");
+		return -1;
+	}
 
-	fclose(f);
+	/* Search if requested server exists*/
+	for (i = 0; i < MAX_SERVERS; i++) {
+		if (!strcmp(server->ipaddr, current[i].ipaddr)) {
+			librouter_pam_free_servers(1, &current[i]); /* Delete it! */
+			break;
+		}
+	}
+
+	_add_servers_to_file(FILE_RADDB_SERVER, current);
+
+	librouter_pam_free_servers(MAX_SERVERS, current);
 
 	return 0;
 }
