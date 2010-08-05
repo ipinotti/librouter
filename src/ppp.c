@@ -25,6 +25,78 @@
 #include "pam.h"
 
 
+
+
+/**
+ * Função seta no backup interface no arquivo para que o backupd deamon efetue a operação no Modem3G
+ * @param interface3g
+ * @return 0 if ok, -1 if not
+ */
+int librouter_ppp_backupd_set_no_backup_interface (char * intf3g_ppp){
+
+
+	if (librouter_dev_exists((char *)intf3g_ppp))
+		return -1;
+
+	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,BCKUP_STR,"no") < 0 )
+		return -1;
+
+	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,MAIN_INTF_STR,"") < 0)
+		return -1;
+
+	return 0;
+
+}
+
+
+/**
+ * Função seta backup interface no arquivo para efetuar operação pelo backupd deamon
+ * Ex: intf3g_ppp == "ppp0" && main_interface == "ethernet0"
+ *
+ * Caso a main_interface já esta em backup, a função retorna em qual PPP
+ * ela está configurada pelo intf_return
+ * @param interface3g
+ * @param main_interface
+ * @param intf_return
+ * @return 0 if ok, -1 if not
+ */
+int librouter_ppp_backupd_set_backup_interface (char * intf3g_ppp, char * main_interface, char * intf_return){
+
+	if (librouter_dev_exists(intf3g_ppp))
+		return -1;
+
+	if ( librouter_ppp_backupd_verif_param_infile(MAIN_INTF_STR,main_interface, intf_return))
+		return -1;
+
+	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,BCKUP_STR,"yes") < 0 )
+		return -1;
+
+	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,MAIN_INTF_STR,main_interface) < 0)
+		return -1;
+
+	return -1;
+
+}
+
+
+/**
+ * Função faz shutdown no modem3g escolhido (seta no arquivo backupd.conf)
+ * e realiza o reload no backupd
+ * @param interface
+ * @return 0 if ok, -1 if not
+ */
+int librouter_ppp_backupd_set_shutdown_3Gmodem (char * intf3g_ppp){
+
+	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,SHUTD_STR,"yes") < 0)
+		return -1;
+	if (librouter_ppp_backupd_set_no_backup_interface(intf3g_ppp) < 0 )
+		return -1;
+	if (librouter_ppp_reload_backupd() < 0)
+		return -1;
+	return 0;
+}
+
+
 /**
  * Faz a leitura do arquivo de config. do backupd, carregando as infos. referentes
  * ao serial number(ex:serial number == 0  --> ppp0)
