@@ -73,7 +73,9 @@ int librouter_ppp_backupd_set_backup_interface (char * intf3g_ppp, char * main_i
 	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,MAIN_INTF_STR,main_interface) < 0)
 		return -1;
 
-	return -1;
+	intf_return = NULL;
+
+	return 0;
 
 }
 

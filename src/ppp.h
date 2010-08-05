@@ -148,8 +148,9 @@ int librouter_ppp_reload_backupd(void);
 int librouter_ppp_backupd_set_param_infile(char * intf, char * field, char *value);
 int librouter_ppp_backupd_verif_param_infile(char * intf, char *field, char *value);
 int librouter_ppp_backupd_verif_param_byintf_infile(char * intf, char *field, char *value);
-int librouter_ppp_backupd_set_shutdown_3Gmodem (char * interface3g);
-int librouter_ppp_backupd_set_backup_interface (char * interface3g, char * main_interface);
+int librouter_ppp_backupd_set_shutdown_3Gmodem (char * intf3g_ppp);
+int librouter_ppp_backupd_set_backup_interface (char * intf3g_ppp, char * main_interface, char * intf_return);
+int librouter_ppp_backupd_set_no_backup_interface (char * intf3g_ppp);
 
 
 
