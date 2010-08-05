@@ -7,8 +7,6 @@
 #ifndef PAM_H_
 #define PAM_H_
 
-#include "cish_defines.h"
-
 #define FILE_PASSWD "/etc/passwd"
 #define FILE_RADDB_SERVER "/etc/raddb/server"
 #define FILE_TACDB_SERVER "/etc/tacdb/server"
@@ -16,6 +14,9 @@
 #define	AUTH_NOK		0
 #define	AUTH_OK			1
 #define	AUTH_FACTORY		2
+
+#define AUTH_MAX_SERVERS	3
+#define MAX_AUTH_SERVER_KEY	256
 
 enum {
 	AUTH_TYPE_NONE = 0, AUTH_TYPE_PAP, AUTH_TYPE_CHAP
@@ -71,5 +72,15 @@ int librouter_pam_get_auth_type(char *device);
 int librouter_pam_get_users(char *users);
 int librouter_pam_del_user(char *user);
 int librouter_pam_add_user(char *user, char *pw);
+
+int librouter_pam_add_tacacs_server(struct auth_server *server);
+int librouter_pam_del_tacacs_server(struct auth_server *server);
+int librouter_pam_get_tacacs_servers(struct auth_server *server);
+
+int librouter_pam_add_radius_server(struct auth_server *server);
+int librouter_pam_del_radius_server(struct auth_server *server);
+int librouter_pam_get_radius_servers(struct auth_server *server);
+
+void librouter_pam_free_servers(int num_servers, struct auth_server *server);
 
 #endif /* PAM_H_ */

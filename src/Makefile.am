@@ -35,6 +35,7 @@ librouter_la_SOURCES = \
 	qos.c \
 	quagga.c \
 	config_fetcher.c \
+	config_mapper.c \
 	sha1.c \
 	smcroute.c \
 	snmp.c \
@@ -44,7 +45,7 @@ librouter_la_SOURCES = \
 	tunnel.c \
 	version.c \
 	usb.c \
-	vlan.c 
+	vlan.c
 
 librouter_la_LIBADD = $(top_builddir)/src/libnetlink/libnetlink.la
 
@@ -61,7 +62,6 @@ librouter_ladir = $(includedir)/librouter
 librouter_la_HEADERS = \
 	acl.h \
 	args.h \
-	cish_defines.h \
 	debug.h \
 	defines.h \
 	dev.h \
@@ -96,6 +96,7 @@ librouter_la_HEADERS = \
 	qos.h \
 	quagga.h \
 	config_fetcher.h \
+	config_mapper.h \
 	sha1.h \
 	shm.h \
 	smcroute.h \

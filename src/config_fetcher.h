@@ -8,13 +8,10 @@
 #ifndef CONFIG_FETCHER_H_
 #define CONFIG_FETCHER_H_
 
-cish_config *librouter_config_mmap_cfg(void);
-int librouter_config_munmap_cfg(cish_config *cish_cfg);
-
-void librouter_config_dump_version(FILE *f, cish_config *cish_cfg);
-void librouter_config_dump_terminal(FILE *f, cish_config *cish_cfg);
-void librouter_config_dump_secret(FILE *f, cish_config *cish_cfg);
-void librouter_config_dump_aaa(FILE *f, cish_config *cish_cfg);
+void librouter_config_dump_version(FILE *f, struct router_config *cfg);
+void librouter_config_dump_terminal(FILE *f, struct router_config *cfg);
+void librouter_config_dump_secret(FILE *f, struct router_config *cfg);
+void librouter_config_dump_aaa(FILE *f, struct router_config *cfg);
 void librouter_config_dump_hostname(FILE *f);
 void librouter_config_dump_ip(FILE *f, int conf_format);
 void librouter_config_dump_snmp(FILE *f, int conf_format);
@@ -30,6 +27,6 @@ void librouter_config_rip_dump_interface(FILE *out, char *intf);
 
 void librouter_config_dump_routing(FILE *f);
 
-int librouter_config_write(char *filename, cish_config *cish_cfg);
+int librouter_config_write(char *filename, struct router_config *cfg);
 
 #endif /* CONFIG_FETCHER_H_ */

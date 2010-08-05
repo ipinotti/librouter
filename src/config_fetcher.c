@@ -22,7 +22,6 @@
 
 #include "options.h"
 #include "defines.h"
-#include "cish_defines.h"
 #include "pam.h"
 #include "device.h"
 #include "quagga.h"
@@ -37,10 +36,9 @@
 #include "ip.h"
 #include "dev.h"
 #include "qos.h"
+#include "config_mapper.h"
 
 #define PPPDEV "ppp"
-
-#define CISH_CFG_FILE "/var/run/cish_cfg"
 
 /********************/
 /* Helper functions */
@@ -73,30 +71,30 @@ static int _get_procip_val(const char *parm)
 /***********************/
 /* Main dump functions */
 /***********************/
-void librouter_config_dump_version(FILE *f, cish_config *cish_cfg)
+void librouter_config_dump_version(FILE *f, struct router_config *cfg)
 {
 	fprintf(f, "version %s\n", librouter_get_system_version());
 	fprintf(f, "!\n");
 }
 
-void librouter_config_dump_terminal(FILE *f, cish_config *cish_cfg)
+void librouter_config_dump_terminal(FILE *f, struct router_config *cfg)
 {
-	fprintf(f, "terminal length %d\n", cish_cfg->terminal_lines);
-	fprintf(f, "terminal timeout %d\n", cish_cfg->terminal_timeout);
+	fprintf(f, "terminal length %d\n", cfg->terminal_lines);
+	fprintf(f, "terminal timeout %d\n", cfg->terminal_timeout);
 	fprintf(f, "!\n");
 }
 
-void librouter_config_dump_secret(FILE *f, cish_config *cish_cfg)
+void librouter_config_dump_secret(FILE *f, struct router_config *cfg)
 {
 	int printed_something = 0;
 
-	if (cish_cfg->enable_secret[0]) {
-		fprintf(f, "secret enable hash %s\n", cish_cfg->enable_secret);
+	if (cfg->enable_secret[0]) {
+		fprintf(f, "secret enable hash %s\n", cfg->enable_secret);
 		printed_something = 1;
 	}
 
-	if (cish_cfg->login_secret[0]) {
-		fprintf(f, "secret login hash %s\n", cish_cfg->login_secret);
+	if (cfg->login_secret[0]) {
+		fprintf(f, "secret login hash %s\n", cfg->login_secret);
 		printed_something = 1;
 	}
 
@@ -104,41 +102,52 @@ void librouter_config_dump_secret(FILE *f, cish_config *cish_cfg)
 		fprintf(f, "!\n");
 }
 
-void librouter_config_dump_aaa(FILE *f, cish_config *cish_cfg)
+void librouter_config_dump_aaa(FILE *f, struct router_config *cfg)
 {
 	int i;
 	FILE *passwd;
+	struct auth_server tacacs_server[AUTH_MAX_SERVERS];
+	struct auth_server radius_server[AUTH_MAX_SERVERS];
+
+	memset(tacacs_server, 0, sizeof(tacacs_server));
+	memset(radius_server, 0, sizeof(radius_server));
+
+	librouter_pam_get_radius_servers(radius_server);
+	librouter_pam_get_tacacs_servers(tacacs_server);
 
 	/* Dump RADIUS & TACACS servers */
-	for (i = 0; i < MAX_SERVERS; i++) {
-		if (cish_cfg->radius[i].ip_addr[0]) {
+	for (i = 0; i < AUTH_MAX_SERVERS; i++) {
+		if (radius_server[i].ipaddr) {
 
-			fprintf(f, "radius-server host %s", cish_cfg->radius[i].ip_addr);
+			fprintf(f, "radius-server host %s", radius_server[i].ipaddr);
 
-			if (cish_cfg->radius[i].authkey[0])
-				fprintf(f, " key %s", cish_cfg->radius[i].authkey);
+			if (radius_server[i].key)
+				fprintf(f, " key %s", radius_server[i].key);
 
-			if (cish_cfg->radius[i].timeout)
-				fprintf(f, " timeout %d", cish_cfg->radius[i].timeout);
+			if (radius_server[i].timeout)
+				fprintf(f, " timeout %d", radius_server[i].timeout);
+
+			fprintf(f, "\n");
+		}
+	}
+
+	for (i = 0; i < AUTH_MAX_SERVERS; i++) {
+		if (tacacs_server[i].ipaddr) {
+
+			fprintf(f, "tacacs-server host %s", tacacs_server[i].ipaddr);
+
+			if (tacacs_server[i].key)
+				fprintf(f, " key %s", tacacs_server[i].key);
+
+			if (tacacs_server[i].timeout)
+				fprintf(f, " timeout %d", tacacs_server[i].timeout);
 
 			fprintf(f, "\n");
 		}
 	}
 
-	for (i = 0; i < MAX_SERVERS; i++) {
-		if (cish_cfg->tacacs[i].ip_addr[0]) {
-
-			fprintf(f, "tacacs-server host %s", cish_cfg->tacacs[i].ip_addr);
-
-			if (cish_cfg->tacacs[i].authkey[0])
-				fprintf(f, " key %s", cish_cfg->tacacs[i].authkey);
-
-			if (cish_cfg->tacacs[i].timeout)
-				fprintf(f, " timeout %d", cish_cfg->tacacs[i].timeout);
-
-			fprintf(f, "\n");
-		}
-	}
+	librouter_pam_free_servers(AUTH_MAX_SERVERS, tacacs_server);
+	librouter_pam_free_servers(AUTH_MAX_SERVERS, radius_server);
 
 	/* Dump aaa authentication login mode */
 	switch (librouter_pam_get_current_mode(FILE_PAM_GENERIC)) {
@@ -1285,23 +1294,30 @@ void librouter_config_interfaces_dump(FILE *out)
  * All router configuration is written to filename
  *
  * @param filename Open file descriptor
- * @param cish_cfg Cish configuration struct
+ * @param cfg Cish configuration struct
  * @return
  */
-int librouter_config_write(char *filename, cish_config *cish_cfg)
+int librouter_config_write(char *filename, struct router_config *cfg)
 {
 	FILE * f;
+	printf("Writing config\n");
 
 	f = fopen(filename, "wt");
 	if (!f)
 		return -1;
 
+	printf("%s : %d\n", __FUNCTION__, __LINE__);
 	fprintf(f, "!\n");
-	librouter_config_dump_version(f, cish_cfg);
-	librouter_config_dump_terminal(f, cish_cfg);
-	librouter_config_dump_secret(f, cish_cfg);
-	librouter_config_dump_aaa(f, cish_cfg);
+	librouter_config_dump_version(f, cfg);
+	printf("%s : %d\n", __FUNCTION__, __LINE__);
+	librouter_config_dump_terminal(f, cfg);
+	printf("%s : %d\n", __FUNCTION__, __LINE__);
+	librouter_config_dump_secret(f, cfg);
+	printf("%s : %d\n", __FUNCTION__, __LINE__);
+	librouter_config_dump_aaa(f, cfg);
+	printf("%s : %d\n", __FUNCTION__, __LINE__);
 	librouter_config_dump_hostname(f);
+	printf("%s : %d\n", __FUNCTION__, __LINE__);
 	librouter_config_dump_log(f);
 #ifdef OPTION_BGP
 	librouter_config_bgp_dump_router(f, 0);
@@ -1325,7 +1341,7 @@ int librouter_config_write(char *filename, cish_config *cish_cfg)
 	/* qos */
 	librouter_qos_dump_config(f);
 
-	librouter_nat_dump_helper(f, cish_cfg);
+	librouter_nat_dump_helper(f, cfg);
 
 	/* Quagga */
 	librouter_config_rip_dump_router(f);
@@ -1349,66 +1365,4 @@ int librouter_config_write(char *filename, cish_config *cish_cfg)
 #endif
 
 	fclose(f);
-}
-
-static int _set_default_cfg(void)
-{
-	FILE *f;
-	cish_config cfg;
-
-	memset(&cfg, 0, sizeof(cfg));
-
-	f = fopen(CISH_CFG_FILE, "wb");
-
-	if (!f) {
-		librouter_pr_error(1, "Can't write configuration");
-		return (-1);
-	}
-
-	fwrite(&cfg, sizeof(cish_config), 1, f);
-	fclose(f);
-
-	return 0;
-}
-
-static int _check_cfg(void)
-{
-	struct stat st;
-
-	if (stat(CISH_CFG_FILE, &st))
-		return _set_default_cfg();
-
-	return 0;
-}
-
-cish_config* librouter_config_mmap_cfg(void)
-{
-	int fd;
-	cish_config *cish_cfg = NULL;
-
-	_check_cfg();
-
-	if ((fd = open(CISH_CFG_FILE, O_RDWR)) < 0) {
-		librouter_pr_error(1, "Could not open configuration");
-		return NULL;
-	}
-
-	cish_cfg = mmap(NULL, sizeof(cish_config), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-
-	if (cish_cfg == ((void *) -1)) {
-		librouter_pr_error(1, "Could not open configuration");
-		return NULL;
-	}
-
-	close(fd);
-
-	/* debug persistent */
-	librouter_debug_recover_all();
-
-	return cish_cfg;
-}
-
-int librouter_config_munmap_cfg(cish_config *cish_cfg)
-{
-	return (munmap(cish_cfg, sizeof(cish_config)) < 0);
 }

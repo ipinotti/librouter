@@ -106,7 +106,7 @@ int librouter_debug_set_token(int on_off, const char *token)
 		DEBUG[i].enabled = on_off;
 #if 0
 		/* debug persistent */
-		cish_cfg->debug[i]=on_off;
+		cfg->debug[i]=on_off;
 #endif
 		printf("  %s debbuging is %s\n", DEBUG[i].description,
 		                on_off ? "on" : "off");
@@ -130,7 +130,7 @@ void librouter_debug_set_all(int on_off)
 	for (i = 0; DEBUG[i].name; i++) {
 		DEBUG[i].enabled = on_off;
 #if 0
-		cish_cfg->debug[i]=on_off; /* debug persistent */
+		cfg->debug[i]=on_off; /* debug persistent */
 #endif
 	}
 	printf("  All debugging %s\n", on_off ? "enabled" : "disabled");
@@ -162,7 +162,7 @@ void librouter_debug_recover_all(void)
 	int i;
 
 	for (i=0; DEBUG[i].name; i++)
-	DEBUG[i].enabled=cish_cfg->debug[i]; /* debug persistent */
+	DEBUG[i].enabled=cfg->debug[i]; /* debug persistent */
 #endif
 }
 
