@@ -1300,24 +1300,17 @@ void librouter_config_interfaces_dump(FILE *out)
 int librouter_config_write(char *filename, struct router_config *cfg)
 {
 	FILE * f;
-	printf("Writing config\n");
 
 	f = fopen(filename, "wt");
 	if (!f)
 		return -1;
 
-	printf("%s : %d\n", __FUNCTION__, __LINE__);
 	fprintf(f, "!\n");
 	librouter_config_dump_version(f, cfg);
-	printf("%s : %d\n", __FUNCTION__, __LINE__);
 	librouter_config_dump_terminal(f, cfg);
-	printf("%s : %d\n", __FUNCTION__, __LINE__);
 	librouter_config_dump_secret(f, cfg);
-	printf("%s : %d\n", __FUNCTION__, __LINE__);
 	librouter_config_dump_aaa(f, cfg);
-	printf("%s : %d\n", __FUNCTION__, __LINE__);
 	librouter_config_dump_hostname(f);
-	printf("%s : %d\n", __FUNCTION__, __LINE__);
 	librouter_config_dump_log(f);
 #ifdef OPTION_BGP
 	librouter_config_bgp_dump_router(f, 0);
