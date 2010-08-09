@@ -25,6 +25,50 @@
 #include "modem3G.h"
 
 /**
+ * Função seta todas informações responsaveis pela ordem dos SIM cards na M3G0
+ * @param sim_main
+ * @param sim_back
+ * @param interface
+ * @return 0 if ok, -1 if not
+ */
+int librouter_modem3g_sim_order_set_allinfo(int sim_main, int sim_back, char * interface, int intfnumber){
+	struct sim_conf * sim = malloc(sizeof(struct sim_conf));
+
+	if (librouter_dev_exists((char *)interface)){
+			free (sim);
+			return -1;
+	}
+
+	if (sim_back == -1)
+		librouter_modem3g_sim_order_set_enable(0);
+	else
+		librouter_modem3g_sim_order_set_enable(1);
+
+	sim->sim_num = sim_main;
+
+	if(librouter_modem3g_sim_order_set_mainsim(sim->sim_num) < 0){
+		free (sim);
+		return -1;
+	}
+
+	if(librouter_modem3g_sim_get_info_fromfile(sim) < 0){
+		free (sim);
+		return -1;
+	}
+
+	if(librouter_modem3g_set_all_info_inchat(sim,intfnumber) <0){
+		free (sim);
+		return -1;
+	}
+	if(librouter_modem3g_sim_card_set(sim->sim_num) < 0){
+		free (sim);
+		return -1;
+	}
+
+	return 0;
+}
+
+/**
  * Função grava informações referentes as configurações do SIM card (M3G0) no arquivo apontado por MODEM3G_SIM_INFO_FILE.
  * É necessário passar por parâmetro o número do cartão (0 ou 1), o campo da configuração e o valor desejado.
  * @param sim

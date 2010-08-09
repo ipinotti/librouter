@@ -54,5 +54,7 @@ int librouter_modem3g_sim_card_get();
 int librouter_modem3g_sim_order_set_enable(int value);
 int librouter_modem3g_sim_order_is_enable();
 int librouter_modem3g_sim_set_all_info_inchat(int simcard, int m3g);
+int librouter_modem3g_sim_order_set_allinfo(int sim_main, int sim_back, char * interface, int intfnumber);
+
 
 #endif
