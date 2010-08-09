@@ -8,27 +8,425 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <syslog.h>
 #include <ctype.h>
+
 #include <arpa/inet.h>
 
 #include "args.h"
 #include "nat.h"
 #include "ip.h"
 
+int librouter_nat_rule_exists(char *nat_rule)
+{
+	FILE *f;
+	char *tmp, buf[256];
+	int nat_rule_exists = 0;
+
+	f = popen("/bin/iptables -t nat -L -n", "r");
+
+	if (!f) {
+		fprintf(stderr, "%% NAT subsystem not found\n");
+		return 0;
+	}
+
+	while (!feof(f)) {
+		buf[0] = 0;
+		fgets(buf, 255, f);
+		buf[255] = 0;
+		librouter_str_striplf(buf);
+		if (strncmp(buf, "Chain ", 6) == 0) {
+			tmp = strchr(buf + 6, ' ');
+			if (tmp) {
+				*tmp = 0;
+				if (strcmp(buf + 6, nat_rule) == 0) {
+					nat_rule_exists = 1;
+					break;
+				}
+			}
+		}
+	}
+	pclose(f);
+	return nat_rule_exists;
+}
+
+#if 0
+int librouter_nat_exact_rules_exists(struct nat_config *n)
+{
+	FILE *f;
+	arg_list argl = NULL;
+	int k, l, n, insert = 0;
+	char line[512];
+	int ruleexists;
+
+	if (n->mode == insert_nat)
+	insert = 1;
+
+	f = fopen(TMP_CFG_FILE, "w+");
+
+	if (f == NULL) {
+		fprintf(stderr, "Could not open temporary file\n");
+		return -1;
+	}
+
+	librouter_nat_dump(0, f, 1);
+
+	fseek(f, 0, SEEK_SET);
+
+	while (fgets(line, sizeof(line), f)) {
+		if ((n = librouter_parse_args_din(line, &argl)) > 3) {
+			if (n == (args->argc - insert)) {
+				if (!strcmp(args->argv[0], "nat-rule")) {
+					for (k = 0, l = 0, ruleexists = 1; k < args->argc; k++, l++) {
+						if (k == 2 && insert) {
+							l--;
+							continue;
+						}
+						if (strcmp(args->argv[k], argl[l])) {
+							ruleexists = 0;
+							break;
+						}
+					}
+					if (ruleexists) {
+						librouter_destroy_args_din(&argl);
+						break;
+					}
+				}
+			}
+		}
+		librouter_destroy_args_din(&argl);
+	}
+
+	fclose(f);
+	return ruleexists;
+}
+#endif
+
+/**
+ * librouter_nat_apply_rule	Apply rule from structure
+ *
+ * @param n
+ * @return 0 if success
+ */
+int librouter_nat_apply_rule(struct nat_config *n)
+{
+	char cmd[256];
+
+	if (!librouter_nat_rule_exists(n->name)) {
+		sprintf(cmd, "/bin/iptables -t nat -N %s", n->name);
+
+		nat_dbg("Creating NAT rule: %s\n", cmd);
+		system(cmd);
+	}
+
+	sprintf(cmd, "/bin/iptables -t nat ");
+	switch (n->mode) {
+	case insert_nat:
+		strcat(cmd, "-I ");
+		break;
+	case remove_nat:
+		strcat(cmd, "-D ");
+		break;
+	default:
+		strcat(cmd, "-A ");
+		break;
+	}
+	/* Print rule's name */
+	strcat(cmd, n->name);
+	strcat(cmd, " ");
+
+	switch (n->protocol) {
+	case proto_tcp:
+		strcat(cmd, "-p tcp ");
+		break;
+	case proto_udp:
+		strcat(cmd, "-p udp ");
+		break;
+	case proto_icmp:
+		strcat(cmd, "-p icmp ");
+		break;
+	default:
+		sprintf(cmd + strlen(cmd), "-p %d ", n->protocol);
+	}
+
+	/* Source */
+	if (strcmp(n->src_address, "0.0.0.0/0")) {
+		sprintf(cmd + strlen(cmd), "-s %s", n->src_address);
+	}
+
+	if (strlen(n->src_portrange)) {
+		sprintf(cmd + strlen(cmd), "--sport %s ", n->src_portrange);
+	}
+
+	if (strcmp(n->dst_address, "0.0.0.0/0")) {
+		sprintf(cmd + strlen(cmd), "-d %s", n->dst_address);
+	}
+
+	if (strlen(n->dst_portrange)) {
+		sprintf(cmd + strlen(cmd), "--dport %s ", n->dst_portrange);
+	}
+
+	if (n->masquerade) {
+		if (n->action != snat) {
+			fprintf(stderr,
+			                "%% Change to interface-address is valid only with source NAT\n");
+			return;
+		}
+
+		strcat(cmd, "-j MASQUERADE ");
+
+		if (n->nat_port1[0])
+			sprintf(cmd + strlen(cmd), "--to-ports %s", n->nat_port1);
+
+		if (n->nat_port2[0])
+			sprintf(cmd + strlen(cmd), "-%s", n->nat_port2);
+
+	} else {
+		sprintf(cmd + strlen(cmd), "-j %cNAT --to %s", (n->action == snat) ? 'S' : 'D',
+		                n->nat_addr1);
+		if (n->nat_addr2[0])
+			sprintf(cmd + strlen(cmd), "-%s", n->nat_addr2);
+		if (n->nat_port1[0])
+			sprintf(cmd + strlen(cmd), ":%s", n->nat_port1);
+		if (n->nat_port2[0])
+			sprintf(cmd + strlen(cmd), "-%s", n->nat_port2);
+	}
+
+#if 0
+	/* Check if this exact rule already exists */
+	if (librouter_nat_exact_rules_exists(n))
+	printf("%% Rule already exists\n");
+	else {
+#endif
+	nat_dbg("Applying NAT rule: %s\n", cmd);
+	system(cmd); /* Apply rule */
+}
+
+/**
+ * librouter_nat_check_interface_rule	Check if rule is applied
+ *
+ * This function needs to be replaced by smaller ones.
+ * At the moment, it uses the parameters passed and ignores
+ * the ones that are NULL.
+ *
+ * @param acl
+ * @param iface_in
+ * @param iface_out
+ * @param chain
+ * @return 1 if rule is applied, 0 otherwise
+ */
+int librouter_nat_check_interface_rule(char *acl, char *iface_in, char *iface_out, char *chain)
+{
+	FILE *f;
+	char *tmp, buf[256];
+	int acl_exists = 0;
+	int in_chain = 0;
+	char *iface_in_, *iface_out_, *target;
+
+	f = popen("/bin/iptables -t nat -L -nv", "r");
+
+	if (!f) {
+		fprintf(stderr, "%% NAT subsystem not found\n");
+		return 0;
+	}
+
+	while (fgets(buf, sizeof(buf), f)) {
+		librouter_str_striplf(buf);
+
+		if (strncmp(buf, "Chain ", 6) == 0) {
+			if (in_chain)
+				break; // chegou `a proxima chain sem encontrar - finaliza
+			tmp = strchr(buf + 6, ' ');
+			if (tmp) {
+				*tmp = 0;
+				if (strcmp(buf + 6, chain) == 0)
+					in_chain = 1;
+			}
+		} else if ((in_chain) && (strncmp(buf, " pkts", 5) != 0) && (strlen(buf) > 40)) {
+			arglist *args;
+			char *p;
+			p = buf;
+			while ((*p) && (*p == ' '))
+				p++;
+			args = librouter_make_args(p);
+
+			if (args->argc < 7) {
+				librouter_destroy_args(args);
+				continue;
+			}
+
+			iface_in_ = args->argv[5];
+			iface_out_ = args->argv[6];
+			target = args->argv[2];
+
+			if (((iface_in == NULL) || (strcmp(iface_in_, iface_in) == 0))
+			                && ((iface_out == NULL) || (strcmp(iface_out_, iface_out)
+			                                == 0)) && ((acl == NULL) || (strcmp(target,
+			                acl) == 0))) {
+				acl_exists = 1;
+				librouter_destroy_args(args);
+				break;
+			}
+
+			librouter_destroy_args(args);
+		}
+	}
+	pclose(f);
+	return acl_exists;
+}
+
+int librouter_nat_bind_interface_to_rule(char *interface, char *rulename, nat_chain chain)
+{
+	char buf[256];
+
+	if (chain == nat_chain_in)
+		sprintf(buf, "/bin/iptables -t nat -A PREROUTING -i %s -j %s", interface, rulename);
+	else
+		sprintf(buf, "/bin/iptables -t nat -A POSTROUTING -o %s -j %s", interface, rulename);
+
+	nat_dbg("Binding interface: %s\n", buf);
+	system(buf);
+}
+
+int librouter_nat_delete_rule(char *name)
+{
+	char cmd[256];
+
+	sprintf(cmd, "/bin/iptables -t nat -F %s", name); /* flush */
+	system(cmd);
+
+	sprintf(cmd, "/bin/iptables -t nat -X %s", name); /* delete */
+	system(cmd);
+}
+
+/**
+ * librouter_nat_rule_refcount		Get rule reference count
+ *
+ * @param nat_rule
+ * @return number of references
+ */
+int librouter_nat_rule_refcount(char *nat_rule)
+{
+	FILE *f;
+	char *tmp;
+	char buf[256];
+
+	f = popen("/bin/iptables -t nat -L -n", "r");
+
+	if (!f) {
+		fprintf(stderr, "%% NAT subsystem not found\n");
+		return 0;
+	}
+
+	while (fgets(buf, sizeof(buf), f)) {
+		librouter_str_striplf(buf); /* strip new line */
+
+		if (strncmp(buf, "Chain ", 6) == 0) {
+			tmp = strchr(buf + 6, ' ');
+			if (tmp) {
+				*tmp = 0;
+				if (strcmp(buf + 6, nat_rule) == 0) {
+					tmp = strchr(tmp + 1, '(');
+					if (!tmp)
+						return 0;
+					tmp++;
+					return atoi(tmp);
+				}
+			}
+		}
+	}
+	pclose(f);
+	return 0;
+}
+
+/**
+ * librouter_nat_clean_iface_rules	Remove rules from an interface
+ *
+ * @param iface
+ * @return 0 if success
+ */
+int librouter_nat_clean_iface_rules(char *iface)
+{
+	FILE *f;
+	char buf[256];
+	char cmd[256];
+	char chain[16];
+	char *p, *iface_in_, *iface_out_, *target;
+	FILE *procfile;
+
+	procfile = fopen("/proc/net/ip_tables_names", "r");
+	if (!procfile)
+		return 0;
+	fclose(procfile);
+
+	f = popen("/bin/iptables -t nat -L -nv", "r");
+
+	if (!f) {
+		fprintf(stderr, "%% NAT subsystem not found\n");
+		return 0;
+	}
+
+	while (fgets(buf, 255, f)) {
+		librouter_str_striplf(buf);
+
+		if (strncmp(buf, "Chain ", 6) == 0) {
+			p = strchr(buf + 6, ' ');
+			if (p) {
+				*p = 0;
+				strncpy(chain, buf + 6, 16);
+				chain[15] = 0;
+			}
+		} else if ((strncmp(buf, " pkts", 5) != 0) && (strlen(buf) > 40)) {
+			arglist *args;
+
+			p = buf;
+			while ((*p) && (*p == ' '))
+				p++;
+			args = librouter_make_args(p);
+			if (args->argc < 7) {
+				librouter_destroy_args(args);
+				continue;
+			}
+			iface_in_ = args->argv[5];
+			iface_out_ = args->argv[6];
+			target = args->argv[2];
+			if (strncmp(iface, iface_in_, strlen(iface)) == 0) {
+				sprintf(cmd, "/bin/iptables -t nat -D %s -i %s -j %s", chain,
+				                iface_in_, target);
+
+				sprintf(cmd, "/bin/iptables -t nat -D %s -i %s -j %s", chain,
+				                iface_in_, target);
+				nat_dbg("%s\n", cmd);
+				system(cmd);
+			}
+			if (strncmp(iface, iface_out_, strlen(iface)) == 0) {
+				sprintf(cmd, "/bin/iptables -t nat -D %s -o %s -j %s", chain,
+				                iface_out_, target);
+
+				nat_dbg("%s\n", cmd);
+				system(cmd);
+			}
+			librouter_destroy_args(args);
+		}
+	}
+	pclose(f);
+	return 0;
+}
+
 #define trimcolumn(x) tmp=strchr(x, ' '); if (tmp != NULL) *tmp=0;
 
 static void _print_nat_rule(const char *action,
-                           const char *proto,
-                           const char *src,
-                           const char *dst,
-                           const char *sports,
-                           const char *dports,
-                           char *acl,
-                           FILE *out,
-                           int conf_format,
-                           int mc,
-                           char *to,
-                           char *masq_ports)
+                            const char *proto,
+                            const char *src,
+                            const char *dst,
+                            const char *sports,
+                            const char *dports,
+                            char *acl,
+                            FILE *out,
+                            int conf_format,
+                            int mc,
+                            char *to,
+                            char *masq_ports)
 {
 	char src_ports[32];
 	char dst_ports[32];
@@ -151,7 +549,7 @@ static void _print_nat_rule(const char *action,
 	fprintf(out, "\n");
 }
 
-void librouter_nat_dump(char *xacl, FILE *F, int conf_format)
+void librouter_nat_dump(char *xacl, FILE *f, int conf_format)
 {
 	FILE *ipc;
 	char *tmp;
@@ -194,7 +592,7 @@ void librouter_nat_dump(char *xacl, FILE *F, int conf_format)
 			*tmp = 0;
 
 		if (strncmp(buf, "Chain ", 6) == 0) {
-			//if (conf_format && aclp) fprintf(F, "!\n");
+			//if (conf_format && aclp) fprintf(f, "!\n");
 			trimcolumn(buf+6);
 			strncpy(acl, buf + 6, 100);
 			acl[100] = 0;
@@ -262,17 +660,16 @@ void librouter_nat_dump(char *xacl, FILE *F, int conf_format)
 					trimcolumn(masq_ports);
 
 				if ((strcmp(type, "MASQUERADE") == 0)
-					|| (strcmp(type, "DNAT") == 0)
-					|| (strcmp(type, "SNAT") == 0)) {
+				                || (strcmp(type, "DNAT") == 0) || (strcmp(type,
+				                "SNAT") == 0)) {
 
 					/* filter CHAINs */
-					if (strcmp(acl, "INPUT") != 0 &&
-						strcmp(acl, "PREROUTING") != 0 &&
-						strcmp(acl, "OUTPUT") != 0 &&
-						strcmp(acl, "POSTROUTING") != 0) {
+					if (strcmp(acl, "INPUT") != 0 && strcmp(acl, "PREROUTING")
+					                != 0 && strcmp(acl, "OUTPUT") != 0
+					                && strcmp(acl, "POSTROUTING") != 0) {
 
 						if ((!aclp) && (!conf_format)) {
-							fprintf(F, "NAT rule %s\n", acl);
+							fprintf(f, "NAT rule %s\n", acl);
 						}
 
 						aclp = 1;
@@ -283,10 +680,10 @@ void librouter_nat_dump(char *xacl, FILE *F, int conf_format)
 								++mcount;
 						}
 
-						_print_nat_rule(type, prot, source, dest,
-						                sports, dports, acl, F,
-						                conf_format, atoi(mcount),
-						                to, masq_ports);
+						_print_nat_rule(type, prot, source, dest, sports,
+						                dports, acl, f, conf_format, atoi(
+						                                mcount), to,
+						                masq_ports);
 					}
 
 				} else {
@@ -295,10 +692,16 @@ void librouter_nat_dump(char *xacl, FILE *F, int conf_format)
 						/* PRE|POST ROUTING */
 						if (strstr(acl, "ROUTING")) {
 							if (strcmp(input, "*"))
-								fprintf(F, "interface %s in nat-rule %s\n", input, type);
+								fprintf(
+								                f,
+								                "interface %s in nat-rule %s\n",
+								                input, type);
 
 							if (strcmp(output, "*"))
-								fprintf(F, "interface %s out nat-rule %s\n", output, type);
+								fprintf(
+								                f,
+								                "interface %s out nat-rule %s\n",
+								                output, type);
 						}
 					}
 				}
@@ -339,7 +742,7 @@ int librouter_nat_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 		chain_in, chain_out, chain_other
 	} acl_chain;
 
-	FILE *F;
+	FILE *f;
 	FILE *procfile;
 
 	acl_chain chain = chain_other;
@@ -353,16 +756,16 @@ int librouter_nat_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 		return 0;
 	fclose(procfile);
 
-	F = popen("/bin/iptables -t nat -L -nv", "r");
+	f = popen("/bin/iptables -t nat -L -nv", "r");
 
-	if (!F) {
+	if (!f) {
 		fprintf(stderr, "%% NAT subsystem not found\n");
 		return 0;
 	}
 
-	while (!feof(F)) {
+	while (!feof(f)) {
 		buf[0] = 0;
-		fgets(buf, 255, F);
+		fgets(buf, 255, f);
 		buf[255] = 0;
 
 		librouter_str_striplf(buf);
@@ -412,6 +815,6 @@ int librouter_nat_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 			librouter_destroy_args(args);
 		}
 	}
-	pclose(F);
+	pclose(f);
 	return 0;
 }
