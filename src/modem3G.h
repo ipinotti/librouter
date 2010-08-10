@@ -38,13 +38,13 @@ struct sim_conf {
 	char password[SIZE_FIELDS_STRUCT];
 };
 
-int librouter_modem3g_get_apn (char * apn, int devcish);
-int librouter_modem3g_set_apn (char * apn, int devcish);
-int librouter_modem3g_get_username (char * username, int devcish);
-int librouter_modem3g_set_username (char * username, int devcish);
-int librouter_modem3g_get_password (char * password, int devcish);
-int librouter_modem3g_set_password (char * password, int devcish);
-int librouter_modem3g_set_all_info_inchat(struct sim_conf * sim, int devcish);
+int librouter_modem3g_get_apn (char * apn, int devnum);
+int librouter_modem3g_set_apn (char * apn, int devnum);
+int librouter_modem3g_get_username (char * username, int devnum);
+int librouter_modem3g_set_username (char * username, int devnum);
+int librouter_modem3g_get_password (char * password, int devnum);
+int librouter_modem3g_set_password (char * password, int devnum);
+int librouter_modem3g_set_all_info_inchat(struct sim_conf * sim, int devnum);
 int librouter_modem3g_sim_set_info_infile(int sim, char * field, char * info);
 int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card);
 int librouter_modem3g_sim_order_set_mainsim(int sim);

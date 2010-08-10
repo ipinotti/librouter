@@ -31,7 +31,8 @@
  * @param interface
  * @return 0 if ok, -1 if not
  */
-int librouter_modem3g_sim_order_set_allinfo(int sim_main, int sim_back, char * interface, int intfnumber){
+int librouter_modem3g_sim_order_set_allinfo(int sim_main, int sim_back, char * interface, int intfnumber)
+{
 	struct sim_conf * sim = malloc(sizeof(struct sim_conf));
 
 	if (librouter_dev_exists((char *)interface)){
@@ -125,7 +126,6 @@ int librouter_modem3g_sim_set_info_infile(int sim, char * field, char * info)
 	rename(filenamesim_new, MODEM3G_SIM_INFO_FILE);
 
 	return 0;
-
 }
 
 /**
@@ -190,7 +190,6 @@ int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card)
 
 	fclose(fd);
 	return 0;
-
 }
 
 /**
@@ -321,17 +320,17 @@ int librouter_modem3g_sim_card_get(void)
  * Caso ocorra problema, é retornado -1 e controle de erros referente a função descrita em str.c
  *
  * @param apn
- * @param devcish
+ * @param devnum
  * @return 0 if OK, -1 if not
  */
-int librouter_modem3g_get_apn(char * apn, int devcish)
+int librouter_modem3g_get_apn(char * apn, int devnum)
 {
 	int check = -1, length = 0, i = 0;
 	char file[48] = MODEM3G_CHAT_FILE;
 	char device[2];
 	char key[] = "\"IP\",";
 
-	snprintf(device, 2, "%d", devcish);
+	snprintf(device, 2, "%d", devnum);
 	strcat(file, device);
 
 	check = librouter_str_find_string_in_file(file, key, apn, SIZE_FIELDS_STRUCT);
@@ -344,7 +343,6 @@ int librouter_modem3g_get_apn(char * apn, int devcish)
 	apn[length - 3] = '\0';
 
 	return check;
-
 }
 
 /**
@@ -356,22 +354,20 @@ int librouter_modem3g_get_apn(char * apn, int devcish)
  * Caso ocorra problema, é retornado -1 e controle de erros referente a função descrita em str.c
  *
  * @param apn
- * @param devcish
+ * @param devnum
  * @return 0 if OK, -1 if not
  */
-int librouter_modem3g_set_apn(char * apn, int devcish)
+int librouter_modem3g_set_apn(char * apn, int devnum)
 {
 	int check = -1;
 	char file[48] = MODEM3G_CHAT_FILE;
 	char device[2];
 	char key[] = "\"IP\",";
-	char buffer_apn[SIZE_FIELDS_STRUCT] = "\"";
-	char plus[] = "\"'";
+	char buffer_apn[SIZE_FIELDS_STRUCT];
 
-	strcat(buffer_apn, apn);
-	strcat(buffer_apn, plus);
+	snprintf(buffer_apn, (SIZE_FIELDS_STRUCT-3), "\"%s\"'", apn);
 
-	snprintf(device, 2, "%d", devcish);
+	snprintf(device, 2, "%d", devnum);
 	strcat(file, device);
 
 	check = librouter_str_replace_string_in_file(file, key, buffer_apn);
@@ -389,14 +385,14 @@ int librouter_modem3g_set_apn(char * apn, int devcish)
  * @param username
  * @return 0 if OK, -1 if not
  */
-int librouter_modem3g_get_username(char * username, int devcish)
+int librouter_modem3g_get_username(char * username, int devnum)
 {
 	int check = -1;
 	char file[48] = MODEM3G_PEERS_FILE;
 	char device[2];
 	char key[] = "user";
 
-	snprintf(device, 2, "%d", devcish);
+	snprintf(device, 2, "%d", devnum);
 	strcat(file, device);
 
 	check = librouter_str_find_string_in_file(file, key, username, SIZE_FIELDS_STRUCT);
@@ -413,17 +409,17 @@ int librouter_modem3g_get_username(char * username, int devcish)
  * Caso ocorra problema, é retornado -1 e controle de erros referente a função descrita em str.c
  *
  * @param username
- * @param devcish
+ * @param devnum
  * @return 0 if OK, -1 if not
  */
-int librouter_modem3g_set_username(char * username, int devcish)
+int librouter_modem3g_set_username(char * username, int devnum)
 {
 	int check = -1;
 	char file[48] = MODEM3G_PEERS_FILE;
 	char device[2];
 	char key[] = "user";
 
-	snprintf(device, 2, "%d", devcish);
+	snprintf(device, 2, "%d", devnum);
 	strcat(file, device);
 
 	check = librouter_str_replace_string_in_file(file, key, username);
@@ -440,17 +436,17 @@ int librouter_modem3g_set_username(char * username, int devcish)
  * referente a função descrita em str.c
  *
  * @param password
- * @param devcish
+ * @param devnum
  * @return 0 if OK, -1 if not
  */
-int librouter_modem3g_get_password(char * password, int devcish)
+int librouter_modem3g_get_password(char * password, int devnum)
 {
 	int check = -1;
 	char file[48] = MODEM3G_PEERS_FILE;
 	char device[2];
 	char key[] = "password";
 
-	snprintf(device, 2, "%d", devcish);
+	snprintf(device, 2, "%d", devnum);
 	strcat(file, device);
 
 	check = librouter_str_find_string_in_file(file, key, password, SIZE_FIELDS_STRUCT);
@@ -468,17 +464,17 @@ int librouter_modem3g_get_password(char * password, int devcish)
  * referente a função descrita em str.c
  *
  * @param password
- * @param devcish
+ * @param devnum
  * @return 0 if OK, -1 if not
  */
-int librouter_modem3g_set_password(char * password, int devcish)
+int librouter_modem3g_set_password(char * password, int devnum)
 {
 	int check = -1;
 	char file[48] = MODEM3G_PEERS_FILE;
 	char device[2];
 	char key[] = "password";
 
-	snprintf(device, 2, "%d", devcish);
+	snprintf(device, 2, "%d", devnum);
 	strcat(file, device);
 
 	check = librouter_str_replace_string_in_file(file, key, password);
@@ -491,10 +487,10 @@ int librouter_modem3g_set_password(char * password, int devcish)
  * através da struct sim_conf.
  *
  * @param sim
- * @param devcish
+ * @param devnum
  * @return 0 if ok, -1 if not
  */
-int librouter_modem3g_set_all_info_inchat(struct sim_conf * sim, int devcish)
+int librouter_modem3g_set_all_info_inchat(struct sim_conf * sim, int devnum)
 {
 	int check = -1;
 	char key_apn[] = "\"IP\",";
@@ -504,13 +500,13 @@ int librouter_modem3g_set_all_info_inchat(struct sim_conf * sim, int devcish)
 	char file[56] = { (int) NULL };
 
 	snprintf(buffer_apn, SIZE_FIELDS_STRUCT, "\"%s\"'", sim->apn);
-	snprintf(file, 56, "%s%d", MODEM3G_CHAT_FILE, devcish);
+	snprintf(file, 56, "%s%d", MODEM3G_CHAT_FILE, devnum);
 
 	check = librouter_str_replace_string_in_file(file, key_apn, buffer_apn);
 	if (check < 0)
 		goto end;
 
-	snprintf(file, 56, "%s%d", MODEM3G_PEERS_FILE, devcish);
+	snprintf(file, 56, "%s%d", MODEM3G_PEERS_FILE, devnum);
 
 	check = librouter_str_replace_string_in_file(file, key_user, sim->username);
 	if (check < 0)
@@ -527,7 +523,7 @@ int librouter_modem3g_set_all_info_inchat(struct sim_conf * sim, int devcish)
  * É necessário passar por parâmetro o número do SIM Card desejado, e a interface M3G, no momento, somente
  * a interfacae M3G0 possui DUAL SIM.
  * @param simcard
- * @param devcish -> must be 0 for now
+ * @param devnum -> must be 0 for now
  * @return 0 if ok, -1 if not
  */
 int librouter_modem3g_sim_set_all_info_inchat(int simcard, int m3g)
