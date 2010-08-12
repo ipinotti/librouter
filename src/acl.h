@@ -1,6 +1,14 @@
 #ifndef _LIB_ACL_H
 #define _LIB_ACL_H
 
+#define DEBUG
+#ifdef DEBUG
+#define acl_dbg(x,...) \
+		syslog(LOG_INFO, "%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__);
+#else
+#define acl_dbg(x,...)
+#endif
+
 typedef enum {
 	chain_in, chain_out, chain_both
 } acl_chain;
@@ -40,6 +48,27 @@ struct acl_config {
 	acl_action action;
 	acl_mode mode;
 	acl_state state;
+};
+
+struct acl_dump {
+	char *acl;
+	char *action;
+	char *type;
+	char *proto;
+	char *input;
+	char *output;
+	char *src;
+	char *dst;
+	char *sports;
+	char *dports;
+	char *flags;
+	char *tos;
+	char *state;
+	char *icmp_type;
+	char *icmp_type_code;
+	char *tcpmss;
+	char *mac;
+	char *mcount;
 };
 
 #define trimcolumn(x) tmp=strchr(x, ' '); if (tmp != NULL) *tmp=0;

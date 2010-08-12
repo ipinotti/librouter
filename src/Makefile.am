@@ -17,6 +17,7 @@ librouter_la_SOURCES = \
 	hash_sn.c \
 	ip.c \
 	ipsec.c \
+	iptc.c \
 	lan.c \
 	lock.c \
 	mangle.c \
@@ -75,6 +76,7 @@ librouter_la_HEADERS = \
 	hash_sn.h \
 	initreq.h \
 	ip.h \
+	iptc.h \
 	ipsec.h \
 	lan.h \
 	lock.h \

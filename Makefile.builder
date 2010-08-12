@@ -1,7 +1,7 @@
 include ../../common.mk
 
-CFLAGS += -I$(ROOTDIR)/include              
-LDFLAGS += -L$(ROOTDIR)/lib
+CFLAGS += -I$(ROOTDIR)/include -I$(ROOTDIR)/fs/include
+LDFLAGS += -L$(ROOTDIR)/lib -L$(ROOTDIR)/fs/lib
 
 all: config
 	$(MAKE)
