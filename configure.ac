@@ -72,7 +72,7 @@ AC_FUNC_FORK
 AC_FUNC_MALLOC
 AC_FUNC_MKTIME
 AC_FUNC_MMAP
-AC_CHECK_FUNCS([bzero ftruncate getpagesize inet_ntoa localtime_r memmove memset munmap socket stime strcasecmp strchr strdup strerror strncasecmp strrchr strstr strtol tzset])
+AC_CHECK_FUNCS([bzero ftruncate getpagesize inet_ntoa localtime_r memmove memset munmap socket stime strcasecmp strchr strdup strerror strncasecmp strrchr strstr strtol tzset if_nametoindex if_indextoname])
 
 SHAVE_INIT([m4], [enable]) # dnl Make the output pretty
 
@@ -80,5 +80,6 @@ AC_CONFIG_FILES([m4/shave
 		 m4/shave-libtool
 		 Makefile
 		 src/Makefile
-		 src/libnetlink/Makefile])
+		 src/libnetlink/Makefile
+		 src/libbridge/Makefile])
 AC_OUTPUT
