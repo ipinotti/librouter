@@ -1,0 +1,25 @@
+int br_initbr(void);
+int br_exists(char *brname);
+int br_addbr(char *brname);
+int br_delbr(char *brname);
+int br_addif(char *brname, char *ifname);
+int br_delif(char *brname, char *ifname);
+int br_checkif(char *brname, char *ifname);
+int br_hasifs(char *brname);
+int br_setageing(char *brname, int sec);
+int br_getageing(char *brname);
+int br_setbridgeprio(char *brname, int prio);
+int br_getbridgeprio(char *brname);
+int br_setfd(char *brname, int sec);
+int br_getfd(char *brname);
+int br_setgcint(char *brname, int sec);
+int br_sethello(char *brname, int sec);
+int br_gethello(char *brname);
+int br_setmaxage(char *brname, int sec);
+int br_getmaxage(char *brname);
+int br_setpathcost(char *brname, char *portname, int cost);
+int br_setportprio(char *brname, char *portname, int cost);
+int br_set_stp(char *brname, int on_off);
+int br_get_stp(char *brname);
+int br_dump_info(char *brname, FILE *out);
+

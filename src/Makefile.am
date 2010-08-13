@@ -1,8 +1,9 @@
-SUBDIRS = libnetlink
+SUBDIRS = libnetlink libbridge
 lib_LTLIBRARIES = librouter.la libroutersnmp.la
 librouter_la_SOURCES = \
 	acl.c \
 	args.c \
+	bridge.c \
 	crc32.c \
 	crc.c \
 	debug.c \
@@ -17,6 +18,7 @@ librouter_la_SOURCES = \
 	hash_sn.c \
 	ip.c \
 	ipsec.c \
+	iptc.c \
 	lan.c \
 	lock.c \
 	mangle.c \
@@ -47,8 +49,8 @@ librouter_la_SOURCES = \
 	usb.c \
 	vlan.c
 
-librouter_la_LIBADD = $(top_builddir)/src/libnetlink/libnetlink.la
-
+librouter_la_LIBADD = $(top_builddir)/src/libnetlink/libnetlink.la \
+		$(top_builddir)/src/libbridge/libbridge.la
 
 libroutersnmp_la_SOURCES = \
 	snmp.c
@@ -62,6 +64,7 @@ librouter_ladir = $(includedir)/librouter
 librouter_la_HEADERS = \
 	acl.h \
 	args.h \
+	bridge.h \
 	debug.h \
 	defines.h \
 	dev.h \
@@ -75,6 +78,7 @@ librouter_la_HEADERS = \
 	hash_sn.h \
 	initreq.h \
 	ip.h \
+	iptc.h \
 	ipsec.h \
 	lan.h \
 	lock.h \

@@ -11,10 +11,6 @@
 #include "exec.h"
 #include "ip.h"
 
-//#define DEBUG_CMD(x) printf("cmd = %s\n", x)
-//#define DEBUG_CMD(x) syslog(LOG_DEBUG, "%s\n", x)
-#define DEBUG_CMD(x)
-
 void librouter_acl_create_new(char *name)
 {
 	char cmd[64];
@@ -171,7 +167,7 @@ void librouter_acl_apply(struct acl_config *acl)
 	if (ruleexists)
 		printf("%% Rule already exists\n");
 	else {
-		DEBUG_CMD(cmd);
+		acl_dbg("Applying rule : %s\n", cmd);
 		system(cmd); /* Do it ! */
 	}
 }
@@ -222,99 +218,92 @@ void librouter_acl_print_flags(FILE *out, char *flags)
 	}
 }
 
-static void _librouter_acl_print_rule(const char *action,
-                                      const char *proto,
-                                      const char *src,
-                                      const char *dst,
-                                      const char *sports,
-                                      const char *dports,
-                                      char *acl,
-                                      FILE *out,
-                                      int conf_format,
-                                      int mc,
-                                      char *flags,
-                                      char *tos,
-                                      char *state,
-                                      char *icmp_type,
-                                      char *icmp_type_code,
-                                      char *tcpmss,
-                                      char *mac)
+static void _librouter_acl_print_rule(struct acl_dump *a, FILE *out, int conf_format)
 {
 	char src_ports[32];
 	char dst_ports[32];
-	char *_src;
-	char *_dst;
+
+	//char *_src;
+	//char *_dst;
+
 	const char *src_netmask;
 	const char *dst_netmask;
 
-	_src = strdup(src);
-	_dst = strdup(dst);
-	src_ports[0] = 0;
-	dst_ports[0] = 0;
-	src_netmask = librouter_ip_extract_mask(_src);
-	dst_netmask = librouter_ip_extract_mask(_dst);
-	librouter_acl_set_ports(sports, src_ports);
-	librouter_acl_set_ports(dports, dst_ports);
+	//_src = strdup(src);
+	//_dst = strdup(dst);
+	memset(src_ports, 0, sizeof(src_ports));
+	memset(dst_ports, 0, sizeof(dst_ports));
+
+	src_netmask = librouter_ip_extract_mask(a->src);
+	dst_netmask = librouter_ip_extract_mask(a->dst);
+	librouter_acl_set_ports(a->sports, src_ports);
+	librouter_acl_set_ports(a->dports, dst_ports);
 
 	if (conf_format)
-		fprintf(out, "access-list ");
-	if (conf_format)
-		fprintf(out, "%s ", acl);
+		fprintf(out, "access-list %s ", a->acl);
 	else
 		fprintf(out, "    ");
-	if (strcmp(action, "ACCEPT") == 0)
+
+	if (strcmp(a->type, "ACCEPT") == 0)
 		fprintf(out, "accept ");
-	else if (strcmp(action, "DROP") == 0)
+	else if (strcmp(a->type, "DROP") == 0)
 		fprintf(out, "drop ");
-	else if (strcmp(action, "REJECT") == 0)
+	else if (strcmp(a->type, "REJECT") == 0)
 		fprintf(out, "reject ");
-	else if (strcmp(action, "LOG") == 0)
+	else if (strcmp(a->type, "LOG") == 0)
 		fprintf(out, "log ");
-	else if (strcmp(action, "TCPMSS") == 0 && tcpmss) {
-		if (strcmp(tcpmss, "PMTU") == 0)
+	else if (strcmp(a->type, "TCPMSS") == 0 && a->tcpmss) {
+		if (strcmp(a->tcpmss, "PMTU") == 0)
 			fprintf(out, "tcpmss pmtu ");
 		else
-			fprintf(out, "tcpmss %s ", tcpmss);
+			fprintf(out, "tcpmss %s ", a->tcpmss);
 	} else
 		fprintf(out, "???? ");
-	if (mac) {
-		fprintf(out, "mac %s ", mac);
+
+	if (a->mac) {
+		fprintf(out, "mac %s ", a->mac);
 		if (!conf_format)
-			fprintf(out, " (%i matches)", mc);
+			fprintf(out, " (%s matches)", a->mcount);
 		fprintf(out, "\n");
 		return;
 	}
-	if (strcmp(proto, "all") == 0)
+
+	if (strcmp(a->proto, "all") == 0)
 		fprintf(out, "ip ");
 	else
-		fprintf(out, "%s ", proto);
-	if (icmp_type) {
-		if (icmp_type_code)
-			fprintf(out, "type %s %s ", icmp_type, icmp_type_code);
+		fprintf(out, "%s ", a->proto);
+	if (a->icmp_type) {
+		if (a->icmp_type_code)
+			fprintf(out, "type %s %s ", a->icmp_type, a->icmp_type_code);
 		else
-			fprintf(out, "type %s ", icmp_type);
+			fprintf(out, "type %s ", a->icmp_type);
 	}
-	if (strcasecmp(src, "0.0.0.0/0") == 0)
+
+	/* Source */
+	if (strcasecmp(a->src, "0.0.0.0/0") == 0)
 		fprintf(out, "any ");
 	else if (strcmp(src_netmask, "255.255.255.255") == 0)
-		fprintf(out, "host %s ", _src);
+		fprintf(out, "host %s ", a->src);
 	else
-		fprintf(out, "%s %s ", _src, librouter_ip_ciscomask(src_netmask));
+		fprintf(out, "%s %s ", a->src, librouter_ip_ciscomask(src_netmask));
 	if (*src_ports)
 		fprintf(out, "%s ", src_ports);
-	if (strcasecmp(dst, "0.0.0.0/0") == 0)
+
+	/* Destination */
+	if (strcasecmp(a->dst, "0.0.0.0/0") == 0)
 		fprintf(out, "any ");
 	else if (strcmp(dst_netmask, "255.255.255.255") == 0)
-		fprintf(out, "host %s ", _dst);
+		fprintf(out, "host %s ", a->dst);
 	else
-		fprintf(out, "%s %s ", _dst, librouter_ip_ciscomask(dst_netmask));
+		fprintf(out, "%s %s ", a->dst, librouter_ip_ciscomask(dst_netmask));
 	if (*dst_ports)
 		fprintf(out, "%s ", dst_ports);
-	if (flags) {
-		if (strncmp(flags, "0x16/0x02", 9)) {
+
+	if (a->flags) {
+		if (strncmp(a->flags, "0x16/0x02", 9)) {
 			char *t;
 
-			t = strtok(flags, "/");
+			t = strtok(a->flags, "/");
 			if (t != NULL) {
 				fprintf(out, "flags ");
 				librouter_acl_print_flags(out, t);
@@ -326,55 +315,48 @@ static void _librouter_acl_print_rule(const char *action,
 		} else
 			fprintf(out, "flags syn ");
 	}
-	if (tos)
-		fprintf(out, "tos %d ", (int) strtol(tos, NULL, 16));
-	if (state) {
-		if (strstr(state, "ESTABLISHED"))
+
+	if (a->tos)
+		fprintf(out, "tos %d ", (int) strtol(a->tos, NULL, 16));
+	if (a->state) {
+		if (strstr(a->state, "ESTABLISHED"))
 			fprintf(out, "established ");
-		if (strstr(state, "NEW"))
+		if (strstr(a->state, "NEW"))
 			fprintf(out, "new ");
-		if (strstr(state, "RELATED"))
+		if (strstr(a->state, "RELATED"))
 			fprintf(out, "related ");
 	}
+
 	if (!conf_format)
-		fprintf(out, " (%i matches)", mc);
+		fprintf(out, " (%s matches)", a->mcount);
 	fprintf(out, "\n");
 }
 
 void librouter_acl_dump(char *xacl, FILE *F, int conf_format)
 {
 	FILE *ipc;
+	FILE *procfile;
+
 	char buf[512];
 	char *tmp;
-	char acl[101];
-	char *type = NULL;
-	char *prot = NULL;
-	char *input = NULL;
-	char *output = NULL;
-	char *source = NULL;
-	char *dest = NULL;
-	char *sports = NULL;
-	char *dports = NULL;
-	char *flags = NULL;
-	char *tos = NULL;
-	char *state = NULL;
-	char *icmp_type = NULL;
-	char *icmp_type_code = NULL;
-	char *tcpmss = NULL;
-	char *mac = NULL;
-	char *mcount;
+
+	//char acl[256];
+
+	struct acl_dump a;
+
 	int aclp = 1;
-	FILE *procfile;
+
+	memset(&a, 0, sizeof(a));
 
 	procfile = fopen("/proc/net/ip_tables_names", "r");
 	if (!procfile) {
 		if (conf_format)
-			fprintf(F, "!\n"); /* ! for next: router rip */
+			fprintf(F, "!\n");
 		return;
 	}
 	fclose(procfile);
 
-	acl[0] = 0;
+	//acl[0] = 0;
 
 	ipc = popen("/bin/iptables -L -nv", "r");
 
@@ -383,22 +365,17 @@ void librouter_acl_dump(char *xacl, FILE *F, int conf_format)
 		return;
 	}
 
-	while (!feof(ipc)) {
-		buf[0] = 0;
-		fgets(buf, sizeof(buf), ipc);
-		tmp = strchr(buf, '\n');
-		if (tmp)
-			*tmp = 0;
+	while (fgets(buf, sizeof(buf), ipc)) {
+		librouter_str_striplf(buf); /* Remove new line */
 
 		if (strncmp(buf, "Chain ", 6) == 0) {
-			//if ((conf_format)&&(aclp)) fprintf(F, "!\n");
 			trimcolumn(buf+6);
-			strncpy(acl, buf + 6, 100);
-			acl[100] = 0;
+			//strncpy(acl, buf + 6, sizeof(acl));
+			a.acl = strdup(buf + 6); /* acl name */
 			aclp = 0;
 		} else if (strncmp(buf, " pkts", 5) != 0) {
 			/* pkts bytes target prot opt in out source destination */
-			if (strlen(buf) && ((xacl == NULL) || (strcmp(xacl, acl) == 0))) {
+			if (strlen(buf) && ((xacl == NULL) || (strcmp(xacl, a.acl) == 0))) {
 				arglist *args;
 				char *p;
 
@@ -413,134 +390,123 @@ void librouter_acl_dump(char *xacl, FILE *F, int conf_format)
 					continue;
 				}
 
-				type = args->argv[2];
-				prot = args->argv[3];
-				input = args->argv[5];
-				output = args->argv[6];
-				source = args->argv[7];
-				dest = args->argv[8];
+				a.type = args->argv[2];
+				a.proto = args->argv[3];
+				a.input = args->argv[5];
+				a.output = args->argv[6];
+				a.src = args->argv[7];
+				a.dst = args->argv[8];
 
-				sports = strstr(buf, "spts:");
-				if (sports) {
-					sports += 5;
+				a.sports = strstr(buf, "spts:");
+				if (a.sports) {
+					a.sports += 5;
 				} else {
-					sports = strstr(buf, "spt:");
-					if (sports)
-						sports += 4;
+					a.sports = strstr(buf, "spt:");
+					if (a.sports)
+						a.sports += 4;
 				}
 
-				dports = strstr(buf, "dpts:");
-				if (dports) {
-					dports += 5;
+				a.dports = strstr(buf, "dpts:");
+				if (a.dports) {
+					a.dports += 5;
 				} else {
-					dports = strstr(buf, "dpt:");
-					if (dports)
-						dports += 4;
+					a.dports = strstr(buf, "dpt:");
+					if (a.dports)
+						a.dports += 4;
 				}
 
-				if ((flags = strstr(buf, "tcp flags:")))
-					flags += 10;
+				if ((a.flags = strstr(buf, "tcp flags:")))
+					a.flags += 10;
 
-				if ((tos = strstr(buf, "TOS match 0x")))
-					tos += 12;
+				if ((a.tos = strstr(buf, "TOS match 0x")))
+					a.tos += 12;
 
-				if ((state = strstr(buf, "state ")))
-					state += 6;
+				if ((a.state = strstr(buf, "state ")))
+					a.state += 6;
 
-				if ((icmp_type = strstr(buf, "icmp type "))) {
-					icmp_type += 10;
-					if ((icmp_type_code = strstr(buf,
-					                "code ")))
-						icmp_type_code += 5;
+				if ((a.icmp_type = strstr(buf, "icmp type "))) {
+					a.icmp_type += 10;
+					if ((a.icmp_type_code = strstr(buf, "code ")))
+						a.icmp_type_code += 5;
 				}
 
-				if ((tcpmss = strstr(buf, "TCPMSS clamp to "))) {
-					tcpmss += 16;
-				} else if ((tcpmss = strstr(buf, "TCPMSS set "))) {
-					tcpmss += 11;
+				if ((a.tcpmss = strstr(buf, "TCPMSS clamp to "))) {
+					a.tcpmss += 16;
+				} else if ((a.tcpmss = strstr(buf, "TCPMSS set "))) {
+					a.tcpmss += 11;
 				}
 
-				if ((mac = strstr(buf, "MAC ")))
-					mac += 4;
+				if ((a.mac = strstr(buf, "MAC ")))
+					a.mac += 4;
 
-				if (flags)
-					trimcolumn(flags);
+				if (a.flags)
+					trimcolumn(a.flags);
 
-				if (sports)
-					trimcolumn(sports);
+				if (a.sports)
+					trimcolumn(a.sports);
 
-				if (dports)
-					trimcolumn(dports);
+				if (a.dports)
+					trimcolumn(a.dports);
 
-				if (tos)
-					trimcolumn(tos);
+				if (a.tos)
+					trimcolumn(a.tos);
 
-				if (state)
-					trimcolumn(state);
+				if (a.state)
+					trimcolumn(a.state);
 
-				if (icmp_type)
-					trimcolumn(icmp_type);
+				if (a.icmp_type)
+					trimcolumn(a.icmp_type);
 
-				if (icmp_type_code)
-					trimcolumn(icmp_type_code);
+				if (a.icmp_type_code)
+					trimcolumn(a.icmp_type_code);
 
-				if (tcpmss)
-					trimcolumn(tcpmss);
+				if (a.tcpmss)
+					trimcolumn(a.tcpmss);
 
-				if (mac)
-					trimcolumn(mac);
+				if (a.mac)
+					trimcolumn(a.mac);
 
-				if ((strcmp(type, "ACCEPT") == 0) ||
-					(strcmp(type, "DROP") == 0) ||
-					(strcmp(type, "REJECT") == 0) ||
-					(strcmp(type, "LOG") == 0) ||
-					(strcmp(type, "TCPMSS") == 0)) {
+				if ((strcmp(a.type, "ACCEPT") == 0) ||
+					(strcmp(a.type, "DROP") == 0) ||
+					(strcmp(a.type, "REJECT") == 0) ||
+					(strcmp(a.type, "LOG") == 0) ||
+					(strcmp(a.type, "TCPMSS") == 0)) {
 
-					if (strcmp(acl, "INPUT") != 0 &&
-						strcmp(acl, "OUTPUT") != 0 &&
-						strcmp(acl, "FORWARD") != 0) {
+					if (strcmp(a.acl, "INPUT") != 0 &&
+						strcmp(a.acl, "OUTPUT") != 0 &&
+						strcmp(a.acl, "FORWARD") != 0) {
 						/* filter CHAINs */
 
 						if ((!aclp) && (!conf_format)) {
-							fprintf(F, "IP access list %s\n", acl);
+							fprintf(F, "IP access list %s\n", a.acl);
 						}
 
 						aclp = 1;
-						mcount = buf;
+						a.mcount = buf;
 
 						if (!conf_format) {
-							while (*mcount == ' ')
-								++mcount;
+							while (*a.mcount == ' ')
+								++a.mcount;
 						}
 
-						_librouter_acl_print_rule(type,
-						                prot, source,
-						                dest, sports,
-						                dports, acl, F,
-						                conf_format,
-						                atoi(mcount),
-						                flags, tos,
-						                state,
-						                icmp_type,
-						                icmp_type_code,
-						                tcpmss, mac);
+						_librouter_acl_print_rule(&a, F, conf_format);
 					}
 				} else {
 					if (!conf_format) {
-						if (strcmp(acl, "FORWARD")) {
+						if (strcmp(a.acl, "FORWARD")) {
 							/* INTPUT || OUTPUT */
 
-							if (strcmp(input, "*") && !strstr(input,"ipsec"))
+							if (strcmp(a.input, "*") && !strstr(a.input,"ipsec"))
 								fprintf(F,
 									"interface %s in access-list %s\n",
-								        input,
-								        type);
+									a.input,
+									a.type);
 
-							if (strcmp(output, "*") && !strstr(output, "ipsec"))
+							if (strcmp(a.output, "*") && !strstr(a.output, "ipsec"))
 								fprintf(F,
 									"interface %s out access-list %s\n",
-									output,
-									type);
+									a.output,
+									a.type);
 						}
 					}
 				}
@@ -573,15 +539,16 @@ void librouter_acl_dump_policy(FILE *F)
 		return;
 	}
 
-	while (!feof(ipc)) {
-		buf[0] = 0;
-		fgets(buf, sizeof(buf), ipc);
+	while (fgets(buf, sizeof(buf), ipc)) {
+		syslog(LOG_INFO, "%s\n", buf);
 		p = strstr(buf, "policy");
 		if (p) {
-			if (strncasecmp(p + 7, "accept", 6) == 0) {
+			if (strncmp(p + 7, "ACCEPT", 6) == 0) {
+				syslog(LOG_INFO, "policy is accept\n");
 				fprintf(F, "access-policy accept\n");
 				break;
-			} else if (strncasecmp(p + 7, "drop", 4) == 0) {
+			} //else if (strncasecmp(p + 7, "drop", 4) == 0) {
+			else {
 				fprintf(F, "access-policy drop\n");
 				break;
 			}
@@ -643,8 +610,6 @@ int librouter_acl_matched_exists(char *acl,
 		fprintf(stderr, "%% ACL subsystem not found\n");
 		return 0;
 	}
-
-	DEBUG_CMD("acl_matched_exists\n");
 
 	while (!feof(F)) {
 		buf[0] = 0;
@@ -846,8 +811,6 @@ int librouter_acl_clean_iface_acls(char *iface)
 		return -1;
 	}
 
-	DEBUG_CMD("clean_iface_acls\n");
-
 	chain[0] = 0;
 	while (!feof(F)) {
 		buf[0] = 0;
@@ -885,16 +848,12 @@ int librouter_acl_clean_iface_acls(char *iface)
 				sprintf(cmd, "/bin/iptables -D %s -i %s -j %s",
 						chain, iface_in_, target);
 
-				DEBUG_CMD(cmd);
-
 				system(cmd);
 			}
 
 			if (strncmp(iface, iface_out_, strlen(iface)) == 0) {
 				sprintf(cmd, "/bin/iptables -D %s -o %s -j %s",
 				                chain, iface_out_, target);
-				DEBUG_CMD(cmd);
-
 				system(cmd);
 			}
 			librouter_destroy_args(args);
@@ -929,8 +888,6 @@ int librouter_acl_copy_iface_acls(char *src, char *trg) /* starter/interfaces.c 
 		fprintf(stderr, "%% ACL subsystem not found\n");
 		return -1;
 	}
-
-	DEBUG_CMD("copy_iface_acls\n");
 
 	chain[0] = 0;
 	while (!feof(F)) {
@@ -969,16 +926,12 @@ int librouter_acl_copy_iface_acls(char *src, char *trg) /* starter/interfaces.c 
 				sprintf(cmd, "/bin/iptables -A %s -i %s -j %s",
 				                chain, trg, target);
 
-				DEBUG_CMD(cmd);
-
 				system(cmd);
 			}
 
 			if (strncmp(src, iface_out_, strlen(src)) == 0) {
 				sprintf(cmd, "/bin/iptables -A %s -o %s -j %s",
 				                chain, trg, target);
-
-				DEBUG_CMD(cmd);
 
 				system(cmd);
 			}
@@ -1018,28 +971,28 @@ int librouter_acl_interface_ipsec(int add_del,
 							"/bin/iptables -A INPUT -i %s -j %s",
 							ipsec, listno);
 
-						DEBUG_CMD(buf);
+						acl_dbg("%s\n", buf);
 						system(buf);
 
 						sprintf(buf,
 						        "/bin/iptables -A FORWARD -i %s -j %s",
 						        ipsec, listno);
 
-						DEBUG_CMD(buf);
+						acl_dbg("%s\n", buf);
 						system(buf);
 					} else {
 						sprintf(buf,
 							"/bin/iptables -A OUTPUT -o %s -j %s",
 							ipsec, listno);
 
-						DEBUG_CMD(buf);
+						acl_dbg("%s\n", buf);
 						system(buf);
 
 						sprintf(buf,
 						        "/bin/iptables -A FORWARD -o %s -j %s",
 						        ipsec, listno);
 
-						DEBUG_CMD(buf);
+						acl_dbg("%s\n", buf);
 						system(buf);
 					}
 				} else {
@@ -1051,7 +1004,7 @@ int librouter_acl_interface_ipsec(int add_del,
 								ipsec,
 								listno);
 
-							DEBUG_CMD(buf);
+							acl_dbg("%s\n", buf);
 							system(buf);
 						}
 
@@ -1062,7 +1015,7 @@ int librouter_acl_interface_ipsec(int add_del,
 								ipsec,
 								listno);
 
-							DEBUG_CMD(buf);
+							acl_dbg("%s\n", buf);
 							system(buf);
 						}
 					}
@@ -1075,7 +1028,7 @@ int librouter_acl_interface_ipsec(int add_del,
 								ipsec,
 								listno);
 
-							DEBUG_CMD(buf);
+							acl_dbg("%s\n", buf);
 							system(buf);
 						}
 
@@ -1086,7 +1039,7 @@ int librouter_acl_interface_ipsec(int add_del,
 								ipsec,
 								listno);
 
-							DEBUG_CMD(buf);
+							acl_dbg("%s\n", buf);
 							system(buf);
 						}
 					}
@@ -1106,4 +1059,3 @@ void librouter_acl_cleanup_modules(void)
 {
 	delete_module(NULL); /* clean unused modules! */
 }
-
