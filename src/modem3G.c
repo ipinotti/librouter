@@ -35,9 +35,9 @@ int librouter_modem3g_sim_order_set_allinfo(int sim_main, int sim_back, char * i
 {
 	struct sim_conf * sim = malloc(sizeof(struct sim_conf));
 
-	if (librouter_dev_exists((char *)interface)){
-			free (sim);
-			return -1;
+	if (librouter_dev_exists(interface) == 1){
+		free (sim);
+		return -1;
 	}
 
 	if (sim_back == -1)
@@ -138,9 +138,9 @@ int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card)
 {
 	FILE *fd;
 	char line[128] = { (int) NULL };
-	char sim_ref[32];
+	char sim_ref[16];
 	char *p;
-	snprintf(sim_ref, 32, "%s%d\n", SIMCARD_STR, sim_card->sim_num);
+	snprintf(sim_ref, 16, "%s%d\n", SIMCARD_STR, sim_card->sim_num);
 
 	if ((fd = fopen(MODEM3G_SIM_INFO_FILE, "r")) == NULL) {
 		syslog(LOG_ERR, "Could not open configuration file\n");

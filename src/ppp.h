@@ -153,6 +153,7 @@ int librouter_ppp_backupd_set_shutdown_3Gmodem (char * intf3g_ppp);
 int librouter_ppp_backupd_set_backup_interface (char * intf3g_ppp, char * main_interface, char * intf_return);
 int librouter_ppp_backupd_set_no_backup_interface (char * intf3g_ppp);
 int librouter_ppp_backupd_set_backup_method (char * intf3g_ppp, char * method, char * ping_addr);
+int librouter_ppp_backupd_is_interface_3G_enable (char * intf3g_ppp);
 
 
 #endif /* PPP_H_ */

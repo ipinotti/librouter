@@ -70,9 +70,6 @@ int librouter_ppp_backupd_set_backup_method (char * intf3g_ppp, char * method, c
  */
 int librouter_ppp_backupd_set_no_backup_interface (char * intf3g_ppp)
 {
-	if (librouter_dev_exists((char *)intf3g_ppp))
-		return -1;
-
 	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,BCKUP_STR,"no") < 0 )
 		return -1;
 
@@ -112,6 +109,16 @@ int librouter_ppp_backupd_set_backup_interface (char * intf3g_ppp, char * main_i
 
 	return 0;
 }
+/**
+ * Função verifica se interface 3G está ativada no sistema do backupd
+ *
+ * @return 1 if ENABLE, 0 if DISABLED
+ */
+int librouter_ppp_backupd_is_interface_3G_enable (char * intf3g_ppp)
+{
+	return librouter_ppp_backupd_verif_param_byintf_infile(intf3g_ppp,SHUTD_STR,"no");
+}
+
 
 /**
  * Função faz "no shutdown" no modem3g escolhido (seta no arquivo backupd.conf),
@@ -135,8 +142,6 @@ int librouter_ppp_backupd_set_no_shutdown_3Gmodem (char * intf3g_ppp)
 int librouter_ppp_backupd_set_shutdown_3Gmodem (char * intf3g_ppp)
 {
 	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,SHUTD_STR,"yes") < 0)
-		return -1;
-	if (librouter_ppp_backupd_set_no_backup_interface(intf3g_ppp) < 0 )
 		return -1;
 	return 0;
 }
