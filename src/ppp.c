@@ -322,8 +322,7 @@ int librouter_ppp_backupd_verif_param_infile(char *field, char *value, char * in
 		}
 	}
 
-	if (!verif)
-		intf_return = NULL;
+	strcpy(intf_return,"");
 
 end:
 	fclose(fd);
