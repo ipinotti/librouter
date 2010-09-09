@@ -17,6 +17,7 @@ int parse_date(char *date, int *d, int *m, int *y);
 int parse_time(char *time, int *h, int *m, int *s);
 int librouter_time_get_date(char *buf, int size);
 int librouter_time_set_date(int day, int mon, int year, int hour, int min, int sec);
+int librouter_time_get_uptime(char * time_buf);
 
 int librouter_time_system_to_rtc(void);
 int librouter_time_rtc_to_system(void);

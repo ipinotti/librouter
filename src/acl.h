@@ -73,6 +73,8 @@ struct acl_dump {
 
 #define trimcolumn(x) tmp=strchr(x, ' '); if (tmp != NULL) *tmp=0;
 
+int librouter_acl_apply_access_policy(char *policy_target);
+int librouter_acl_apply_exist_chain_in_intf(char *dev, char *chain, int direction);
 void librouter_acl_create_new(char *);
 void librouter_acl_apply(struct acl_config *);
 int librouter_acl_exists(char *);

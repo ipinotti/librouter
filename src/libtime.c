@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
+#include <stdarg.h>
 
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
@@ -238,6 +239,51 @@ exit_now:
 error:
 	ret=-1;
 	goto exit_now;
+}
+
+static int uptime_sprintf(char * time_buf, const char *fmt, ...)
+{
+	va_list ap;
+	char buf[1024];
+
+	buf[0] = 0;
+
+	va_start(ap, fmt);
+	vsnprintf(buf, 1023, fmt, ap);
+	va_end(ap);
+	buf[1023] = 0;
+
+	sprintf(time_buf,"%s", buf);
+
+	return 0;
+
+}
+
+int librouter_time_get_uptime(char * time_buf)
+{
+	FILE *tf;
+	int ret = 0;
+	char timeup [256];
+
+	tf = popen("/bin/uptime", "r");
+
+	if (tf == NULL){
+		ret = -1;
+		return ret;
+	}
+
+	while (!feof(tf)) {
+		timeup[0] = 0;
+		fgets(timeup, 255, tf);
+		timeup[255] = 0;
+		if (strlen(timeup)){
+			ret = uptime_sprintf(time_buf,"%s",timeup);
+		}
+	}
+	if (tf)
+		pclose(tf);
+
+	return ret;
 }
 
 #ifdef OPTION_NTPD

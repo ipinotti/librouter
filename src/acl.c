@@ -11,6 +11,99 @@
 #include "exec.h"
 #include "ip.h"
 
+int librouter_acl_ppp_backupd_apply_chain_tofile(int dev, char *chain, int direction)
+{
+	char * buf = malloc(256);
+	char pppdev[4];
+
+	snprintf(pppdev,4,"ppp%d",dev);
+
+
+}
+
+/**
+ * librouter_acl_apply_access_policy: Apply access-policy based on the given policy_target (Accept/Drop)
+ *
+ * @param policy_target
+ * @return 0 if ok, -1 if not
+ */
+int librouter_acl_apply_access_policy(char *policy_target)
+{
+	char cmd[256];
+	FILE *procfile;
+	char *target;
+	int ret=-1;
+	memset(cmd, 0, sizeof(cmd));
+
+	procfile = fopen("/proc/net/ip_tables_names", "r");
+
+	if (!strcmp(policy_target, "accept")) {
+		target = "ACCEPT";
+		if (!procfile)
+			goto end;
+		/* doesnt need to load modules! */
+	}
+	else
+		if (!strcmp(policy_target, "drop"))
+			target = "DROP";
+		else
+			target = "REJECT";
+
+	if (procfile)
+		fclose(procfile);
+
+	sprintf(cmd, "/bin/iptables -P INPUT %s", target);
+	ret = system(cmd);
+
+	sprintf(cmd, "/bin/iptables -P OUTPUT %s", target);
+	ret = system(cmd);
+
+	sprintf(cmd, "/bin/iptables -P FORWARD %s", target);
+	ret = system(cmd);
+
+end:
+	return ret;
+
+}
+
+
+/**
+ * librouter_acl_apply_exist_chain_in_intf: Apply existent chain on a given interface based on the direction (IN/OUT)
+ *
+ * @param dev
+ * @param chain
+ * @param direction
+ * @return 0 if ok, -1 if not
+ */
+int librouter_acl_apply_exist_chain_in_intf(char *dev, char *chain, int direction)
+{
+	char * buf=malloc(256);
+	int ret=0;
+
+	if (direction){
+		sprintf(buf, "/bin/iptables -A INPUT -i %s -j %s", dev, chain);
+		ret = system(buf);
+		sprintf(buf, "/bin/iptables -A FORWARD -i %s -j %s", dev, chain);
+		ret = system(buf);
+	}
+	else{
+		sprintf(buf, "/bin/iptables -A OUTPUT -o %s -j %s", dev, chain);
+		ret = system(buf);
+		sprintf(buf, "/bin/iptables -A FORWARD -o %s -j %s", dev, chain);
+		ret = system(buf);
+	}
+
+	free(buf);
+	buf=NULL;
+	return ret;
+}
+
+
+/**
+ * librouter_acl_create_new: Create a new chain from a given name
+ *
+ * @param name
+ */
 void librouter_acl_create_new(char *name)
 {
 	char cmd[64];
