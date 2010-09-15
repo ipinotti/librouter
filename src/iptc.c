@@ -26,16 +26,16 @@ const char *mangle_table = "mangle";
  * @param filter_table
  * @return
  */
-static struct iptc_handle * _get_iptc_handle(const char *filter_table)
+static struct iptc_handle * _get_iptc_handle(const char *table)
 {
 	struct iptc_handle *h;
 
-	h = iptc_init(filter_table);
+	h = iptc_init(table);
 	/* Perhaps we need to insmod */
 	if (h == NULL) {
 		librouter_exec_prog(0, "/sbin/modprobe", "ip_tables", NULL);
 		sleep(1); /* wait a little bit */
-		h = iptc_init(filter_table);
+		h = iptc_init(table);
 	}
 
 	if (h == NULL) {
@@ -43,6 +43,7 @@ static struct iptc_handle * _get_iptc_handle(const char *filter_table)
 		return NULL;
 	}
 
+	iptc_dbg("_get_iptc_handle OK");
 	return h;
 }
 
@@ -72,6 +73,8 @@ static int _iptc_query(char *buf, const char *table)
 		strcat(buf, chain);
 		strcat(buf, " "); /* separate with spaces */
 	}
+
+	iptc_dbg("Iptc_query ok");
 
 	iptc_free(h);
 
@@ -111,27 +114,62 @@ static char *_iptc_get_chain_for_interface(const char *table, int direction, cha
 	const struct ipt_entry *e;
 	const char *chain = NULL;
 
-	h = _get_iptc_handle(filter_table);
+	h = _get_iptc_handle(table);
+
 	if (h == NULL)
 		return NULL;
 
 	for (chain = iptc_first_chain(h); chain != NULL; chain = iptc_next_chain(h)) {
 		/* Check which chain we are interested in */
-		if (direction) {
-			if (strcmp(chain, "OUTPUT"))
-				break;
-		} else {
-			if (strcmp(chain, "INPUT"))
-				break;
+		if (!strcmp(table,filter_table)){
+			if (direction){
+				if (!strcmp(chain, "OUTPUT"))
+						break;
+			}
+			else {
+				if (!strcmp(chain, "INPUT"))
+						break;
+			}
 		}
-		/* For each rule in the chain, check if it has the interface we want
-		 * and return the target chain */
-		for (e = iptc_first_rule(chain, h); e != NULL; e = iptc_next_rule(e,h)) {
-			if (!strcmp(interface, e->ip.iniface))
-				return ((char *)iptc_get_target(e, h));
+		else {
+			if (!strcmp(table,nat_table)){
+				if (direction){
+					if (!strcmp(chain, "POSTROUTING"))
+						break;
+				}
+				else {
+					if (!strcmp(chain, "PREROUTING"))
+						break;
+				}
+			}
+			else {
+				if (!strcmp(table,mangle_table)){
+					/* Para o funcionamento com MANGLE, é necessário implementação especifica nesta parte do codigo */
+					continue;
+				}
+			}
 		}
 	}
 
+	/* For each rule in the chain, check if it has the interface we want
+	 * and return the target chain */
+	for (e = iptc_first_rule(chain, h); e != NULL; e = iptc_next_rule(e,h)) {
+		if (direction){
+			if (!strcmp(interface, e->ip.outiface)){
+				iptc_dbg("Get chain_out for Iface == %s",(char *)iptc_get_target(e, h));
+				return ((char *)iptc_get_target(e, h));
+			}
+		}
+		else{
+			if (!strcmp(interface, e->ip.iniface)){
+				iptc_dbg("Get chain_in for Iface == %s",(char *)iptc_get_target(e, h));
+				return ((char *)iptc_get_target(e, h));
+			}
+		}
+	}
+
+
+	iptc_dbg("_iptc_get_chain_for_interface FAIL");
 	return NULL;
 }
 

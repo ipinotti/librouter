@@ -393,11 +393,6 @@ int librouter_ppp_backupd_set_param_infile(char * intf, char * field, char *valu
 	return 0;
 }
 
-#endif
-
-
-
-
 /**
  * ppp_reload_backupd - signal backupd to reload configuration
  *
@@ -429,6 +424,11 @@ int librouter_ppp_reload_backupd(void)
 
 	return 0;
 }
+
+
+#endif
+
+
 
 int librouter_ppp_notify_systtyd(void)
 {

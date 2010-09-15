@@ -78,6 +78,7 @@ int librouter_acl_apply_exist_chain_in_intf(char *dev, char *chain, int directio
 void librouter_acl_create_new(char *);
 void librouter_acl_apply(struct acl_config *);
 int librouter_acl_exists(char *);
+int librouter_acl_delete_rule(char * name);
 int librouter_acl_matched_exists(char *acl,
                                  char *iface_in,
                                  char *iface_out,

@@ -116,7 +116,8 @@ int librouter_nat_apply_rule(struct nat_config *n)
 		sprintf(cmd, "/bin/iptables -t nat -N %s", n->name);
 
 		nat_dbg("Creating NAT rule: %s\n", cmd);
-		system(cmd);
+		if (system(cmd) != 0)
+			return -1;
 	}
 
 	sprintf(cmd, "/bin/iptables -t nat ");
@@ -151,7 +152,7 @@ int librouter_nat_apply_rule(struct nat_config *n)
 
 	/* Source */
 	if (strcmp(n->src_address, "0.0.0.0/0")) {
-		sprintf(cmd + strlen(cmd), "-s %s", n->src_address);
+		sprintf(cmd + strlen(cmd), "-s %s ", n->src_address);
 	}
 
 	if (strlen(n->src_portrange)) {
@@ -159,7 +160,7 @@ int librouter_nat_apply_rule(struct nat_config *n)
 	}
 
 	if (strcmp(n->dst_address, "0.0.0.0/0")) {
-		sprintf(cmd + strlen(cmd), "-d %s", n->dst_address);
+		sprintf(cmd + strlen(cmd), "-d %s ", n->dst_address);
 	}
 
 	if (strlen(n->dst_portrange)) {
@@ -179,7 +180,7 @@ int librouter_nat_apply_rule(struct nat_config *n)
 			sprintf(cmd + strlen(cmd), "--to-ports %s", n->nat_port1);
 
 		if (n->nat_port2[0])
-			sprintf(cmd + strlen(cmd), "-%s", n->nat_port2);
+			sprintf(cmd + strlen(cmd), "-%s ", n->nat_port2);
 
 	} else {
 		sprintf(cmd + strlen(cmd), "-j %cNAT --to %s", (n->action == snat) ? 'S' : 'D',
@@ -195,11 +196,16 @@ int librouter_nat_apply_rule(struct nat_config *n)
 #if 0
 	/* Check if this exact rule already exists */
 	if (librouter_nat_exact_rules_exists(n))
-	printf("%% Rule already exists\n");
+		printf("%% Rule already exists\n");
 	else {
 #endif
 	nat_dbg("Applying NAT rule: %s\n", cmd);
-	system(cmd); /* Apply rule */
+
+	/* Apply rule */
+	if (system(cmd) != 0)
+		return -1;
+
+	return 0;
 }
 
 /**
@@ -277,26 +283,45 @@ int librouter_nat_check_interface_rule(char *acl, char *iface_in, char *iface_ou
 
 int librouter_nat_bind_interface_to_rule(char *interface, char *rulename, nat_chain chain)
 {
-	char buf[256];
+	char cmd[256];
+
+	memset(cmd, 0, sizeof(cmd));
 
 	if (chain == nat_chain_in)
-		sprintf(buf, "/bin/iptables -t nat -A PREROUTING -i %s -j %s", interface, rulename);
-	else
-		sprintf(buf, "/bin/iptables -t nat -A POSTROUTING -o %s -j %s", interface, rulename);
+		sprintf(cmd, "/bin/iptables -t nat -A PREROUTING -i %s -j %s", interface, rulename);
+	else {
+		if(chain == nat_chain_out)
+			sprintf(cmd, "/bin/iptables -t nat -A POSTROUTING -o %s -j %s", interface, rulename);
+	}
 
-	nat_dbg("Binding interface: %s\n", buf);
-	system(buf);
+	nat_dbg("Binding interface: %s\n", cmd);
+
+	if (system(cmd) != 0)
+		return -1;
+
+	return 0;
 }
 
+/**
+ * librouter_nat_delete_rule: 	Delete NAT rule
+ * @param name
+ * @return 0 if ok, -1 if not
+ */
 int librouter_nat_delete_rule(char *name)
 {
 	char cmd[256];
 
+	memset(cmd, 0, sizeof(cmd));
+
 	sprintf(cmd, "/bin/iptables -t nat -F %s", name); /* flush */
-	system(cmd);
+	if (system(cmd) != 0)
+		return -1;
 
 	sprintf(cmd, "/bin/iptables -t nat -X %s", name); /* delete */
-	system(cmd);
+	if (system(cmd) != 0)
+		return -1;
+
+	return 0;
 }
 
 /**

@@ -22,6 +22,29 @@ int librouter_acl_ppp_backupd_apply_chain_tofile(int dev, char *chain, int direc
 }
 
 /**
+ * librouter_acl_delete_rule:	Delete firewall rule
+ * @param name
+ * @return 0 if ok, -1 if not
+ */
+int librouter_acl_delete_rule(char * name)
+{
+	char cmd[256];
+
+	memset(cmd, 0, sizeof(cmd));
+
+	sprintf(cmd, "/bin/iptables -F %s", name); /* flush */
+	if (system(cmd) != 0)
+		return -1;
+
+	sprintf(cmd, "/bin/iptables -X %s", name); /* delete */
+	if (system(cmd) != 0)
+		return -1;
+
+	return 0;
+}
+
+
+/**
  * librouter_acl_apply_access_policy: Apply access-policy based on the given policy_target (Accept/Drop)
  *
  * @param policy_target
@@ -77,25 +100,30 @@ end:
  */
 int librouter_acl_apply_exist_chain_in_intf(char *dev, char *chain, int direction)
 {
-	char * buf=malloc(256);
-	int ret=0;
+	char cmd[256];
+
+	memset(cmd, 0, sizeof(cmd));
 
 	if (direction){
-		sprintf(buf, "/bin/iptables -A INPUT -i %s -j %s", dev, chain);
-		ret = system(buf);
-		sprintf(buf, "/bin/iptables -A FORWARD -i %s -j %s", dev, chain);
-		ret = system(buf);
+		sprintf(cmd, "/bin/iptables -A INPUT -i %s -j %s", dev, chain);
+		if (system(cmd) != 0)
+			return -1;
+
+		sprintf(cmd, "/bin/iptables -A FORWARD -i %s -j %s", dev, chain);
+		if (system(cmd) != 0)
+			return -1;
 	}
 	else{
-		sprintf(buf, "/bin/iptables -A OUTPUT -o %s -j %s", dev, chain);
-		ret = system(buf);
-		sprintf(buf, "/bin/iptables -A FORWARD -o %s -j %s", dev, chain);
-		ret = system(buf);
+		sprintf(cmd, "/bin/iptables -A OUTPUT -o %s -j %s", dev, chain);
+		if (system(cmd) != 0)
+			return -1;
+
+		sprintf(cmd, "/bin/iptables -A FORWARD -o %s -j %s", dev, chain);
+		if (system(cmd) != 0)
+			return -1;
 	}
 
-	free(buf);
-	buf=NULL;
-	return ret;
+	return 0;
 }
 
 
