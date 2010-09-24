@@ -14,6 +14,9 @@
 #define SERIALDEV_PPP "sx"
 #define BRIDGE_NAME "bridge"
 
+/* Modem3G System built-in */
+#define OPTION_MODEM3G
+
 #define MAX_BRIDGE  1 /* Se alterar este valor alterar tambem as strings "1-1" nos comandos relacionados a bridge */
 /* Teste do modelo... */
 #define MAX_WAN_INTF 2 /* Numero de interfaces WAN (UCC HDLC Fast Mode)  */

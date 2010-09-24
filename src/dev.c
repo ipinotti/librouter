@@ -37,8 +37,10 @@
 #include "error.h"
 #include "dev.h"
 #include "device.h"
-#include "../../cish/util/backupd.h" /*FIXME*/
 
+#ifdef OPTION_MODEM3G
+#include "../../cish/util/backupd.h" /*FIXME*/
+#endif
 
 static int _librouter_dev_get_ctrlfd(void)
 {
@@ -224,10 +226,12 @@ int librouter_dev_set_link_down(char *dev)
 	dev_family *fam = librouter_device_get_family_by_name(dev, str_linux);
 
 	switch (fam->type) {
+#ifdef OPTION_MODEM3G
 	case ppp:
 		librouter_ppp_backupd_set_param_infile(dev,SHUTD_STR,"yes");
 		ret = librouter_ppp_reload_backupd();
 		break;
+#endif
 	default:
 		ret = _librouter_dev_chflags(dev, 0, IFF_UP);
 		break;
@@ -243,10 +247,12 @@ int librouter_dev_set_link_up(char *dev)
 	dev_family *fam = librouter_device_get_family_by_name(dev, str_linux);
 
 	switch (fam->type) {
+#ifdef OPTION_MODEM3G
 	case ppp:
 		librouter_ppp_backupd_set_param_infile(dev,SHUTD_STR,"no");
 		ret = librouter_ppp_reload_backupd();
 		break;
+#endif
 	default:
 		ret = _librouter_dev_chflags(dev, IFF_UP, IFF_UP);
 		break;
