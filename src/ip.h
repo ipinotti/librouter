@@ -24,7 +24,8 @@ typedef struct in_addr IP;
 //#define DEBUG
 #ifdef DEBUG
 #define ip_dbg(x,...) \
-	printf("%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+	syslog(LOG_INFO, "%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__)
+	//printf("%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 #else
 #define ip_dbg(x,...)
 #endif

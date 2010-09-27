@@ -169,7 +169,7 @@ static char *_iptc_get_chain_for_interface(const char *table, int direction, cha
 	}
 
 
-	iptc_dbg("_iptc_get_chain_for_interface FAIL");
+	iptc_dbg("_iptc_get_chain_for_interface FAIL/no chain");
 	return NULL;
 }
 

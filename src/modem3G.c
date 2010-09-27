@@ -244,7 +244,6 @@ int librouter_modem3g_sim_order_get_mainsim(void)
  */
 int librouter_modem3g_sim_order_set_enable(int value)
 {
-
 	char file[] = MODEM3G_SIM_ORDER_FILE;
 	char * enable = malloc(2);
 	int ret = -1;
@@ -266,7 +265,6 @@ int librouter_modem3g_sim_order_set_enable(int value)
  */
 int librouter_modem3g_sim_order_is_enable(void)
 {
-
 	char file[] = MODEM3G_SIM_ORDER_FILE;
 	char * enable = malloc(2);
 	int result = -1;
@@ -280,10 +278,6 @@ int librouter_modem3g_sim_order_is_enable(void)
 	end: free(enable);
 	return result;
 }
-
-
-#define GPIO_SIM_SELECT_PIN	1
-#define GPIO_SIM_SELECT_PORT	1
 
 /**
  * Função relacionada a seleção do SIM CARD pelo HW.
