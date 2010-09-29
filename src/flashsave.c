@@ -23,10 +23,8 @@
 
 #include "options.h"
 
-#include <u-boot/types.h>
-#include <u-boot/image.h>
-#include <u-boot/rtc.h>
-#include <u-boot/zlib.h>
+#include "u-boot/image.h"
+#include "u-boot/rtc.h"
 
 #include "defines.h"
 #include "flashsave.h"
