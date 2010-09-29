@@ -19,6 +19,9 @@
 /* BGP */
 #define OPTION_BGP
 
+/* Bridging */
+#define OPTION_BRIDGE
+
 /* IPSec */
 #define OPTION_IPSEC 1
 #define N_IPSEC_IF 5
