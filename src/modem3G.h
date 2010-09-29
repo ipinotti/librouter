@@ -31,6 +31,9 @@
 #define MAINSIM_STR_LEN		strlen(MAINSIM_STR)
 #define SIMORDER_ENABLE_STR_LEN	strlen(SIMORDER_ENABLE_STR)
 
+#define GPIO_SIM_SELECT_PIN	21
+#define GPIO_SIM_SELECT_PORT	0
+
 struct sim_conf {
 	int sim_num;
 	char apn[SIZE_FIELDS_STRUCT];
