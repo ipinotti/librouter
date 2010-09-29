@@ -308,8 +308,14 @@ int librouter_modem3g_sim_card_set(int sim)
  */
 int librouter_modem3g_sim_card_get(void)
 {
+	struct powerpc_gpio gpio;
 
-	return 0;
+	gpio.pin = GPIO_SIM_SELECT_PIN;
+	gpio.port = GPIO_SIM_SELECT_PORT;
+
+	librouter_ppcio_read(&gpio);
+
+	return gpio.value;
 }
 
 /**
