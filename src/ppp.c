@@ -550,13 +550,13 @@ void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg){
 
 	/* Clean memory! */
 	memset(cfg, 0, sizeof(ppp_config));
-	snprintf(cfg->osdevice, 16, "ttyU%d", serial_no);
+	snprintf(cfg->osdevice, 16, "ttyUSB%d", librouter_usb_device_is_modem(librouter_usb_get_realport_by_aliasport(serial_no)));
 
 	librouter_ppp_backupd_get_config(serial_no,&cfg->bckp_conf);
 
 	cfg->unit = serial_no;
 
-	if (serial_no == 0){
+	if (serial_no == BTIN_M3G_ALIAS){
 		cfg->sim_main.sim_num = librouter_modem3g_sim_order_get_mainsim();
 		cfg->sim_backup.sim_num = !librouter_modem3g_sim_order_get_mainsim();
 		librouter_modem3g_sim_get_info_fromfile(&cfg->sim_main);

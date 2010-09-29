@@ -1108,7 +1108,7 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 	librouter_config_rip_dump_interface(out, osdev);
 	librouter_config_ospf_dump_interface(out, osdev);
 
-	if (serial_no != 0){
+	if (serial_no != BTIN_M3G_ALIAS){
 		if (strcmp(cfg.sim_main.apn, "") != 0)
 			fprintf(out, " apn set %s\n", cfg.sim_main.apn);
 		if (strcmp(cfg.sim_main.username, "") != 0)

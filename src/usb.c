@@ -20,6 +20,51 @@
 #include "ppp.h"
 #include "usb.h"
 
+/* type, port[NUMBER_OF_USBPORTS]*/
+port_family_usb _ports[] = {
+	{ real,  {1,2,3} },
+	{ alias, {1,2,0} },
+	{ non,  {0,0,0} }
+};
+/**
+ * Função retorna porta "alias" utilizada no cish e backupd através da
+ * porta usb real correspondente passada por parâmetro
+ *
+ * @param port
+ * @return aliasport if ok, -1 if not
+ */
+int librouter_usb_get_aliasport_by_realport(int port)
+{
+	int i;
+
+	for (i=0; i < NUMBER_OF_USBPORTS; i++){
+		if ( _ports[real].port[i] == port ){
+			return _ports[alias].port[i];
+		}
+	}
+	return -1;
+}
+
+/**
+ * Função retorna porta usb correspondente através da porta "alias"
+ * utilizada no cish e backupd
+ *
+ *
+ * @param port
+ * @return hubport if ok, -1 if not
+ */
+int librouter_usb_get_realport_by_aliasport(int port)
+{
+	int i;
+
+	for (i=0; i < NUMBER_OF_USBPORTS; i++){
+		if ( _ports[alias].port[i] == port ){
+			return _ports[real].port[i];
+		}
+	}
+	return -1;
+}
+
 /**
  * Função utilizada para verificar a existencia de dispositivo USB conectado a uma porta X
  * do HUB_USB do sistema
@@ -41,7 +86,7 @@ int librouter_usb_device_is_connected(int port)
 	int result = 0;
 	char buff_addr[sizeof(ADDR_USB)];
 
-	sprintf(buff_addr, ADDR_USB, HUB_PORT, port);
+	sprintf(buff_addr, ADDR_USB, HUB_PORT, HUB_PORT, port);
 
 	target = (struct DIR *) opendir(buff_addr);
 
@@ -58,31 +103,31 @@ int librouter_usb_device_is_connected(int port)
  * do HUB_USB é um modem 3G.
  *
  * É passado por parâmetro a porta desejada para verificação da existencia de dispositivo conectado
- * Retorna 1 caso o dispositivo for um modem 3G
- * Retorna 0 se não houver dispositivo conectado ou não for um modem 3G
+ * Retorna numero do ttyUSB atribuido ao dispositivo caso o mesmo for um modem 3G
+ * Retorna -1 se não houver dispositivo conectado ou não for um modem 3G
  *
  * OBS: a verificação da existencia de disp. USB conectado é feita através da análise de diretórios
  * criados segundo a porta do HUB_USB
  * @param port
- * @return 1 if device is a modem, 0 if not
+ * @return number of ttyUSB if ok, -1 if not
  */
 int librouter_usb_device_is_modem(int port)
 {
 	struct DIR * target = NULL;
 	char buff_addr[sizeof(ADDR_PORT_USB)];
-	int result = 0, i = 0;
+	int result = -1, i = 0;
 
 	if (!librouter_usb_device_is_connected(port)) {
 		goto res;
 	}
 
 	for (i = 0; i < 15; i++) {
-		sprintf(buff_addr, ADDR_PORT_USB, HUB_PORT, port, HUB_PORT, port, i);
+		sprintf(buff_addr, ADDR_PORT_USB, HUB_PORT, HUB_PORT, port, HUB_PORT, HUB_PORT, port, i);
 
 		target = (struct DIR *) opendir(buff_addr);
 
 		if (target != NULL) {
-			result = 1;
+			result = i;
 			closedir(target);
 			break;
 		}
@@ -118,7 +163,7 @@ int librouter_usb_get_descriptor(librouter_usb_dev * usb)
 	struct libusb_device_handle *handle = NULL;
 	struct libusb_device_descriptor desc;
 
-	sprintf(addr_file, ADDR_USB_IDPRODUCT, usb->port);
+	sprintf(addr_file, ADDR_USB_IDPRODUCT, HUB_PORT, HUB_PORT, usb->port);
 
 	file = fopen(addr_file, "rt");
 	if (!file)

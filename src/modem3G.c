@@ -281,7 +281,9 @@ int librouter_modem3g_sim_order_is_enable(void)
 
 /**
  * Função relacionada a seleção do SIM CARD pelo HW.
- * @return
+ *
+ * @param sim
+ * @return 0 if ok
  */
 int librouter_modem3g_sim_card_set(int sim)
 {
@@ -297,8 +299,9 @@ int librouter_modem3g_sim_card_set(int sim)
 }
 
 /**
- * Função relacionada a seleção do SIM CARD pelo Hw.
- * @return
+ *  Função relacionada a seleção do SIM CARD pelo Hw.
+ *
+ * @return gpio.value
  */
 int librouter_modem3g_sim_card_get(void)
 {

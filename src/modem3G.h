@@ -9,6 +9,7 @@
 #define _MODEM3G_H
 
 #define SIZE_FIELDS_STRUCT 256
+#define BTIN_M3G_ALIAS 0
 
 #define MODEM3G_CHAT_FILE 	"/etc/ppp/chat-modem-3g-"
 #define MODEM3G_PEERS_FILE 	"/etc/ppp/peers/modem-3g-"
