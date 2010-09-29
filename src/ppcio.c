@@ -39,6 +39,11 @@ int librouter_ppcio_read(struct powerpc_gpio *gpio)
 
 	close(fd);
 
+	if (ret < 0)
+		librouter_logerr("Could not read GPIO. Port = %d Pin = %d\n",
+				gpio->port, gpio->pin);
+
+
 	return ret;
 }
 
@@ -54,6 +59,10 @@ int librouter_ppcio_write(struct powerpc_gpio *gpio)
 	}
 
 	ret = write(fd, (void *)gpio, sizeof(struct powerpc_gpio));
+
+	if (ret < 0)
+		librouter_logerr("Could not write to GPIO. Port = %d Pin = %d\n",
+				gpio->port, gpio->pin);
 
 	close(fd);
 
