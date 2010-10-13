@@ -8,6 +8,23 @@
 #ifndef _MODEM3G_H
 #define _MODEM3G_H
 
+//#define DEBUG
+#ifdef DEBUG
+#define dbgS_modem3g(x,...) \
+		syslog(LOG_INFO,  "%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#else
+#define dbgS_modem3g(x,...)
+#endif
+
+//#define DEBUGB
+#ifdef DEBUGB
+#define dbgP_modem3g(x,...) \
+		printf("%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#else
+#define dbgP_modem3g(x,...)
+#endif
+
+
 #define SIZE_FIELDS_STRUCT 256
 #define BTIN_M3G_ALIAS 0
 
@@ -34,6 +51,10 @@
 
 #define GPIO_SIM_SELECT_PIN	21
 #define GPIO_SIM_SELECT_PORT	0
+#define GPIO_MODULE_RESET_PIN   12
+#define MODULE_STATUS_ON	1
+#define MODULE_STATUS_OFF	0
+#define MODULE_USBHUB_PORT	3
 
 struct sim_conf {
 	int sim_num;
@@ -59,6 +80,7 @@ int librouter_modem3g_sim_order_set_enable(int value);
 int librouter_modem3g_sim_order_is_enable();
 int librouter_modem3g_sim_set_all_info_inchat(int simcard, int m3g);
 int librouter_modem3g_sim_order_set_allinfo(int sim_main, int sim_back, char * interface, int intfnumber);
-
+int librouter_modem3g_module_reset (void);
+int librouter_modem3g_module_set_status (int status);
 
 #endif
