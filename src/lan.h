@@ -7,6 +7,7 @@
 #ifndef LAN_H_
 #define LAN_H_
 
+
 /* Defines para os registros do PHY ethernet */
 #define MII_ADM7001_GPCR 0x10 /* Generic PHY Control/Configuration Register */
 #define MII_ADM7001_GPCR_XOVEN 0x0010 /* Cross Over Auto Detect Enable */
@@ -18,8 +19,10 @@
 #define MII_ADM7001_PSSR 0x17 /* PHY Specific Status Register */
 #define MII_ADM7001_PSSR_SPD 0x0020 /* Operating speed */
 
+#include <linux/mii.h>
+struct lan_status testettt;
 /* prototipos de funcoes */
-int librouter_lan_get_status(char *ifname);
+int librouter_lan_get_status(char *ifname, struct lan_status *st);
 int librouter_lan_get_phy_reg(char *ifname, unsigned short regnum);
 int librouter_lan_set_phy_reg(char *ifname, unsigned short regnum, unsigned short data);
 int librouter_fec_autonegotiate_link(char *dev);

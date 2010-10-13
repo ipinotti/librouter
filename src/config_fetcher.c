@@ -18,6 +18,7 @@
 #include <unistd.h>
 
 #include <net/if_arp.h>
+#include <linux/autoconf.h>
 #include <linux/mii.h>
 
 #include "options.h"
