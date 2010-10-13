@@ -4,14 +4,6 @@
  *  Created on: Jun 24, 2010
  */
 
-#include <linux/config.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <linux/netdevice.h>
-#include <linux/if.h>
 #include <stdio.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -21,6 +13,16 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <syslog.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+
+#include <linux/autoconf.h>
+#include <netinet/in.h>
+#include <linux/netdevice.h>
+#include <linux/if.h>
 #include <linux/hdlc.h>
 #include <linux/sockios.h>
 #include <linux/mii.h>
@@ -35,27 +37,27 @@
 #include "ppcio.h"
 #include "lan.h"
 
-int librouter_lan_get_status(char *ifname)
+int librouter_lan_get_status(char *ifname, struct lan_status *st)
 {
-	int fd, err; //, status;
+	int fd, err;
 	char *p;
 	struct ifreq ifr;
 
 	/* Create a socket to the INET kernel. */
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		librouter_pr_error(1, "lan_get_status: socket");
-		return (-1);
+		return -1;
 	}
 
 	memset(&ifr, 0, sizeof(ifr));
 	strcpy(ifr.ifr_name, ifname);
+	ifr.ifr_data = (void *) st;
 
 	/* vlan uses ethernetX status! */
 	if ((p = strchr(ifr.ifr_name, '.')) != NULL)
 		*p = 0;
 
-#if 0
-	err=ioctl(fd, SIOCGPHYSTATUS, &ifr);
+	err = ioctl(fd, SIOCGPHYSTATUS, &ifr);
 	close(fd);
 
 	if (err < 0) {
@@ -63,10 +65,10 @@ int librouter_lan_get_status(char *ifname)
 			return 0;
 
 		librouter_pr_error(1, "SIOCGPHYSTATUS");
-		return(-1);
+		return -1;
 	}
-#endif
-	return ifr.ifr_ifru.ifru_ivalue;
+
+	return 0;
 }
 
 int librouter_lan_get_phy_reg(char *ifname, u16 regnum)
@@ -94,10 +96,10 @@ int librouter_lan_get_phy_reg(char *ifname, u16 regnum)
 
 	if (ioctl(fd, SIOCGMIIPHY, &ifr) < 0) {
 		close(fd);
-		librouter_pr_error(1, "lan_get_phy_reg: SIOCGMIIPHY");
+		librouter_pr_error(1, "Error reading PHY register for %s: SIOCGMIIPHY", ifname);
 		return -1;
 	}
-#if 0
+#if 1
 	printf("SIOCGMIIPHY (0x%02x=0x%04x)\n", mii.reg_num, mii.val_out);
 #endif
 	close(fd);
@@ -152,7 +154,7 @@ static void _configure_auto_mdix(char *dev)
 	int gpcr;
 
 	if ((gpcr = librouter_lan_get_phy_reg(dev, MII_ADM7001_GPCR)) < 0)
-		return;
+	return;
 
 	gpcr |= MII_ADM7001_GPCR_XOVEN;
 	librouter_lan_set_phy_reg(dev, MII_ADM7001_GPCR, gpcr);
@@ -173,7 +175,7 @@ int librouter_fec_autonegotiate_link(char *dev)
 #endif
 #ifdef ADVERTISE
 	if ((advertise = librouter_lan_get_phy_reg(dev, MII_ADVERTISE)) < 0)
-		return -1;
+	return -1;
 
 	advertise |= (ADVERTISE_10HALF | ADVERTISE_10FULL | ADVERTISE_100HALF | ADVERTISE_100FULL);
 
@@ -205,21 +207,21 @@ int librouter_fec_config_link(char *dev, int speed100, int duplex)
 #ifdef VERIFY_LP
 	/* Verify link partner */
 	if ((lpa = librouter_lan_get_phy_reg(dev, MII_LPA)) < 0)
-		return -1;
+	return -1;
 
 	if (speed100) {
 		if (!(lpa & LPA_100))
-			impossible++;
+		impossible++;
 		else {
 			if (duplex) {
 				if (!(lpa & LPA_100FULL))
-					impossible++;
+				impossible++;
 			}
 		}
 	} else {
 		if (duplex) {
 			if (!(lpa & LPA_10FULL))
-				impossible++;
+			impossible++;
 		}
 	}
 
