@@ -1165,16 +1165,16 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
  */
 static void librouter_config_dump_interface(FILE *out, struct interface_conf *conf)
 {
-	struct iptables_t ipt;
 	char *description;
 	char *cish_dev;
 
 	/* Get iptables config */
-	memset(&ipt, 0, sizeof(struct iptables_t));
 
-	librouter_acl_get_iface_rules(conf->name, ipt.in_acl, ipt.out_acl);
-	librouter_mangle_get_iface_rules(conf->name, ipt.in_mangle, ipt.out_mangle);
-	librouter_nat_get_iface_rules(conf->name, ipt.in_nat, ipt.out_nat);
+	printf("####### CONF-NAME --> %s\n\n", conf->name);
+
+	librouter_acl_get_iface_rules(conf->name, conf->ipt.in_acl, conf->ipt.out_acl);
+	librouter_mangle_get_iface_rules(conf->name, conf->ipt.in_mangle, conf->ipt.out_mangle);
+	librouter_nat_get_iface_rules(conf->name, conf->ipt.in_nat, conf->ipt.out_nat);
 
 	cish_dev = librouter_device_convert_os(conf->name, 0);
 
