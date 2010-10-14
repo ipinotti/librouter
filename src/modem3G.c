@@ -288,27 +288,31 @@ int librouter_modem3g_module_reset (void)
 {
 	if (librouter_modem3g_module_set_status(MODULE_STATUS_OFF) < 0)
 		return -1;
+
 	dbgP_modem3g("MODULE SET STATUS -- command module OFF -> WORKED\n");
 
 	while (1){
 		if (librouter_usb_device_is_modem(MODULE_USBHUB_PORT) == -1)
 			break;
-		dbgP_modem3g("WAITING FOR DEVICE (TTY) GOES DOWN\n");
 
+		dbgP_modem3g("WAITING FOR DEVICE (TTY) GOES DOWN\n");
 		sleep (2);
 	}
 	sleep (2);
-	printf("MODULE SET STATUS -- sleep -> WORKED\n");
+
+	dbgP_modem3g("MODULE SET STATUS -- sleep -> WORKED\n");
 
 
 	if (librouter_modem3g_module_set_status(MODULE_STATUS_ON) < 0)
 		return -1;
+
 	dbgP_modem3g("MODULE SET STATUS -- command module ON -> WORKED\n");
 
 
 	while (1){
 		if (librouter_usb_device_is_modem(MODULE_USBHUB_PORT) != -1)
 			break;
+
 		dbgP_modem3g("WAITING FOR DEVICE (TTY) GOES UP\n");
 		sleep (2);
 	}

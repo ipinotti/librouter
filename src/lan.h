@@ -20,7 +20,7 @@
 #define MII_ADM7001_PSSR_SPD 0x0020 /* Operating speed */
 
 #include <linux/mii.h>
-struct lan_status testettt;
+
 /* prototipos de funcoes */
 int librouter_lan_get_status(char *ifname, struct lan_status *st);
 int librouter_lan_get_phy_reg(char *ifname, unsigned short regnum);

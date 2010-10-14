@@ -67,14 +67,14 @@ enum {
 #define DHCP_INTF_FILE "/var/run/l2tp_dhcp.interface"
 
 #ifdef UDHCPD
-#define DHCPD_DAEMON_LOCAL "/sbin/udhcpd -f -S /etc/udhcpd.loopback0.conf"
-#define FILE_DHCPDCONF_LOCAL "/etc/udhcpd.loopback0.conf"
-#define FILE_DHCPDLEASES_LOCAL "/etc/udhcpd.loopback0.leases"
-#define FILE_DHCPDPID_LOCAL "/var/run/udhcpd.loopback0.pid"
-#define DHCPD_DAEMON "/sbin/udhcpd -f -S /etc/udhcpd.ethernet%d.conf"
-#define FILE_DHCPDCONF "/etc/udhcpd.ethernet%d.conf"
-#define FILE_DHCPDLEASES "/etc/udhcpd.ethernet%d.leases"
-#define FILE_DHCPD_PID_ETH "/var/run/udhcpd.ethernet%d.pid"
+#define DHCPD_DAEMON_LOCAL "/sbin/udhcpd -f -S /etc/udhcpd.lo0.conf"
+#define FILE_DHCPDCONF_LOCAL "/etc/udhcpd.lo0.conf"
+#define FILE_DHCPDLEASES_LOCAL "/etc/udhcpd.lo0.leases"
+#define FILE_DHCPDPID_LOCAL "/var/run/udhcpd.lo0.pid"
+#define DHCPD_DAEMON "/sbin/udhcpd -f -S /etc/udhcpd.eth%d.conf"
+#define FILE_DHCPDCONF "/etc/udhcpd.eth%d.conf"
+#define FILE_DHCPDLEASES "/etc/udhcpd.eth%d.leases"
+#define FILE_DHCPD_PID_ETH "/var/run/udhcpd.eth%d.pid"
 #define FILE_DHCPD_PID_STR "/var/run/udhcpc.%s.pid"
 #else
 #define DHCPD_DAEMON "dhcpd"
