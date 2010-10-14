@@ -606,7 +606,7 @@ int _getleases(struct dhcp_lease_t *leases, int intf_index)
 	char file[32];
 	unsigned expires;
 
-	sprintf(file, "/etc/udhcpd.ethernet%d.leases", intf_index);
+	sprintf(file, FILE_DHCPDLEASES, intf_index);
 	fd = open(file, O_RDONLY);
 
 	if (read(fd, &written_at, sizeof(written_at)) != sizeof(written_at))

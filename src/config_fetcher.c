@@ -20,6 +20,7 @@
 #include <net/if_arp.h>
 #include <linux/autoconf.h>
 #include <linux/mii.h>
+#include <syslog.h>
 
 #include "options.h"
 #include "defines.h"
@@ -1024,6 +1025,12 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 
 	_dump_vlans(out, conf);
 
+#ifdef CONFIG_DIGISTAR_3G
+	if (!strcmp(conf->name, "eth1")){
+		syslog(LOG_DEBUG,"Ignored REG_PHY_DATA for eth1");
+	}
+	else
+#endif
 	/* Show line status if main interface. Avoid VLANs ... */
 	if (strchr(osdev, '.') == NULL) {
 		int bmcr;
@@ -1038,6 +1045,7 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 			                (bmcr & BMCR_FULLDPLX) ? "full" : "half");
 		}
 	}
+
 
 #ifdef OPTION_VRRP
 	dump_vrrp_interface(out, osdev);
