@@ -1170,8 +1170,6 @@ static void librouter_config_dump_interface(FILE *out, struct interface_conf *co
 
 	/* Get iptables config */
 
-	printf("####### CONF-NAME --> %s\n\n", conf->name);
-
 	librouter_acl_get_iface_rules(conf->name, conf->ipt.in_acl, conf->ipt.out_acl);
 	librouter_mangle_get_iface_rules(conf->name, conf->ipt.in_mangle, conf->ipt.out_mangle);
 	librouter_nat_get_iface_rules(conf->name, conf->ipt.in_nat, conf->ipt.out_nat);

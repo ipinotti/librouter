@@ -362,8 +362,6 @@ int librouter_modem3g_sim_card_set(int sim)
 	if (librouter_modem3g_module_reset() < 0)
 			return -1;
 
-	printf("MODULE SET STATUS -- retornando 0\n");
-
 	return 0;
 }
 
