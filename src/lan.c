@@ -37,6 +37,8 @@
 #include "ppcio.h"
 #include "lan.h"
 
+//#define PHY_DEBUG
+
 int librouter_lan_get_status(char *ifname, struct lan_status *st)
 {
 	int fd, err;
@@ -99,7 +101,7 @@ int librouter_lan_get_phy_reg(char *ifname, u16 regnum)
 		librouter_pr_error(1, "Error reading PHY register for %s: SIOCGMIIPHY", ifname);
 		return -1;
 	}
-#if 1
+#ifdef PHY_DEBUG
 	printf("SIOCGMIIPHY (0x%02x=0x%04x)\n", mii.reg_num, mii.val_out);
 #endif
 	close(fd);
