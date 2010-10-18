@@ -113,7 +113,7 @@ int librouter_dhcp_get_status(void)
 	int ret = DHCP_NONE;
 	char dhcp_server[64];
 
-	sprintf(dhcp_server, DHCPD_DAEMON, 0);
+	sprintf(dhcp_server, DHCPD_DAEMON, INTF_DHCP_SERVER_DEFAULT);
 
 	if (librouter_exec_check_daemon(dhcp_server))
 		return DHCP_SERVER;
@@ -135,7 +135,7 @@ int librouter_dhcpd_set_status(int on_off, int eth)
 		sprintf(daemon, DHCPD_DAEMON, eth);
 		return librouter_exec_init_program(1, daemon);
 	}
-	sprintf(daemon, DHCPD_DAEMON, 0);
+	sprintf(daemon, DHCPD_DAEMON, eth);
 	ret = librouter_exec_init_program(0, daemon);
 
 	return ret;
@@ -170,7 +170,7 @@ int librouter_dhcp_set_no_server(void)
 	int pid;
 #endif
 
-	if (librouter_dhcpd_set_status(0, 0) < 0)
+	if (librouter_dhcpd_set_status(0, INTF_DHCP_SERVER_DEFAULT) < 0)
 		return (-1);
 #if 0 /* ifndef UDHCPD */
 	pid=librouter_process_get_pid(DHCPD_DAEMON);
@@ -201,7 +201,7 @@ static int _check_subnet(int intf_idx, char *network, char *mask)
 	IP dhcp_network, dhcp_mask;
 	char interface[32];
 
-	sprintf(interface, "ethernet%d",  intf_idx);
+	sprintf(interface, "eth%d",  intf_idx);
 
 	librouter_ip_interface_get_info(librouter_ip_ethernet_get_dev(interface),
 	                                &eth_addr, &eth_mask, 0, 0);
@@ -222,7 +222,7 @@ int librouter_dhcp_server_set_dnsserver(char *dns)
 	char buf[32];
 	char filename[32];
 
-	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	if (dns != NULL) {
 		snprintf(buf, sizeof(buf), "%s", dns);
@@ -241,7 +241,7 @@ int librouter_dhcp_server_get_dnsserver(char **dns)
 	char buf[64];
 	char filename[32];
 
-	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	memset(buf, 0, sizeof(buf));
 
@@ -260,7 +260,7 @@ int librouter_dhcp_server_set_leasetime(int time)
 	char buf[32];
 	char filename[32];
 
-	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	memset(buf, 0, sizeof(buf));
 	if (time > 0) {
@@ -280,7 +280,7 @@ int librouter_dhcp_server_get_leasetime(int *time)
 	char buf[64];
 	char filename[32];
 
-	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	memset(buf, 0, sizeof(buf));
 
@@ -299,7 +299,7 @@ int librouter_dhcp_server_set_maxleasetime(int time)
 	char buf[32];
 	char filename[32];
 
-	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	if (time > 0) {
 		snprintf(buf, sizeof(buf), "%d", time);
@@ -320,7 +320,7 @@ int librouter_dhcp_server_get_maxleasetime(int *time)
 	char buf[64];
 	char filename[32];
 
-	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	memset(buf, 0, sizeof(buf));
 
@@ -339,7 +339,7 @@ int librouter_dhcp_server_set_domain(char *domain)
 	char buf[64];
 	char filename[32];
 
-	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	if (domain != NULL) {
 		snprintf(buf, sizeof(buf), "%s", domain);
@@ -359,7 +359,7 @@ int librouter_dhcp_server_get_domain(char **domain)
 	char buf[64];
 	char filename[32];
 
-	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	memset(buf, 0, sizeof(buf));
 
@@ -422,7 +422,7 @@ int librouter_dhcp_server_set_router(char *router)
 	char buf[64];
 	char filename[32];
 
-	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	if (router != NULL) {
 		snprintf(buf, sizeof(buf), "%s", router);
@@ -443,7 +443,7 @@ int librouter_dhcp_server_get_router(char **router)
 	char buf[64];
 	char filename[32];
 
-	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	memset(buf, 0, sizeof(buf));
 
@@ -472,7 +472,7 @@ int librouter_dhcp_server_set_pool(char *start, char *end)
 	char filename[32];
 	char buf[32];
 
-	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 	if (start != NULL) {
 		if (librouter_str_replace_string_in_file(filename, "start", start) < 0) {
 			snprintf(buf, sizeof(buf), "start %s\n", start);
@@ -494,7 +494,7 @@ int librouter_dhcp_server_get_pool(char **start, char **end)
 	char buf[64];
 	char filename[32];
 
-	sprintf(filename, FILE_DHCPDCONF, 0); /* FIXME Only Ethernet 0 */
+	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	memset(buf, 0, sizeof(buf));
 	librouter_str_find_string_in_file(filename, "start", buf, sizeof(buf));
@@ -519,7 +519,7 @@ int librouter_dhcp_server_set(int enable)
 		char filename[64];
 		FILE *file;
 
-		sprintf(filename, FILE_DHCPDLEASES, 0); /* FIXME ONLY ETHERNET 0 */
+		sprintf(filename, FILE_DHCPDLEASES, INTF_DHCP_SERVER_DEFAULT);
 		file = fopen(filename, "r");
 
 		if (!file) {
@@ -533,9 +533,9 @@ int librouter_dhcp_server_set(int enable)
 			librouter_dhcp_set_no_relay();
 
 		/* poe o dhcpd para rodar */
-		return librouter_dhcpd_set_status(1, 0);
+		return librouter_dhcpd_set_status(1, INTF_DHCP_SERVER_DEFAULT);
 	} else
-		return librouter_dhcpd_set_status(0, 0);
+		return librouter_dhcpd_set_status(0, INTF_DHCP_SERVER_DEFAULT);
 }
 
 /**
@@ -704,9 +704,9 @@ int librouter_dhcp_get_server(char *buf)
 	if (!buf)
 		return -1;
 	buf[0] = 0;
-	sprintf(filename, FILE_DHCPDCONF, 0);
+	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 	if ((file = fopen(filename, "r")) != NULL) {
-		if (librouter_udhcpd_pid_by_eth(0) != -1) {
+		if (librouter_udhcpd_pid_by_eth(INTF_DHCP_SERVER_DEFAULT) != -1) {
 			/* pula o '#' */
 			fseek(file, 1, SEEK_SET);
 			fgets(buf, 1023, file);
@@ -875,7 +875,7 @@ int librouter_dhcp_l2tp_get_interface(void)
 }
 
 /*
- * l2tp pool <local|ethernet 0> POOL-START POOL-END [dns-server DNS1 dns-server DNS2 router ROUTER
+ * l2tp pool <local|eth 0> POOL-START POOL-END [dns-server DNS1 dns-server DNS2 router ROUTER
  * domain-name DOMAIN default-lease-time D H M S max-lease-time D H M S mask MASK]
  */
 int librouter_dhcp_set_server_local(int save_dns, char *cmdline)
@@ -891,7 +891,7 @@ int librouter_dhcp_set_server_local(int save_dns, char *cmdline)
 	FILE *file;
 
 	args = librouter_make_args(cmdline);
-	if (strcmp(args->argv[2], "ethernet") == 0) {
+	if (strcmp(args->argv[2], "eth") == 0) {
 		int eth_number = atoi(args->argv[3]);
 		FILE *fd;
 
