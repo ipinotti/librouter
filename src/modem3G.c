@@ -286,12 +286,15 @@ int librouter_modem3g_sim_order_is_enable(void)
  */
 int librouter_modem3g_module_reset (void)
 {
+	int timeout_val = 20;
+	int timeout = timeout_val;
+
 	if (librouter_modem3g_module_set_status(MODULE_STATUS_OFF) < 0)
 		return -1;
 
 	dbgP_modem3g("MODULE SET STATUS -- command module OFF -> WORKED\n");
 
-	while (1){
+	while (timeout--){
 		if (librouter_usb_device_is_modem(MODULE_USBHUB_PORT) == -1)
 			break;
 
@@ -302,6 +305,7 @@ int librouter_modem3g_module_reset (void)
 
 	dbgP_modem3g("MODULE SET STATUS -- sleep -> WORKED\n");
 
+	timeout = timeout_val;
 
 	if (librouter_modem3g_module_set_status(MODULE_STATUS_ON) < 0)
 		return -1;
@@ -309,7 +313,7 @@ int librouter_modem3g_module_reset (void)
 	dbgP_modem3g("MODULE SET STATUS -- command module ON -> WORKED\n");
 
 
-	while (1){
+	while (timeout--){
 		if (librouter_usb_device_is_modem(MODULE_USBHUB_PORT) != -1)
 			break;
 
