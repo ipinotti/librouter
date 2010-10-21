@@ -8,9 +8,10 @@
 #define PPP_H_
 
 #include <linux/config.h>
-#include "../../cish/util/backupd.h" /*FIXME*/
-#include "modem3G.h"
 
+#ifdef OPTION_MODEM3G
+#include "modem3G.h"
+#endif
 
 /* 0 1 2 */
 #define PPP_CFG_FILE "/var/run/serial%d.config"
@@ -115,9 +116,11 @@ typedef struct {
 	int debug;
 	/* apn -> Não utilizado no momento, substituido por sim_main & sim_backup para modem3g */
 	char apn[MAX_PPP_APN];
+#ifdef OPTION_MODEM3G
 	struct sim_conf sim_main;
 	struct sim_conf sim_backup;
 	struct bckp_conf_t bckp_conf;
+#endif
 #ifdef CONFIG_HDLC_SPPP_LFI
 int fragment_size;
 int priomarks[CONFIG_MAX_LFI_PRIORITY_MARKS];
@@ -144,6 +147,7 @@ int librouter_ppp_l2tp_has_config(char *name);
 int librouter_ppp_l2tp_set_config(char *name, ppp_config *cfg);
 void librouter_ppp_l2tp_set_defaults(char *name, ppp_config *cfg);
 
+#ifdef OPTION_MODEM3G
 int librouter_ppp_reload_backupd(void);
 int librouter_ppp_backupd_set_param_infile(char * intf, char * field, char *value);
 int librouter_ppp_backupd_verif_param_infile(char * intf, char *field, char *value);
@@ -154,6 +158,6 @@ int librouter_ppp_backupd_set_backup_interface (char * intf3g_ppp, char * main_i
 int librouter_ppp_backupd_set_no_backup_interface (char * intf3g_ppp);
 int librouter_ppp_backupd_set_backup_method (char * intf3g_ppp, char * method, char * ping_addr);
 int librouter_ppp_backupd_is_interface_3G_enable (char * intf3g_ppp);
-
+#endif
 
 #endif /* PPP_H_ */

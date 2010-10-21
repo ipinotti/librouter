@@ -8,6 +8,8 @@
 #ifndef _MODEM3G_H
 #define _MODEM3G_H
 
+#include "../../cish/util/backupd.h" /*FIXME*/
+
 //#define DEBUG
 #ifdef DEBUG
 #define dbgS_modem3g(x,...) \

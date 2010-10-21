@@ -25,7 +25,6 @@
 
 #ifdef OPTION_MODEM3G
 #include "modem3G.h"
-#include "../../cish/util/backupd.h" /*FIXME*/
 #endif
 
 

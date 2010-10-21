@@ -18,6 +18,7 @@ int librouter_dev_get_mtu(char *dev);
 int librouter_dev_set_link_down(char *dev);
 int librouter_dev_set_link_up(char *dev);
 int librouter_dev_get_link(char *dev);
+int librouter_dev_get_link_running(char *dev);
 int librouter_dev_get_hwaddr(char *dev, unsigned char *hwaddr);
 int librouter_dev_change_name(char *ifname, char *new_ifname);
 int librouter_dev_exists(char *dev_name);

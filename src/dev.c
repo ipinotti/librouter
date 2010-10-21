@@ -39,7 +39,7 @@
 #include "device.h"
 
 #ifdef OPTION_MODEM3G
-#include "../../cish/util/backupd.h" /*FIXME*/
+#include "modem3G.h"
 #endif
 
 static int _librouter_dev_get_ctrlfd(void)
@@ -270,6 +270,17 @@ int librouter_dev_get_link(char *dev)
 
 	return (flags & IFF_UP);
 }
+
+int librouter_dev_get_link_running(char *dev)
+{
+	u32 flags;
+
+	if (librouter_dev_get_flags(dev, &flags) < 0)
+		return (-1);
+
+	return (flags & IFF_RUNNING);
+}
+
 
 int librouter_dev_get_hwaddr(char *dev, unsigned char *hwaddr)
 {
