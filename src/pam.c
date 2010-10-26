@@ -25,13 +25,6 @@
 #include "pam.h"
 #include "ppp.h"
 
-#undef AAA_DEBUG 
-#ifdef AAA_DEBUG
-#define PRINTF(x,...) printf("[%s]:%d "x"\n" ,__FUNCTION__,__LINE__,##__VA_ARGS__);
-#else
-#define PRINTF(x,...) do {} while (0);
-#endif
-
 /* New modes must be added to this global variable */
 #define MAX_AAA_TYPES 32
 static const aaa_config_t
@@ -148,6 +141,8 @@ int librouter_pam_web_authenticate(char *user, char *pass)
 	static struct pam_conv null_conv = { _pam_null_conv, NULL };
 	struct web_auth_data web_data;
 
+	dbgS_aaa("Starting librouter_pam_web_authenticate\n\n");
+
 	if (user != NULL)
 		web_data.user = strdup(user);
 	else
@@ -164,18 +159,28 @@ int librouter_pam_web_authenticate(char *user, char *pass)
 	if ((pam_err = pam_start("web", NULL, &null_conv, &pam_handle)) != PAM_SUCCESS)
 		goto web_auth_err;
 
-	if ((pam_err = pam_set_item(pam_handle, PAM_CONV, (const void *) &fpam_conv))
-	                != PAM_SUCCESS)
+	dbgS_aaa("Done PAM_START -- user: %s || pass: %s\n\n",web_data.user,web_data.pass);
+
+	if ((pam_err = pam_set_item(pam_handle, PAM_CONV, (const void *) &fpam_conv)) != PAM_SUCCESS)
 		goto web_auth_err;
+
+	dbgS_aaa("Done PAM_SET_ITEM\n\n");
+
 
 	if ((pam_err = pam_authenticate(pam_handle, 0)) != PAM_SUCCESS)
 		goto web_auth_err;
+
+	dbgS_aaa("Done PAM_AUTHENTICATE\n\n");
+
 
 	/* Now check if the authenticated user is allowed to login. */
 	if (pam_acct_mgmt(pam_handle, 0) == PAM_AUTHTOK_EXPIRED) {
 		if (pam_chauthtok(pam_handle, 0) != PAM_SUCCESS)
 			goto web_auth_err;
 	}
+
+	dbgS_aaa("Done PAM_ACCT_MGMT\n\n");
+
 
 	/*
 	 *  Call 'pam_open_session' to open the authenticated session;
@@ -184,6 +189,9 @@ int librouter_pam_web_authenticate(char *user, char *pass)
 	if (pam_open_session(pam_handle, 0) != PAM_SUCCESS)
 		goto web_auth_err;
 
+	dbgS_aaa("Done PAM_OPEN_SESSION\n\n");
+
+
 	/* 
 	 * Initialize the supplementary group access list. 
 	 * This should be done before pam_setcred because the PAM modules might add groups during the pam_setcred call.
@@ -191,11 +199,16 @@ int librouter_pam_web_authenticate(char *user, char *pass)
 	if (pam_setcred(pam_handle, PAM_ESTABLISH_CRED) != PAM_SUCCESS)
 		goto web_auth_err;
 
+	dbgS_aaa("Done PAM_SETCRED\n\n");
+
+
 	ret = AUTH_OK;
 
 	web_auth_err: if (pam_handle != NULL)
 		pam_end(pam_handle, pam_err);
 	pam_handle = NULL;
+
+	dbgS_aaa("Returning -- %d\n\n",ret);
 
 	return ret;
 }

@@ -18,6 +18,25 @@
 #define AUTH_MAX_SERVERS	3
 #define MAX_AUTH_SERVER_KEY	256
 
+//#define DEBUGS_AAA
+#ifdef DEBUGS_AAA
+#define dbgS_aaa(x,...) \
+		syslog(LOG_INFO,  "%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#else
+#define dbgS_aaa(x,...)
+#endif
+
+//#define DEBUGP_AAA
+#ifdef DEBUGP_AAA
+#define dbgP_aaa(x,...) \
+		printf("%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#else
+#define dbgP_aaa(x,...)
+#endif
+
+
+
+
 enum {
 	AUTH_TYPE_NONE = 0, AUTH_TYPE_PAP, AUTH_TYPE_CHAP
 };
