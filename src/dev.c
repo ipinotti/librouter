@@ -4,6 +4,8 @@
  *  Created on: Jun 23, 2010
  */
 
+#include "dev.h"
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,7 +37,6 @@
 #include "defines.h"
 #include "ip.h"
 #include "error.h"
-#include "dev.h"
 #include "device.h"
 
 #ifdef OPTION_MODEM3G

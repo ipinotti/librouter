@@ -39,6 +39,20 @@
 
 //#define DEBUG
 
+char * librouter_nv_get_product_name(char * product_define){
+
+	if (!strcmp(product_define,"CONFIG_DIGISTAR_3G"))
+		return "DIGISTAR-3G";
+
+	if (!strcmp(product_define,"CONFIG_DIGISTAR_EFM"))
+		return "DIGISTAR-EFM";
+
+	return;
+}
+
+
+
+
 static int _nv_search(struct _nv *nv, char *startup_config_path)
 {
 	FILE *f;

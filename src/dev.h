@@ -10,6 +10,9 @@
 #define DESCRIPTION_DIR "/var/run/description/"
 #define DESCRIPTION_FILE DESCRIPTION_DIR"%s"
 
+#include <linux/config.h>
+
+
 int librouter_dev_get_flags(char *dev, unsigned int *flags);
 int librouter_dev_set_qlen(char *dev, int qlen);
 int librouter_dev_get_qlen(char *dev);

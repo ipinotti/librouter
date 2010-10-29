@@ -76,7 +76,7 @@ int load_feature(struct _saved_feature *feature);
 int save_feature(struct _saved_feature *feature);
 char *get_serial_number(void);
 char *get_system_ID(int);
-char *get_product_name(void);
+char *librouter_nv_get_product_name(char * product_define);
 #endif
 #if defined(OPTION_IPSEC)
 int librouter_nv_save_ipsec_secret(char *secret);
