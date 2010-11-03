@@ -31,12 +31,15 @@
  * @param interface
  * @return 0 if ok, -1 if not
  */
-int librouter_modem3g_sim_order_set_allinfo(int sim_main, int sim_back, char * interface, int intfnumber)
+int librouter_modem3g_sim_order_set_allinfo(int sim_main,
+                                            int sim_back,
+                                            char * interface,
+                                            int intfnumber)
 {
 	struct sim_conf * sim = malloc(sizeof(struct sim_conf));
 
-	if (librouter_dev_exists(interface) == 1){
-		free (sim);
+	if (librouter_dev_exists(interface) == 1) {
+		free(sim);
 		return -1;
 	}
 
@@ -47,18 +50,18 @@ int librouter_modem3g_sim_order_set_allinfo(int sim_main, int sim_back, char * i
 
 	sim->sim_num = sim_main;
 
-	if(librouter_modem3g_sim_order_set_mainsim(sim->sim_num) < 0){
-		free (sim);
+	if (librouter_modem3g_sim_order_set_mainsim(sim->sim_num) < 0) {
+		free(sim);
 		return -1;
 	}
 
-	if(librouter_modem3g_sim_get_info_fromfile(sim) < 0){
-		free (sim);
+	if (librouter_modem3g_sim_get_info_fromfile(sim) < 0) {
+		free(sim);
 		return -1;
 	}
 
-	if(librouter_modem3g_set_all_info_inchat(sim,intfnumber) <0){
-		free (sim);
+	if (librouter_modem3g_set_all_info_inchat(sim, intfnumber) < 0) {
+		free(sim);
 		return -1;
 	}
 
@@ -270,7 +273,8 @@ int librouter_modem3g_sim_order_is_enable(void)
 	char * enable = malloc(2);
 	int result = -1;
 
-	if (librouter_str_find_string_in_file(file, SIMORDER_ENABLE_STR, enable, sizeof(enable)) < 0)
+	if (librouter_str_find_string_in_file(file, SIMORDER_ENABLE_STR, enable, sizeof(enable))
+	                < 0)
 		goto end;
 
 	result = atoi(enable);
@@ -284,7 +288,7 @@ int librouter_modem3g_sim_order_is_enable(void)
  *
  * @return 0 if ok, -1 if not
  */
-int librouter_modem3g_module_reset (void)
+int librouter_modem3g_module_reset(void)
 {
 	int timeout_val = 30;
 	int timeout = timeout_val;
@@ -294,14 +298,14 @@ int librouter_modem3g_module_reset (void)
 
 	dbgP_modem3g("MODULE SET STATUS -- command module OFF -> WORKED\n");
 
-	while (timeout--){
+	while (timeout--) {
 		if (librouter_usb_device_is_modem(MODULE_USBHUB_PORT) == -1)
 			break;
 
 		dbgP_modem3g("WAITING FOR DEVICE (TTY) GOES DOWN\n");
-		sleep (2);
+		sleep(2);
 	}
-	sleep (2);
+	sleep(2);
 
 	dbgP_modem3g("MODULE SET STATUS -- sleep -> WORKED\n");
 
@@ -312,19 +316,18 @@ int librouter_modem3g_module_reset (void)
 
 	dbgP_modem3g("MODULE SET STATUS -- command module ON -> WORKED\n");
 
-
-	while (timeout--){
+	while (timeout--) {
 		if (librouter_usb_device_is_modem(MODULE_USBHUB_PORT) != -1)
 			break;
 
 		dbgP_modem3g("WAITING FOR DEVICE (TTY) GOES UP\n");
-		sleep (2);
+		sleep(2);
 	}
-	sleep (2);
+	sleep(2);
 
 	dbgP_modem3g("MODULE SET STATUS -- last sleep -> WORKED - ALL's UP\n");
 
-	if ( (timeout == 0) && (librouter_usb_device_is_modem(MODULE_USBHUB_PORT) < 0) )
+	if ((timeout == 0) && (librouter_usb_device_is_modem(MODULE_USBHUB_PORT) < 0))
 		return -1;
 
 	return 0;
@@ -336,7 +339,7 @@ int librouter_modem3g_module_reset (void)
  * @param status (0 or 1)
  * @return 0 if ok, -1 if not
  */
-int librouter_modem3g_module_set_status (int status)
+int librouter_modem3g_module_set_status(int status)
 {
 	int ret;
 	struct powerpc_gpio gpio;
@@ -346,6 +349,9 @@ int librouter_modem3g_module_set_status (int status)
 	gpio.value = status;
 
 	ret = librouter_ppcio_write(&gpio);
+
+	if (status)
+		sleep(15); /* Give it some time to boot up */
 
 	return ret;
 }
@@ -367,7 +373,7 @@ int librouter_modem3g_sim_card_set(int sim)
 	librouter_ppcio_write(&gpio);
 
 	if (librouter_modem3g_module_reset() < 0)
-			return -1;
+		return -1;
 
 	return 0;
 }
@@ -442,7 +448,7 @@ int librouter_modem3g_set_apn(char * apn, int devnum)
 	char key[] = "\"IP\",";
 	char buffer_apn[SIZE_FIELDS_STRUCT];
 
-	snprintf(buffer_apn, (SIZE_FIELDS_STRUCT-3), "\"%s\"'", apn);
+	snprintf(buffer_apn, (SIZE_FIELDS_STRUCT - 3), "\"%s\"'", apn);
 
 	snprintf(device, 2, "%d", devnum);
 	strcat(file, device);
