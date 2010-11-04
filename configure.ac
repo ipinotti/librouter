@@ -53,6 +53,7 @@ AC_CHECK_LIB(pam_misc, pam_misc_setenv,, exit)
 AC_CHECK_LIB(crypto, RSA_public_encrypt,, exit)
 AC_CHECK_LIB(netsnmp, snmpv3_store,, exit)
 AC_CHECK_LIB(iptc, iptc_init,, exit)
+AC_CHECK_LIB(usb-1.0, libusb_init,, exit)
 
 # Checks for header files.
 AC_HEADER_RESOLV
