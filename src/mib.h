@@ -24,7 +24,7 @@ struct obj_node {
 struct obj_node *librouter_snmp_get_tree_node(char *name,
                                               struct obj_node *P_node);
 int librouter_snmp_translate_oid(char *oid_str,
-                                 unsigned long *name,
+                                 oid *name,
                                  size_t *namelen);
 void librouter_snmp_adjust_shm_to_offset(struct obj_node *P_node,
                                          void *start_addr);
