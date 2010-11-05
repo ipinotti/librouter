@@ -655,7 +655,7 @@ void librouter_ip_ethernet_set_addr(char *ifname, char *addr, char *mask) /* mai
 
 	ip_addr_add (dev, addr, NULL, mask); /* new address */
 
-	if (strcmp(dev, "ethernet0") == 0)
+	if (strcmp(dev, "eth0") == 0)
 		librouter_udhcpd_reload(0); /* udhcpd integration! */
 }
 

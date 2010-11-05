@@ -87,7 +87,7 @@ enum {
 
 #define DHCPD_CONFIG_FILE "/etc/dhcpd.conf"
 
-#define INTF_DHCP_SERVER_DEFAULT 1 /* Value related to interface for DHCP_SERVER_DEFAULT */
+#define INTF_DHCP_SERVER_DEFAULT 0 /* Value related to interface for DHCP_SERVER_DEFAULT */
 
 int librouter_udhcpd_reload(int eth);
 int librouter_udhcpd_kick_by_eth(int eth);
