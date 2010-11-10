@@ -21,6 +21,7 @@
 #include <sys/socket.h>
 #include <linux/sockios.h>
 
+#ifdef OPTION_EFM
 #include <ikanos/orionplus.h>
 
 static int _do_ioctl(unsigned long int cmd, struct orionplus_conf *conf)
@@ -81,3 +82,5 @@ int librouter_efm_get_mode(void)
 
 	return conf.mode;
 }
+
+#endif /* OPTION_EFM */
