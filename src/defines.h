@@ -3,6 +3,7 @@
  *
  *  Created on: Jun 23, 2010
  */
+#include <linux/config.h>
 
 #ifndef DEFINES_H_
 #define DEFINES_H_
@@ -13,9 +14,6 @@
 #define SERIALDEV "serial"
 #define SERIALDEV_PPP "sx"
 #define BRIDGE_NAME "bridge"
-
-/* Modem3G System built-in */
-#define OPTION_MODEM3G
 
 #define MAX_BRIDGE  1 /* Se alterar este valor alterar tambem as strings "1-1" nos comandos relacionados a bridge */
 /* Teste do modelo... */

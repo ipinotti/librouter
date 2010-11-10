@@ -12,20 +12,44 @@
 /*****************************************************************************/
 /* Defines for Digistar Models ***********************************************/
 /*****************************************************************************/
-#define OPTION_PPP
 
-/* MODEM3G */
+/* ------ Digistar 3G Product Models Declaration ------ */
+/* RCG1000 */
+#ifdef CONFIG_DIGISTAR_RCG1000
 #define OPTION_MODEM3G
-
-/* Enable options for 3G models only */
-#ifdef CONFIG_DIGISTAR_3G
-#define NUM_3G_INTFS	3
+#define OPTION_PPP
+#define OPTION_DHCP_SWITCH_ETH0
 #endif
 
-/* Enable options for EFM models only */
-#ifdef CONFIG_DIGISTAR_EFM
-#define OPTION_EFM
-#endif /* CONFIG_DIGISTAR_EFM */
+/* RCG800 */
+#ifdef CONFIG_DIGISTAR_RCG800
+#define OPTION_NO_WAN
+#define OPTION_MODEM3G
+#define OPTION_PPP
+#define OPTION_DHCP_SWITCH_ETH0
+#endif
+
+/* RCG700 */
+#ifdef CONFIG_DIGISTAR_RCG700
+#define OPTION_DHCP_SWITCH_ETH0
+#endif
+/*-----------------------------------------------------*/
+
+/* ====== Digistar EFM Product Models Declaration ==== */
+/* EFM MOD1 */
+
+/* EFM MOD2 */
+
+/* EFM MOD3 */
+/*=====================================================*/
+
+/*****************************************************************************/
+/*****************************************************************************/
+
+/* MODEM3G */
+#define NUM_3G_INTFS	3
+//#define OPTION_MODEM3G
+//#define OPTION_PPP
 
 /* BGP */
 #define OPTION_BGP
