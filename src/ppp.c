@@ -549,6 +549,7 @@ void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg){
 
 	/* Clean memory! */
 	memset(cfg, 0, sizeof(ppp_config));
+#ifdef OPTION_MODEM3G
 	snprintf(cfg->osdevice, 16, "ttyUSB%d", librouter_usb_device_is_modem(librouter_usb_get_realport_by_aliasport(serial_no)));
 
 	librouter_ppp_backupd_get_config(serial_no,&cfg->bckp_conf);
@@ -576,6 +577,19 @@ void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg){
 	 * FIXME
 	 * cfg->novj = 1;
 	 */
+#else
+	snprintf(cfg->osdevice, 16, "ttyS%d", serial_no);
+
+	cfg->unit=serial_no;
+	cfg->speed=9600;
+	cfg->echo_failure=3;
+	cfg->echo_interval=5;
+	cfg->novj=1;
+	cfg->ip_unnumbered=-1;
+	cfg->backup=-1;
+
+#endif
+
 }
 
 /*
