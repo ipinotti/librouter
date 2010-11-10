@@ -11,6 +11,7 @@ librouter_la_SOURCES = \
 	device.c \
 	dhcp.c \
 	dns.c \
+	efm.c \
 	error.c \
 	exec.c \
 	flashsave.c \
@@ -71,6 +72,7 @@ librouter_la_HEADERS = \
 	device.h \
 	dhcp.h \
 	dns.h \
+	efm.h \
 	error.h \
 	exec.h \
 	flashsave.h \

@@ -16,7 +16,16 @@
 
 /* MODEM3G */
 #define OPTION_MODEM3G
+
+/* Enable options for 3G models only */
+#ifdef CONFIG_DIGISTAR_3G
 #define NUM_3G_INTFS	3
+#endif
+
+/* Enable options for EFM models only */
+#ifdef CONFIG_DIGISTAR_EFM
+#define OPTION_EFM
+#endif /* CONFIG_DIGISTAR_EFM */
 
 /* BGP */
 #define OPTION_BGP

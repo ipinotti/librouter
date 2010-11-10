@@ -25,6 +25,7 @@ dev_family _devices[] = {
 	{ tun, "tun", "tun", "Tunnel" },
 	{ ipsec, "ipsec", "ipsec", "IPSec" },
 	{ ppp, "m3G", "ppp", "3GModem" },
+	{ efm, "efm", "eth", "EFM"},
 	{ none, NULL, NULL, NULL }
 };
 
