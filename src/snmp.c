@@ -17,6 +17,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
+#include "options.h"
 #include "defines.h"
 #include "args.h"
 #include "error.h"
@@ -216,6 +217,7 @@ int librouter_snmp_dump_communities(FILE *out)
 	return count;
 }
 
+#ifdef OPTION_SNMP_VERSION_SELECT
 int librouter_snmp_dump_versions(FILE *out)
 {
 	int count = 0;
@@ -252,6 +254,7 @@ int librouter_snmp_dump_versions(FILE *out)
 
 	return count;
 }
+#endif /* OPTION_SNMP_VERSION_SELECT */
 
 int librouter_snmp_add_trapsink(char *addr, char *community)
 {

@@ -400,7 +400,10 @@ void librouter_config_dump_snmp(FILE *f, int conf_format)
 
 	if (librouter_snmp_is_running()) {
 		print = 1;
+#ifdef OPTION_SNMP_VERSION_SELECT
 		librouter_snmp_dump_versions(f);
+#endif
+		fprintf(f, "snmp-server enable\n");
 	}
 
 	if (print)
