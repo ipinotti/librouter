@@ -13,34 +13,43 @@
 /* Defines for Digistar Models ***********************************************/
 /*****************************************************************************/
 
+#if defined(CONFIG_DIGISTAR_3G)
 /* ------ Digistar 3G Product Models Declaration ------ */
 /* RCG1000 */
-#ifdef CONFIG_DIGISTAR_RCG1000
+#if defined(CONFIG_DIGISTAR_RCG1000)
 #define OPTION_MODEM3G
 #define OPTION_PPP
 #define OPTION_DHCP_SWITCH_ETH0
-#endif
 
 /* RCG800 */
-#ifdef CONFIG_DIGISTAR_RCG800
+#elif defined(CONFIG_DIGISTAR_RCG800)
 #define OPTION_NO_WAN
 #define OPTION_MODEM3G
 #define OPTION_PPP
 #define OPTION_DHCP_SWITCH_ETH0
-#endif
 
 /* RCG700 */
-#ifdef CONFIG_DIGISTAR_RCG700
+#elif defined(CONFIG_DIGISTAR_RCG700)
 #define OPTION_DHCP_SWITCH_ETH0
-#endif
-/*-----------------------------------------------------*/
 
-/* ====== Digistar EFM Product Models Declaration ==== */
+#else
+#error "No such 3G Board!"
+#endif
+
+#elif defined(CONFIG_DIGISTAR_EFM)
+
+#define OPTION_EFM
+/* TODO */
+/* ------ Digistar EFM Product Models Declaration ------ */
 /* EFM MOD1 */
 
 /* EFM MOD2 */
 
 /* EFM MOD3 */
+
+#else
+#error "No such board!"
+#endif
 /*=====================================================*/
 
 /*****************************************************************************/
