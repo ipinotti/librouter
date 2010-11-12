@@ -7,6 +7,7 @@
 
 #include "error.h"
 #include "device.h"
+#include "defines.h"
 #include "libbridge/libbridge.h"
 
 int librouter_br_initbr(void)
@@ -289,7 +290,7 @@ int librouter_br_sethello(char *brname, int sec)
 		return 0;
 }
 
-int librouter_librouter_br_gethello(char *brname)
+int librouter_br_gethello(char *brname)
 {
 	struct bridge *br = _find_bridge(brname);
 	if (br == NULL)
@@ -495,5 +496,28 @@ int librouter_br_dump_info(char *brname, FILE *out)
 		p = p->next;
 	}
 	return 0;
+}
+
+void librouter_br_dump_bridge(FILE *out)
+{
+	int i, printed_something = 0;
+	char brname[32];
+
+	for (i = 1; i <= MAX_BRIDGE; i++) {
+		sprintf(brname, "%s%d", BRIDGE_NAME, i);
+		if (!librouter_br_exists(brname))
+			continue;
+		printed_something = 1;
+		fprintf(out, "bridge %d protocol ieee\n", i);
+		fprintf(out, "bridge %d aging-time %d\n", i, librouter_br_getageing(brname));
+		fprintf(out, "bridge %d forward-time %d\n", i, librouter_br_getfd(brname));
+		fprintf(out, "bridge %d hello-time %d\n", i, librouter_br_gethello(brname));
+		fprintf(out, "bridge %d max-age %d\n", i, librouter_br_getmaxage(brname));
+		fprintf(out, "bridge %d priority %d\n", i, librouter_br_getbridgeprio(brname));
+		if (!librouter_br_get_stp(brname))
+			fprintf(out, "bridge %d spanning-disabled\n", i);
+	}
+	if (printed_something)
+		fprintf(out, "!\n");
 }
 

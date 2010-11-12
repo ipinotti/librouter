@@ -245,8 +245,8 @@ void librouter_config_dump_aaa(FILE *f, struct router_config *cfg)
 
 		while ((pw = fgetpwent(passwd))) {
 			if (pw->pw_uid > 500 && !strncmp(pw->pw_gecos, "Local", 5)) {
-				fprintf(f, "aaa username %s password hash %s\n",
-				                pw->pw_name, pw->pw_passwd);
+				fprintf(f, "aaa username %s password hash %s\n", pw->pw_name,
+				                pw->pw_passwd);
 			}
 		}
 
@@ -292,7 +292,8 @@ void librouter_config_bgp_dump_router(FILE *f, int main_nip)
 				break;
 
 			librouter_str_striplf(buf);
-			fprintf(f, "%s\n", librouter_device_from_linux_cmdline(librouter_zebra_to_linux_cmdline(buf)));
+			fprintf(f, "%s\n", librouter_device_from_linux_cmdline(
+			                librouter_zebra_to_linux_cmdline(buf)));
 		}
 
 		fclose(fd);
@@ -420,22 +421,20 @@ void librouter_config_dump_rmon(FILE *f)
 	if (librouter_snmp_rmon_get_access_cfg(&shm_rmon_p) == 1) {
 		for (i = 0; i < NUM_EVENTS; i++) {
 			if (shm_rmon_p->events[i].index > 0) {
-				fprintf(f, "rmon event %d",shm_rmon_p->events[i].index);
+				fprintf(f, "rmon event %d", shm_rmon_p->events[i].index);
 
 				if (shm_rmon_p->events[i].do_log)
 					fprintf(f, " log");
 
 				if (shm_rmon_p->events[i].community[0] != 0)
-					fprintf(f, " trap %s",
-					                shm_rmon_p->events[i].community);
+					fprintf(f, " trap %s", shm_rmon_p->events[i].community);
 
 				if (shm_rmon_p->events[i].description[0] != 0)
 					fprintf(f, " description %s",
 					                shm_rmon_p->events[i].description);
 
 				if (shm_rmon_p->events[i].owner[0] != 0)
-					fprintf(f, " owner %s",
-					                shm_rmon_p->events[i].owner);
+					fprintf(f, " owner %s", shm_rmon_p->events[i].owner);
 
 				fprintf(f, "\n");
 			}
@@ -447,17 +446,14 @@ void librouter_config_dump_rmon(FILE *f)
 				result[0] = '\0';
 
 				for (k = 0; k < shm_rmon_p->alarms[i].oid_len; k++) {
-					sprintf(tp, "%lu.",
-					                shm_rmon_p->alarms[i].oid[k]);
+					sprintf(tp, "%lu.", shm_rmon_p->alarms[i].oid[k]);
 					strcat(result, tp);
 				}
 
 				*(result + strlen(result) - 1) = '\0';
 
-				fprintf(f, "rmon alarm %d %s %d",
-				                shm_rmon_p->alarms[i].index,
-				                result,
-				                shm_rmon_p->alarms[i].interval);
+				fprintf(f, "rmon alarm %d %s %d", shm_rmon_p->alarms[i].index,
+				                result, shm_rmon_p->alarms[i].interval);
 
 				switch (shm_rmon_p->alarms[i].sample_type) {
 				case SAMPLE_ABSOLUTE:
@@ -474,7 +470,9 @@ void librouter_config_dump_rmon(FILE *f)
 					                shm_rmon_p->alarms[i].rising_threshold);
 
 					if (shm_rmon_p->alarms[i].rising_event_index)
-						fprintf(f, " %d",
+						fprintf(
+						                f,
+						                " %d",
 						                shm_rmon_p->alarms[i].rising_event_index);
 				}
 
@@ -484,13 +482,14 @@ void librouter_config_dump_rmon(FILE *f)
 					                shm_rmon_p->alarms[i].falling_threshold);
 
 					if (shm_rmon_p->alarms[i].falling_event_index)
-						fprintf(f, " %d",
+						fprintf(
+						                f,
+						                " %d",
 						                shm_rmon_p->alarms[i].falling_event_index);
 				}
 
 				if (shm_rmon_p->alarms[i].owner[0] != 0)
-					fprintf(f, " owner %s",
-					                shm_rmon_p->alarms[i].owner);
+					fprintf(f, " owner %s", shm_rmon_p->alarms[i].owner);
 
 				fprintf(f, "\n");
 			}
@@ -572,8 +571,8 @@ void librouter_config_ospf_dump_router(FILE *out)
 				break;
 
 			librouter_str_striplf(buf);
-			fprintf(out, "%s\n",
-			                librouter_device_from_linux_cmdline(librouter_zebra_to_linux_cmdline(buf)));
+			fprintf(out, "%s\n", librouter_device_from_linux_cmdline(
+			                librouter_zebra_to_linux_cmdline(buf)));
 		}
 
 		fclose(f);
@@ -605,7 +604,8 @@ void librouter_config_ospf_dump_interface(FILE *out, char *intf)
 
 		librouter_str_striplf(buf);
 
-		fprintf(out, "%s\n", librouter_device_from_linux_cmdline(librouter_zebra_to_linux_cmdline(buf)));
+		fprintf(out, "%s\n", librouter_device_from_linux_cmdline(
+		                librouter_zebra_to_linux_cmdline(buf)));
 	}
 
 	fclose(f);
@@ -639,9 +639,8 @@ void librouter_config_rip_dump_router(FILE *out)
 				break;
 
 			librouter_str_striplf(buf);
-			fprintf(out," %s\n",
-			                librouter_device_from_linux_cmdline(
-			                                librouter_zebra_to_linux_cmdline(buf)));
+			fprintf(out, " %s\n", librouter_device_from_linux_cmdline(
+			                librouter_zebra_to_linux_cmdline(buf)));
 		}
 
 		fclose(f);
@@ -744,27 +743,25 @@ static void _dump_dhcp_server(FILE *out)
 		fprintf(out, " domain-name %s\n", dhcp.domain);
 
 	if (dhcp.default_lease_time) {
-		int days = dhcp.default_lease_time/(24*3600);
-		dhcp.default_lease_time -= days*24*3600;
-		int hours = dhcp.default_lease_time/3600;
-		dhcp.default_lease_time -= hours*3600;
-		int minutes = dhcp.default_lease_time/60;
-		dhcp.default_lease_time -= minutes*60;
+		int days = dhcp.default_lease_time / (24 * 3600);
+		dhcp.default_lease_time -= days * 24 * 3600;
+		int hours = dhcp.default_lease_time / 3600;
+		dhcp.default_lease_time -= hours * 3600;
+		int minutes = dhcp.default_lease_time / 60;
+		dhcp.default_lease_time -= minutes * 60;
 		int seconds = dhcp.default_lease_time;
-		fprintf(out, " default-lease-time %d %d %d %d\n",
-		        days, hours, minutes, seconds);
+		fprintf(out, " default-lease-time %d %d %d %d\n", days, hours, minutes, seconds);
 	}
 
 	if (dhcp.max_lease_time) {
-		int days = dhcp.max_lease_time/(24*3600);
-		dhcp.max_lease_time -= days*24*3600;
-		int hours = dhcp.max_lease_time/3600;
-		dhcp.max_lease_time -= hours*3600;
-		int minutes = dhcp.max_lease_time/60;
-		dhcp.max_lease_time -= minutes*60;
+		int days = dhcp.max_lease_time / (24 * 3600);
+		dhcp.max_lease_time -= days * 24 * 3600;
+		int hours = dhcp.max_lease_time / 3600;
+		dhcp.max_lease_time -= hours * 3600;
+		int minutes = dhcp.max_lease_time / 60;
+		dhcp.max_lease_time -= minutes * 60;
 		int seconds = dhcp.max_lease_time;
-		fprintf(out, " max-lease-time %d %d %d %d\n",
-		        days, hours, minutes, seconds);
+		fprintf(out, " max-lease-time %d %d %d %d\n", days, hours, minutes, seconds);
 	}
 
 	if (dhcp.default_router)
@@ -792,12 +789,9 @@ void librouter_config_ip_dump_servers(FILE *out)
 	} else
 		fprintf(out, "no ip dhcp relay\n");
 
+	fprintf(out, "%sip dns relay\n", librouter_exec_check_daemon(DNS_DAEMON) ? "" : "no ");
 
-	fprintf(out, "%sip dns relay\n",
-	                librouter_exec_check_daemon(DNS_DAEMON) ? "" : "no ");
-
-	fprintf(out, "%sip domain lookup\n",
-	                librouter_dns_domain_lookup_enabled() ? "" : "no ");
+	fprintf(out, "%sip domain lookup\n", librouter_dns_domain_lookup_enabled() ? "" : "no ");
 
 	librouter_dns_dump_nameservers(out);
 
@@ -819,7 +813,8 @@ void librouter_config_ip_dump_servers(FILE *out)
 	fprintf (out, "%sip ssh server\n", librouter_exec_get_inetd_program(SSH_DAEMON) ? "" : "no ");
 #endif
 
-	fprintf(out, "%sip telnet server\n", librouter_exec_get_inetd_program(TELNET_DAEMON) ? "" : "no ");
+	fprintf(out, "%sip telnet server\n",
+	                librouter_exec_get_inetd_program(TELNET_DAEMON) ? "" : "no ");
 	fprintf(out, "!\n");
 }
 
@@ -929,8 +924,7 @@ static void _dump_intf_iptables_config(FILE *out, struct interface_conf *conf)
 		fprintf(out, " ip nat %s out\n", ipt->out_nat);
 }
 
-static void _dump_intf_secondary_ipaddr_config(FILE *out,
-                                               struct interface_conf *conf)
+static void _dump_intf_secondary_ipaddr_config(FILE *out, struct interface_conf *conf)
 {
 	int i;
 	struct ip_t *ip = &conf->sec_ip[0];
@@ -966,9 +960,20 @@ static void _dump_vlans(FILE *out, struct interface_conf *conf)
 	strcat(devtmp, ".");
 	for (i = 0; i < MAX_NUM_LINKS; i++) {
 		if (strncmp(conf->info->link[i].ifname, devtmp, strlen(devtmp)) == 0) {
-			fprintf(out, " vlan %s\n", conf->info->link[i].ifname
-					+ strlen(devtmp));
+			fprintf(out, " vlan %s\n", conf->info->link[i].ifname + strlen(devtmp));
 		}
+	}
+}
+
+static void _dump_interface_bridge(FILE *out, char *intf)
+{
+	int n;
+
+	for (n = 1; n <= MAX_BRIDGE; n++) {
+		char brname[32];
+		sprintf(brname, "%s%d", BRIDGE_NAME, n);
+		if (librouter_br_checkif(brname, intf))
+			fprintf(out, " bridge-group %d\n", n);
 	}
 }
 
@@ -1006,6 +1011,11 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	/* Dump QoS */
 	_dump_policy_interface(out, osdev);
 
+#ifdef OPTION_BRIDGE
+	/* Dump Bridge */
+	_dump_interface_bridge(out, osdev);
+#endif
+
 	/* Dump Quagga */
 	librouter_config_rip_dump_interface(out, osdev);
 	librouter_config_ospf_dump_interface(out, osdev);
@@ -1025,14 +1035,12 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	if (conf->txqueue)
 		fprintf(out, " txqueuelen %d\n", conf->txqueue);
 
-
 	_dump_vlans(out, conf);
 
 #ifdef CONFIG_DIGISTAR_3G
-	if (!strcmp(conf->name, "eth1")){
-		syslog(LOG_DEBUG,"Ignored REG_PHY_DATA for eth1");
-	}
-	else
+	if (!strcmp(conf->name, "eth1")) {
+		syslog(LOG_DEBUG, "Ignored REG_PHY_DATA for eth1");
+	} else
 #endif
 	/* Show line status if main interface. Avoid VLANs ... */
 	if (strchr(osdev, '.') == NULL) {
@@ -1043,12 +1051,10 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 		if (bmcr & BMCR_ANENABLE)
 			fprintf(out, " speed auto\n");
 		else {
-			fprintf(out, " speed %s %s\n",
-					(bmcr & BMCR_SPEED100) ? "100" : "10",
-			                (bmcr & BMCR_FULLDPLX) ? "full" : "half");
+			fprintf(out, " speed %s %s\n", (bmcr & BMCR_SPEED100) ? "100" : "10", (bmcr
+			                & BMCR_FULLDPLX) ? "full" : "half");
 		}
 	}
-
 
 #ifdef OPTION_VRRP
 	dump_vrrp_interface(out, osdev);
@@ -1091,10 +1097,10 @@ static void _dump_tunnel_config(FILE *out, struct interface_conf *conf)
 	_dump_intf_secondary_ipaddr_config(out, conf);
 
 	if (conf->mtu)
-		fprintf(out, " mtu %d\n", conf->mtu);
+	fprintf(out, " mtu %d\n", conf->mtu);
 
 	if (conf->txqueue)
-		fprintf(out, " txqueuelen %d\n", conf->txqueue);
+	fprintf(out, " txqueuelen %d\n", conf->txqueue);
 
 	librouter_tunnel_dump_interface(out, 1, osdev);
 
@@ -1120,40 +1126,48 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 	librouter_config_rip_dump_interface(out, osdev);
 	librouter_config_ospf_dump_interface(out, osdev);
 
-	if (serial_no != BTIN_M3G_ALIAS){
+	if (serial_no != BTIN_M3G_ALIAS) {
 		if (strcmp(cfg.sim_main.apn, "") != 0)
 			fprintf(out, " apn set %s\n", cfg.sim_main.apn);
 		if (strcmp(cfg.sim_main.username, "") != 0)
 			fprintf(out, " username set %s\n", cfg.sim_main.username);
 		if (strcmp(cfg.sim_main.password, "") != 0)
 			fprintf(out, " password set %s\n", cfg.sim_main.password);
-	}
-	else{
+	} else {
 		if (strcmp(cfg.sim_main.apn, "") != 0)
 			fprintf(out, " sim %d apn set %s\n", cfg.sim_main.sim_num, cfg.sim_main.apn);
 		if (strcmp(cfg.sim_main.username, "") != 0)
-			fprintf(out, " sim %d username set %s\n", cfg.sim_main.sim_num, cfg.sim_main.username);
+			fprintf(out, " sim %d username set %s\n", cfg.sim_main.sim_num,
+			                cfg.sim_main.username);
 		if (strcmp(cfg.sim_main.password, "") != 0)
-			fprintf(out, " sim %d password set %s\n", cfg.sim_main.sim_num, cfg.sim_main.password);
+			fprintf(out, " sim %d password set %s\n", cfg.sim_main.sim_num,
+			                cfg.sim_main.password);
 		if (strcmp(cfg.sim_backup.apn, "") != 0)
-			fprintf(out, " sim %d apn set %s\n", cfg.sim_backup.sim_num, cfg.sim_backup.apn);
+			fprintf(out, " sim %d apn set %s\n", cfg.sim_backup.sim_num,
+			                cfg.sim_backup.apn);
 		if (strcmp(cfg.sim_backup.username, "") != 0)
-			fprintf(out, " sim %d username set %s\n", cfg.sim_backup.sim_num, cfg.sim_backup.username);
+			fprintf(out, " sim %d username set %s\n", cfg.sim_backup.sim_num,
+			                cfg.sim_backup.username);
 		if (strcmp(cfg.sim_backup.password, "") != 0)
-			fprintf(out, " sim %d password set %s\n", cfg.sim_backup.sim_num, cfg.sim_backup.password);
+			fprintf(out, " sim %d password set %s\n", cfg.sim_backup.sim_num,
+			                cfg.sim_backup.password);
 		if (strcmp(cfg.sim_main.apn, "") != 0)
 			if (librouter_modem3g_sim_order_is_enable())
-				fprintf(out, " sim-order %d %d\n", librouter_modem3g_sim_order_get_mainsim(),!librouter_modem3g_sim_order_get_mainsim());
+				fprintf(out, " sim-order %d %d\n",
+				                librouter_modem3g_sim_order_get_mainsim(),
+				                !librouter_modem3g_sim_order_get_mainsim());
 			else
-				fprintf(out, " sim-order %d\n", librouter_modem3g_sim_order_get_mainsim());
+				fprintf(out, " sim-order %d\n",
+				                librouter_modem3g_sim_order_get_mainsim());
 	}
 
 	if (cfg.bckp_conf.method == BCKP_METHOD_LINK)
 		fprintf(out, " backup-method link\n");
 	else
-		fprintf(out, " backup-method ping %s\n",cfg.bckp_conf.ping_address);
+		fprintf(out, " backup-method ping %s\n", cfg.bckp_conf.ping_address);
 	if (cfg.bckp_conf.is_backup)
-		fprintf(out, " backup-interface %8.8s %c\n", cfg.bckp_conf.main_intf_name, cfg.bckp_conf.main_intf_name[8]);
+		fprintf(out, " backup-interface %8.8s %c\n", cfg.bckp_conf.main_intf_name,
+		                cfg.bckp_conf.main_intf_name[8]);
 	else
 		fprintf(out, " no backup-interface\n");
 	fprintf(out, " %sshutdown\n", cfg.up ? "no " : "");
@@ -1202,8 +1216,8 @@ static void librouter_config_dump_interface(FILE *out, struct interface_conf *co
 		_dump_loopback_config(out, conf);
 		break;
 #ifdef OPTION_TUNNEL
-	case ARPHRD_TUNNEL:
-	case ARPHRD_IPGRE:
+		case ARPHRD_TUNNEL:
+		case ARPHRD_IPGRE:
 		_dump_tunnel_config (out, conf);
 		break;
 #endif
@@ -1264,17 +1278,17 @@ void librouter_config_interfaces_dump(FILE *out)
 		/* TODO Check PHY/Switch status for ethernet interfaces */
 #if 0
 		switch (conf.linktype) {
-		case ARPHRD_ETHER:
+			case ARPHRD_ETHER:
 			phy_status = librouter_lan_get_status(conf.name);
 			/* vlan: interface must be up */
 			running = (up && (phy_status & PHY_STAT_LINK) ? 1 : 0);
 			/* VLAN */
 			if (!strncmp(conf.name,"ethernet",8) && strstr(conf.name,"."))
-				vlan_cos = librouter_vlan_get_cos(conf.name);
+			vlan_cos = librouter_vlan_get_cos(conf.name);
 			else
-				vlan_cos = NONE_TO_COS;
+			vlan_cos = NONE_TO_COS;
 			break;
-		default:
+			default:
 			running = (link_table[i].flags & IFF_RUNNING) ? 1 : 0;
 			break;
 		}
@@ -1285,7 +1299,6 @@ void librouter_config_interfaces_dump(FILE *out)
 		/* Ignore loopbacks that are down */
 		if (conf.linktype == ARPHRD_LOOPBACK && !conf.running)
 			continue;
-
 
 		/* Start dumping information */
 		librouter_config_dump_interface(out, &conf);
@@ -1332,7 +1345,9 @@ int librouter_config_write(char *filename, struct router_config *cfg)
 #ifdef OPTION_RMON
 	librouter_config_dump_rmon(f);
 #endif
-
+#ifdef OPTION_BRIDGE
+	librouter_br_dump_bridge(f);
+#endif
 	librouter_config_dump_chatscripts(f);
 
 	/* iptables */
