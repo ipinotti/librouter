@@ -8,8 +8,10 @@
 #include "error.h"
 #include "device.h"
 #include "defines.h"
+#include "options.h"
 #include "libbridge/libbridge.h"
 
+#ifdef OPTION_BRIDGE
 int librouter_br_initbr(void)
 {
 	int err;
@@ -520,4 +522,4 @@ void librouter_br_dump_bridge(FILE *out)
 	if (printed_something)
 		fprintf(out, "!\n");
 }
-
+#endif /* OPTION_BRIDGE */
