@@ -19,7 +19,7 @@
 #include <unistd.h>
 #include <mtd/mtd-user.h>
 
-#include <linux/config.h>
+#include <linux/autoconf.h>
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
 

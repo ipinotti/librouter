@@ -20,6 +20,7 @@ librouter_la_SOURCES = \
 	ip.c \
 	ipsec.c \
 	iptc.c \
+	ksz8863.c \
 	lan.c \
 	lock.c \
 	mangle.c \
@@ -82,6 +83,7 @@ librouter_la_HEADERS = \
 	ip.h \
 	iptc.h \
 	ipsec.h \
+	ksz8863.h \
 	lan.h \
 	lock.h \
 	mangle.h \
