@@ -14,23 +14,31 @@
 /*****************************************************************************/
 
 #if defined(CONFIG_DIGISTAR_3G)
+
+#define OPTION_ETHERNET /* Enables ethernet interfaces */
+#define OPTION_GIGAETHERNET /* Enable gigabit options */
+
 /* ------ Digistar 3G Product Models Declaration ------ */
 /* RCG1000 */
 #if defined(CONFIG_DIGISTAR_RCG1000)
 #define OPTION_MODEM3G
 #define OPTION_PPP
 #define OPTION_DHCP_SWITCH_ETH0
+#define OPTION_NUM_ETHERNET_IFACES	2
 
 /* RCG800 */
 #elif defined(CONFIG_DIGISTAR_RCG800)
+
 #define OPTION_NO_WAN
 #define OPTION_MODEM3G
 #define OPTION_PPP
 #define OPTION_DHCP_SWITCH_ETH0
+#define OPTION_NUM_ETHERNET_IFACES	1
 
 /* RCG700 */
 #elif defined(CONFIG_DIGISTAR_RCG700)
 #define OPTION_DHCP_SWITCH_ETH0
+#define OPTION_NUM_ETHERNET_IFACES	2
 
 #else
 #error "No such 3G Board!"
@@ -39,6 +47,9 @@
 #elif defined(CONFIG_DIGISTAR_EFM)
 
 #define OPTION_EFM
+#define OPTION_MANAGED_SWITCH
+#define OPTION_NUM_ETHERNET_IFACES	1
+
 /* TODO */
 /* ------ Digistar EFM Product Models Declaration ------ */
 /* EFM MOD1 */
