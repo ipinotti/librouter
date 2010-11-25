@@ -33,6 +33,7 @@
 /*#include <ll_map.h>*/
 #include <fnmatch.h>
 
+#include "options.h"
 #include "typedefs.h"
 #include "defines.h"
 #include "ip.h"
