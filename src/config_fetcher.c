@@ -969,7 +969,7 @@ static void _dump_interface_bridge(FILE *out, char *intf)
 {
 	int n;
 
-	for (n = 1; n <= MAX_BRIDGE; n++) {
+	for (n = 0; n <= MAX_BRIDGE; n++) {
 		char brname[32];
 		sprintf(brname, "%s%d", BRIDGE_NAME, n);
 		if (librouter_br_checkif(brname, intf))
