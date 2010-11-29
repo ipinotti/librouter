@@ -883,12 +883,11 @@ int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf,
 	int ret = -1;
 	int i;
 	char daemon_dhcpc[32];
-	int is_sub_iface = 0;
 
 	ip_dbg("Getting config for interface %s\n", interface);
 
 	if (strstr(interface, ".") != NULL) /* Is sub-interface? */
-		is_sub_iface = 1;
+		conf->is_subiface = 1;
 
 	memset(conf, 0, sizeof(struct interface_conf));
 
@@ -989,7 +988,7 @@ int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf,
 	/* Check if IP was configured by DHCP on ethernet interfaces */
 	if (conf->linktype == ARPHRD_ETHER &&
 			strstr(interface, "eth") &&
-			!is_sub_iface) {
+			!conf->is_subiface) {
 		sprintf(daemon_dhcpc, DHCPC_DAEMON, interface);
 		if (librouter_exec_check_daemon(daemon_dhcpc))
 			conf->dhcpc = 1;

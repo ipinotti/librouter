@@ -50,6 +50,7 @@ struct iptables_t {
 
 struct interface_conf {
 	char *name;
+	int is_subiface; /* Sub-interface */
 	struct iptables_t ipt;
 	int mtu;
 	int flags;
