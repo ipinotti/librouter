@@ -87,6 +87,10 @@
 #define OPTION_NTPD
 #undef OPTION_NTPD_authenticate
 
+/* AAA */
+#undef OPTION_AAA_ACCOUNTING
+#undef OPTION_AAA_AUTHORIZATION
+
 #define OPTION_OPENSSH
 #define OPTION_PIMD
 #define OPTION_RMON
