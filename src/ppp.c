@@ -310,6 +310,7 @@ int librouter_ppp_backupd_verif_param_infile(char *field, char *value, char * in
 	}
 
 	while (fgets(line, sizeof(line), fd) != NULL) {
+		librouter_str_striplf(line); /* delete new line at end */
 		if (!strncmp(line, INTF_STR, INTF_STR_LEN)) {
 			strcpy(intf_return, line+INTF_STR_LEN);
 			while( (fgets(line, sizeof(line), fd) != NULL) && (strcmp(line, "\n") != 0) ){
