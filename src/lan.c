@@ -196,7 +196,7 @@ int librouter_fec_autonegotiate_link(char *dev)
 
 #undef VERIFY_LP
 
-int librouter_fec_config_link(char *dev, int speed100, int duplex)
+int librouter_fec_config_link(char *dev, int speed, int duplex)
 {
 	int bmcr;
 #ifdef VERIFY_LP
@@ -271,10 +271,14 @@ int librouter_fec_config_link(char *dev, int speed100, int duplex)
 	/* disable auto-negotiate */
 	bmcr &= ~BMCR_ANENABLE;
 
-	if (speed100)
+	/* Clear speed bits */
+	bmcr &= ~BMCR_SPEED100;
+	bmcr &= ~BMCR_SPEED1000;
+	if (speed == 1000)
+		bmcr |= BMCR_SPEED1000;
+	else if (speed == 100)
 		bmcr |= BMCR_SPEED100;
-	else
-		bmcr &= (~BMCR_SPEED100);
+
 
 	if (duplex)
 		bmcr |= BMCR_FULLDPLX;
