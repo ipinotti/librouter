@@ -201,6 +201,7 @@ void librouter_config_dump_aaa(FILE *f, struct router_config *cfg)
 		break;
 	}
 
+#ifdef OPTION_AAA_AUTHORIZATION
 	/* Dump aaa authorization mode */
 	switch (librouter_pam_get_current_author_mode(FILE_PAM_GENERIC)) {
 	case AAA_AUTHOR_NONE:
@@ -213,7 +214,9 @@ void librouter_config_dump_aaa(FILE *f, struct router_config *cfg)
 		fprintf(f, "aaa authorization exec default group tacacs+ local\n");
 		break;
 	}
+#endif
 
+#ifdef OPTION_AAA_ACCOUNTING
 	/* Dump aaa accounting mode */
 	switch (librouter_pam_get_current_acct_mode(FILE_PAM_GENERIC)) {
 	case AAA_ACCT_NONE:
@@ -238,6 +241,7 @@ void librouter_config_dump_aaa(FILE *f, struct router_config *cfg)
 		fprintf(f, "aaa accounting commands 15 default start-stop group tacacs+\n");
 		break;
 	}
+#endif
 
 	/* Dump users */
 	if ((passwd = fopen(FILE_PASSWD, "r"))) {
@@ -1037,24 +1041,23 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 
 	_dump_vlans(out, conf);
 
-#ifdef CONFIG_DIGISTAR_3G
-	if (!strcmp(conf->name, "eth1")) {
-		syslog(LOG_DEBUG, "Ignored REG_PHY_DATA for eth1");
-	} else
-#endif
 	/* Show line status if main interface. Avoid VLANs ... */
-	if (strchr(osdev, '.') == NULL) {
-		int bmcr;
+	if (conf->is_subiface) {
+		struct lan_status st;
+		int phy_status;
 
-		bmcr = librouter_lan_get_phy_reg(osdev, MII_BMCR);
+		phy_status = librouter_lan_get_status(conf->name, &st);
 
-		if (bmcr & BMCR_ANENABLE)
+		if (phy_status < 0)
+			return;
+
+
+		if (st.autoneg)
 			fprintf(out, " speed auto\n");
-		else {
-			fprintf(out, " speed %s %s\n", (bmcr & BMCR_SPEED100) ? "100" : "10", (bmcr
-			                & BMCR_FULLDPLX) ? "full" : "half");
-		}
+		else
+			fprintf(out, " speed %d %s\n", st.speed, st.duplex ? "full" : "half");
 	}
+
 
 #ifdef OPTION_VRRP
 	dump_vrrp_interface(out, osdev);
