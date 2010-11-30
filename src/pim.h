@@ -16,15 +16,15 @@
 #define MAX_LINES 50
 
 int librouter_pim_dense_phyint(int add, char *dev);
-int librouter_pim_sparse_phyint(int add, char *dev);
+int librouter_pim_sparse_phyint(int add, char *dev, int pref, int metric);
 
-void librouter_pim_sparse_bsr_candidate(int add,
+int librouter_pim_sparse_bsr_candidate(int add,
                                         char *dev,
                                         char *major,
                                         char *priority);
 
-void librouter_pim_sparse_rp_address(int add, char *rp);
-void librouter_pim_sparse_rp_candidate(int add,
+int librouter_pim_sparse_rp_address(int add, char *rp);
+int librouter_pim_sparse_rp_candidate(int add,
                         char *dev,
                         char *major,
                         char *priority,
@@ -32,5 +32,8 @@ void librouter_pim_sparse_rp_candidate(int add,
 
 void librouter_pim_dump(FILE *out);
 void librouter_pim_dump_interface(FILE *out, char *ifname);
+int librouter_pim_sparse_verify_intf_enable(char *dev);
+int librouter_pim_sparse_enable(int opt);
+
 
 #endif /* PIM_H_ */

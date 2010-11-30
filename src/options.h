@@ -21,6 +21,7 @@
 /* ------ Digistar 3G Product Models Declaration ------ */
 /* RCG1000 */
 #if defined(CONFIG_DIGISTAR_RCG1000)
+#define OPTION_ETHERNET_WAN
 #define OPTION_MODEM3G
 #define OPTION_PPP
 #define OPTION_DHCP_SWITCH_ETH0
@@ -28,7 +29,6 @@
 
 /* RCG800 */
 #elif defined(CONFIG_DIGISTAR_RCG800)
-
 #define OPTION_ETHERNET_WAN
 #define OPTION_MODEM3G
 #define OPTION_PPP
@@ -37,6 +37,7 @@
 
 /* RCG700 */
 #elif defined(CONFIG_DIGISTAR_RCG700)
+#define OPTION_ETHERNET_WAN
 #define OPTION_DHCP_SWITCH_ETH0
 #define OPTION_NUM_ETHERNET_IFACES	2
 
