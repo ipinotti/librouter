@@ -22,6 +22,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include "options.h"
 #include "args.h"
 #include "defines.h"
 #include "device.h"
@@ -858,6 +859,10 @@ int librouter_qos_create_interface_config(char *dev)
 {
 	char file_path[64];
 	int fd;
+	dev_family *fam = librouter_device_get_family_by_name(dev, str_linux);
+
+	if (fam == NULL) /* No interface family found */
+		return -1;
 
 	sprintf(file_path, SERVICE_POLICY_CONFIG_FILE, dev);
 	fd = open(file_path, O_RDWR);
@@ -867,19 +872,22 @@ int librouter_qos_create_interface_config(char *dev)
 		intf_qos_cfg_t default_cfg;
 
 		/* Default values */
-
-		if (strstr(dev, "aux")) {
-			/* 9600 bps */
-			default_cfg.bw = 9600;
-		} else if (strstr(dev, "serial")) {
-			/* 2 Mbit */
-			default_cfg.bw = 2048000;
-		} else if (strstr(dev, "ethernet")) {
-			/* 100 Mbit */
-			default_cfg.bw = 100000000;
-		} else {
-			/* Not a valid interface */
-			return -1;
+		switch (fam->type) {
+		case eth:
+#ifdef OPTION_GIGAETHERNET
+			default_cfg.bw = 1000000000; /* 1000 Mbit */
+#else
+			default_cfg.bw = 100000000; /* 100 Mbit */
+#endif
+			break;
+		case ppp:
+			default_cfg.bw = 1000000; /* 1Mbit */
+			break;
+		case efm:
+			default_cfg.bw = 10000000; /* 10 Mbit */
+			break;
+		default:
+			return -1; /* Not supported */
 		}
 
 		default_cfg.max_reserved_bw = 75; /* 75% */

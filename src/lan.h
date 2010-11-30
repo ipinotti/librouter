@@ -26,7 +26,7 @@ int librouter_lan_get_status(char *ifname, struct lan_status *st);
 int librouter_lan_get_phy_reg(char *ifname, unsigned short regnum);
 int librouter_lan_set_phy_reg(char *ifname, unsigned short regnum, unsigned short data);
 int librouter_fec_autonegotiate_link(char *dev);
-int librouter_fec_config_link(char *dev, int speed100, int duplex);
+int librouter_fec_config_link(char *dev, int speed, int duplex);
 
 #if 0
 int eth_switch_port_get_status(char *ifname, int *status);

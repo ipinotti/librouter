@@ -8,7 +8,7 @@
 #ifndef KSZ8863_H_
 #define KSZ8863_H_
 
-//#define KSZ8863_DEBUG
+#define KSZ8863_DEBUG
 #ifdef KSZ8863_DEBUG
 #define ksz8863_dbg(x,...) \
 		printf("%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__);
@@ -43,6 +43,8 @@
 
 /* Port n Control 0 */
 #define KSZ8863REG_ENABLE_BC_STORM_PROTECT_MSK	0x80
+#define KSZ8863REG_ENABLE_DIFFSERV_MSK		0x40
+#define KSZ8863REG_ENABLE_8021P_MSK		0x20
 
 /* Port n Control 3 */
 #define KSZ8863REG_DEFAULT_VID_UPPER_MSK	0x0F
@@ -63,6 +65,12 @@ int librouter_ksz8863_set_ingress_rate_limit(int port, int prio, int rate);
 int librouter_ksz8863_get_8021q(void);
 int librouter_ksz8863_set_8021q(int enable);
 
+int librouter_ksz8863_get_8021p(int port);
+int librouter_ksz8863_set_8021p(int enable, int port);
+
+int librouter_ksz8863_get_diffserv(int port);
+int librouter_ksz8863_set_diffserv(int enable, int port);
+
 int librouter_ksz8863_get_wfq(void);
 int librouter_ksz8863_set_wfq(int enable);
 
@@ -70,5 +78,8 @@ int librouter_ksz8863_get_default_vid(int port);
 int librouter_ksz8863_set_default_vid(int port, int vid);
 
 int librouter_ksz8863_probe(void);
+
+int librouter_ksz8863_read(__u8 reg);
+int librouter_ksz8863_write(__u8 reg, __u8 data);
 
 #endif /* KSZ8863_H_ */

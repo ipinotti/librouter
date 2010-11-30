@@ -242,15 +242,15 @@ int librouter_ksz8863_set_egress_rate_limit(int port, int prio, int rate)
 	return _ksz8863_reg_write(reg, &data, sizeof(data));
 }
 
-/**
- * librouter_ksz8863_get_egress_rate_limit
- *
- * Get rate limit from a certain port and priority queue
- *
- * @param port
- * @param prio
- * @return The configured rate limit or -1 if error
- */
+		/**
+		 * librouter_ksz8863_get_egress_rate_limit
+		 *
+		 * Get rate limit from a certain port and priority queue
+		 *
+		 * @param port
+		 * @param prio
+		 * @return The configured rate limit or -1 if error
+		 */
 int librouter_ksz8863_get_egress_rate_limit(int port, int prio)
 {
 	__u8 reg, data;
@@ -316,29 +316,29 @@ int librouter_ksz8863_set_ingress_rate_limit(int port, int prio, int rate)
 	reg += 0x10 * port;
 	reg += prio;
 
-	if (!rate)
+	if (!rate) {
 		data = (__u8) 0;
-		else if (rate >= 1000)
+	} else if (rate >= 1000) {
 		data = (__u8) rate/1000;
-		else {
-			data = 0x65;
-			data += (__u8) (rate/64 - 1);
-		}
-
-		ksz8863_dbg("addr = %02x data = %02x\n", reg, data)
-
-		return _ksz8863_reg_write(reg, &data, sizeof(data));
+	} else {
+		data = 0x65;
+		data += (__u8) (rate/64 - 1);
 	}
 
-		/**
-		 * librouter_ksz8863_get_ingress_rate_limit
-		 *
-		 * Get ingress rate limit from a certain port and priority queue
-		 *
-		 * @param port
-		 * @param prio
-		 * @return The configured rate limit or -1 if error
-		 */
+	ksz8863_dbg("addr = %02x data = %02x\n", reg, data)
+
+	return _ksz8863_reg_write(reg, &data, sizeof(data));
+}
+
+/**
+ * librouter_ksz8863_get_ingress_rate_limit
+ *
+ * Get ingress rate limit from a certain port and priority queue
+ *
+ * @param port
+ * @param prio
+ * @return The configured rate limit or -1 if error
+ */
 int librouter_ksz8863_get_ingress_rate_limit(int port, int prio)
 {
 	__u8 reg, data;
@@ -391,6 +391,8 @@ int librouter_ksz8863_set_8021q(int enable)
 	else
 		data &= ~KSZ8863_ENABLE_8021Q_MSK;
 
+	ksz8863_dbg("addr = %02x data = %02x\n", KSZ8863REG_GLOBAL_CONTROL3, data)
+
 	if (_ksz8863_reg_write(KSZ8863REG_GLOBAL_CONTROL3, &data, sizeof(data)))
 		return -1;
 
@@ -408,6 +410,8 @@ int librouter_ksz8863_get_8021q(void)
 
 	if (_ksz8863_reg_read(KSZ8863REG_GLOBAL_CONTROL3, &data, sizeof(data)))
 		return -1;
+
+	ksz8863_dbg("addr = %02x data = %02x\n", KSZ8863REG_GLOBAL_CONTROL3, data)
 
 	return ((data | KSZ8863_ENABLE_8021Q_MSK) ? 1 : 0);
 }
@@ -430,6 +434,8 @@ int librouter_ksz8863_set_wfq(int enable)
 	else
 		data &= ~KSZ8863_ENABLE_WFQ_MSK;
 
+	ksz8863_dbg("addr = %02x data = %02x\n", KSZ8863REG_GLOBAL_CONTROL3, data)
+
 	if (_ksz8863_reg_write(KSZ8863REG_GLOBAL_CONTROL3, &data, sizeof(data)))
 		return -1;
 
@@ -447,6 +453,8 @@ int librouter_ksz8863_get_wfq(void)
 
 	if (_ksz8863_reg_read(KSZ8863REG_GLOBAL_CONTROL3, &data, sizeof(data)))
 		return -1;
+
+	ksz8863_dbg("addr = %02x data = %02x\n", KSZ8863REG_GLOBAL_CONTROL3, data)
 
 	return ((data | KSZ8863_ENABLE_WFQ_MSK) ? 1 : 0);
 }
@@ -485,11 +493,15 @@ int librouter_ksz8863_set_default_vid(int port, int vid)
 	/* Set upper part of VID */
 	vid_u |= (data & (~KSZ8863REG_DEFAULT_VID_UPPER_MSK));
 
+	ksz8863_dbg("addr = %02x data = %02x\n", KSZ8863REG_GLOBAL_CONTROL3, data)
+
 	if (_ksz8863_reg_write(reg, &vid_u, sizeof(vid_u)) < 0)
-	return -1;
+		return -1;
+
+	ksz8863_dbg("addr = %02x data = %02x\n", KSZ8863REG_GLOBAL_CONTROL3, data)
 
 	if (_ksz8863_reg_write(reg+1, &vid_l, sizeof(vid_l)) < 0)
-	return -1;
+		return -1;
 
 	return 0;
 }
@@ -516,14 +528,18 @@ int librouter_ksz8863_get_default_vid(int port)
 	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
 		return -1;
 
+	ksz8863_dbg("addr = %02x data = %02x\n", reg, data)
+
 	vid_u = data & KSZ8863REG_DEFAULT_VID_UPPER_MSK;
 
-	if (_ksz8863_reg_read(reg + 1, &data, sizeof(data)))
+	if (_ksz8863_reg_read(++reg, &data, sizeof(data)))
 		return -1;
+
+	ksz8863_dbg("addr = %02x data = %02x\n", reg, data)
 
 	vid_l = data;
 
-	return ((int)(vid_u << 8 | vid_l));
+	return ((int) (vid_u << 8 | vid_l));
 }
 
 /**
@@ -554,3 +570,152 @@ int librouter_ksz8863_probe(void)
 	return 0;
 }
 
+/**
+ * librouter_ksz8863_set_8021p
+ *
+ * Enable or Disable 802.1p classification
+ *
+ * @param enable
+ * @param port:	from 0 to 2
+ * @return 0 on success, -1 otherwise
+ */
+int librouter_ksz8863_set_8021p(int enable, int port)
+{
+	__u8 reg, data;
+
+	if (port > 2) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	reg = KSZ8863REG_PORT_CONTROL;
+	reg += port * 0x10;
+
+	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
+		return -1;
+
+	if (enable)
+		data |= KSZ8863REG_ENABLE_8021P_MSK;
+	else
+		data &= ~KSZ8863REG_ENABLE_8021P_MSK;
+
+
+	ksz8863_dbg("addr = %02x data = %02x\n", reg, data)
+
+	if (_ksz8863_reg_write(reg, &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_ksz8863_get_8021p
+ *
+ * Get if 802.1p classification is enabled or disabled
+ *
+ * @param port: from 0 to 2
+ * @return 1 if enabled, 0 if disabled, -1 if error
+ */
+int librouter_ksz8863_get_8021p(int port)
+{
+	__u8 reg, data;
+
+	if (port > 2) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	reg = KSZ8863REG_PORT_CONTROL;
+	reg += port * 0x10;
+
+	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
+		return -1;
+
+	ksz8863_dbg("addr = %02x data = %02x\n", reg, data)
+
+	return (data | KSZ8863REG_ENABLE_8021P_MSK) ? 1 : 0;
+}
+
+/**
+ * librouter_ksz8863_set_diffserv
+ *
+ * Enable or Disable Diff Service classification
+ *
+ * @param enable
+ * @param port:	from 0 to 2
+ * @return 0 on success, -1 otherwise
+ */
+int librouter_ksz8863_set_diffserv(int enable, int port)
+{
+	__u8 reg, data;
+
+	if (port > 2) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	reg = KSZ8863REG_PORT_CONTROL;
+	reg += port * 0x10;
+
+	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
+		return -1;
+
+	if (enable)
+		data |= KSZ8863REG_ENABLE_DIFFSERV_MSK;
+	else
+		data &= ~KSZ8863REG_ENABLE_DIFFSERV_MSK;
+
+	ksz8863_dbg("addr = %02x data = %02x\n", reg, data)
+
+	if (_ksz8863_reg_write(reg, &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_ksz8863_get_diffserv
+ *
+ * Get if Diff Service classification is enabled or disabled
+ *
+ * @param port: from 0 to 2
+ * @return 1 if enabled, 0 if disabled, -1 if error
+ */
+int librouter_ksz8863_get_diffserv(int port)
+{
+	__u8 reg, data;
+
+	if (port > 2) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	reg = KSZ8863REG_PORT_CONTROL;
+	reg += port * 0x10;
+
+	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
+		return -1;
+
+	ksz8863_dbg("addr = %02x data = %02x\n", reg, data)
+
+	return (data | KSZ8863REG_ENABLE_DIFFSERV_MSK) ? 1 : 0;
+}
+
+/******************/
+/* For tests only */
+/******************/
+int librouter_ksz8863_read(__u8 reg)
+{
+	__u8 data;
+
+	_ksz8863_reg_read(reg, &data, sizeof(data));
+	ksz8863_dbg("addr = %02x data = %02x\n", reg, data)
+
+	return data;
+}
+
+int librouter_ksz8863_write(__u8 reg, __u8 data)
+{
+	ksz8863_dbg("addr = %02x data = %02x\n", reg, data)
+	return _ksz8863_reg_write(reg, &data, sizeof(data));
+}
