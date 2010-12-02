@@ -152,6 +152,10 @@ int librouter_ksz8863_set_ingress_rate_limit(int port, int prio, int rate);
 int librouter_ksz8863_get_dscp_prio(int dscp);
 int librouter_ksz8863_set_dscp_prio(int dscp, int prio);
 
+/* VLAN */
+int librouter_ksz8863_get_table(int entry, struct vlan_config_t *vconfig);
+int librouter_ksz8863_del_table(struct vlan_config_t *vconfig);
+int librouter_ksz8863_add_table(struct vlan_config_t *vconfig);
 
 
 
