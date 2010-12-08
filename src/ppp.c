@@ -27,7 +27,6 @@
 #include "modem3G.h"
 #endif
 
-
 #ifdef OPTION_MODEM3G
 /**
  * Função seta método de backup no arquivo do backupd
@@ -38,46 +37,42 @@
  * @param ping_addr
  * @return 0 if ok, -1 if not
  */
-int librouter_ppp_backupd_set_backup_method (char * intf3g_ppp, char * method, char * ping_addr)
+int librouter_ppp_backupd_set_backup_method(char * intf3g_ppp, char * method, char * ping_addr)
 {
-	if (!strcmp(method, "ping")){
-		if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,METHOD_STR,"ping") < 0)
+	if (!strcmp(method, "ping")) {
+		if (librouter_ppp_backupd_set_param_infile(intf3g_ppp, METHOD_STR, "ping") < 0)
 			return -1;
 
-		if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,PING_ADDR_STR,ping_addr) < 0)
+		if (librouter_ppp_backupd_set_param_infile(intf3g_ppp, PING_ADDR_STR, ping_addr)
+		                < 0)
 			return -1;
-	}
-	else
-		if (!strcmp(method, "link")){
-			if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,METHOD_STR,"link") < 0)
-				return -1;
+	} else if (!strcmp(method, "link")) {
+		if (librouter_ppp_backupd_set_param_infile(intf3g_ppp, METHOD_STR, "link") < 0)
+			return -1;
 
-			if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,PING_ADDR_STR,"") < 0)
-				return -1;
-		}
-		else
+		if (librouter_ppp_backupd_set_param_infile(intf3g_ppp, PING_ADDR_STR, "") < 0)
 			return -1;
+	} else
+		return -1;
 
 	return 0;
 }
-
 
 /**
  * Função seta "no backup interface" no arquivo para que o backupd deamon efetue a operação no Modem3G
  * @param interface3g
  * @return 0 if ok, -1 if not
  */
-int librouter_ppp_backupd_set_no_backup_interface (char * intf3g_ppp)
+int librouter_ppp_backupd_set_no_backup_interface(char * intf3g_ppp)
 {
-	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,BCKUP_STR,"no") < 0 )
+	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp, BCKUP_STR, "no") < 0)
 		return -1;
 
-	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,MAIN_INTF_STR,"") < 0)
+	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp, MAIN_INTF_STR, "") < 0)
 		return -1;
 
 	return 0;
 }
-
 
 /**
  * Função seta backup interface no arquivo para efetuar operação pelo backupd deamon
@@ -90,20 +85,22 @@ int librouter_ppp_backupd_set_no_backup_interface (char * intf3g_ppp)
  * @param intf_return
  * @return 0 if ok, -1 if not
  */
-int librouter_ppp_backupd_set_backup_interface (char * intf3g_ppp, char * main_interface, char * intf_return)
+int librouter_ppp_backupd_set_backup_interface(char * intf3g_ppp,
+                                               char * main_interface,
+                                               char * intf_return)
 {
 	if (librouter_dev_exists(intf3g_ppp))
 		return -1;
 
-	if ( librouter_ppp_backupd_verif_param_infile(MAIN_INTF_STR,main_interface, intf_return))
+	if (librouter_ppp_backupd_verif_param_infile(MAIN_INTF_STR, main_interface, intf_return))
 		return -1;
 	else
 		intf_return = NULL;
 
-	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,BCKUP_STR,"yes") < 0 )
+	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp, BCKUP_STR, "yes") < 0)
 		return -1;
 
-	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,MAIN_INTF_STR,main_interface) < 0)
+	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp, MAIN_INTF_STR, main_interface) < 0)
 		return -1;
 
 	return 0;
@@ -113,11 +110,10 @@ int librouter_ppp_backupd_set_backup_interface (char * intf3g_ppp, char * main_i
  *
  * @return 1 if ENABLE, 0 if DISABLED
  */
-int librouter_ppp_backupd_is_interface_3G_enable (char * intf3g_ppp)
+int librouter_ppp_backupd_is_interface_3G_enable(char * intf3g_ppp)
 {
-	return librouter_ppp_backupd_verif_param_byintf_infile(intf3g_ppp,SHUTD_STR,"no");
+	return librouter_ppp_backupd_verif_param_byintf_infile(intf3g_ppp, SHUTD_STR, "no");
 }
-
 
 /**
  * Função faz "no shutdown" no modem3g escolhido (seta no arquivo backupd.conf),
@@ -125,9 +121,9 @@ int librouter_ppp_backupd_is_interface_3G_enable (char * intf3g_ppp)
  * @param interface
  * @return 0 if ok, -1 if not
  */
-int librouter_ppp_backupd_set_no_shutdown_3Gmodem (char * intf3g_ppp)
+int librouter_ppp_backupd_set_no_shutdown_3Gmodem(char * intf3g_ppp)
 {
-	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,SHUTD_STR,"no") < 0)
+	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp, SHUTD_STR, "no") < 0)
 		return -1;
 	return 0;
 }
@@ -138,13 +134,12 @@ int librouter_ppp_backupd_set_no_shutdown_3Gmodem (char * intf3g_ppp)
  * @param interface
  * @return 0 if ok, -1 if not
  */
-int librouter_ppp_backupd_set_shutdown_3Gmodem (char * intf3g_ppp)
+int librouter_ppp_backupd_set_shutdown_3Gmodem(char * intf3g_ppp)
 {
-	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp,SHUTD_STR,"yes") < 0)
+	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp, SHUTD_STR, "yes") < 0)
 		return -1;
 	return 0;
 }
-
 
 /**
  * Faz a leitura do arquivo de config. do backupd, carregando as infos. referentes
@@ -158,10 +153,10 @@ int librouter_ppp_backupd_set_shutdown_3Gmodem (char * intf3g_ppp)
 int librouter_ppp_backupd_get_config(int serial_num, struct bckp_conf_t * back_conf)
 {
 	FILE *fd;
-	char line[128] = {(int)NULL};
+	char line[128] = { (int) NULL };
 	char intf_ref[32];
 	char *p;
-	snprintf(intf_ref,32,"%sppp%d\n",INTF_STR, serial_num);
+	snprintf(intf_ref, 32, "%sppp%d\n", INTF_STR, serial_num);
 
 	if ((fd = fopen(BACKUPD_CONF_FILE, "r")) == NULL) {
 		syslog(LOG_ERR, "Could not open configuration file\n");
@@ -181,7 +176,7 @@ int librouter_ppp_backupd_get_config(int serial_num, struct bckp_conf_t * back_c
 					*p = '\0';
 			}
 
-			while( (fgets(line, sizeof(line), fd) != NULL) && (strcmp(line, "\n") != 0) ){
+			while ((fgets(line, sizeof(line), fd) != NULL) && (strcmp(line, "\n") != 0)) {
 
 				/* Shutdown field */
 				if (!strncmp(line, SHUTD_STR, SHUTD_STR_LEN)) {
@@ -230,13 +225,12 @@ int librouter_ppp_backupd_get_config(int serial_num, struct bckp_conf_t * back_c
 					continue;
 				}
 			}
-		goto end;
+			goto end;
 		}
 
 	}
 
-end:
-	fclose(fd);
+	end: fclose(fd);
 	return 0;
 }
 
@@ -252,14 +246,13 @@ end:
 int librouter_ppp_backupd_verif_param_byintf_infile(char * intf, char *field, char *value)
 {
 	FILE *fd;
-	char line[128] = {(int)NULL};
+	char line[128] = { (int) NULL };
 	char fvalue[32], intf_ref[32];
 	int verif = 0;
 
+	snprintf(intf_ref, 32, "%s%s\n", INTF_STR, intf);
 
-	snprintf(intf_ref,32,"%s%s\n",INTF_STR, intf);
-
-	snprintf(fvalue,32,"%s%s\n",field, value);
+	snprintf(fvalue, 32, "%s%s\n", field, value);
 
 	if ((fd = fopen(BACKUPD_CONF_FILE, "r")) == NULL) {
 		syslog(LOG_ERR, "Could not open configuration file\n");
@@ -268,8 +261,8 @@ int librouter_ppp_backupd_verif_param_byintf_infile(char * intf, char *field, ch
 
 	while (fgets(line, sizeof(line), fd) != NULL) {
 		if (!strncmp(line, intf_ref, strlen(intf_ref))) {
-			while( (fgets(line, sizeof(line), fd) != NULL) && (strcmp(line, "\n") != 0) ){
-				if (!strncmp(line, fvalue, strlen(fvalue))){
+			while ((fgets(line, sizeof(line), fd) != NULL) && (strcmp(line, "\n") != 0)) {
+				if (!strncmp(line, fvalue, strlen(fvalue))) {
 					verif = 1;
 					goto end;
 				}
@@ -278,13 +271,9 @@ int librouter_ppp_backupd_verif_param_byintf_infile(char * intf, char *field, ch
 		}
 	}
 
-
-end:
-	fclose(fd);
+	end: fclose(fd);
 	return verif;
 }
-
-
 
 /**
  * Verifica a existencia de um parametro desejavel no arquivo de conf. do backupd
@@ -298,11 +287,11 @@ end:
 int librouter_ppp_backupd_verif_param_infile(char *field, char *value, char * intf_return)
 {
 	FILE *fd;
-	char line[128] = {(int)NULL};
+	char line[128] = { (int) NULL };
 	char fvalue[32], intf_ref[32], interface[24];
 	int verif = 0;
 
-	snprintf(fvalue,32,"%s%s\n",field, value);
+	snprintf(fvalue, 32, "%s%s\n", field, value);
 
 	if ((fd = fopen(BACKUPD_CONF_FILE, "r")) == NULL) {
 		syslog(LOG_ERR, "Could not open configuration file\n");
@@ -312,9 +301,9 @@ int librouter_ppp_backupd_verif_param_infile(char *field, char *value, char * in
 	while (fgets(line, sizeof(line), fd) != NULL) {
 		librouter_str_striplf(line); /* delete new line at end */
 		if (!strncmp(line, INTF_STR, INTF_STR_LEN)) {
-			strcpy(intf_return, line+INTF_STR_LEN);
-			while( (fgets(line, sizeof(line), fd) != NULL) && (strcmp(line, "\n") != 0) ){
-				if (!strncmp(line, fvalue, strlen(fvalue))){
+			strcpy(intf_return, line + INTF_STR_LEN);
+			while ((fgets(line, sizeof(line), fd) != NULL) && (strcmp(line, "\n") != 0)) {
+				if (!strncmp(line, fvalue, strlen(fvalue))) {
 					verif = 1;
 					goto end;
 				}
@@ -322,13 +311,11 @@ int librouter_ppp_backupd_verif_param_infile(char *field, char *value, char * in
 		}
 	}
 
-	strcpy(intf_return,"");
+	strcpy(intf_return, "");
 
-end:
-	fclose(fd);
+	end: fclose(fd);
 	return verif;
 }
-
 
 /**
  * Grava os parâmetros desejados no arquivo de configurações do backupd,
@@ -344,12 +331,12 @@ end:
 int librouter_ppp_backupd_set_param_infile(char * intf, char * field, char *value)
 {
 	FILE *fd;
-	char line[128] = {(int)NULL};
-	char buff[384] = {(int)NULL}; /*buff de tamanho determinado para 3 conex PPP */
+	char line[128] = { (int) NULL };
+	char buff[384] = { (int) NULL }; /*buff de tamanho determinado para 3 conex PPP */
 	char filename_new[64], fvalue[32], intf_ref[32];
 
-	snprintf(intf_ref,32,"%s%s",INTF_STR,intf);
-	snprintf(fvalue,32,"%s%s\n",field, value);
+	snprintf(intf_ref, 32, "%s%s", INTF_STR, intf);
+	snprintf(fvalue, 32, "%s%s\n", field, value);
 
 	if ((fd = fopen(BACKUPD_CONF_FILE, "r")) == NULL) {
 		syslog(LOG_ERR, "Could not open configuration file\n");
@@ -358,18 +345,17 @@ int librouter_ppp_backupd_set_param_infile(char * intf, char * field, char *valu
 
 	while (fgets(line, sizeof(line), fd) != NULL) {
 		if (!strncmp(line, intf_ref, strlen(intf_ref))) {
-			strcat(buff, (const char *)line);
-			while(fgets(line, sizeof(line), fd) != NULL){
-				if (!strncmp(line, field, strlen(field))){
-					strcat(buff, (const char *)fvalue);
+			strcat(buff, (const char *) line);
+			while (fgets(line, sizeof(line), fd) != NULL) {
+				if (!strncmp(line, field, strlen(field))) {
+					strcat(buff, (const char *) fvalue);
 					break;
-				}
-				else
-					strcat(buff,(const char *)line);
+				} else
+					strcat(buff, (const char *) line);
 			}
 			continue;
 		}
-		strcat(buff, (const char *)line);
+		strcat(buff, (const char *) line);
 	}
 
 	fclose(fd);
@@ -378,12 +364,12 @@ int librouter_ppp_backupd_set_param_infile(char * intf, char * field, char *valu
 	filename_new[63] = 0;
 	strcat(filename_new, ".new");
 
-	if ((fd = fopen((const char *)filename_new,"w+")) < 0) {
+	if ((fd = fopen((const char *) filename_new, "w+")) < 0) {
 		syslog(LOG_ERR, "Could not open configuration file\n");
 		return -1;
 	}
 
-	fputs((const char *)buff,fd);
+	fputs((const char *) buff, fd);
 
 	fclose(fd);
 
@@ -421,14 +407,10 @@ int librouter_ppp_reload_backupd(void)
 		return (-1);
 	}
 
-
 	return 0;
 }
 
-
 #endif
-
-
 
 int librouter_ppp_notify_systtyd(void)
 {
@@ -546,24 +528,25 @@ int librouter_ppp_set_config(int serial_no, ppp_config *cfg)
 	return librouter_ppp_notify_systtyd();
 }
 
-void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg){
+void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg)
+{
 
 	/* Clean memory! */
 	memset(cfg, 0, sizeof(ppp_config));
 #ifdef OPTION_MODEM3G
-	snprintf(cfg->osdevice, 16, "ttyUSB%d", librouter_usb_device_is_modem(librouter_usb_get_realport_by_aliasport(serial_no)));
+	snprintf(cfg->osdevice, 16, "ttyUSB%d", librouter_usb_device_is_modem(
+	                librouter_usb_get_realport_by_aliasport(serial_no)));
 
-	librouter_ppp_backupd_get_config(serial_no,&cfg->bckp_conf);
+	librouter_ppp_backupd_get_config(serial_no, &cfg->bckp_conf);
 
 	cfg->unit = serial_no;
 
-	if (serial_no == BTIN_M3G_ALIAS){
+	if (serial_no == BTIN_M3G_ALIAS) {
 		cfg->sim_main.sim_num = librouter_modem3g_sim_order_get_mainsim();
 		cfg->sim_backup.sim_num = !librouter_modem3g_sim_order_get_mainsim();
 		librouter_modem3g_sim_get_info_fromfile(&cfg->sim_main);
 		librouter_modem3g_sim_get_info_fromfile(&cfg->sim_backup);
-	}
-	else{
+	} else {
 		cfg->sim_main.sim_num = 0;
 		librouter_modem3g_get_apn(cfg->sim_main.apn, serial_no);
 		librouter_modem3g_get_username(cfg->sim_main.username, serial_no);
@@ -894,9 +877,7 @@ void librouter_ppp_pppd_arglist(char **arglist, ppp_config *cfg, int server)
 			/* Configures local and/or remote IP address */
 			char buf[40];
 
-			snprintf(buf, 39, "%s:%s",
-					 cfg->server_ip_addr,
-					 cfg->server_ip_peer_addr);
+			snprintf(buf, 39, "%s:%s", cfg->server_ip_addr, cfg->server_ip_peer_addr);
 			buf[39] = 0;
 			MKARG(buf);
 		}
@@ -926,7 +907,8 @@ void librouter_ppp_pppd_arglist(char **arglist, ppp_config *cfg, int server)
 		MKARG("nodefaultroute");
 	}
 
-	if (cfg->auth_user[0] && ((cfg->server_flags & SERVER_FLAGS_PAP) || (cfg->server_flags & SERVER_FLAGS_CHAP))) {
+	if (cfg->auth_user[0] && ((cfg->server_flags & SERVER_FLAGS_PAP) || (cfg->server_flags
+	                & SERVER_FLAGS_CHAP))) {
 		MKARG("auth");
 
 		if (cfg->server_flags & SERVER_FLAGS_PAP) {
@@ -938,7 +920,6 @@ void librouter_ppp_pppd_arglist(char **arglist, ppp_config *cfg, int server)
 		/* Will not ask for the peer to authenticate itself */
 		MKARG("noauth");
 	}
-
 
 	/* pppd will use lines in the secrets files which have name as 
 	 * the second field when looking for a secret to use in authenticating the peer */
@@ -1008,9 +989,8 @@ void librouter_ppp_pppd_arglist(char **arglist, ppp_config *cfg, int server)
 
 		ipx_network[8] = 0;
 
-		sprintf(ipx_node, "%02x%02x%02x%02x%02x%02x", cfg->ipx_node[0],
-		                cfg->ipx_node[1], cfg->ipx_node[2],
-		                cfg->ipx_node[3], cfg->ipx_node[4],
+		sprintf(ipx_node, "%02x%02x%02x%02x%02x%02x", cfg->ipx_node[0], cfg->ipx_node[1],
+		                cfg->ipx_node[2], cfg->ipx_node[3], cfg->ipx_node[4],
 		                cfg->ipx_node[5]);
 
 		MKARG("ipx");
@@ -1044,7 +1024,7 @@ void librouter_ppp_pppd_arglist(char **arglist, ppp_config *cfg, int server)
 
 		syslog(LOG_ERR, "pppd line");
 		for (i=0; i < n; i++)
-			syslog(LOG_INFO, ">> %s", arglist[i]);
+		syslog(LOG_INFO, ">> %s", arglist[i]);
 	}
 #endif
 	arglist[n] = NULL;

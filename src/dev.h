@@ -10,7 +10,7 @@
 #define DESCRIPTION_DIR "/var/run/description/"
 #define DESCRIPTION_FILE DESCRIPTION_DIR"%s"
 
-#include <linux/config.h>
+#include <linux/autoconf.h>
 
 
 int librouter_dev_get_flags(char *dev, unsigned int *flags);

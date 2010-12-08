@@ -15,7 +15,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
-#include <linux/config.h>
+#include <linux/autoconf.h>
 #include <linux/if.h>
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>

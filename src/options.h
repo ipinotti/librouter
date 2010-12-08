@@ -18,6 +18,9 @@
 #define OPTION_ETHERNET /* Enables ethernet interfaces */
 #define OPTION_GIGAETHERNET /* Enable gigabit options */
 
+/* !!!!!! */
+#define OPTION_MANAGED_SWITCH
+
 /* ------ Digistar 3G Product Models Declaration ------ */
 /* RCG1000 */
 #if defined(CONFIG_DIGISTAR_RCG1000)
@@ -91,6 +94,14 @@
 /* AAA */
 #undef OPTION_AAA_ACCOUNTING
 #undef OPTION_AAA_AUTHORIZATION
+
+/* QoS */
+#define QOS_MIN_BANDWIDTH	1000 /* 1Kbps */
+#ifdef OPTION_GIGAETHERNET
+#define QOS_MAX_BANDWIDTH	1000000000 /* 1Gbps */
+#else
+#define QOS_MAX_BANDWIDTH	100000000 /* 100Mbps */
+#endif
 
 #define OPTION_OPENSSH
 #define OPTION_PIMD
