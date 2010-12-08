@@ -28,6 +28,8 @@
 #define KSZ8863REG_GLOBAL_CONTROL3	0x05
 #define KSZ8863REG_GLOBAL_CONTROL4	0x06
 #define KSZ8863REG_GLOBAL_CONTROL5	0x07
+#define KSZ8863REG_GLOBAL_CONTROL10	0x0C
+#define KSZ8863REG_GLOBAL_CONTROL11	0x0D
 
 #define KSZ8863REG_PORT_CONTROL3	0x13
 #define KSZ8863REG_PORT_CONTROL4	0x14
@@ -141,6 +143,9 @@ int librouter_ksz8863_set_default_vid(int port, int vid);
 
 int librouter_ksz8863_get_default_cos(int port);
 int librouter_ksz8863_set_default_cos(int port, int cos);
+
+int librouter_ksz8863_get_cos_prio(int cos);
+int librouter_ksz8863_set_cos_prio(int cos, int prio);
 
 /* ------------------ */
 int librouter_ksz8863_get_egress_rate_limit(int port, int prio);

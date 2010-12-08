@@ -974,13 +974,13 @@ int librouter_ksz8863_set_dscp_prio(int dscp, int prio)
 
 	/*
 	 * See KSZ8863 Datasheet Page 65  for the register description
-	 * (DSCP mod 16) will give the offset:
-	 * 	- mod 0: bits [1-0]
-	 * 	- mod 1: bits [3-2]
-	 * 	- mod 2: bits [5-4]
-	 * 	- mod 3: bits [7-6]
+	 * (DSCP mod 4) will give the offset:
+	 * 	- rest 0: bits [1-0]
+	 * 	- rest 1: bits [3-2]
+	 * 	- rest 2: bits [5-4]
+	 * 	- rest 3: bits [7-6]
 	 */
-	offset = (dscp%16)*2;
+	offset = (dscp % 4) * 2;
 	mask = 0x3 << offset;
 	data &= ~mask; /* Clear current config */
 	data |= (prio << offset);
@@ -1015,7 +1015,85 @@ int librouter_ksz8863_get_dscp_prio(int dscp)
 	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
 		return -1;
 
-	prio = (int)((data >> (dscp%16)*2) & 0x3);
+	prio = (int) ((data >> (dscp % 4) * 2) & 0x3);
+
+	return prio;
+}
+
+/**
+ * librouter_ksz8863_set_cos_prio
+ *
+ * Set the packet priority based on DSCP value
+ *
+ * @param cos
+ * @param prio
+ * @return 0 if success, -1 if error
+ */
+int librouter_ksz8863_set_cos_prio(int cos, int prio)
+{
+	__u8 reg, data, mask;
+	int offset;
+
+	if (cos < 0 || cos > 7) {
+		printf("%% Invalid CoS value : %d\n", cos);
+		return -1;
+	}
+
+	if (prio < 0 || prio > 3) {
+		printf("%% Invalid priority : %d\n", prio);
+		return -1;
+	}
+
+	reg = KSZ8863REG_GLOBAL_CONTROL10;
+	reg += cos/4;
+
+	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
+		return -1;
+
+	/*
+	 * See KSZ8863 Datasheet Page 53  for the register description
+	 * (CoS mod 4) will give the offset:
+	 * 	- mod 0: bits [1-0]
+	 * 	- mod 1: bits [3-2]
+	 * 	- mod 2: bits [5-4]
+	 * 	- mod 3: bits [7-6]
+	 */
+	offset = (cos % 4) * 2;
+	mask = 0x3 << offset;
+	data &= ~mask; /* Clear current config */
+	data |= (prio << offset);
+
+	if (_ksz8863_reg_write(reg, &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_ksz8863_get_dscp_prio
+ *
+ * Get the packet priority based on CoS value
+ *
+ * @param cos
+ * @return priority value if success, -1 if error
+ */
+int librouter_ksz8863_get_cos_prio(int cos)
+{
+	__u8 reg, data;
+	int prio;
+
+	if (cos < 0 || cos > 7) {
+		printf("%% Invalid DSCP value : %d\n", cos);
+		return -1;
+	}
+
+	reg = KSZ8863REG_GLOBAL_CONTROL10;
+	reg += cos/4;
+
+	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
+		return -1;
+
+	prio = (int) ((data >> (cos % 4) * 2) & 0x3);
 
 	return prio;
 }
