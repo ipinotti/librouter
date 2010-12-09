@@ -551,33 +551,47 @@ void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg){
 	/* Clean memory! */
 	memset(cfg, 0, sizeof(ppp_config));
 #ifdef OPTION_MODEM3G
-	snprintf(cfg->osdevice, 16, "ttyUSB%d", librouter_usb_device_is_modem(librouter_usb_get_realport_by_aliasport(serial_no)));
+	if (serial_no < 10){
+		snprintf(cfg->osdevice, 16, "ttyUSB%d", librouter_usb_device_is_modem(librouter_usb_get_realport_by_aliasport(serial_no)));
 
-	librouter_ppp_backupd_get_config(serial_no,&cfg->bckp_conf);
+		librouter_ppp_backupd_get_config(serial_no,&cfg->bckp_conf);
 
-	cfg->unit = serial_no;
+		cfg->unit = serial_no;
 
-	if (serial_no == BTIN_M3G_ALIAS){
-		cfg->sim_main.sim_num = librouter_modem3g_sim_order_get_mainsim();
-		cfg->sim_backup.sim_num = !librouter_modem3g_sim_order_get_mainsim();
-		librouter_modem3g_sim_get_info_fromfile(&cfg->sim_main);
-		librouter_modem3g_sim_get_info_fromfile(&cfg->sim_backup);
+		if (serial_no == BTIN_M3G_ALIAS){
+			cfg->sim_main.sim_num = librouter_modem3g_sim_order_get_mainsim();
+			cfg->sim_backup.sim_num = !librouter_modem3g_sim_order_get_mainsim();
+			librouter_modem3g_sim_get_info_fromfile(&cfg->sim_main);
+			librouter_modem3g_sim_get_info_fromfile(&cfg->sim_backup);
+		}
+		else{
+			cfg->sim_main.sim_num = 0;
+			librouter_modem3g_get_apn(cfg->sim_main.apn, serial_no);
+			librouter_modem3g_get_username(cfg->sim_main.username, serial_no);
+			librouter_modem3g_get_password(cfg->sim_main.password, serial_no);
+		}
+
+		cfg->ip_unnumbered = -1;
+
+		cfg->up = !cfg->bckp_conf.shutdown;
+
+
+		return;
+		/*
+		 * FIXME
+		 * cfg->novj = 1;
+		 */
 	}
-	else{
-		cfg->sim_main.sim_num = 0;
-		librouter_modem3g_get_apn(cfg->sim_main.apn, serial_no);
-		librouter_modem3g_get_username(cfg->sim_main.username, serial_no);
-		librouter_modem3g_get_password(cfg->sim_main.password, serial_no);
+	else {
+		snprintf(cfg->osdevice, 16, "ttyPPTP%d", serial_no);
+
+			cfg->unit=serial_no;
+			cfg->echo_failure=3;
+			cfg->echo_interval=5;
+			cfg->novj=1;
+			cfg->ip_unnumbered=-1;
 	}
 
-	cfg->ip_unnumbered = -1;
-
-	cfg->up = !cfg->bckp_conf.shutdown;
-
-	/*
-	 * FIXME
-	 * cfg->novj = 1;
-	 */
 #else
 	snprintf(cfg->osdevice, 16, "ttyS%d", serial_no);
 
@@ -588,7 +602,6 @@ void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg){
 	cfg->novj=1;
 	cfg->ip_unnumbered=-1;
 	cfg->backup=-1;
-
 #endif
 
 }

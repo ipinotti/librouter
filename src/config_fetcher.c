@@ -29,6 +29,7 @@
 #include "quagga.h"
 #include "snmp.h"
 #include "ppp.h"
+#include "pptp.h"
 #include "exec.h"
 #include "smcroute.h"
 #include "ntp.h"
@@ -39,6 +40,7 @@
 #include "dev.h"
 #include "qos.h"
 #include "config_mapper.h"
+#include "acl.h"
 
 #define PPPDEV "ppp"
 
@@ -1177,6 +1179,24 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 }
 #endif
 
+static void _dump_pptp_config(FILE * out, struct interface_conf *conf)
+{
+	char *osdev = conf->name;
+	int serial_no;
+
+	/* Get interface index */
+	serial_no = atoi(osdev + strlen(PPPDEV));
+
+	_dump_intf_iptables_config(out, conf);
+	_dump_policy_interface(out, osdev);
+
+	librouter_config_rip_dump_interface(out, osdev);
+	librouter_config_ospf_dump_interface(out, osdev);
+
+	librouter_pptp_dump(out);
+}
+
+
 /**
  * Show interface configuration
  *
@@ -1187,6 +1207,7 @@ static void librouter_config_dump_interface(FILE *out, struct interface_conf *co
 {
 	char *description;
 	char *cish_dev;
+	char pppid[10];
 
 	/* Get iptables config */
 
@@ -1194,7 +1215,13 @@ static void librouter_config_dump_interface(FILE *out, struct interface_conf *co
 	librouter_mangle_get_iface_rules(conf->name, conf->ipt.in_mangle, conf->ipt.out_mangle);
 	librouter_nat_get_iface_rules(conf->name, conf->ipt.in_nat, conf->ipt.out_nat);
 
-	cish_dev = librouter_device_convert_os(conf->name, 0);
+
+	if  ( (strstr(conf->name, "ppp")) && (strlen(conf->name) >= 5) ){
+		snprintf(pppid,10,"PPTP%c",conf->name[strlen(conf->name)-1]);
+		cish_dev = pppid;
+	}
+	else
+		cish_dev = librouter_device_convert_os(conf->name, 0);
 
 	/* skip ipsec ones... */
 	if (conf->linktype == ARPHRD_TUNNEL6)
@@ -1209,7 +1236,10 @@ static void librouter_config_dump_interface(FILE *out, struct interface_conf *co
 	switch (conf->linktype) {
 #ifdef OPTION_PPP
 	case ARPHRD_PPP:
-		_dump_ppp_config(out, conf);
+		if (strstr(cish_dev,"PPTP"))
+			_dump_pptp_config(out, conf);
+		else
+			_dump_ppp_config(out, conf);
 		break;
 #endif
 	case ARPHRD_ETHER:
