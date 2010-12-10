@@ -15,6 +15,7 @@
 #include "device.h"
 #include "args.h"
 #include "str.h"
+#include "efm.h"
 
 //#define DEBUG
 
@@ -114,7 +115,7 @@ int librouter_device_get_major(const char *name, string_type type)
 }
 
 /**
- * librouter_device_convert	Convert a cish interface string to linux interface string
+ * librouter_device_cli_to_linux	Convert a cish interface string to linux interface string
  *
  * FIXME: Maybe the function name should indicate that it is a cish to
  * linux name convertion.
@@ -127,13 +128,20 @@ int librouter_device_get_major(const char *name, string_type type)
  * @param minor
  * @return
  */
-char *librouter_device_convert(const char *device, int major, int minor)
+char *librouter_device_cli_to_linux(const char *device, int major, int minor)
 {
 	char *result;
 	dev_family *fam = librouter_device_get_family_by_name(device, str_cish);
 
 	if (fam) {
 		switch (fam->type) {
+#ifdef OPTION_EFM
+		case efm:
+			/* Special case: EFM is in fact just an ethernet interface,
+			 * we just need to correct the major to the right offset */
+			major += EFM_INDEX_OFFSET;
+			/* Fall through */
+#endif
 		case eth:
 		case lo:
 		case tun:
@@ -158,10 +166,7 @@ char *librouter_device_convert(const char *device, int major, int minor)
 }
 
 /**
- * librouter_device_convert_os	Convert a linux string to cish string
- *
- * FIXME: Maybe the function name should indicate that it is a cish to
- * linux name convertion.
+ * librouter_device_linux_to_cli	Convert a linux string to cish string
  *
  * ex.: osdev = 'serial0.16'
  * retorna 'serial 0.16' se mode=0,
@@ -171,22 +176,27 @@ char *librouter_device_convert(const char *device, int major, int minor)
  * @param mode
  * @return
  */
-char *librouter_device_convert_os(const char *osdev, int mode)
+char *librouter_device_linux_to_cli(const char *osdev, int mode)
 {
 	static char dev[64];
 	char odev[16];
 	int i, crsr;
 	const char *cishdev;
+	int iface_index = 0;
 
 	crsr = 0;
 	while ((crsr < 8) && (osdev[crsr] > 32) && (!isdigit(osdev[crsr])))
 		++crsr;
 	memcpy(odev, osdev, crsr);
 	odev[crsr] = 0;
+
 	while ((osdev[crsr]) && (!isdigit(osdev[crsr])))
 		++crsr; /* skip space! */
 
+	iface_index = atoi(&osdev[crsr]);
+
 	cishdev = NULL;
+
 	for (i = 0; _devices[i].linux_string != NULL; i++) {
 		if (strcmp(_devices[i].linux_string, odev) == 0) {
 			cishdev = _devices[i].cish_string;
@@ -218,8 +228,18 @@ char *librouter_device_convert_os(const char *osdev, int mode)
 			                iface + crsr);
 		} else
 			return NULL;
-	} else
+	}
 #endif
+#ifdef OPTION_EFM
+	/* Need to check if this eth interface is not in EFM for the CLI */
+	else if ((_devices[i].type == eth) && (iface_index >= EFM_INDEX_OFFSET) &&
+			iface_index <= (EFM_INDEX_OFFSET + EFM_NUM_INTERFACES)) {
+		dev_family *fam = librouter_device_get_family_by_type(efm);
+
+		sprintf(dev, "%s%s%d", fam->cish_string, mode ? "" : " ", iface_index - EFM_INDEX_OFFSET);
+	}
+#endif
+	else
 		sprintf(dev, "%s%s%s", cishdev, mode ? "" : " ", osdev + crsr);
 
 	/* Make ethernet -> Ethernet */
@@ -283,7 +303,7 @@ char *librouter_device_from_linux_cmdline(char *cmdline)
 		return new_cmdline;
 	args = librouter_make_args(cmdline);
 	for (i = 0; i < args->argc; i++) {
-		dev = librouter_device_convert_os(args->argv[i], 0);
+		dev = librouter_device_linux_to_cli(args->argv[i], 0);
 		if (dev)
 			strcat(new_cmdline, dev);
 		else
