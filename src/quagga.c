@@ -788,6 +788,7 @@ void librouter_quagga_zebra_dump_static_routes(FILE *out)
 			break;
 
 		librouter_str_striplf(buf);
+
 		fprintf(out, "%s\n", librouter_device_from_linux_cmdline(librouter_zebra_to_linux_cmdline(buf)));
 	}
 
@@ -858,7 +859,7 @@ struct routes_t * librouter_quagga_get_routes(void)
 	if (f == NULL)
 		return NULL;
 
-	librouter_config_dump_routing(f);
+	librouter_quagga_zebra_dump_static_routes(f);
 	fclose(f);
 
 	f = fopen(CGI_TMP_FILE, "r");
@@ -974,8 +975,12 @@ int librouter_quagga_add_route(struct routes_t *route)
 	if (librouter_quagga_connect_daemon(ZEBRA_PATH) < 0)
 		return -1;
 
-	sprintf(zebra_cmd, "ip route %s %s %s", route->network, route->mask,
-	                route->gateway);
+	if (route->gateway)
+		sprintf(zebra_cmd, "ip route %s %s %s %d", route->network, route->mask,
+	                route->gateway, route->metric ? route->metric : 1);
+	else
+		sprintf(zebra_cmd, "ip route %s %s %s %d", route->network, route->mask,
+	                route->interface, route->metric ? route->metric : 1);
 
 	librouter_quagga_execute_client("enable", stdout, buf_daemon, 0);
 	librouter_quagga_execute_client("configure terminal", stdout, buf_daemon, 0);
