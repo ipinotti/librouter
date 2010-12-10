@@ -29,6 +29,7 @@
 #include "quagga.h"
 #include "snmp.h"
 #include "ppp.h"
+#include "pptp.h"
 #include "exec.h"
 #include "smcroute.h"
 #include "ntp.h"
@@ -39,6 +40,7 @@
 #include "dev.h"
 #include "qos.h"
 #include "config_mapper.h"
+#include "acl.h"
 
 #define PPPDEV "ppp"
 
@@ -1183,6 +1185,24 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 }
 #endif
 
+static void _dump_pptp_config(FILE * out, struct interface_conf *conf)
+{
+	char *osdev = conf->name;
+	int serial_no;
+
+	/* Get interface index */
+	serial_no = atoi(osdev + strlen(PPPDEV));
+
+	_dump_intf_iptables_config(out, conf);
+	_dump_policy_interface(out, osdev);
+
+	librouter_config_rip_dump_interface(out, osdev);
+	librouter_config_ospf_dump_interface(out, osdev);
+
+	librouter_pptp_dump(out);
+}
+
+
 /**
  * Show interface configuration
  *
@@ -1193,12 +1213,14 @@ static void librouter_config_dump_interface(FILE *out, struct interface_conf *co
 {
 	char *description;
 	char *cish_dev;
+	char pppid[10];
 
 	/* Get iptables config */
 
 	librouter_acl_get_iface_rules(conf->name, conf->ipt.in_acl, conf->ipt.out_acl);
 	librouter_mangle_get_iface_rules(conf->name, conf->ipt.in_mangle, conf->ipt.out_mangle);
 	librouter_nat_get_iface_rules(conf->name, conf->ipt.in_nat, conf->ipt.out_nat);
+
 
 	cish_dev = librouter_device_linux_to_cli(conf->name, 0);
 
@@ -1215,7 +1237,10 @@ static void librouter_config_dump_interface(FILE *out, struct interface_conf *co
 	switch (conf->linktype) {
 #ifdef OPTION_PPP
 	case ARPHRD_PPP:
-		_dump_ppp_config(out, conf);
+		if (strstr(cish_dev,"pptp"))
+			_dump_pptp_config(out, conf);
+		else
+			_dump_ppp_config(out, conf);
 		break;
 #endif
 	case ARPHRD_ETHER:

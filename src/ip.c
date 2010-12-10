@@ -45,6 +45,7 @@
 #include "dev.h"
 #include "error.h"
 #include "ppcio.h"
+#include "pptp.h"
 
 #ifdef OPTION_SHM_IP_TABLE
 int ip_addr_table_backup_shmid = 0; /* ip address backup base on shmid */
@@ -394,6 +395,27 @@ int librouter_ip_get_if_list(struct intf_info *info)
 		free(tmp);
 	}
 
+
+
+	/* OPTION PPTP */
+
+	/*
+	 * Search for PPTP interfaces. They may not exist in the kernel,
+	 * since PPP interfaces are created dinamically.
+	 * So we need to create some here.
+	 * For now, just PPTP0 -> ppp20 is available by the define PPTP_PPP_START
+	 */
+	/*TODO*/
+	if (!_has_ppp_intf(PPTP_PPP_START, info)) {
+		sprintf(link->ifname, "ppp%d", PPTP_PPP_START);
+		link->type = ARPHRD_PPP;
+		link++;
+	}
+
+	/* OPTION PPTP */
+
+
+
 #ifdef OPTION_MODEM3G
 	/*
 	 * Search for 3G Interfaces. They may not exist in the kernel,
@@ -408,6 +430,8 @@ int librouter_ip_get_if_list(struct intf_info *info)
 		}
 	}
 #endif
+
+
 
 	for (a = ainfo; a;) {
 		/* Update ipaddr pointer if __get_addrinfo succeeds */

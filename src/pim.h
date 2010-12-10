@@ -13,7 +13,7 @@
 #define PIMD_CFG_FILE "/etc/pimdd.conf"
 #define PIMS_CFG_FILE "/etc/pimsd.conf"
 
-#define MAX_LINES 50
+#define MAX_LINES_PIM 50
 
 int librouter_pim_dense_phyint(int add, char *dev);
 int librouter_pim_sparse_phyint(int add, char *dev, int pref, int metric);

@@ -49,6 +49,7 @@ librouter_la_SOURCES = \
 	tunnel.c \
 	version.c \
 	usb.c \
+	pptp.c \
 	vlan.c
 
 librouter_la_LIBADD = $(top_builddir)/src/libnetlink/libnetlink.la \
@@ -116,4 +117,5 @@ librouter_la_HEADERS = \
 	typedefs.h \
 	version.h \
 	usb.h \
+	pptp.h \
 	vlan.h

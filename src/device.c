@@ -26,7 +26,8 @@ dev_family _devices[] = {
 	{ tun, "tun", "tun", "Tunnel" },
 	{ ipsec, "ipsec", "ipsec", "IPSec" },
 	{ ppp, "m3G", "ppp", "3GModem" },
-	{ efm, "efm", "eth", "EFM"},
+	{ efm, "efm", "eth", "EFM" },
+	{ pptp, "pptp", "ppp", "PPTP" },
 	{ none, NULL, NULL, NULL }
 };
 
@@ -166,8 +167,50 @@ char *librouter_device_cli_to_linux(const char *device, int major, int minor)
 }
 
 /**
- * librouter_device_linux_to_cli	Convert a linux string to cish string
+ * ppp_convert_management	Convert PPP interface to the deserved type, like PPTP, PPPOE...
  *
+ * @param osdev
+ * @param crsr
+ * @param ppp_index
+ * @return cishdev
+ */
+static const char * ppp_convert_management(const char *osdev, int * crsr, int ppp_index)
+{
+	int j;
+	const char *cishdev;
+
+	if ( (atoi(osdev+*crsr) > M3G_PPP_END) ){
+
+		switch ( (osdev+*crsr)[0] ){
+
+			case '2':
+				for (j = 0; _devices[j].type != none; j++) {
+					if (_devices[j].type == pptp){
+						cishdev = _devices[j].cish_string;
+						++*crsr; /* shift++ para pegar só a unidade do ppp -> (ex: ppp20 -> ppp0) */
+						break;
+					}
+				}
+				break;
+
+			case '3':
+				/*PPPOE*/
+				break;
+
+			default:
+				break;
+
+		}
+
+	}
+	else
+		cishdev = _devices[ppp_index].cish_string;
+
+	return cishdev;
+}
+
+/**
+ * librouter_device_linux_to_cli	Convert a linux string to cish string
  * ex.: osdev = 'serial0.16'
  * retorna 'serial 0.16' se mode=0,
  * ou      'serial0.16'  se mode=1.
@@ -199,7 +242,10 @@ char *librouter_device_linux_to_cli(const char *osdev, int mode)
 
 	for (i = 0; _devices[i].linux_string != NULL; i++) {
 		if (strcmp(_devices[i].linux_string, odev) == 0) {
-			cishdev = _devices[i].cish_string;
+			if ( !strcmp(odev,"ppp") )
+				cishdev = ppp_convert_management(osdev, &crsr, i);
+			else
+				cishdev = _devices[i].cish_string;
 			break;
 		}
 	}
