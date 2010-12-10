@@ -50,6 +50,7 @@ librouter_la_SOURCES = \
 	version.c \
 	usb.c \
 	pptp.c \
+	pppoe.c \
 	vlan.c
 
 librouter_la_LIBADD = $(top_builddir)/src/libnetlink/libnetlink.la \
@@ -118,4 +119,5 @@ librouter_la_HEADERS = \
 	version.h \
 	usb.h \
 	pptp.h \
+	pppoe.h \
 	vlan.h
