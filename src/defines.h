@@ -8,6 +8,10 @@
 #ifndef DEFINES_H_
 #define DEFINES_H_
 
+#define PPTP_PPP_START 20
+#define PPTP_PPP_END 29
+#define M3G_PPP_END 19
+
 #define ETHERNETDEV "ethernet"
 #define AUXDEV "aux"
 #define AUXDEV_PPP "ax"

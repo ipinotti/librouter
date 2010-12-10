@@ -159,6 +159,49 @@ char *librouter_device_convert(const char *device, int major, int minor)
 }
 
 /**
+ * ppp_convert_management	Convert PPP interface to the deserved type, like PPTP, PPPOE...
+ *
+ * @param osdev
+ * @param crsr
+ * @param ppp_index
+ * @return cishdev
+ */
+static const char * ppp_convert_management(const char *osdev, int * crsr, int ppp_index)
+{
+	int j;
+	const char *cishdev;
+
+	if ( (atoi(osdev+*crsr) > M3G_PPP_END) ){
+
+		switch ( (osdev+*crsr)[0] ){
+
+			case '2':
+				for (j = 0; _devices[j].type != none; j++) {
+					if (_devices[j].type == pptp){
+						cishdev = _devices[j].cish_string;
+						++*crsr; /* shift++ para pegar só a unidade do ppp -> (ex: ppp20 -> ppp0) */
+						break;
+					}
+				}
+				break;
+
+			case '3':
+				/*PPPOE*/
+				break;
+
+			default:
+				break;
+
+		}
+
+	}
+	else
+		cishdev = _devices[ppp_index].cish_string;
+
+	return cishdev;
+}
+
+/**
  * librouter_device_convert_os	Convert a linux string to cish string
  *
  * FIXME: Maybe the function name should indicate that it is a cish to
@@ -188,9 +231,13 @@ char *librouter_device_convert_os(const char *osdev, int mode)
 		++crsr; /* skip space! */
 
 	cishdev = NULL;
+
 	for (i = 0; _devices[i].linux_string != NULL; i++) {
 		if (strcmp(_devices[i].linux_string, odev) == 0) {
-			cishdev = _devices[i].cish_string;
+			if ( !strcmp(odev,"ppp") )
+				cishdev = ppp_convert_management(osdev, &crsr, i);
+			else
+				cishdev = _devices[i].cish_string;
 			break;
 		}
 	}

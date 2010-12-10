@@ -9,12 +9,11 @@
 #define PPTP_H_
 
 #define PPTP_OPTIONSPPTP "/etc/ppp/options.pptp"
-#define PPTP_TUNNEL "/etc/ppp/peers/tunnel"
+#define PPTP_TUNNEL "/etc/ppp/peers/tunnel_pptp"
 #define PPTP_CHAPSECRETS "/etc/ppp/chap-secrets"
-#define PPTP_PPP_START 20
 #define MAX_LINES_PPTP 30
 #define DEF_SIZE_FIELDS_PPTP 128
-#define PPTP_PPP "tunnel"
+#define PPTP_PPP "tunnel_pptp"
 
 typedef struct {
 	char server[DEF_SIZE_FIELDS_PPTP];

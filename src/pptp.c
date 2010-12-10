@@ -24,6 +24,14 @@
 #include "exec.h"
 #include "str.h"
 
+
+/**
+ * pptp_destroy_args_conffile		Free args list created from file read
+ *
+ * @param args
+ * @param lines
+ * @return 0
+ */
 static int pptp_destroy_args_conffile(arglist * args[], int lines)
 {
 	int i=0;
@@ -62,6 +70,14 @@ static int pptp_read_conffile(arglist * args[], char * conffile)
 	return lines;
 }
 
+/**
+ * pptp_update_args_conffile		Function frees the args list and re-read the config file
+ *
+ * @param args
+ * @param conffile
+ * @param lines
+ * @return total lines of the config file if ok, -1 if not
+ */
 static int pptp_update_args_conffile(arglist * args[], char * conffile, int lines)
 {
 	int i=0;
@@ -71,6 +87,18 @@ static int pptp_update_args_conffile(arglist * args[], char * conffile, int line
 	return pptp_read_conffile(args, conffile);
 }
 
+/**
+ * pptp_write_conffile		Função edita arquivo de conf atraves da args list,
+ * valor a gravar, linha (l) e posição do elemento da arglist (c) para ser modificado
+ *
+ * @param args
+ * @param conffile
+ * @param lines
+ * @param l
+ * @param c
+ * @param value
+ * @return 0 if ok, -1 if not
+ */
 static int pptp_write_conffile(arglist * args[], char * conffile, int lines, int l, int c, char * value)
 {
 	FILE *f;
@@ -105,6 +133,11 @@ static int pptp_write_conffile(arglist * args[], char * conffile, int lines, int
 	return 0;
 }
 
+/**
+ * pptp_set_server		Writes the desired server in the conf file (pptp_tunnel)
+ * @param server
+ * @return 0 if ok, -1 if not
+ */
 static int pptp_set_server(char * server)
 {
 	arglist *args[MAX_LINES_PPTP];
@@ -132,6 +165,12 @@ static int pptp_set_server(char * server)
 	return 0;
 }
 
+/**
+ * pptp_set_domain_chapsecrets		Writes the desired domain in conf file (chapsecrets)
+ *
+ * @param domain
+ * @return 0 if ok, -1 if not
+ */
 static int pptp_set_domain_chapsecrets(char * domain)
 {
 	arglist *args[MAX_LINES_PPTP];
@@ -174,6 +213,13 @@ static int pptp_set_domain_chapsecrets(char * domain)
 	return 0;
 }
 
+/**
+ * pptp_set_domain_tunnel		Writes the desired domain in conf file (pptp_tunnel)
+ *
+ *
+ * @param domain
+ * @return 0 if ok, -1 if not
+ */
 static int pptp_set_domain_tunnel(char * domain)
 {
 	arglist *args[MAX_LINES_PPTP];
@@ -220,6 +266,12 @@ static int pptp_set_domain_tunnel(char * domain)
 	return 0;
 }
 
+/**
+ * pptp_set_domain		Set the desired domain in all conf files
+ *
+ * @param domain
+ * @return 0 if ok, -1 if not
+ */
 static int pptp_set_domain(char * domain)
 {
 	if (pptp_set_domain_chapsecrets(domain) < 0)
@@ -231,6 +283,12 @@ static int pptp_set_domain(char * domain)
 	return 0;
 }
 
+/**
+ * pptp_set_username_chapsecrets		Writes the desired username in conf file (chapsecrets)
+ *
+ * @param username
+ * @return 0 if ok, -1 if not
+ */
 static int pptp_set_username_chapsecrets(char * username)
 {
 	arglist *args[MAX_LINES_PPTP];
@@ -262,6 +320,13 @@ static int pptp_set_username_chapsecrets(char * username)
 	return 0;
 }
 
+/**
+ * pptp_set_username_tunnel		Writes the desired username in conf file (pptp_tunnel)
+ *
+ *
+ * @param username
+ * @return 0 if ok, -1 if not
+ */
 static int pptp_set_username_tunnel(char * username)
 {
 	arglist *args[MAX_LINES_PPTP];
@@ -298,6 +363,12 @@ static int pptp_set_username_tunnel(char * username)
 	return 0;
 }
 
+/**
+ * pptp_set_username		Set username in all conf files
+ *
+ * @param username
+ * @return 0 if ok, -1 if not
+ */
 static int pptp_set_username(char * username)
 {
 
@@ -311,6 +382,12 @@ static int pptp_set_username(char * username)
 
 }
 
+/**
+ * pptp_set_password		Writes the desired password in conf file (chapsecrets)
+ *
+ * @param password
+ * @return 0 if ok, -1 if not
+ */
 static int pptp_set_password(char * password)
 {
 	arglist *args[MAX_LINES_PPTP];
@@ -334,6 +411,13 @@ static int pptp_set_password(char * password)
 	return 0;
 }
 
+/**
+ * librouter_pptp_analyze_input		Analyze if the input is good to go,
+ * avoiding invalids characters such as " .@<>#\\/&* "
+ *
+ * @param input
+ * @return 0 if ok, -1 if not
+ */
 int librouter_pptp_analyze_input(char * input)
 {
 	char invalids[] = ".@<>#\\/&*";
@@ -344,6 +428,12 @@ int librouter_pptp_analyze_input(char * input)
 		return -1;
 }
 
+/**
+ * pptp_get_username		Get username from conf file (chapsecrets)
+ *
+ * @param username
+ * @return 0 if ok, -1 if not
+ */
 static int pptp_get_username(char * username)
 {
 	arglist *args[MAX_LINES_PPTP];
@@ -370,6 +460,12 @@ static int pptp_get_username(char * username)
 	return 0;
 }
 
+/**
+ * pptp_get_password		Get password from conf file (chapsecrets)
+ *
+ * @param password
+ * @return 0 if ok, -1 if not
+ */
 static int pptp_get_password(char * password)
 {
 	arglist *args[MAX_LINES_PPTP];
@@ -396,6 +492,12 @@ static int pptp_get_password(char * password)
 	return 0;
 }
 
+/**
+ * pptp_get_domain		Get domain from conf file (chapsecrets)
+ *
+ * @param domain
+ * @return 0 if ok, -1 if not
+ */
 static int pptp_get_domain(char * domain)
 {
 	arglist *args[MAX_LINES_PPTP];
@@ -421,6 +523,12 @@ static int pptp_get_domain(char * domain)
 	return 0;
 }
 
+/**
+ * pptp_get_server		Get server from conf file (pptp_tunnel)
+ *
+ * @param server
+ * @return 0 if ok, -1 if not
+ */
 static int pptp_get_server(char * server)
 {
 	arglist *args[MAX_LINES_PPTP];
@@ -446,6 +554,11 @@ static int pptp_get_server(char * server)
 	return 0;
 }
 
+/**
+ * pptp_get_mppe		Get MPPE state from conf file (optionspptp)
+ *
+ * @return mppe
+ */
 static int pptp_get_mppe(void)
 {
 	arglist *args[MAX_LINES_PPTP];
@@ -469,6 +582,13 @@ static int pptp_get_mppe(void)
 	return mppe;
 
 }
+
+/**
+ * librouter_pptp_get_config		Get all configs by pptp_config struct
+ *
+ * @param pptp_conf
+ * @return 0 if ok, -1 if not
+ */
 int librouter_pptp_get_config(pptp_config * pptp_conf)
 {
 
@@ -492,11 +612,25 @@ int librouter_pptp_get_config(pptp_config * pptp_conf)
 	return 0;
 }
 
+/**
+ * librouter_pptp_set_config		Set all configs by pptp_config struct
+ *
+ * @param pptp_cfg
+ * @return 0 if ok, -1 if not
+ */
 int librouter_pptp_set_config(pptp_config * pptp_cfg) /*TODO*/
 {
 
 }
 
+/**
+ * librouter_pptp_set_config_cli		Set configs based on field (username,
+ * password,domain,server) and its desired value
+ *
+ * @param field
+ * @param value
+ * @return 0 if ok, -1 if not
+ */
 int librouter_pptp_set_config_cli(char * field, char * value)
 {
 	char key;
@@ -529,6 +663,12 @@ int librouter_pptp_set_config_cli(char * field, char * value)
 	return check;
 }
 
+/**
+ * pptp_set_mppe_tunnel		Set/remove MPPE in conf file (pptp_tunnel)
+ *
+ * @param add
+ * @return 0 if ok, -1 if not
+ */
 static int pptp_set_mppe_tunnel(int add)
 {
 	arglist *args[MAX_LINES_PPTP];
@@ -556,6 +696,12 @@ static int pptp_set_mppe_tunnel(int add)
 	return 0;
 }
 
+/**
+ *  pptp_set_mppe_options		Set/remove MPPE in conf file (optionspptp)
+ *
+ * @param add
+ * @return 0 if ok, -1 if not
+ */
 static int pptp_set_mppe_options(int add)
 {
 	arglist *args[MAX_LINES_PPTP];
@@ -583,6 +729,13 @@ static int pptp_set_mppe_options(int add)
 	return 0;
 }
 
+/**
+ * pptp_set_authentication_protocol		Set/remove authentication protocols
+ * from conf file (optionspptp) --> (PAP,CHAP,EAP,MSCHAP)
+ *
+ * @param add
+ * @return 0 if ok, -1 if not
+ */
 static int pptp_set_authentication_protocol(int add)
 {
 	arglist *args[MAX_LINES_PPTP];
@@ -631,6 +784,12 @@ static int pptp_set_authentication_protocol(int add)
 	return 0;
 }
 
+/**
+ * librouter_pptp_set_mppe	Set/remove MPPE
+ *
+ * @param add
+ * @return 0 if ok, -1 if not
+ */
 int librouter_pptp_set_mppe(int add)
 {
 	if (pptp_set_mppe_options(add) < 0)
@@ -645,20 +804,38 @@ int librouter_pptp_set_mppe(int add)
 	return 0;
 }
 
+/**
+ * pptp_clientmode_on		Execute PPP (PPTP) program in inittab
+ *
+ * @return 0
+ */
 static int pptp_clientmode_on(void)
 {
 	if (!librouter_exec_check_daemon(PPTP_PPP)){
 		librouter_exec_daemon(PPTP_PPP);
 	}
+	return 0;
 }
 
+/**
+ * pptp_clientmode_off		Kill PPP (PPTP) program
+ *
+ * @return 0
+ */
 static int pptp_clientmode_off(void)
 {
 	if (librouter_exec_check_daemon(PPTP_PPP)){
 		librouter_kill_daemon(PPTP_PPP);
 	}
+	return 0;
 }
 
+/**
+ * librouter_pptp_set_clientmode		Enable/disable PPTP connection (client mode)
+ *
+ * @param add
+ * @return 0
+ */
 int librouter_pptp_set_clientmode(int add)
 {
 	if (add)
@@ -669,6 +846,11 @@ int librouter_pptp_set_clientmode(int add)
 	return 0;
 }
 
+/**
+ * librouter_pptp_get_clientmode		Get status of PPTP Client Mode (on/off)
+ *
+ * @return 1 if enabled, 0 if disabled
+ */
 int librouter_pptp_get_clientmode(void)
 {
 	if (librouter_exec_check_daemon(PPTP_PPP))
@@ -677,29 +859,35 @@ int librouter_pptp_get_clientmode(void)
 		return 0;
 }
 
+/**
+ * librouter_pptp_dump		Dump configuration setted for cish
+ *
+ * @param out
+ * @return 0
+ */
 int librouter_pptp_dump(FILE *out)
 {
 	pptp_config pptp_cfg;
 	librouter_pptp_get_config(&pptp_cfg);
 
-	fprintf(out, "pptp username %s\n",pptp_cfg.username);
+	fprintf(out, " username %s\n",pptp_cfg.username);
 
-	fprintf(out, "pptp password %s\n",pptp_cfg.password);
+	fprintf(out, " password %s\n",pptp_cfg.password);
 
 	if (strlen(pptp_cfg.domain) > 0 )
-		fprintf(out, "pptp domain %s\n",pptp_cfg.domain);
+		fprintf(out, " domain %s\n",pptp_cfg.domain);
 
 	if (pptp_cfg.mppe)
-		fprintf(out, "pptp mppe\n");
+		fprintf(out, " mppe\n");
 	else
-		fprintf(out, "no pptp mppe\n");
+		fprintf(out, " no mppe\n");
 
-	fprintf(out, "pptp server %s\n", pptp_cfg.server);
+	fprintf(out, " server %s\n", pptp_cfg.server);
 
 	if (librouter_pptp_get_clientmode())
-		fprintf (out, "pptp client-mode\n");
+		fprintf (out, " client-mode\n");
 	else
-		fprintf (out, "no pptp client-mode\n");
+		fprintf (out, " no client-mode\n");
 
 	return 0;
 

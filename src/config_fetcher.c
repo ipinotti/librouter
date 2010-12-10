@@ -1216,12 +1216,8 @@ static void librouter_config_dump_interface(FILE *out, struct interface_conf *co
 	librouter_nat_get_iface_rules(conf->name, conf->ipt.in_nat, conf->ipt.out_nat);
 
 
-	if  ( (strstr(conf->name, "ppp")) && (strlen(conf->name) >= 5) ){
-		snprintf(pppid,10,"PPTP%c",conf->name[strlen(conf->name)-1]);
-		cish_dev = pppid;
-	}
-	else
-		cish_dev = librouter_device_convert_os(conf->name, 0);
+	cish_dev = librouter_device_convert_os(conf->name, 0);
+
 
 	/* skip ipsec ones... */
 	if (conf->linktype == ARPHRD_TUNNEL6)
@@ -1236,7 +1232,7 @@ static void librouter_config_dump_interface(FILE *out, struct interface_conf *co
 	switch (conf->linktype) {
 #ifdef OPTION_PPP
 	case ARPHRD_PPP:
-		if (strstr(cish_dev,"PPTP"))
+		if (strstr(cish_dev,"pptp"))
 			_dump_pptp_config(out, conf);
 		else
 			_dump_ppp_config(out, conf);
