@@ -158,6 +158,8 @@ int librouter_ppp_backupd_set_backup_interface (char * intf3g_ppp, char * main_i
 int librouter_ppp_backupd_set_no_backup_interface (char * intf3g_ppp);
 int librouter_ppp_backupd_set_backup_method (char * intf3g_ppp, char * method, char * ping_addr);
 int librouter_ppp_backupd_is_interface_3G_enable (char * intf3g_ppp);
+int librouter_ppp_backupd_set_default_route(char *iface, int enable);
+int librouter_ppp_backupd_set_default_metric(char *iface, int metric);
 #endif
 
 #endif /* PPP_H_ */
