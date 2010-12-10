@@ -1173,6 +1173,12 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 		                cfg.bckp_conf.main_intf_name[8]);
 	else
 		fprintf(out, " no backup-interface\n");
+
+	if (cfg.bckp_conf.is_default_gateway)
+		fprintf(out, " default-gateway %d\n", cfg.bckp_conf.default_route_distance);
+	else
+		fprintf(out, " no default-gateway\n");
+
 	fprintf(out, " %sshutdown\n", cfg.up ? "no " : "");
 }
 #endif
@@ -1194,7 +1200,7 @@ static void librouter_config_dump_interface(FILE *out, struct interface_conf *co
 	librouter_mangle_get_iface_rules(conf->name, conf->ipt.in_mangle, conf->ipt.out_mangle);
 	librouter_nat_get_iface_rules(conf->name, conf->ipt.in_nat, conf->ipt.out_nat);
 
-	cish_dev = librouter_device_convert_os(conf->name, 0);
+	cish_dev = librouter_device_linux_to_cli(conf->name, 0);
 
 	/* skip ipsec ones... */
 	if (conf->linktype == ARPHRD_TUNNEL6)
@@ -1268,7 +1274,7 @@ void librouter_config_interfaces_dump(FILE *out)
 
 		st = conf.stats;
 
-		cish_dev = librouter_device_convert_os(conf.name, 1);
+		cish_dev = librouter_device_linux_to_cli(conf.name, 1);
 
 		/* Ignore if device is not recognized by CISH */
 		if (cish_dev == NULL)

@@ -591,11 +591,11 @@ void librouter_pim_dump(FILE *out)
 			switch (args[i]->argc){
 
 			case 2:
-				fprintf(out, "ip pim bsr-candidate %s\n", librouter_device_convert_os(args[i]->argv[1], 0));
+				fprintf(out, "ip pim bsr-candidate %s\n", librouter_device_linux_to_cli(args[i]->argv[1], 0));
 				break;
 
 			case 4:
-				fprintf(out, "ip pim bsr-candidate %s priority %s\n", librouter_device_convert_os(args[i]->argv[1], 0), args[i]->argv[3]);				break;
+				fprintf(out, "ip pim bsr-candidate %s priority %s\n", librouter_device_linux_to_cli(args[i]->argv[1], 0), args[i]->argv[3]);				break;
 
 			default:
 				break;
@@ -618,15 +618,15 @@ void librouter_pim_dump(FILE *out)
 			switch (args[i]->argc){
 
 			case 2:
-				fprintf(out,"ip pim rp-candidate %s\n", librouter_device_convert_os(args[i]->argv[1], 0));
+				fprintf(out,"ip pim rp-candidate %s\n", librouter_device_linux_to_cli(args[i]->argv[1], 0));
 				break;
 
 			case 4:
-				fprintf(out, "ip pim rp-candidate %s priority %s\n", librouter_device_convert_os(args[i]->argv[1], 0), args[i]->argv[3]);
+				fprintf(out, "ip pim rp-candidate %s priority %s\n", librouter_device_linux_to_cli(args[i]->argv[1], 0), args[i]->argv[3]);
 				break;
 
 			case 6:
-				fprintf(out, "ip pim rp-candidate %s priority %s interval %s\n",librouter_device_convert_os(args[i]->argv[1], 0), args[i]->argv[5], args[i]->argv[3]);
+				fprintf(out, "ip pim rp-candidate %s priority %s interval %s\n",librouter_device_linux_to_cli(args[i]->argv[1], 0), args[i]->argv[5], args[i]->argv[3]);
 				break;
 
 			default:
