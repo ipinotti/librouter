@@ -601,7 +601,7 @@ int librouter_ipsec_get_interface(char *iface, int max_len)
 	if ((p=strstr(buf, "\"")))
 		memmove(p,"\0", 1);
 
-	cish_dev = librouter_device_convert_os(buf, 0);
+	cish_dev = librouter_device_linux_to_cli(buf, 0);
 
 	if (strlen(cish_dev) < max_len) {
 		strncpy(iface, cish_dev, max_len);
@@ -1179,7 +1179,7 @@ void librouter_ipsec_dump(FILE *out)
 
 						if (strlen(buf) > 0)
 							fprintf(out, "  local address interface %s\n",
-							                librouter_device_convert_os(buf + 1, 0));
+							                librouter_device_linux_to_cli(buf + 1, 0));
 						/* skip % */
 						break;
 					case ADDR_IP:

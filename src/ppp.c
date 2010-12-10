@@ -142,6 +142,23 @@ int librouter_ppp_backupd_set_shutdown_3Gmodem(char * intf3g_ppp)
 	return 0;
 }
 
+int librouter_ppp_backupd_set_default_route(char *iface, int enable)
+{
+	if (librouter_ppp_backupd_set_param_infile(iface, DEFAULT_ROUTE_STR, enable ? "yes" : "no") < 0)
+		return -1;
+	return 0;
+}
+
+int librouter_ppp_backupd_set_default_metric(char *iface, int metric)
+{
+	char str[8];
+
+	sprintf(str, "%d", metric);
+	if (librouter_ppp_backupd_set_param_infile(iface, ROUTE_DISTANCE_STR, str) < 0)
+		return -1;
+	return 0;
+}
+
 /**
  * Faz a leitura do arquivo de config. do backupd, carregando as infos. referentes
  * ao serial number(ex:serial number == 0  --> ppp0)
@@ -225,6 +242,24 @@ int librouter_ppp_backupd_get_config(int serial_num, struct bckp_conf_t * back_c
 					}
 					continue;
 				}
+
+
+				/* Should install a default route? */
+				if (!strncmp(line, DEFAULT_ROUTE_STR, DEFAULT_ROUTE_STR_LEN)) {
+					if (strstr(line, "yes"))
+						back_conf->is_default_gateway = 1;
+					else
+						back_conf->is_default_gateway = 0;
+
+					continue;
+				}
+
+				/* Is backup field */
+				if (!strncmp(line, ROUTE_DISTANCE_STR, ROUTE_DISTANCE_STR_LEN)) {
+					back_conf->default_route_distance = atoi(line + ROUTE_DISTANCE_STR_LEN);
+					continue;
+				}
+
 			}
 			goto end;
 		}
@@ -333,7 +368,7 @@ int librouter_ppp_backupd_set_param_infile(char * intf, char * field, char *valu
 {
 	FILE *fd;
 	char line[128] = { (int) NULL };
-	char buff[384] = { (int) NULL }; /*buff de tamanho determinado para 3 conex PPP */
+	char buff[1024] = { (int) NULL }; /*buff de tamanho determinado para 3 conex PPP */
 	char filename_new[64], fvalue[32], intf_ref[32];
 
 	snprintf(intf_ref, 32, "%s%s", INTF_STR, intf);

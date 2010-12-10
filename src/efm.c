@@ -21,6 +21,8 @@
 #include <sys/socket.h>
 #include <linux/sockios.h>
 
+#include "options.h"
+
 #ifdef OPTION_EFM
 #include <ikanos/orionplus.h>
 

@@ -407,7 +407,7 @@ static void librouter_br_dump_port_info(struct port *p, FILE *out)
 
 	pi = &p->info;
 	if_indextoname(p->ifindex, ifname);
-	dev = librouter_device_convert_os(ifname, 1);
+	dev = librouter_device_linux_to_cli(ifname, 1);
 	if (dev == NULL)
 		return;
 

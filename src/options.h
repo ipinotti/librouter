@@ -17,6 +17,7 @@
 
 #define OPTION_ETHERNET /* Enables ethernet interfaces */
 #define OPTION_GIGAETHERNET /* Enable gigabit options */
+#define OPTION_IP_ROUTING
 
 /* ------ Digistar 3G Product Models Declaration ------ */
 /* RCG1000 */
