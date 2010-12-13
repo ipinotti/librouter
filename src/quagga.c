@@ -896,8 +896,9 @@ struct routes_t * librouter_quagga_get_routes(void)
 		if (isdigit(args->argv[4][0])) {
 			cur->gateway = strdup(args->argv[4]);
 		} else {
-			cur->interface = malloc(32);
-			sprintf(cur->interface, "%s %s", args->argv[4], args->argv[5]);
+			/* FIXME Why is this so fucking difficult? We should not have a CLI string here */
+			cur->interface = strdup(librouter_device_cli_to_linux(args->argv[4],
+			                atoi(args->argv[5]), -1));
 		}
 
 		if (cur->gateway && args->argc == 6)
@@ -1007,7 +1008,16 @@ static void __del_route(struct routes_t *route)
 	if (librouter_quagga_connect_daemon(ZEBRA_PATH) < 0)
 		return;
 
-	sprintf(zebra_cmd, "no ip route %s %s %s", route->network, route->mask, route->gateway);
+	if (route->gateway)
+		sprintf(zebra_cmd, "no ip route %s %s %s", route->network, route->mask,
+		                route->gateway);
+	else if (route->interface)
+		sprintf(zebra_cmd, "no ip route %s %s %s", route->network, route->mask,
+		                route->interface);
+	else {
+		librouter_quagga_close_daemon();
+		return;
+	}
 
 	librouter_quagga_execute_client("enable", stdout, buf_daemon, 0);
 	librouter_quagga_execute_client("configure terminal", stdout, buf_daemon, 0);
