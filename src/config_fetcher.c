@@ -29,6 +29,7 @@
 #include "quagga.h"
 #include "snmp.h"
 #include "ppp.h"
+#include "pppoe.h"
 #include "pptp.h"
 #include "exec.h"
 #include "smcroute.h"
@@ -1202,6 +1203,23 @@ static void _dump_pptp_config(FILE * out, struct interface_conf *conf)
 	librouter_pptp_dump(out);
 }
 
+static void _dump_pppoe_config(FILE * out, struct interface_conf *conf)
+{
+	char *osdev = conf->name;
+	int serial_no;
+
+	/* Get interface index */
+	serial_no = atoi(osdev + strlen(PPPDEV));
+
+	_dump_intf_iptables_config(out, conf);
+	_dump_policy_interface(out, osdev);
+
+	librouter_config_rip_dump_interface(out, osdev);
+	librouter_config_ospf_dump_interface(out, osdev);
+
+	librouter_pppoe_dump(out);
+}
+
 
 /**
  * Show interface configuration
@@ -1237,9 +1255,11 @@ static void librouter_config_dump_interface(FILE *out, struct interface_conf *co
 	switch (conf->linktype) {
 #ifdef OPTION_PPP
 	case ARPHRD_PPP:
-		if (strstr(cish_dev,"pptp"))
+		if (strstr(cish_dev, "pptp"))
 			_dump_pptp_config(out, conf);
-		else
+		if (strstr(cish_dev, "pppoe"))
+			_dump_pppoe_config(out, conf);
+		if (strstr(cish_dev, "m3G"))
 			_dump_ppp_config(out, conf);
 		break;
 #endif

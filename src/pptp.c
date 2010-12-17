@@ -88,6 +88,27 @@ static int pptp_update_args_conffile(arglist * args[], char * conffile, int line
 }
 
 /**
+ * pptp_search_for_target_infile	Função procura por target em arglist, e
+ * retorna linha em que se encontra o mesmo
+ *
+ * @param args
+ * @param lines
+ * @param target
+ * @return line if ok, -1 if not
+ */
+static int pptp_search_for_target_infile(arglist * args[], int lines, char * target)
+{
+	int i,j;
+
+	for (i = 0; i < lines; i++)
+			for (j = 0; j < args[i]->argc; j++)
+				if (!strcmp(args[i]->argv[j],target))
+					return i;
+
+	return -1;
+}
+
+/**
  * pptp_write_conffile		Função edita arquivo de conf atraves da args list,
  * valor a gravar, linha (l) e posição do elemento da arglist (c) para ser modificado
  *
@@ -141,7 +162,7 @@ static int pptp_write_conffile(arglist * args[], char * conffile, int lines, int
 static int pptp_set_server(char * server)
 {
 	arglist *args[MAX_LINES_PPTP];
-	int i,j, lines = 0;
+	int lines = 0, line_pty=0;
 
 	/*read conf file to retrieve info*/
 	lines = pptp_read_conffile(args, PPTP_TUNNEL);
@@ -151,14 +172,12 @@ static int pptp_set_server(char * server)
 	}
 
 	/*modify info*/
-	for (i = 0; i < lines; i++){
-		for (j = 0; j < args[i]->argc; j++){
-			if ( !strcmp(args[i]->argv[j], "pty") ){
-				/*write modified info to conf file*/
-				pptp_write_conffile(args,PPTP_TUNNEL,lines,i,2,server);
-			}
-		}
+	if ( (line_pty = pptp_search_for_target_infile(args,lines,"pty")) < 0 ){
+		pptp_destroy_args_conffile(args, lines);
+		return -1;
 	}
+
+	pptp_write_conffile(args,PPTP_TUNNEL,lines,line_pty,2,server);
 
 	pptp_destroy_args_conffile(args, lines);
 
@@ -174,7 +193,7 @@ static int pptp_set_server(char * server)
 static int pptp_set_domain_chapsecrets(char * domain)
 {
 	arglist *args[MAX_LINES_PPTP];
-	int i, lines = 0, empty=0;
+	int line_pptp=0, lines = 0, empty=0;
 	char * buff_domain;
 	char * buff_username;
 	char buff[256]="";
@@ -190,8 +209,14 @@ static int pptp_set_domain_chapsecrets(char * domain)
 	}
 
 	/*modify info for file PPTP_CHAPSECRETS*/
-	if ( strstr(args[0]->argv[0], "\\")  ){
-		buff_domain = strtok(args[0]->argv[0],"\\");
+
+	if ( (line_pptp = pptp_search_for_target_infile(args,lines,"PPTP")) < 0){
+		pptp_destroy_args_conffile(args, lines);
+		return -1;
+	}
+
+	if ( strstr(args[line_pptp]->argv[0], "\\")  ){
+		buff_domain = strtok(args[line_pptp]->argv[0],"\\");
 		buff_username = strtok(NULL,"\\");
 
 		if (!empty)
@@ -199,12 +224,12 @@ static int pptp_set_domain_chapsecrets(char * domain)
 		else
 			sprintf(buff,"%s",buff_username);
 
-		pptp_write_conffile(args,PPTP_CHAPSECRETS,lines,0,0,buff);
+		pptp_write_conffile(args,PPTP_CHAPSECRETS,lines,line_pptp,0,buff);
 	}
 	else{
 		if (!empty){
-			sprintf(buff,"%s\\\\%s",domain,args[0]->argv[0]);
-			pptp_write_conffile(args,PPTP_CHAPSECRETS,lines,0,0,buff);
+			sprintf(buff,"%s\\\\%s",domain,args[line_pptp]->argv[0]);
+			pptp_write_conffile(args,PPTP_CHAPSECRETS,lines,line_pptp,0,buff);
 		}
 	}
 
@@ -223,7 +248,7 @@ static int pptp_set_domain_chapsecrets(char * domain)
 static int pptp_set_domain_tunnel(char * domain)
 {
 	arglist *args[MAX_LINES_PPTP];
-	int i, lines = 0, empty = 0;
+	int line_name = 0, lines = 0, empty = 0;
 	char * buff_domain;
 	char * buff_username;
 	char buff[256]="";
@@ -239,25 +264,26 @@ static int pptp_set_domain_tunnel(char * domain)
 	}
 
 	/*modify info for file PPTP_TUNNEL*/
-	for (i = 0; i < lines; i++) {
-		if ( !strcmp(args[i]->argv[0], "name") ){
-			if ( strstr(args[i]->argv[1], "\\")  ){
-				buff_domain = strtok(args[i]->argv[1],"\\");
-				buff_username = strtok(NULL,"\\");
+	if ( (line_name = pptp_search_for_target_infile(args,lines,"name")) < 0){
+		pptp_destroy_args_conffile(args, lines);
+		return -1;
+	}
 
-				if (!empty)
-					sprintf(buff,"%s\\\\%s",domain,buff_username);
-				else
-					sprintf(buff,"%s",buff_username);
+	if ( strstr(args[line_name]->argv[1], "\\")  ){
+		buff_domain = strtok(args[line_name]->argv[1],"\\");
+		buff_username = strtok(NULL,"\\");
 
-				pptp_write_conffile(args,PPTP_TUNNEL,lines,i,1,buff);
-			}
-			else{
-				if (!empty){
-					sprintf(buff,"%s\\\\%s",domain,args[i]->argv[1]);
-					pptp_write_conffile(args,PPTP_TUNNEL,lines,i,1,buff);
-				}
-			}
+		if (!empty)
+			sprintf(buff,"%s\\\\%s",domain,buff_username);
+		else
+			sprintf(buff,"%s",buff_username);
+
+		pptp_write_conffile(args,PPTP_TUNNEL,lines,line_name,1,buff);
+	}
+	else{
+		if (!empty){
+			sprintf(buff,"%s\\\\%s",domain,args[line_name]->argv[1]);
+			pptp_write_conffile(args,PPTP_TUNNEL,lines,line_name,1,buff);
 		}
 	}
 
@@ -292,7 +318,7 @@ static int pptp_set_domain(char * domain)
 static int pptp_set_username_chapsecrets(char * username)
 {
 	arglist *args[MAX_LINES_PPTP];
-	int i,lines = 0;
+	int line_pptp = 0,lines = 0;
 	char * buff_domain;
 	char buff[256]="";
 
@@ -307,13 +333,18 @@ static int pptp_set_username_chapsecrets(char * username)
 	}
 
 	/*modify info for file PPTP_CHAPSECRETS*/
-	if ( strstr(args[0]->argv[0], "\\")  ){
-		buff_domain = strtok(args[0]->argv[0],"\\");
+	if ( (line_pptp = pptp_search_for_target_infile(args,lines,"PPTP")) < 0){
+		pptp_destroy_args_conffile(args, lines);
+		return -1;
+	}
+
+	if ( strstr(args[line_pptp]->argv[0], "\\")  ){
+		buff_domain = strtok(args[line_pptp]->argv[0],"\\");
 		sprintf(buff,"%s\\\\%s",buff_domain,username);
-		pptp_write_conffile(args,PPTP_CHAPSECRETS,lines,0,0,buff);
+		pptp_write_conffile(args,PPTP_CHAPSECRETS,lines,line_pptp,0,buff);
 	}
 	else
-		pptp_write_conffile(args,PPTP_CHAPSECRETS,lines,0,0,username);
+		pptp_write_conffile(args,PPTP_CHAPSECRETS,lines,line_pptp,0,username);
 
 	pptp_destroy_args_conffile(args, lines);
 
@@ -330,7 +361,7 @@ static int pptp_set_username_chapsecrets(char * username)
 static int pptp_set_username_tunnel(char * username)
 {
 	arglist *args[MAX_LINES_PPTP];
-	int i, lines = 0;
+	int line_name = 0, lines = 0;
 	char * buff_domain;
 	char buff[256]="";
 
@@ -345,18 +376,18 @@ static int pptp_set_username_tunnel(char * username)
 	}
 
 	/*modify info for file PPTP_TUNNEL*/
-	for (i = 0; i < lines; i++) {
-		if ( !strcmp(args[i]->argv[0], "name") ){
-			if ( strstr(args[i]->argv[1], "\\")  ){
-				buff_domain = strtok(args[i]->argv[1],"\\");
-				sprintf(buff,"%s\\\\%s",buff_domain,username);
-				pptp_write_conffile(args,PPTP_TUNNEL,lines,i,1,buff);
-			}
-			else
-				pptp_write_conffile(args,PPTP_TUNNEL,lines,i,1,username);
-
-		}
+	if ( (line_name = pptp_search_for_target_infile(args,lines,"name")) < 0){
+		pptp_destroy_args_conffile(args, lines);
+		return -1;
 	}
+
+	if ( strstr(args[line_name]->argv[1], "\\")  ){
+		buff_domain = strtok(args[line_name]->argv[1],"\\");
+		sprintf(buff,"%s\\\\%s",buff_domain,username);
+		pptp_write_conffile(args,PPTP_TUNNEL,lines,line_name,1,buff);
+	}
+	else
+		pptp_write_conffile(args,PPTP_TUNNEL,lines,line_name,1,username);
 
 	pptp_destroy_args_conffile(args, lines);
 
@@ -391,7 +422,7 @@ static int pptp_set_username(char * username)
 static int pptp_set_password(char * password)
 {
 	arglist *args[MAX_LINES_PPTP];
-	int i, lines = 0;
+	int line_pptp = 0,lines = 0;
 	char buff[DEF_SIZE_FIELDS_PPTP+2]="";
 
 	/*read conf file to retrieve info*/
@@ -404,7 +435,12 @@ static int pptp_set_password(char * password)
 	snprintf(buff,DEF_SIZE_FIELDS_PPTP+2,"\"%s\"",password);
 
 	/*modify info*/
-	pptp_write_conffile(args,PPTP_CHAPSECRETS,lines,0,2,buff);
+	if ( (line_pptp = pptp_search_for_target_infile(args,lines,"PPTP")) < 0){
+		pptp_destroy_args_conffile(args, lines);
+		return -1;
+	}
+
+	pptp_write_conffile(args,PPTP_CHAPSECRETS,lines,line_pptp,2,buff);
 
 	pptp_destroy_args_conffile(args, lines);
 
@@ -413,14 +449,14 @@ static int pptp_set_password(char * password)
 
 /**
  * librouter_pptp_analyze_input		Analyze if the input is good to go,
- * avoiding invalids characters such as " .@<>#\\/&* "
+ * avoiding invalids characters such as " .<>#\\/&* "
  *
  * @param input
  * @return 0 if ok, -1 if not
  */
 int librouter_pptp_analyze_input(char * input)
 {
-	char invalids[] = ".@<>#\\/&*";
+	char invalids[] = ".<>#\\/&*";
 
 	if ( strpbrk(input, invalids) == NULL )
 		return 0;
@@ -437,7 +473,7 @@ int librouter_pptp_analyze_input(char * input)
 static int pptp_get_username(char * username)
 {
 	arglist *args[MAX_LINES_PPTP];
-	int i, lines = 0;
+	int line_pptp = 0, lines = 0;
 	char * buff_domain;
 	char * buff_username;
 
@@ -447,13 +483,18 @@ static int pptp_get_username(char * username)
 		return -1;
 	}
 
-	if ( strstr(args[0]->argv[0], "\\")  ){
-		buff_domain = strtok(args[0]->argv[0],"\\");
+	if ( (line_pptp = pptp_search_for_target_infile(args,lines,"PPTP")) < 0){
+		pptp_destroy_args_conffile(args, lines);
+		return -1;
+	}
+
+	if ( strstr(args[line_pptp]->argv[0], "\\")  ){
+		buff_domain = strtok(args[line_pptp]->argv[0],"\\");
 		buff_username = strtok(NULL,"\\");
 		strcpy(username,buff_username);
 	}
 	else
-		strcpy(username,args[0]->argv[0]);
+		strcpy(username,args[line_pptp]->argv[0]);
 
 	pptp_destroy_args_conffile(args, lines);
 
@@ -469,7 +510,7 @@ static int pptp_get_username(char * username)
 static int pptp_get_password(char * password)
 {
 	arglist *args[MAX_LINES_PPTP];
-	int lines = 0;
+	int line_pptp = 0,lines = 0;
 	char buff[DEF_SIZE_FIELDS_PPTP+2]="";
 	char *p="";
 
@@ -480,7 +521,12 @@ static int pptp_get_password(char * password)
 		return -1;
 	}
 
-	strncpy(buff,args[0]->argv[2],strlen(args[0]->argv[2]));
+	if ( (line_pptp = pptp_search_for_target_infile(args,lines,"PPTP")) < 0 ){
+		pptp_destroy_args_conffile(args, lines);
+		return -1;
+	}
+
+	strncpy(buff,args[line_pptp]->argv[2],strlen(args[line_pptp]->argv[2]));
 
 	while ((p = strchr(buff,'\"')) != NULL)
 		memmove(p, p+1, strlen(p));
@@ -501,7 +547,7 @@ static int pptp_get_password(char * password)
 static int pptp_get_domain(char * domain)
 {
 	arglist *args[MAX_LINES_PPTP];
-	int lines = 0;
+	int line_pptp = 0, lines = 0;
 	char * buff_domain;
 
 	/*read conf file PPTP_CHAPSECRETS to retrieve info*/
@@ -511,8 +557,11 @@ static int pptp_get_domain(char * domain)
 		return -1;
 	}
 
-	if ( strstr(args[0]->argv[0], "\\")  ){
-		buff_domain = strtok(args[0]->argv[0],"\\");
+	if ( (line_pptp = pptp_search_for_target_infile(args,lines,"PPTP")) < 0 )
+		return -1;
+
+	if ( strstr(args[line_pptp]->argv[0], "\\")  ){
+		buff_domain = strtok(args[line_pptp]->argv[0],"\\");
 		strcpy(domain,buff_domain);
 	}
 	else
@@ -532,7 +581,7 @@ static int pptp_get_domain(char * domain)
 static int pptp_get_server(char * server)
 {
 	arglist *args[MAX_LINES_PPTP];
-	int i,j, lines = 0;
+	int line_pty = 0, lines = 0;
 
 	/*read conf file to retrieve info*/
 	lines = pptp_read_conffile(args, PPTP_TUNNEL);
@@ -541,13 +590,12 @@ static int pptp_get_server(char * server)
 		return -1;
 	}
 
-	for (i = 0; i < lines; i++){
-		for (j = 0; j < args[i]->argc; j++){
-			if ( !strcmp(args[i]->argv[j], "pty") ){
-				strcpy(server,args[i]->argv[2]);
-			}
-		}
+	if ( (line_pty = pptp_search_for_target_infile(args,lines,"pty")) < 0 ){
+		pptp_destroy_args_conffile(args, lines);
+		return -1;
 	}
+
+	strcpy(server,args[line_pty]->argv[2]);
 
 	pptp_destroy_args_conffile(args, lines);
 
@@ -562,7 +610,7 @@ static int pptp_get_server(char * server)
 static int pptp_get_mppe(void)
 {
 	arglist *args[MAX_LINES_PPTP];
-	int i, lines = 0, mppe=-1;
+	int line_mppe = 0, lines = 0, mppe=-1;
 
 	lines = pptp_read_conffile(args, PPTP_OPTIONSPPTP);
 	if (lines < 0){
@@ -570,12 +618,10 @@ static int pptp_get_mppe(void)
 		return -1;
 	}
 
-	for (i = 0; i < lines; i++) {
-		if ( !strcmp(args[i]->argv[0], "require-mppe-128") )
-			mppe = 1;
-		else
-			mppe = 0;
-	}
+	if ( (line_mppe = pptp_search_for_target_infile(args,lines,"require-mppe-128")) < 0 )
+		mppe = 0;
+	else
+		mppe = 1;
 
 	pptp_destroy_args_conffile(args, lines);
 
@@ -876,6 +922,8 @@ int librouter_pptp_dump(FILE *out)
 
 	if (strlen(pptp_cfg.domain) > 0 )
 		fprintf(out, " domain %s\n",pptp_cfg.domain);
+	else
+		fprintf(out, " no domain\n");
 
 	if (pptp_cfg.mppe)
 		fprintf(out, " mppe\n");

@@ -415,6 +415,24 @@ int librouter_ip_get_if_list(struct intf_info *info)
 	/* OPTION PPTP */
 
 
+	/* OPTION PPPOE */
+
+	/*
+	 * Search for PPPOE interfaces. They may not exist in the kernel,
+	 * since PPP interfaces are created dinamically.
+	 * So we need to create some here.
+	 * For now, just PPPOE0 -> ppp30 is available by the define PPPOE_PPP_START
+	 */
+	/*TODO*/
+	if (!_has_ppp_intf(PPPOE_PPP_START, info)) {
+		sprintf(link->ifname, "ppp%d", PPPOE_PPP_START);
+		link->type = ARPHRD_PPP;
+		link++;
+	}
+
+	/* OPTION PPPOE */
+
+
 
 #ifdef OPTION_MODEM3G
 	/*

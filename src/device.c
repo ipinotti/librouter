@@ -28,6 +28,7 @@ dev_family _devices[] = {
 	{ ppp, "m3G", "ppp", "3GModem" },
 	{ efm, "efm", "eth", "EFM" },
 	{ pptp, "pptp", "ppp", "PPTP" },
+	{ pppoe, "pppoe", "ppp", "PPPoE" },
 	{ none, NULL, NULL, NULL }
 };
 
@@ -184,6 +185,7 @@ static const char * ppp_convert_management(const char *osdev, int * crsr, int pp
 		switch ( (osdev+*crsr)[0] ){
 
 			case '2':
+				/*PPTP*/
 				for (j = 0; _devices[j].type != none; j++) {
 					if (_devices[j].type == pptp){
 						cishdev = _devices[j].cish_string;
@@ -195,6 +197,13 @@ static const char * ppp_convert_management(const char *osdev, int * crsr, int pp
 
 			case '3':
 				/*PPPOE*/
+				for (j = 0; _devices[j].type != none; j++) {
+					if (_devices[j].type == pppoe){
+						cishdev = _devices[j].cish_string;
+						++*crsr; /* shift++ para pegar só a unidade do ppp -> (ex: ppp30 -> ppp0) */
+						break;
+					}
+				}
 				break;
 
 			default:

@@ -8,7 +8,7 @@
 #define DEVICES_H_
 
 typedef enum {
-	none, eth, lo, ppp, tun, ipsec, efm, pptp
+	none, eth, lo, ppp, tun, ipsec, efm, pptp, pppoe
 } device_type;
 
 typedef enum {
