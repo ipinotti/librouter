@@ -234,7 +234,7 @@ char *librouter_device_linux_to_cli(const char *osdev, int mode)
 	char odev[16];
 	int i, crsr;
 	const char *cishdev;
-	int iface_index = 0;
+	int iface_index = -1, subiface_index = -1;
 
 	crsr = 0;
 	while ((crsr < 8) && (osdev[crsr] > 32) && (!isdigit(osdev[crsr])))
@@ -246,6 +246,10 @@ char *librouter_device_linux_to_cli(const char *osdev, int mode)
 		++crsr; /* skip space! */
 
 	iface_index = atoi(&osdev[crsr]);
+
+	/* Search for Sub-Interfaces (VLANs, Frame-Relay DLCIs, etc...) */
+	if (strstr(osdev, ".") != NULL)
+		subiface_index = atoi(strstr(osdev, ".") + 1); /* skip the dot */
 
 	cishdev = NULL;
 
@@ -291,7 +295,12 @@ char *librouter_device_linux_to_cli(const char *osdev, int mode)
 			iface_index <= (EFM_INDEX_OFFSET + EFM_NUM_INTERFACES)) {
 		dev_family *fam = librouter_device_get_family_by_type(efm);
 
-		sprintf(dev, "%s%s%d", fam->cish_string, mode ? "" : " ", iface_index - EFM_INDEX_OFFSET);
+		/* Search for VLANs */
+		if (subiface_index >= 0)
+			sprintf(dev, "%s%s%d.%d", fam->cish_string, mode ? "" : " ", iface_index - EFM_INDEX_OFFSET, subiface_index);
+		else
+			sprintf(dev, "%s%s%d", fam->cish_string, mode ? "" : " ", iface_index - EFM_INDEX_OFFSET);
+
 	}
 #endif
 	else
