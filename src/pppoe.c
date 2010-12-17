@@ -671,7 +671,7 @@ static int pppoe_set_password(char * password)
 
 /**
  * librouter_pppoe_analyze_input		Analyze if the input is good to go,
- * avoiding invalids characters such as " .<>#\\/&* "
+ * avoiding invalids characters such as " <>#\\/&* "
  *
  * @param input
  * @return 0 if ok, -1 if not
