@@ -327,6 +327,7 @@ char *librouter_device_to_linux_cmdline(char *cmdline)
 	arglist *args;
 	int i;
 	dev_family *fam;
+	char * ppp_init = NULL;
 
 	new_cmdline[0] = 0;
 	args = librouter_make_args(cmdline);
@@ -336,6 +337,22 @@ char *librouter_device_to_linux_cmdline(char *cmdline)
 		if (fam) {
 			strcat(new_cmdline, fam->linux_string);
 			i++;
+			if (fam->type == pptp){
+				ppp_init = malloc(2);
+				sprintf(ppp_init,"%d",PPTP_PPP_START);
+				strcat(new_cmdline, ppp_init);
+				strcat(new_cmdline, " ");
+				i++;
+				free(ppp_init);
+			}
+			if (fam->type == pppoe){
+				ppp_init = malloc(2);
+				sprintf(ppp_init,"%d",PPPOE_PPP_START);
+				strcat(new_cmdline, ppp_init);
+				strcat(new_cmdline, " ");
+				i++;
+				free(ppp_init);
+			}
 			if (i >= args->argc)
 				break;
 		}
