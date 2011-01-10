@@ -149,12 +149,16 @@ void librouter_ppp_l2tp_set_defaults(char *name, ppp_config *cfg);
 
 #ifdef OPTION_MODEM3G
 int librouter_ppp_reload_backupd(void);
+char * librouter_ppp_backupd_intf_to_kernel_intf(char *bckp_intf);
+int librouter_ppp_backupd_verify_m3G_loop_backup (char * ppp_interface, char * main_interface);
 int librouter_ppp_backupd_set_param_infile(char * intf, char * field, char *value);
 int librouter_ppp_backupd_verif_param_infile(char * intf, char *field, char *value);
 int librouter_ppp_backupd_verif_param_byintf_infile(char * intf, char *field, char *value);
 int librouter_ppp_backupd_set_no_shutdown_3Gmodem (char * intf3g_ppp);
 int librouter_ppp_backupd_set_shutdown_3Gmodem (char * intf3g_ppp);
-int librouter_ppp_backupd_set_backup_interface (char * intf3g_ppp, char * main_interface, char * intf_return);
+int librouter_ppp_backupd_set_backup_interface_avoiding_same_bckp_intf (char * intf3g_ppp, char * main_interface, char * intf_return);
+int librouter_ppp_backupd_set_backup_interface (char * intf3g_ppp, char * main_interface);
+int librouter_ppp_backupd_get_config(int serial_num, struct bckp_conf_t * back_conf);
 int librouter_ppp_backupd_set_no_backup_interface (char * intf3g_ppp);
 int librouter_ppp_backupd_set_backup_method (char * intf3g_ppp, char * method, char * ping_addr);
 int librouter_ppp_backupd_is_interface_3G_enable (char * intf3g_ppp);

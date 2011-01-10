@@ -101,9 +101,9 @@ static int pppoe_search_for_target_infile(arglist * args[], int lines, char * ta
 	int i,j;
 
 	for (i = 0; i < lines; i++)
-			for (j = 0; j < args[i]->argc; j++)
-				if (!strcmp(args[i]->argv[j],target))
-					return i;
+		for (j = 0; j < args[i]->argc; j++)
+			if (!strcmp(args[i]->argv[j],target))
+				return i;
 
 	return -1;
 }
@@ -129,18 +129,18 @@ static int pppoe_write_conffile(arglist * args[], char * conffile, int lines, in
 	if ((f = fopen(conffile, "w")) != NULL) {
 		for (i = 0; i < lines; i++) {
 			for (j = 0; j < args[i]->argc; j++) {
-					if (j < args[i]->argc - 1){
-						if ( (i == l) && (c == j))
-							fprintf(f, "%s ", value);
-						else
-							fprintf(f, "%s ", args[i]->argv[j]);
-					}
-					else{
-						if ( (i == l) && (c == j))
-							fprintf(f, "%s\n", value);
-						else
-							fprintf(f, "%s\n", args[i]->argv[j]);
-					}
+				if (j < args[i]->argc - 1){
+					if ( (i == l) && (c == j))
+						fprintf(f, "%s ", value);
+					else
+						fprintf(f, "%s ", args[i]->argv[j]);
+				}
+				else{
+					if ( (i == l) && (c == j))
+						fprintf(f, "%s\n", value);
+					else
+						fprintf(f, "%s\n", args[i]->argv[j]);
+				}
 			}
 		}
 	}

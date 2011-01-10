@@ -10,16 +10,16 @@
 
 #include "../../cish/util/backupd.h" /*FIXME*/
 
-//#define DEBUG
-#ifdef DEBUG
+//#define DEBUG_MODEM3G_SYSLOG
+#ifdef DEBUG_MODEM3G_SYSLOG
 #define dbgS_modem3g(x,...) \
 		syslog(LOG_INFO,  "%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 #else
 #define dbgS_modem3g(x,...)
 #endif
 
-//#define DEBUGB
-#ifdef DEBUGB
+//#define DEBUG_MODEM3G_PRINTF
+#ifdef DEBUG_MODEM3G_PRINTF
 #define dbgP_modem3g(x,...) \
 		printf("%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 #else
