@@ -149,6 +149,12 @@ char *librouter_device_cli_to_linux(const char *device, int major, int minor)
 		case tun:
 		case ipsec:
 		case ppp:
+		case pptp:
+			if (fam->type == pptp)
+				major += PPTP_PPP_START;
+		case pppoe:
+			if (fam->type == pppoe)
+				major += PPPOE_PPP_START;
 		default:
 			if (minor >= 0) {
 				result = (char *) malloc(strlen(fam->linux_string) + 12);
