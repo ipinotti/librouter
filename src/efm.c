@@ -66,15 +66,6 @@ int librouter_efm_get_num_channels(void)
 	return conf.num_channels;
 }
 
-int librouter_efm_set_mode(int mode)
-{
-	struct orionplus_conf conf;
-
-	conf.mode = mode;
-
-	return _do_ioctl(ORIONPLUS_SETMODE, &conf);
-}
-
 int librouter_efm_get_mode(void)
 {
 	struct orionplus_conf conf;
@@ -83,6 +74,26 @@ int librouter_efm_get_mode(void)
 		return -1;
 
 	return conf.mode;
+}
+
+int librouter_efm_set_mode(int mode)
+{
+	struct orionplus_conf conf;
+
+	if (_do_ioctl(ORIONPLUS_GETCONFIG, &conf))
+		return -1;
+
+	if (conf.mode == mode) /* already set ? */
+		return 0;
+
+	if (conf.action != GTI_ABORT_REQ) {
+		printf("(EFM) Interface must be shutdown first\n");
+		return -1;
+	}
+
+	conf.mode = mode;
+
+	return _do_ioctl(ORIONPLUS_SET_PARAM, &conf);
 }
 
 #endif /* OPTION_EFM */

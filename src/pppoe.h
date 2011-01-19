@@ -34,6 +34,4 @@ int librouter_pppoe_set_clientmode(int add);
 int librouter_pppoe_get_clientmode(void);
 int librouter_pppoe_dump(FILE *out);
 
-
-
 #endif /* PPPOE_H_ */
