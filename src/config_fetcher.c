@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <pwd.h>
 #include <dirent.h>
+#include <stdlib.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -1114,12 +1115,13 @@ static void _dump_tunnel_config(FILE *out, struct interface_conf *conf)
 }
 #endif
 
-#ifdef OPTION_PPP
+//#ifdef OPTION_PPP
 static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 {
 	ppp_config cfg;
 	char *osdev = conf->name;
 	int serial_no;
+	char *intf_back=NULL;
 
 	/* Get interface index */
 	serial_no = atoi(osdev + strlen(PPPDEV));
@@ -1171,9 +1173,12 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 		fprintf(out, " backup-method link\n");
 	else
 		fprintf(out, " backup-method ping %s\n", cfg.bckp_conf.ping_address);
-	if (cfg.bckp_conf.is_backup)
-		fprintf(out, " backup-interface %8.8s %c\n", cfg.bckp_conf.main_intf_name,
-		                cfg.bckp_conf.main_intf_name[8]);
+	if (cfg.bckp_conf.is_backup){
+		intf_back = malloc(strlen(cfg.bckp_conf.main_intf_name));
+		snprintf(intf_back,strlen(cfg.bckp_conf.main_intf_name),"%s",cfg.bckp_conf.main_intf_name);
+		fprintf(out, " backup-interface %s %c\n", intf_back,cfg.bckp_conf.main_intf_name[strlen(cfg.bckp_conf.main_intf_name)-1]);
+		free (intf_back);
+	}
 	else
 		fprintf(out, " no backup-interface\n");
 
@@ -1184,7 +1189,7 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 
 	fprintf(out, " %sshutdown\n", cfg.up ? "no " : "");
 }
-#endif
+//#endif
 
 static void _dump_pptp_config(FILE * out, struct interface_conf *conf)
 {

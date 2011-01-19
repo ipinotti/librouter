@@ -23,7 +23,6 @@
 #include "ip.h"
 #include "pam.h"
 #include "pptp.h"
-
 #ifdef OPTION_MODEM3G
 #include "modem3G.h"
 #endif
@@ -86,7 +85,7 @@ int librouter_ppp_backupd_set_no_backup_interface(char * intf3g_ppp)
  * @param intf_return
  * @return 0 if ok, -1 if not
  */
-int librouter_ppp_backupd_set_backup_interface(char * intf3g_ppp,
+int librouter_ppp_backupd_set_backup_interface_avoiding_same_bckp_intf(char * intf3g_ppp,
                                                char * main_interface,
                                                char * intf_return)
 {
@@ -106,6 +105,77 @@ int librouter_ppp_backupd_set_backup_interface(char * intf3g_ppp,
 
 	return 0;
 }
+
+char * librouter_ppp_backupd_intf_to_kernel_intf(char *bckp_intf)
+{
+	char * intf_k;
+
+	/* adaptação da função librouter_device_to_linux_cmdline, pois a entrada da mesma
+	 * se baseia em EX:"ethernet 0", e no caso do backupd, a entrada é EX:"ethernet0"
+	 */
+	intf_k = (char *)librouter_device_to_linux_cmdline(bckp_intf);
+	strcat(intf_k, &bckp_intf[strlen((const char *) bckp_intf) - 1]);
+
+	return intf_k;
+}
+
+/**
+ * librouter_ppp_backupd_verify_m3G_loop_backup		Função verifica se a interface a ser monitorada não gera loop de backup
+ * Ex: m3G0 monitora m3G1 e m3G1 monitora M3G0
+ *
+ * @param ppp_interface
+ * @param main_interface
+ * @return 1 if loop exist, 0 if not
+ */
+int librouter_ppp_backupd_verify_m3G_loop_backup (char * ppp_interface, char * main_interface)
+{
+	struct bckp_conf_t *bckp_conf=NULL;
+
+	if (strstr(main_interface,"m3G")){
+		bckp_conf=malloc(sizeof(struct bckp_conf_t));
+		librouter_ppp_backupd_get_config(atoi(&main_interface[strlen(main_interface)-1]), bckp_conf);
+		if ( (bckp_conf->main_intf_name != NULL) && (strlen(bckp_conf->main_intf_name) != 0) ){
+			if (!strcmp(librouter_ppp_backupd_intf_to_kernel_intf(bckp_conf->main_intf_name), ppp_interface) && bckp_conf->is_backup){
+				free(bckp_conf);
+				bckp_conf=NULL;
+				return 1;
+			}
+		}
+		free(bckp_conf);
+		bckp_conf=NULL;
+	}
+
+	return 0;
+}
+
+/**
+ * Função seta backup interface no arquivo para efetuar operação pelo backupd deamon
+ * Ex: intf3g_ppp == "ppp0" && main_interface == "ethernet0"
+ *
+ * Esta função possibilita duas interfaces backup distintas de monitar uma mesma interface
+ * @param interface3g
+ * @param main_interface
+ * @param intf_return
+ * @return 0 if ok, -1 if not
+ */
+int librouter_ppp_backupd_set_backup_interface (char * intf3g_ppp, char * main_interface)
+{
+
+	if (librouter_dev_exists(intf3g_ppp))
+		return -1;
+
+	if (librouter_ppp_backupd_verify_m3G_loop_backup(intf3g_ppp, main_interface))
+		return -1;
+
+	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp, BCKUP_STR, "yes") < 0)
+		return -1;
+
+	if (librouter_ppp_backupd_set_param_infile(intf3g_ppp, MAIN_INTF_STR, main_interface) < 0)
+		return -1;
+
+	return 0;
+}
+
 /**
  * Função verifica se interface 3G está ativada no sistema do backupd
  *
