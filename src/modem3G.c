@@ -19,6 +19,8 @@
 #include <termios.h>
 #include <syslog.h>
 
+#include "options.h"
+#ifdef OPTION_MODEM3G
 #include "str.h"
 #include "error.h"
 #include "ppcio.h"
@@ -364,6 +366,7 @@ int librouter_modem3g_module_set_status(int status)
  */
 int librouter_modem3g_sim_card_set(int sim)
 {
+#ifdef OPTION_DUAL_SIM
 	struct powerpc_gpio gpio;
 
 	gpio.pin = GPIO_SIM_SELECT_PIN;
@@ -374,7 +377,9 @@ int librouter_modem3g_sim_card_set(int sim)
 
 	if (librouter_modem3g_module_reset() < 0)
 		return -1;
-
+#else
+	printf("%s being called, but no dual SIM support\n", __FUNCTION__);
+#endif
 	return 0;
 }
 
@@ -630,3 +635,4 @@ int librouter_modem3g_sim_set_all_info_inchat(int simcard, int m3g)
 	return 0;
 
 }
+#endif /* OPTION_MODEM3G */

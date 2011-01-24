@@ -15,8 +15,10 @@
 #include <unistd.h>
 #include <syslog.h>
 
-#include "pptp.h"
 #include "options.h"
+
+#ifdef OPTION_PPTP
+#include "pptp.h"
 #include "args.h"
 #include "defines.h"
 #include "device.h"
@@ -940,4 +942,5 @@ int librouter_pptp_dump(FILE *out)
 	return 0;
 
 }
+#endif /* OPTION_PPTP */
 

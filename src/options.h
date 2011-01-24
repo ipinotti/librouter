@@ -18,12 +18,15 @@
 #define OPTION_ETHERNET /* Enables ethernet interfaces */
 #define OPTION_GIGAETHERNET /* Enable gigabit options */
 #define OPTION_IP_ROUTING
+#define OPTION_PPPOE
+#define OPTION_PPTP
 
 /* ------ Digistar 3G Product Models Declaration ------ */
 /* RCG1000 */
 #if defined(CONFIG_DIGISTAR_RCG1000)
 #define OPTION_ETHERNET_WAN
 #define OPTION_MODEM3G
+#define OPTION_DUAL_SIM
 #define OPTION_PPP
 #define OPTION_DHCP_SWITCH_ETH0
 #define OPTION_NUM_ETHERNET_IFACES	2
@@ -32,6 +35,7 @@
 #elif defined(CONFIG_DIGISTAR_RCG800)
 #define OPTION_ETHERNET_WAN
 #define OPTION_MODEM3G
+#define OPTION_DUAL_SIM
 #define OPTION_PPP
 #define OPTION_DHCP_SWITCH_ETH0
 #define OPTION_NUM_ETHERNET_IFACES	1
@@ -52,6 +56,12 @@
 #define OPTION_EFM
 #define OPTION_MANAGED_SWITCH
 #define OPTION_NUM_ETHERNET_IFACES	1
+
+#undef OPTION_PPPOE
+#undef OPTION_PPTP
+
+#define OPTION_MODEM3G
+#undef OPTION_DUAL_SIM
 
 /* TODO */
 /* ------ Digistar EFM Product Models Declaration ------ */

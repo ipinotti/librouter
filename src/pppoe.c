@@ -15,15 +15,16 @@
 #include <unistd.h>
 #include <syslog.h>
 
-#include "pppoe.h"
 #include "options.h"
+
+#ifdef OPTION_PPPOE
+#include "pppoe.h"
 #include "args.h"
 #include "defines.h"
 #include "device.h"
 #include "error.h"
 #include "exec.h"
 #include "str.h"
-
 
 /**
  * pppoe_destroy_args_conffile		Free args list created from file read
@@ -1057,4 +1058,5 @@ int librouter_pppoe_dump(FILE *out)
 	return 0;
 
 }
+#endif /* OPTION_PPPOE */
 
