@@ -1191,6 +1191,7 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 }
 //#endif
 
+#ifdef OPTION_PPTP
 static void _dump_pptp_config(FILE * out, struct interface_conf *conf)
 {
 	char *osdev = conf->name;
@@ -1207,7 +1208,9 @@ static void _dump_pptp_config(FILE * out, struct interface_conf *conf)
 
 	librouter_pptp_dump(out);
 }
+#endif
 
+#ifdef OPTION_PPPOE
 static void _dump_pppoe_config(FILE * out, struct interface_conf *conf)
 {
 	char *osdev = conf->name;
@@ -1224,6 +1227,7 @@ static void _dump_pppoe_config(FILE * out, struct interface_conf *conf)
 
 	librouter_pppoe_dump(out);
 }
+#endif
 
 
 /**
@@ -1260,10 +1264,14 @@ static void librouter_config_dump_interface(FILE *out, struct interface_conf *co
 	switch (conf->linktype) {
 #ifdef OPTION_PPP
 	case ARPHRD_PPP:
+#ifdef OPTION_PPTP
 		if (strstr(cish_dev, "pptp"))
 			_dump_pptp_config(out, conf);
+#endif
+#ifdef OPTION_PPPOE
 		if (strstr(cish_dev, "pppoe"))
 			_dump_pppoe_config(out, conf);
+#endif
 		if (strstr(cish_dev, "m3G"))
 			_dump_ppp_config(out, conf);
 		break;

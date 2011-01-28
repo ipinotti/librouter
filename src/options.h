@@ -30,6 +30,7 @@
 #define OPTION_PPP
 #define OPTION_DHCP_SWITCH_ETH0
 #define OPTION_NUM_ETHERNET_IFACES	2
+#define OPTION_NUM_3G_IFACES	3
 
 /* RCG800 */
 #elif defined(CONFIG_DIGISTAR_RCG800)
@@ -39,6 +40,7 @@
 #define OPTION_PPP
 #define OPTION_DHCP_SWITCH_ETH0
 #define OPTION_NUM_ETHERNET_IFACES	1
+#define OPTION_NUM_3G_IFACES	3
 
 /* RCG700 */
 #elif defined(CONFIG_DIGISTAR_RCG700)
@@ -46,6 +48,7 @@
 #define OPTION_PPP
 #define OPTION_DHCP_SWITCH_ETH0
 #define OPTION_NUM_ETHERNET_IFACES	2
+
 
 #else
 #error "No such 3G Board!"
@@ -61,6 +64,8 @@
 #undef OPTION_PPTP
 
 #define OPTION_MODEM3G
+#define OPTION_PPP
+#define OPTION_NUM_3G_IFACES	1
 #undef OPTION_DUAL_SIM
 
 /* TODO */
@@ -78,11 +83,6 @@
 
 /*****************************************************************************/
 /*****************************************************************************/
-
-/* MODEM3G */
-#define NUM_3G_INTFS	3
-//#define OPTION_MODEM3G
-//#define OPTION_PPP
 
 /* BGP */
 #define OPTION_BGP

@@ -395,43 +395,34 @@ int librouter_ip_get_if_list(struct intf_info *info)
 		free(tmp);
 	}
 
-
-
-	/* OPTION PPTP */
-
+#ifdef OPTION_PPTP
 	/*
 	 * Search for PPTP interfaces. They may not exist in the kernel,
 	 * since PPP interfaces are created dinamically.
 	 * So we need to create some here.
 	 * For now, just PPTP0 -> ppp20 is available by the define PPTP_PPP_START
 	 */
-	/*TODO*/
 	if (!_has_ppp_intf(PPTP_PPP_START, info)) {
 		sprintf(link->ifname, "ppp%d", PPTP_PPP_START);
 		link->type = ARPHRD_PPP;
 		link++;
 	}
+#endif	/* OPTION PPTP */
 
-	/* OPTION PPTP */
 
-
-	/* OPTION PPPOE */
-
+#ifdef OPTION_PPPOE
 	/*
 	 * Search for PPPOE interfaces. They may not exist in the kernel,
 	 * since PPP interfaces are created dinamically.
 	 * So we need to create some here.
 	 * For now, just PPPOE0 -> ppp30 is available by the define PPPOE_PPP_START
 	 */
-	/*TODO*/
 	if (!_has_ppp_intf(PPPOE_PPP_START, info)) {
 		sprintf(link->ifname, "ppp%d", PPPOE_PPP_START);
 		link->type = ARPHRD_PPP;
 		link++;
 	}
-
-	/* OPTION PPPOE */
-
+#endif	/* OPTION PPPOE */
 
 
 #ifdef OPTION_MODEM3G
@@ -440,7 +431,7 @@ int librouter_ip_get_if_list(struct intf_info *info)
 	 * since PPP interfaces are created dinamically.
 	 * So we need to create some here.
 	 */
-	for (i=0; i < NUM_3G_INTFS; i++) {
+	for (i=0; i < OPTION_NUM_3G_IFACES; i++) {
 		if (!_has_ppp_intf(i, info)) {
 			sprintf(link->ifname, "ppp%d", i);
 			link->type = ARPHRD_PPP;
@@ -448,8 +439,6 @@ int librouter_ip_get_if_list(struct intf_info *info)
 		}
 	}
 #endif
-
-
 
 	for (a = ainfo; a;) {
 		/* Update ipaddr pointer if __get_addrinfo succeeds */
