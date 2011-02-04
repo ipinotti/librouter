@@ -13,6 +13,8 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <linux/autoconf.h>
+
 #include <libusb/libusb.h>
 
 #include "options.h"
@@ -21,11 +23,19 @@
 #include "usb.h"
 
 /* type, port[NUMBER_OF_USBPORTS]*/
+#if defined(CONFIG_DIGISTAR_3G)
 port_family_usb _ports[] = {
 	{ real,  {1,2,3} },
 	{ alias, {1,2,0} },
 	{ non,  {0,0,0} }
 };
+#elif defined(CONFIG_DIGISTAR_EFM)
+port_family_usb _ports[] = {
+	{ real,  {1} },
+	{ alias, {0} },
+	{ non,  {0} }
+};
+#endif
 /**
  * Função retorna porta "alias" utilizada no cish e backupd através da
  * porta usb real correspondente passada por parâmetro
@@ -86,7 +96,13 @@ int librouter_usb_device_is_connected(int port)
 	int result = 0;
 	char buff_addr[sizeof(ADDR_USB)];
 
+#if defined(CONFIG_DIGISTAR_3G)
 	sprintf(buff_addr, ADDR_USB, HUB_PORT, HUB_PORT, port);
+#elif defined(CONFIG_DIGISTAR_EFM)
+	sprintf(buff_addr, ADDR_USB, HUB_PORT, HUB_PORT);
+#endif
+
+	usb_dbg("Device address : %s\n", buff_addr);
 
 	target = (struct DIR *) opendir(buff_addr);
 
@@ -122,7 +138,12 @@ int librouter_usb_device_is_modem(int port)
 	}
 
 	for (i = 0; i < 15; i++) {
+#if defined(CONFIG_DIGISTAR_3G)
 		sprintf(buff_addr, ADDR_PORT_USB, HUB_PORT, HUB_PORT, port, HUB_PORT, HUB_PORT, port, i);
+#elif defined(CONFIG_DIGISTAR_EFM)
+		sprintf(buff_addr, ADDR_PORT_USB, HUB_PORT, port, HUB_PORT, port, i);
+#endif
+		usb_dbg("Device address : %s\n", buff_addr);
 
 		target = (struct DIR *) opendir(buff_addr);
 
@@ -163,8 +184,11 @@ int librouter_usb_get_descriptor(librouter_usb_dev * usb)
 	struct libusb_device_handle *handle = NULL;
 	struct libusb_device_descriptor desc;
 
+#if defined(CONFIG_DIGISTAR_3G)
 	sprintf(addr_file, ADDR_USB_IDPRODUCT, HUB_PORT, HUB_PORT, usb->port);
-
+#elif defined(CONFIG_DIGISTAR_EFM)
+	sprintf(addr_file, ADDR_USB_IDPRODUCT, HUB_PORT, usb->port);
+#endif
 	file = fopen(addr_file, "rt");
 	if (!file)
 		return -1;

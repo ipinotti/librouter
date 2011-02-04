@@ -8,14 +8,30 @@
 #ifndef USB_H_
 #define USB_H_
 
+//#define USB_DEBUG
+#ifdef USB_DEBUG
+#define usb_dbg(x,...) \
+                printf("%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__);
+#else
+#define usb_dbg(x,...)
+#endif
+
+#define IDVENDOR_LINUX_HUB 7531
+#define USB_STR_SIZE 256
+
+#if defined(CONFIG_DIGISTAR_3G)
+#define NUMBER_OF_USBPORTS 3 /*3 portas USB reais*/
 #define HUB_PORT 1
 #define ADDR_USB "/sys/bus/usb/devices/%d-%d.%d"
 #define ADDR_PORT_USB "/sys/bus/usb/devices/%d-%d.%d/%d-%d.%d:1.0/ttyUSB%d"
 #define ADDR_USB_IDPRODUCT "/sys/bus/usb/devices/%d-%d.%d/idProduct"
-
-#define IDVENDOR_LINUX_HUB 7531
-#define USB_STR_SIZE 256
-#define NUMBER_OF_USBPORTS 3 /*3 portas USB reais*/
+#elif defined(CONFIG_DIGISTAR_EFM)
+#define NUMBER_OF_USBPORTS 1
+#define HUB_PORT 1
+#define ADDR_USB "/sys/bus/usb/devices/%d-%d"
+#define ADDR_PORT_USB "/sys/bus/usb/devices/%d-%d/%d-%d:1.0/ttyUSB%d"
+#define ADDR_USB_IDPRODUCT "/sys/bus/usb/devices/%d-%d/idProduct"
+#endif
 
 typedef enum {
 	real, alias, non
@@ -27,7 +43,6 @@ typedef struct {
 } port_family_usb;
 
 extern port_family_usb _ports[];
-
 
 typedef struct {
 	int port;

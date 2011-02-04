@@ -378,7 +378,7 @@ int librouter_modem3g_sim_card_set(int sim)
 	if (librouter_modem3g_module_reset() < 0)
 		return -1;
 #else
-	printf("%s being called, but no dual SIM support\n", __FUNCTION__);
+	syslog(LOG_ERR ,"%s being called, but no dual SIM support\n", __FUNCTION__);
 #endif
 	return 0;
 }

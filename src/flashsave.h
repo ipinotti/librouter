@@ -7,8 +7,6 @@
 #ifndef FLASHSAVE_H_
 #define FLASHSAVE_H_
 
-#define CFG_PRODUCT	"3GRouter"
-
 #define CFG_BOOT_MTD	"/dev/mtd0"
 #define CFG_SYS_MTD	"/dev/mtd1"
 

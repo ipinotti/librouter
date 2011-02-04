@@ -15,6 +15,8 @@
 
 #if defined(CONFIG_DIGISTAR_3G)
 
+#define CFG_PRODUCT	"3GRouter"
+
 #define OPTION_ETHERNET /* Enables ethernet interfaces */
 #define OPTION_GIGAETHERNET /* Enable gigabit options */
 #define OPTION_IP_ROUTING
@@ -55,6 +57,8 @@
 #endif
 
 #elif defined(CONFIG_DIGISTAR_EFM)
+
+#define CFG_PRODUCT	"EFMRouter"
 
 #define OPTION_EFM
 #define OPTION_MANAGED_SWITCH

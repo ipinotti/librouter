@@ -44,6 +44,10 @@
 #include "modem3G.h"
 #endif
 
+#ifdef OPTION_EFM
+#include "efm.h"
+#endif
+
 static int _librouter_dev_get_ctrlfd(void)
 {
 	int s_errno;
