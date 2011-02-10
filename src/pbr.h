@@ -10,7 +10,7 @@
 #ifndef PBR_H_
 #define PBR_H_
 
-//#define DEBUG_PBR_SYSLOG
+#define DEBUG_PBR_SYSLOG
 #ifdef DEBUG_PBR_SYSLOG
 #define pbr_dbgs(x,...) \
 		syslog(LOG_INFO,  "%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__)
