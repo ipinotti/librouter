@@ -15,10 +15,15 @@
 #include "ip.h"
 #include "pbr.h"
 
-
+/**
+ * librouter_pbr_rule_add	Função adiciona regra baseada em FWMARK nas tabelas disponiveis (table0-9)
+ *
+ * @param mark_no
+ * @param table
+ * @return 0 if ok, -1 if not
+ */
 int librouter_pbr_rule_add(int mark_no, char * table)
 {
-
 	char cmd[128];
 //TODO
 //	if (librouter_mangle_rule_exists_by_num(mark_no)) {
@@ -36,9 +41,15 @@ int librouter_pbr_rule_add(int mark_no, char * table)
 	return 0;
 }
 
+/**
+ * librouter_pbr_rule_del	Função remove regra baseada em FWMARK nas tabelas disponiveis (table0-9)
+ *
+ * @param mark_no
+ * @param table
+ * @return 0 if ok, -1 if not
+ */
 int librouter_pbr_rule_del(int mark_no, char * table)
 {
-
 	char cmd[128];
 
 //TODO
@@ -57,6 +68,13 @@ int librouter_pbr_rule_del(int mark_no, char * table)
 	return 0;
 }
 
+/**
+ *  librouter_pbr_get_show_rules_cli_size	Função fornece uma estimativa de tamanho
+ *  para ser alocado no buffer que irá receber o show das regras do PBR. O tamanho se basea nas linhas,
+ *  sendo 128 caracteres na linha multiplicados pelo número de linhas do show.
+ *
+ * @return Size of show rules (int)
+ */
 int librouter_pbr_get_show_rules_cli_size(void)
 {
 	FILE *pbr_show_file;
@@ -78,6 +96,12 @@ int librouter_pbr_get_show_rules_cli_size(void)
 	return (sizeof(line)*lines_file);
 }
 
+/**
+ * librouter_pbr_get_show_rules_cli	Função adquire a lista de regras do PBR e sistema
+ *
+ * @param pbr_show_rules_buff
+ * @return 0 if ok, -1 if not
+ */
 int librouter_pbr_get_show_rules_cli(char * pbr_show_rules_buff)
 {
 	FILE *pbr_show_file;
@@ -103,6 +127,13 @@ end:
 	return check;
 }
 
+/**
+ * librouter_pbr_get_show_routes_cli	Função adquire a lista das rotas do PBR e sistema
+ *
+ * @param table
+ * @param pbr_show_routes_buff
+ * @return 1 if ok, -1 if not
+ */
 int librouter_pbr_get_show_routes_cli(char * table, char * pbr_show_routes_buff)
 {
 	FILE *pbr_show_file;
@@ -130,6 +161,14 @@ end:
 	return check;
 }
 
+/**
+ *  librouter_pbr_get_show_routes_cli_size	Função fornece uma estimativa de tamanho
+ *  para ser alocado no buffer que irá receber o show das rotas do PBR. O tamanho se basea nas linhas,
+ *  sendo 128 caracteres na linha multiplicados pelo número de linhas do show.
+ *
+ * @param table
+ * @return 1 if ok, -1 if not
+ */
 int librouter_pbr_get_show_routes_cli_size(char * table)
 {
 	FILE *pbr_show_file;
@@ -153,6 +192,12 @@ int librouter_pbr_get_show_routes_cli_size(char * table)
 	return (sizeof(line)*lines_file);
 }
 
+/**
+ * librouter_pbr_flush_route_table	Função apaga todas as rotas de determinada tabela
+ *
+ * @param table
+ * @return 0 if ok, -1 if not
+ */
 int librouter_pbr_flush_route_table(char * table)
 {
 	char cmd[128];
@@ -168,6 +213,12 @@ int librouter_pbr_flush_route_table(char * table)
 	return 0;
 }
 
+/**
+ * librouter_pbr_route_add	Função adiciona rota ao sistema, em determinada tabela (table0-9)
+ *
+ * @param pbr
+ * @return 0 if ok, -1 if not
+ */
 int librouter_pbr_route_add(librouter_pbr_struct * pbr)
 {
 	char cmd[256];
@@ -191,9 +242,19 @@ int librouter_pbr_route_add(librouter_pbr_struct * pbr)
 	if (system(cmd) != 0)
 		return -1;
 
+	/* Flush route cache */
+	if (librouter_pbr_flush_cache() < 0)
+		return -1;
+
 	return 0;
 }
 
+/**
+ * librouter_pbr_route_del	Função apaga rota de determinada tabela (table0-9)
+ *
+ * @param pbr
+ * @return 0 if ok, -1 if not
+ */
 int librouter_pbr_route_del(librouter_pbr_struct *pbr)
 {
 	char cmd[256];
@@ -210,6 +271,31 @@ int librouter_pbr_route_del(librouter_pbr_struct *pbr)
 		else
 			sprintf(cmd, "/bin/ip route del %s dev %s table %s ", pbr->network_opt, pbr->dev, pbr->table);
 	}
+
+	pbr_dbgs("Applying PBR command: %s\n", cmd);
+
+	/* Apply rule */
+	if (system(cmd) != 0)
+		return -1;
+
+	/* Flush route cache */
+	if (librouter_pbr_flush_cache() < 0)
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_pbr_flush_cache	Função executa um "Flush" na cache do gerenciador de rotas
+ * do sistema (ip route)
+ *
+ * @return 0 if ok, -1 if not
+ */
+int librouter_pbr_flush_cache(void)
+{
+	char cmd[64];
+
+	sprintf(cmd, "/bin/ip route flush cache ");
 
 	pbr_dbgs("Applying PBR command: %s\n", cmd);
 

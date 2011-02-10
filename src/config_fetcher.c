@@ -1131,11 +1131,12 @@ static void _dump_efm_config(FILE *out, struct interface_conf *conf)
 	if (conf->txqueue)
 		fprintf(out, " txqueuelen %d\n", conf->txqueue);
 
+#ifdef OPTION_EFM
 	if (librouter_efm_get_mode())
 		fprintf(out, " mode cpe\n");
 	else
 		fprintf(out, " mode co\n");
-
+#endif
 
 	_dump_vlans(out, conf);
 
