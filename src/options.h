@@ -15,6 +15,8 @@
 
 #if defined(CONFIG_DIGISTAR_3G)
 
+#define CFG_PRODUCT	"3GRouter"
+
 #define OPTION_ETHERNET /* Enables ethernet interfaces */
 #define OPTION_GIGAETHERNET /* Enable gigabit options */
 #define OPTION_IP_ROUTING
@@ -30,6 +32,7 @@
 #define OPTION_PPP
 #define OPTION_DHCP_SWITCH_ETH0
 #define OPTION_NUM_ETHERNET_IFACES	2
+#define OPTION_NUM_3G_IFACES	3
 
 /* RCG800 */
 #elif defined(CONFIG_DIGISTAR_RCG800)
@@ -39,6 +42,7 @@
 #define OPTION_PPP
 #define OPTION_DHCP_SWITCH_ETH0
 #define OPTION_NUM_ETHERNET_IFACES	1
+#define OPTION_NUM_3G_IFACES	3
 
 /* RCG700 */
 #elif defined(CONFIG_DIGISTAR_RCG700)
@@ -47,11 +51,14 @@
 #define OPTION_DHCP_SWITCH_ETH0
 #define OPTION_NUM_ETHERNET_IFACES	2
 
+
 #else
 #error "No such 3G Board!"
 #endif
 
 #elif defined(CONFIG_DIGISTAR_EFM)
+
+#define CFG_PRODUCT	"EFMRouter"
 
 #define OPTION_EFM
 #define OPTION_MANAGED_SWITCH
@@ -61,6 +68,8 @@
 #undef OPTION_PPTP
 
 #define OPTION_MODEM3G
+#define OPTION_PPP
+#define OPTION_NUM_3G_IFACES	1
 #undef OPTION_DUAL_SIM
 
 /* TODO */
@@ -78,11 +87,6 @@
 
 /*****************************************************************************/
 /*****************************************************************************/
-
-/* MODEM3G */
-#define NUM_3G_INTFS	3
-//#define OPTION_MODEM3G
-//#define OPTION_PPP
 
 /* BGP */
 #define OPTION_BGP

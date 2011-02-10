@@ -137,35 +137,24 @@ char *librouter_device_cli_to_linux(const char *device, int major, int minor)
 
 	if (fam) {
 		switch (fam->type) {
-#ifdef OPTION_EFM
-		case efm:
-			/* Special case: EFM is in fact just an ethernet interface,
-			 * we just need to correct the major to the right offset */
-			major += EFM_INDEX_OFFSET;
-			/* Fall through */
-#endif
-		case eth:
-		case lo:
-		case tun:
-		case ipsec:
-		case ppp:
 		case pptp:
-			if (fam->type == pptp)
-				major += PPTP_PPP_START;
-		case pppoe:
-			if (fam->type == pppoe)
-				major += PPPOE_PPP_START;
-		default:
-			if (minor >= 0) {
-				result = (char *) malloc(strlen(fam->linux_string) + 12);
-				sprintf(result, "%s%i.%i", fam->linux_string, major, minor);
-				return result;
-			} else {
-				result = (char *) malloc(strlen(fam->linux_string) + 6);
-				sprintf(result, "%s%i", fam->linux_string, major);
-				return result;
-			}
+			major += PPTP_PPP_START;
 			break;
+		case pppoe:
+			major += PPPOE_PPP_START;
+			break;
+		default:
+			break;
+		}
+
+		if (minor >= 0) {
+			result = (char *) malloc(strlen(fam->linux_string) + 12);
+			sprintf(result, "%s%i.%i", fam->linux_string, major, minor);
+			return result;
+		} else {
+			result = (char *) malloc(strlen(fam->linux_string) + 6);
+			sprintf(result, "%s%i", fam->linux_string, major);
+			return result;
 		}
 	} else {
 		fprintf(stderr, "%% Unknown device family: %s\n", device);

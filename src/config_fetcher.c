@@ -1073,6 +1073,100 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	return;
 }
 
+static void _dump_efm_config(FILE *out, struct interface_conf *conf)
+{
+	/* Interface name (linux name) */
+	char *osdev = conf->name;
+	/* Ethernet index */
+	int ether_no;
+	/* Sub-interface index */
+	int minor;
+	char daemon_dhcpc[32];
+	char devtmp[32];
+	int i;
+	char *p;
+
+	ether_no = atoi(osdev + strlen(ETHERNETDEV));
+
+	/* skip '.' */
+	if ((p = strchr(osdev, '.')) != NULL)
+		minor = atoi(p + 1);
+
+	/* Don't allow DHCP for sub-interfaces */
+	if (minor)
+		daemon_dhcpc[0] = 0;
+	else
+		sprintf(daemon_dhcpc, DHCPC_DAEMON, osdev);
+
+	/* Dump iptables configuration */
+	_dump_intf_iptables_config(out, conf);
+
+#ifdef OPTION_PIMD
+	librouter_pim_dump_interface(out, osdev);
+#endif
+	/* Dump QoS */
+	_dump_policy_interface(out, osdev);
+
+#ifdef OPTION_BRIDGE
+	/* Dump Bridge */
+	_dump_interface_bridge(out, osdev);
+#endif
+
+	/* Dump Quagga */
+	librouter_config_rip_dump_interface(out, osdev);
+	librouter_config_ospf_dump_interface(out, osdev);
+
+	/* Print main IP address */
+	if (strlen(daemon_dhcpc) && librouter_exec_check_daemon(daemon_dhcpc))
+		fprintf(out, " ip address dhcp\n");
+	else
+		_dump_intf_ipaddr_config(out, conf);
+
+	/* Print secondary IP addresses */
+	_dump_intf_secondary_ipaddr_config(out, conf);
+
+	if (conf->mtu)
+		fprintf(out, " mtu %d\n", conf->mtu);
+
+	if (conf->txqueue)
+		fprintf(out, " txqueuelen %d\n", conf->txqueue);
+
+	if (librouter_efm_get_mode())
+		fprintf(out, " mode cpe\n");
+	else
+		fprintf(out, " mode co\n");
+
+
+	_dump_vlans(out, conf);
+
+	/* Show line status if main interface. Avoid VLANs ... */
+	if (conf->is_subiface) {
+		struct lan_status st;
+		int phy_status;
+
+		phy_status = librouter_lan_get_status(conf->name, &st);
+
+		if (phy_status < 0)
+			return;
+
+
+		if (st.autoneg)
+			fprintf(out, " speed auto\n");
+		else
+			fprintf(out, " speed %d %s\n", st.speed, st.duplex ? "full" : "half");
+	}
+
+
+#ifdef OPTION_VRRP
+	dump_vrrp_interface(out, osdev);
+#endif
+
+	/* Finally, return if interface is on or off */
+	fprintf(out, " %sshutdown\n", conf->up ? "no " : "");
+
+	return;
+}
+
 static void _dump_loopback_config(FILE *out, struct interface_conf *conf)
 {
 	char *osdev = conf->name; /* Interface name (linux name) */
@@ -1133,7 +1227,7 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 
 	librouter_config_rip_dump_interface(out, osdev);
 	librouter_config_ospf_dump_interface(out, osdev);
-
+#if defined(CONFIG_DIGISTAR_3G)
 	if (serial_no != BTIN_M3G_ALIAS) {
 		if (strcmp(cfg.sim_main.apn, "") != 0)
 			fprintf(out, " apn set %s\n", cfg.sim_main.apn);
@@ -1168,6 +1262,14 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 				fprintf(out, " sim-order %d\n",
 				                librouter_modem3g_sim_order_get_mainsim());
 	}
+#elif defined(CONFIG_DIGISTAR_EFM)
+	if (strcmp(cfg.sim_main.apn, "") != 0)
+		fprintf(out, " apn set %s\n", cfg.sim_main.apn);
+	if (strcmp(cfg.sim_main.username, "") != 0)
+		fprintf(out, " username set %s\n", cfg.sim_main.username);
+	if (strcmp(cfg.sim_main.password, "") != 0)
+		fprintf(out, " password set %s\n", cfg.sim_main.password);
+#endif
 
 	if (cfg.bckp_conf.method == BCKP_METHOD_LINK)
 		fprintf(out, " backup-method link\n");
@@ -1191,6 +1293,7 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 }
 //#endif
 
+#ifdef OPTION_PPTP
 static void _dump_pptp_config(FILE * out, struct interface_conf *conf)
 {
 	char *osdev = conf->name;
@@ -1207,7 +1310,9 @@ static void _dump_pptp_config(FILE * out, struct interface_conf *conf)
 
 	librouter_pptp_dump(out);
 }
+#endif
 
+#ifdef OPTION_PPPOE
 static void _dump_pppoe_config(FILE * out, struct interface_conf *conf)
 {
 	char *osdev = conf->name;
@@ -1224,6 +1329,7 @@ static void _dump_pppoe_config(FILE * out, struct interface_conf *conf)
 
 	librouter_pppoe_dump(out);
 }
+#endif
 
 
 /**
@@ -1260,15 +1366,24 @@ static void librouter_config_dump_interface(FILE *out, struct interface_conf *co
 	switch (conf->linktype) {
 #ifdef OPTION_PPP
 	case ARPHRD_PPP:
+#ifdef OPTION_PPTP
 		if (strstr(cish_dev, "pptp"))
 			_dump_pptp_config(out, conf);
+#endif
+#ifdef OPTION_PPPOE
 		if (strstr(cish_dev, "pppoe"))
 			_dump_pppoe_config(out, conf);
+#endif
 		if (strstr(cish_dev, "m3G"))
 			_dump_ppp_config(out, conf);
 		break;
 #endif
 	case ARPHRD_ETHER:
+#ifdef OPTION_EFM
+		if (strstr(cish_dev, "efm"))
+			_dump_efm_config(out, conf);
+		else
+#endif
 		_dump_ethernet_config(out, conf);
 		break;
 	case ARPHRD_LOOPBACK:

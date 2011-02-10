@@ -647,18 +647,25 @@ void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg)
 
 		cfg->unit = serial_no;
 
-		if (serial_no == BTIN_M3G_ALIAS){
+#if defined(CONFIG_DIGISTAR_3G)
+		if (serial_no == BTIN_M3G_ALIAS) {
 			cfg->sim_main.sim_num = librouter_modem3g_sim_order_get_mainsim();
 			cfg->sim_backup.sim_num = !librouter_modem3g_sim_order_get_mainsim();
 			librouter_modem3g_sim_get_info_fromfile(&cfg->sim_main);
 			librouter_modem3g_sim_get_info_fromfile(&cfg->sim_backup);
-		}
-		else{
+		} else {
 			cfg->sim_main.sim_num = 0;
 			librouter_modem3g_get_apn(cfg->sim_main.apn, serial_no);
 			librouter_modem3g_get_username(cfg->sim_main.username, serial_no);
 			librouter_modem3g_get_password(cfg->sim_main.password, serial_no);
+
 		}
+#elif defined(CONFIG_DIGISTAR_EFM)
+		cfg->sim_main.sim_num = 0;
+		librouter_modem3g_get_apn(cfg->sim_main.apn, serial_no);
+		librouter_modem3g_get_username(cfg->sim_main.username, serial_no);
+		librouter_modem3g_get_password(cfg->sim_main.password, serial_no);
+#endif
 
 		cfg->ip_unnumbered = -1;
 
@@ -681,7 +688,7 @@ void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg)
 			cfg->ip_unnumbered=-1;
 	}
 
-#else
+#else /* OPTION_MODEM3G */
 	snprintf(cfg->osdevice, 16, "ttyS%d", serial_no);
 
 	cfg->unit=serial_no;
