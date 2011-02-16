@@ -8,8 +8,6 @@
 #ifndef _MODEM3G_H
 #define _MODEM3G_H
 
-#include "../../cish/util/backupd.h" /*FIXME*/
-
 //#define DEBUG_MODEM3G_SYSLOG
 #ifdef DEBUG_MODEM3G_SYSLOG
 #define dbgS_modem3g(x,...) \
@@ -64,6 +62,71 @@
 #define MODULE_STATUS_OFF	0
 #define MODULE_USBHUB_PORT	3
 
+#define BACKUPD_PID_FILE        "/var/run/backupd.pid"
+#define BACKUPD_CONF_FILE       "/etc/backupd/backupd.conf"
+
+#define INTF_STR                "interface="
+#define SHUTD_STR               "shutdown="
+#define BCKUP_STR               "backing_up="
+#define MAIN_INTF_STR           "main_interface="
+#define METHOD_STR              "method="
+#define PING_ADDR_STR           "ping-address="
+#define DEFAULT_ROUTE_STR       "default-route="
+#define ROUTE_DISTANCE_STR      "default-route-distance="
+
+#define INTF_STR_LEN            strlen(INTF_STR)
+#define SHUTD_STR_LEN           strlen(SHUTD_STR)
+#define BCKUP_STR_LEN           strlen(BCKUP_STR)
+#define MAIN_INTF_STR_LEN       strlen(MAIN_INTF_STR)
+#define METHOD_STR_LEN          strlen(METHOD_STR)
+#define PING_ADDR_STR_LEN       strlen(PING_ADDR_STR)
+#define DEFAULT_ROUTE_STR_LEN   strlen(DEFAULT_ROUTE_STR)
+#define ROUTE_DISTANCE_STR_LEN  strlen(ROUTE_DISTANCE_STR)
+
+/*
+ * Which methodology to use? For now
+ * we define link and ping methods
+ */
+enum bckp_method {
+        BCKP_METHOD_LINK,
+        BCKP_METHOD_PING
+};
+
+enum bckp_config_field {
+        FIELD_INTF,
+        FIELD_SHUTD,
+        FIELD_BCK_UP,
+        FIELD_MAIN_INTF,
+        FIELD_METHOD,
+        FIELD_PING_ADDR,
+        FIELD_INSTALL_DEFAULT_ROUTE,
+        FIELD_ROUTE_DISTANCE
+};
+
+enum bckp_state {
+        STATE_SHUTDOWN,
+        STATE_NOBACKUP,
+        STATE_SIMCHECK,
+        STATE_WAITING,
+        STATE_MAIN_INTF_RESTABLISHED,
+        STATE_CONNECT
+};
+
+struct bckp_conf_t {
+        struct bckp_conf_t *next;
+        char intf_name[32];
+        int is_backup; /* Is backing up another interface */
+        int shutdown;
+        char main_intf_name[32];
+        enum bckp_method method;
+        char ping_address[128];
+        enum bckp_state state;
+        pid_t pppd_pid;
+        int is_default_gateway;
+        int default_route_distance;
+};
+
+
 struct sim_conf {
 	int sim_num;
 	char apn[SIZE_FIELDS_STRUCT];
@@ -90,5 +153,7 @@ int librouter_modem3g_sim_set_all_info_inchat(int simcard, int m3g);
 int librouter_modem3g_sim_order_set_allinfo(int sim_main, int sim_back, char * interface, int intfnumber);
 int librouter_modem3g_module_reset (void);
 int librouter_modem3g_module_set_status (int status);
+
+
 
 #endif
