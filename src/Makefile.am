@@ -48,6 +48,7 @@ librouter_la_SOURCES = \
 	libtime.c \
 	tunnel.c \
 	version.c \
+	pbr.c \
 	usb.c \
 	pptp.c \
 	pppoe.c \
@@ -117,6 +118,7 @@ librouter_la_HEADERS = \
 	tunnel.h \
 	typedefs.h \
 	version.h \
+	pbr.h \
 	usb.h \
 	pptp.h \
 	pppoe.h \

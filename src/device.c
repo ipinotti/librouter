@@ -15,7 +15,10 @@
 #include "device.h"
 #include "args.h"
 #include "str.h"
+
+#ifdef OPTION_EFM
 #include "efm.h"
+#endif
 
 //#define DEBUG
 

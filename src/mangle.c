@@ -15,6 +15,79 @@
 #include "ip.h"
 #include "qos.h"
 
+int librouter_mangle_rule_exists_by_name(char *mangle_rule)
+{
+	FILE *f;
+	char *tmp, buf[256];
+	int mangle_rule_exists = 0;
+
+	f = popen("/bin/iptables -t mangle -L -n", "r");
+
+	if (!f) {
+		fprintf(stderr, "%% MANGLE subsystem not found\n");
+		return 0;
+	}
+
+	while (!feof(f)) {
+		buf[0] = 0;
+		fgets(buf, 255, f);
+		buf[255] = 0;
+		librouter_str_striplf(buf);
+		if (strncmp(buf, "Chain ", 6) == 0) {
+			tmp = strchr(buf + 6, ' ');
+			if (tmp) {
+				*tmp = 0;
+				if (strcmp(buf + 6, mangle_rule) == 0) {
+					mangle_rule_exists = 1;
+					break;
+				}
+			}
+		}
+	}
+	pclose(f);
+	return mangle_rule_exists;
+}
+
+int librouter_mangle_rule_exists_by_num(int mangle_rule_num)
+{
+	//todo
+/*
+	FILE *f;
+	char *tmp, buf[256], *tmp_pos;
+	int mangle_rule_exists = 0;
+	char num_hex[6];
+
+	f = popen("/bin/iptables -t mangle -L -n", "r");
+
+	if (!f) {
+		fprintf(stderr, "%% MANGLE subsystem not found\n");
+		return 0;
+	}
+
+	sprintf(num_hex,"%x",mangle_rule_num);
+
+	while (!feof(f)) {
+		buf[0] = 0;
+		fgets(buf, 255, f);
+		buf[255] = 0;
+		librouter_str_striplf(buf);
+		if (tmp_pos = strstr(buf, "MARK xset")) {
+			tmp = strchr(buf + 10, ' ');
+			if (tmp) {
+				*tmp = 0;
+				if (strcmp(buf + 6, mangle_rule) == 0) {
+					mangle_rule_exists = 1;
+					break;
+				}
+			}
+		}
+	}
+	pclose(f);
+	return mangle_rule_exists;
+*/
+}
+
+
 static void print_mangle (const char *action,
                           const char *dscp,
                           const char *mark,
