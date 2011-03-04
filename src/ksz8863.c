@@ -18,43 +18,33 @@
 #include <sys/stat.h>
 
 #include <linux/autoconf.h>
-#include <linux/i2c.h>
-#include <linux/i2c-dev.h>
 
 #include "options.h"
 
 #ifdef OPTION_MANAGED_SWITCH
 
-//#include "i2c-dev.h"
+#include "i2c-dev.h"
 #include "ksz8863.h"
 
 /* Low level I2C functions */
 static int _ksz8863_reg_read(__u8 reg, __u8 *buf, __u8 len)
 {
-	struct i2c_rdwr_ioctl_data data;
-	struct i2c_msg msg;
 	int dev;
 
 	dev = open(KSZ8863_I2CDEV, O_NONBLOCK);
 	if (dev < 0) {
-		ksz8863_dbg("error opening %s: %s\n", KSZ8863_I2CDEV, strerror(errno));
+		printf("error opening %s: %s\n", KSZ8863_I2CDEV, strerror(errno));
 		return -1;
 	}
 
-	data.msgs = &msg;
-	data.nmsgs = 1;
-
-	msg.addr = KSZ8863_I2CADDR;
-	msg.buf = buf;
-	msg.len = len;
-	msg.flags = I2C_M_RD;
-	msg.command = reg; /* address to read from */
-
-	if (ioctl(dev, I2C_RDWR, &data) < 0) {
-		ksz8863_dbg("Could not read from device : %s\n", strerror(errno));
+	if (ioctl(dev, I2C_SLAVE, KSZ8863_I2CADDR) < 0) {
+		printf("%% %s : Could not set slave address\n", __FUNCTION__);
 		close(dev);
 		return -1;
 	}
+
+	*buf = i2c_smbus_read_byte_data(dev, reg);
+
 
 	ksz8863_dbg("addr = %02x data = %02x\n", reg, *buf)
 
@@ -64,9 +54,9 @@ static int _ksz8863_reg_read(__u8 reg, __u8 *buf, __u8 len)
 
 static int _ksz8863_reg_write(__u8 reg, __u8 *buf, __u8 len)
 {
-	struct i2c_rdwr_ioctl_data data;
-	struct i2c_msg msg;
 	int dev;
+
+	ksz8863_dbg("addr = %02x data = %02x\n", reg, *buf)
 
 	dev = open(KSZ8863_I2CDEV, O_NONBLOCK);
 	if (dev < 0) {
@@ -74,22 +64,18 @@ static int _ksz8863_reg_write(__u8 reg, __u8 *buf, __u8 len)
 		return -1;
 	}
 
-	data.msgs = &msg;
-	data.nmsgs = 1;
-
-	msg.addr = KSZ8863_I2CADDR;
-	msg.buf = buf;
-	msg.len = len;
-	msg.flags = 0;
-	msg.command = reg; /* address to write to */
-
-	if (ioctl(dev, I2C_RDWR, &data) < 0) {
-		printf("%% %s : Could not write to device\n", __FUNCTION__);
+	if (ioctl(dev, I2C_SLAVE, KSZ8863_I2CADDR) < 0) {
+		printf("%% %s : Could not set slave address\n", __FUNCTION__);
 		close(dev);
 		return -1;
 	}
 
-	ksz8863_dbg("addr = %02x data = %02x\n", reg, *buf)
+	if (i2c_smbus_write_byte_data(dev, reg, *buf) < 0) {
+		printf("%s : Error writing to device\n", __FUNCTION__);
+		close(dev);
+		return -1;
+	}
+
 
 	close(dev);
 	return 0;
