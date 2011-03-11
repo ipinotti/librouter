@@ -655,6 +655,10 @@ char *librouter_ip_ethernet_get_dev(char *dev)
 	int i;
 	static char brname[32];
 
+	/* Only valid for eth0 */
+	if (strcmp(dev, "eth0"))
+		return dev;
+
 	for (i = 0; i < MAX_BRIDGE; i++) {
 		snprintf(brname, 32, "%s%d", BRIDGE_NAME, i);
 		/* Is ethernet interface enslaved by a bridge interface?  */

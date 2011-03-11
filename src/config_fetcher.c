@@ -950,11 +950,21 @@ static void _dump_intf_secondary_ipaddr_config(FILE *out, struct interface_conf 
 static void _dump_intf_ipaddr_config(FILE *out, struct interface_conf *conf)
 {
 	struct ip_t *ip = &conf->main_ip;
+	char *dev = librouter_ip_ethernet_get_dev(conf->name); /* ethernet enslaved by bridge? */
 
-	if (ip->ipaddr[0])
-		fprintf(out, " ip address %s %s\n", ip->ipaddr, ip->ipmask);
-	else
-		fprintf(out, " no ip address\n");
+	if (!strcmp(conf->name, dev)) {
+		if (ip->ipaddr[0])
+			fprintf(out, " ip address %s %s\n", ip->ipaddr, ip->ipmask);
+		else
+			fprintf(out, " no ip address\n");
+	} else {
+		char addr[32], mask[32];
+		librouter_ip_interface_get_ip_addr(dev, addr, mask);
+		if (addr[0])
+			fprintf(out, " ip address %s %s\n", addr, mask);
+		else
+			fprintf(out, " no ip address\n");
+	}
 }
 
 static void _dump_vlans(FILE *out, struct interface_conf *conf)
@@ -1436,6 +1446,10 @@ void librouter_config_interfaces_dump(FILE *out)
 	for (i = 0; intf_list[i][0] != '\0'; i++) {
 
 		if (librouter_ip_iface_get_config(intf_list[i], &conf, &info) < 0)
+			continue;
+
+		/* Ignore the following interfaces: bridge*/
+		if (strstr(conf.name, "bridge"))
 			continue;
 
 		st = conf.stats;
