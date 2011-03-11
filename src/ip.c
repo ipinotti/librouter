@@ -650,18 +650,19 @@ int librouter_ip_get_mac(char *ifname, char *mac)
 	return librouter_dev_get_hwaddr(ifname, (unsigned char *) mac);
 }
 
-/* !!! Caso especial para ethernet, em funcao do modo bridge */
 char *librouter_ip_ethernet_get_dev(char *dev)
 {
-#if 0
-	static char brname[32]; /* dangerous! */
+	int i;
+	static char brname[32];
 
-	snprintf(brname, 32, "%s1", BRIDGE_NAME); // TODO - incluir teste para mais de uma bridge
-	// Teste: a ethernet pertence a alguma bridge ?
-	if (br_checkif(brname, dev))
-		return brname;
-	else
-#endif
+	for (i = 0; i < MAX_BRIDGE; i++) {
+		snprintf(brname, 32, "%s%d", BRIDGE_NAME, i);
+		/* Is ethernet interface enslaved by a bridge interface?  */
+		if (librouter_br_checkif(brname, dev))
+			return brname;
+	}
+
+	/* Not in a bridge, return interface itself */
 	return dev;
 }
 

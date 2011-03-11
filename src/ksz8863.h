@@ -8,7 +8,7 @@
 #ifndef KSZ8863_H_
 #define KSZ8863_H_
 
-#define KSZ8863_DEBUG
+//#define KSZ8863_DEBUG
 #ifdef KSZ8863_DEBUG
 #define ksz8863_dbg(x,...) \
 		printf("%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__);
@@ -17,7 +17,7 @@
 #endif
 
 #define KSZ8863_NUM_VLAN_TABLES		16
-#define KSZ8863_I2CDEV	"/dev/i2c-0"
+#define KSZ8863_I2CDEV	"/dev/i2c-1"
 #define KSZ8863_I2CADDR	0x5f
 
 #define KSZ8863_ID	0x8830

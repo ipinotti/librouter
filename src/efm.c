@@ -104,7 +104,14 @@ int librouter_efm_get_status(struct orionplus_stat *st)
 {
 	memset(st, 0, sizeof(struct orionplus_stat));
 
-return _do_ioctl(ORIONPLUS_GETSTATUS, st);
+	return _do_ioctl(ORIONPLUS_GETSTATUS, st);
+}
+
+int librouter_efm_get_counters(struct orionplus_counters *cnt)
+{
+	memset(cnt, 0, sizeof(struct orionplus_counters));
+
+	return _do_ioctl(ORIONPLUS_GETCOUNTERS, cnt);
 }
 
 int librouter_efm_get_channel_state_string(enum channel_state st, char *buf, int len)

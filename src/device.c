@@ -32,6 +32,7 @@ dev_family _devices[] = {
 	{ efm, "efm", "eth", "EFM" },
 	{ pptp, "pptp", "ppp", "PPTP" },
 	{ pppoe, "pppoe", "ppp", "PPPoE" },
+	{ bridge, "bridge", "bridge", "Bridge"},
 	{ none, NULL, NULL, NULL }
 };
 

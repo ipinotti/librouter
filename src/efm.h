@@ -19,6 +19,7 @@ int librouter_efm_get_mode(void);
 int librouter_efm_enable(int enable);
 
 int librouter_efm_get_status(struct orionplus_stat *st);
+int librouter_efm_get_counters(struct orionplus_counters *cnt);
 int librouter_efm_get_num_channels(void);
 
 int librouter_efm_get_channel_state_string(enum channel_state st, char *buf, int len);
