@@ -14,7 +14,7 @@
 #define PPPOE_PPP_START 30
 #define PPPOE_PPP_END 39
 
-#define ETHERNETDEV "ethernet"
+#define ETHERNETDEV "eth"
 #define AUXDEV "aux"
 #define AUXDEV_PPP "ax"
 #define SERIALDEV "serial"
