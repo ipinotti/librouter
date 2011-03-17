@@ -52,6 +52,7 @@ librouter_la_SOURCES = \
 	usb.c \
 	pptp.c \
 	pppoe.c \
+	bcm53115s.c \
 	vlan.c
 
 librouter_la_LIBADD = $(top_builddir)/src/libnetlink/libnetlink.la \
@@ -122,4 +123,6 @@ librouter_la_HEADERS = \
 	usb.h \
 	pptp.h \
 	pppoe.h \
+	bcm53115s.h \
+	bcm53115s_etc.h \
 	vlan.h
