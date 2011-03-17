@@ -44,6 +44,10 @@
 #include "config_mapper.h"
 #include "acl.h"
 
+#ifdef OPTION_EFM
+#include "ksz8863.h"
+#endif
+
 #define PPPDEV "ppp"
 
 /********************/
@@ -1080,6 +1084,10 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	/* Finally, return if interface is on or off */
 	fprintf(out, " %sshutdown\n", conf->up ? "no " : "");
 
+#if defined(OPTION_EFM) && defined(OPTION_MANAGED_SWITCH)
+	if (!strcmp(osdev, KSZ8863_ETH_IFACE)) /* Check for the right network interface */
+		librouter_ksz8863_dump_config(out);
+#endif
 	return;
 }
 
@@ -1220,7 +1228,7 @@ static void _dump_tunnel_config(FILE *out, struct interface_conf *conf)
 }
 #endif
 
-//#ifdef OPTION_PPP
+#ifdef OPTION_PPP
 static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 {
 	ppp_config cfg;
@@ -1302,7 +1310,7 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 
 	fprintf(out, " %sshutdown\n", cfg.up ? "no " : "");
 }
-//#endif
+#endif /*OPTION_PPP */
 
 #ifdef OPTION_PPTP
 static void _dump_pptp_config(FILE * out, struct interface_conf *conf)
@@ -1435,13 +1443,8 @@ void librouter_config_interfaces_dump(FILE *out)
 
 	/* Get interface names */
 	librouter_ip_get_if_list(&info);
-	for (i = 0; i < MAX_NUM_LINKS; i++) {
+	for (i = 0; i < MAX_NUM_LINKS; i++)
 		intf_list[i] = info.link[i].ifname;
-	}
-
-#if 0
-	int vlan_cos=NONE_TO_COS;
-#endif
 
 	for (i = 0; intf_list[i][0] != '\0'; i++) {
 
@@ -1464,26 +1467,7 @@ void librouter_config_interfaces_dump(FILE *out)
 		if (strncmp(conf.name, "ipsec", 5) == 0)
 			conf.linktype = ARPHRD_TUNNEL6;
 
-		/* TODO Check PHY/Switch status for ethernet interfaces */
-#if 0
-		switch (conf.linktype) {
-			case ARPHRD_ETHER:
-			phy_status = librouter_lan_get_status(conf.name);
-			/* vlan: interface must be up */
-			running = (up && (phy_status & PHY_STAT_LINK) ? 1 : 0);
-			/* VLAN */
-			if (!strncmp(conf.name,"ethernet",8) && strstr(conf.name,"."))
-			vlan_cos = librouter_vlan_get_cos(conf.name);
-			else
-			vlan_cos = NONE_TO_COS;
-			break;
-			default:
-			running = (link_table[i].flags & IFF_RUNNING) ? 1 : 0;
-			break;
-		}
-#else
 		conf.running = (conf.flags & IFF_RUNNING) ? 1 : 0;
-#endif
 
 		/* Ignore loopbacks that are down */
 		if (conf.linktype == ARPHRD_LOOPBACK && !conf.running)

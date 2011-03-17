@@ -19,6 +19,7 @@
 #define KSZ8863_NUM_VLAN_TABLES		16
 #define KSZ8863_I2CDEV	"/dev/i2c-1"
 #define KSZ8863_I2CADDR	0x5f
+#define KSZ8863_ETH_IFACE	"eth0"
 
 #define KSZ8863_ID	0x8830
 
@@ -115,7 +116,7 @@ int librouter_ksz8863_set_wfq(int enable);
 int librouter_ksz8863_get_replace_null_vid(void);
 int librouter_ksz8863_set_replace_null_vid(int enable);
 
-int librouter_ksz8863_get_storm_protect_rate(unsigned int *percentage);
+int librouter_ksz8863_get_storm_protect_rate(void);
 int librouter_ksz8863_set_storm_protect_rate(unsigned int percentage);
 
 /* Port n Control 1*/
@@ -158,7 +159,7 @@ int librouter_ksz8863_get_dscp_prio(int dscp);
 int librouter_ksz8863_set_dscp_prio(int dscp, int prio);
 
 /* VLAN */
-int librouter_ksz8863_get_table(int entry, struct vlan_config_t *vconfig);
+int librouter_ksz8863_get_table(int entry, struct vlan_table_t *v);
 int librouter_ksz8863_del_table(struct vlan_config_t *vconfig);
 int librouter_ksz8863_add_table(struct vlan_config_t *vconfig);
 

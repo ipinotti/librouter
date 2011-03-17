@@ -45,7 +45,6 @@ static int _ksz8863_reg_read(__u8 reg, __u8 *buf, __u8 len)
 
 	*buf = i2c_smbus_read_byte_data(dev, reg);
 
-
 	ksz8863_dbg("addr = %02x data = %02x\n", reg, *buf)
 
 	close(dev);
@@ -75,7 +74,6 @@ static int _ksz8863_reg_write(__u8 reg, __u8 *buf, __u8 len)
 		close(dev);
 		return -1;
 	}
-
 
 	close(dev);
 	return 0;
@@ -159,7 +157,7 @@ int librouter_ksz8863_get_broadcast_storm_protect(int port)
 	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
 		return -1;
 
-	return (data | KSZ8863REG_ENABLE_BC_STORM_PROTECT_MSK) ? 1 : 0;
+	return (data & KSZ8863REG_ENABLE_BC_STORM_PROTECT_MSK) ? 1 : 0;
 }
 
 int librouter_ksz8863_set_storm_protect_rate(unsigned int percentage)
@@ -178,7 +176,7 @@ int librouter_ksz8863_set_storm_protect_rate(unsigned int percentage)
 	if (_ksz8863_reg_read(KSZ8863REG_GLOBAL_CONTROL4, &data, sizeof(data)))
 		return -1;
 
-	data &= ~0x03; /* Clear old rate value - first 3 bits */
+	data &= ~0x07; /* Clear old rate value - first 3 bits */
 	data |= (tmp >> 8); /* Get the 3 most significant bits */
 
 	if (_ksz8863_reg_write(KSZ8863REG_GLOBAL_CONTROL4, &data, sizeof(data)))
@@ -187,19 +185,15 @@ int librouter_ksz8863_set_storm_protect_rate(unsigned int percentage)
 	/* Now write the less significant bits */
 	data = (__u8) (tmp & 0x00ff);
 	if (_ksz8863_reg_write(KSZ8863REG_GLOBAL_CONTROL5, &data, sizeof(data)))
-		return -1;
+	return -1;
 
 	return 0;
 }
 
-int librouter_ksz8863_get_storm_protect_rate(unsigned int *percentage)
+int librouter_ksz8863_get_storm_protect_rate(void)
 {
 	__u8 rate_u, rate_l;
-
-	if (percentage == NULL) {
-		printf("%% Percentage points to NULL\n");
-		return -1;
-	}
+	int perc;
 
 	if (_ksz8863_reg_read(KSZ8863REG_GLOBAL_CONTROL4, &rate_u, sizeof(rate_u)))
 		return -1;
@@ -207,12 +201,13 @@ int librouter_ksz8863_get_storm_protect_rate(unsigned int *percentage)
 	if (_ksz8863_reg_read(KSZ8863REG_GLOBAL_CONTROL5, &rate_l, sizeof(rate_l)))
 		return -1;
 
-	rate_u &= 0x03; /* Get rate bits [2-0] */
-	*percentage = (unsigned int)((rate_u << 8) | rate_l);
+	rate_u &= 0x07; /* Get rate bits [2-0] */
 
-	return 0;
+	perc = ((rate_u << 8) | rate_l);
+	perc /= 99;
+
+	return perc;
 }
-
 
 /**
  * librouter_ksz8863_set_multicast_storm_protect
@@ -255,7 +250,7 @@ int librouter_ksz8863_get_multicast_storm_protect(void)
 	if (_ksz8863_reg_read(KSZ8863REG_GLOBAL_CONTROL2, &data, sizeof(data)))
 		return -1;
 
-	return ((data | KSZ8863REG_ENABLE_MC_STORM_PROTECT_MSK) ? 1 : 0);
+	return ((data & KSZ8863REG_ENABLE_MC_STORM_PROTECT_MSK) ? 1 : 0);
 }
 
 /**
@@ -299,7 +294,7 @@ int librouter_ksz8863_get_replace_null_vid(void)
 	if (_ksz8863_reg_read(KSZ8863REG_GLOBAL_CONTROL4, &data, sizeof(data)))
 		return -1;
 
-	return ((data | KSZ8863_ENABLE_REPLACE_NULL_VID_MSK) ? 1 : 0);
+	return ((data & KSZ8863_ENABLE_REPLACE_NULL_VID_MSK) ? 1 : 0);
 }
 
 /**
@@ -329,14 +324,14 @@ int librouter_ksz8863_set_egress_rate_limit(int port, int prio, int rate)
 	}
 
 	/* Calculate reg offset */
-	reg = KSZ8863REG_INGRESS_RATE_LIMIT;
+	reg = KSZ8863REG_EGRESS_RATE_LIMIT;
 	reg += 0x4 * port;
 	reg += prio;
 
-	if (!rate) {
+	if (!rate || rate == 100000) {
 		data = (__u8) 0;
 	} else if (rate >= 1000) {
-		data = (__u8) rate/1000;
+		data = (__u8) (rate/1000);
 	} else {
 		data = 0x65;
 		data += (__u8) (rate/64 - 1);
@@ -345,15 +340,15 @@ int librouter_ksz8863_set_egress_rate_limit(int port, int prio, int rate)
 	return _ksz8863_reg_write(reg, &data, sizeof(data));
 }
 
-/**
- * librouter_ksz8863_get_egress_rate_limit
- *
- * Get rate limit from a certain port and priority queue
- *
- * @param port
- * @param prio
- * @return The configured rate limit or -1 if error
- */
+		/**
+		 * librouter_ksz8863_get_egress_rate_limit
+		 *
+		 * Get rate limit from a certain port and priority queue
+		 *
+		 * @param port
+		 * @param prio
+		 * @return The configured rate limit or -1 if error
+		 */
 int librouter_ksz8863_get_egress_rate_limit(int port, int prio)
 {
 	__u8 reg, data;
@@ -370,7 +365,7 @@ int librouter_ksz8863_get_egress_rate_limit(int port, int prio)
 	}
 
 	/* Calculate reg offset */
-	reg = KSZ8863REG_INGRESS_RATE_LIMIT;
+	reg = KSZ8863REG_EGRESS_RATE_LIMIT;
 	reg += 0x4 * port;
 	reg += prio;
 
@@ -417,10 +412,10 @@ int librouter_ksz8863_set_ingress_rate_limit(int port, int prio, int rate)
 	reg += 0x10 * port;
 	reg += prio;
 
-	if (!rate) {
+	if (!rate || rate == 100000) {
 		data = (__u8) 0;
 	} else if (rate >= 1000) {
-		data = (__u8) rate/1000;
+		data = (__u8) (rate/1000);
 	} else {
 		data = 0x65;
 		data += (__u8) (rate/64 - 1);
@@ -506,7 +501,7 @@ int librouter_ksz8863_get_8021q(void)
 	if (_ksz8863_reg_read(KSZ8863REG_GLOBAL_CONTROL3, &data, sizeof(data)))
 		return -1;
 
-	return ((data | KSZ8863_ENABLE_8021Q_MSK) ? 1 : 0);
+	return ((data & KSZ8863_ENABLE_8021Q_MSK) ? 1 : 0);
 }
 
 /**
@@ -545,7 +540,7 @@ int librouter_ksz8863_get_wfq(void)
 	if (_ksz8863_reg_read(KSZ8863REG_GLOBAL_CONTROL3, &data, sizeof(data)))
 		return -1;
 
-	return ((data | KSZ8863_ENABLE_WFQ_MSK) ? 1 : 0);
+	return ((data & KSZ8863_ENABLE_WFQ_MSK) ? 1 : 0);
 }
 
 /**
@@ -573,30 +568,30 @@ int librouter_ksz8863_set_default_vid(int port, int vid)
 	reg = KSZ8863REG_PORT_CONTROL3;
 	reg += 0x10 * port;
 
-	vid_l = (__u8) (vid | 0xff);
-	vid_u = (__u8) ((vid >> 8) | KSZ8863REG_DEFAULT_VID_UPPER_MSK);
+	vid_l = (__u8) (vid & 0xff);
+	vid_u = (__u8) ((vid >> 8) & KSZ8863REG_DEFAULT_VID_UPPER_MSK);
 
 	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
-		return -1;
+	return -1;
 
 	/* Set upper part of VID */
 	vid_u |= (data & (~KSZ8863REG_DEFAULT_VID_UPPER_MSK));
 
 	if (_ksz8863_reg_write(reg, &vid_u, sizeof(vid_u)) < 0)
-		return -1;
+	return -1;
 
 	if (_ksz8863_reg_write(reg+1, &vid_l, sizeof(vid_l)) < 0)
-		return -1;
+	return -1;
 
 	return 0;
 }
 
-/**
- * librouter_ksz8863_get_default_vid	Get port's default 802.1q VID
- *
- * @param port
- * @return Default VID if success, -1 if error
- */
+	/**
+	 * librouter_ksz8863_get_default_vid	Get port's default 802.1q VID
+	 *
+	 * @param port
+	 * @return Default VID if success, -1 if error
+	 */
 int librouter_ksz8863_get_default_vid(int port)
 {
 	__u8 vid_l, vid_u;
@@ -741,7 +736,7 @@ int librouter_ksz8863_get_8021p(int port)
 	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
 		return -1;
 
-	return (data | KSZ8863REG_ENABLE_8021P_MSK) ? 1 : 0;
+	return (data & KSZ8863REG_ENABLE_8021P_MSK) ? 1 : 0;
 }
 
 /**
@@ -802,9 +797,8 @@ int librouter_ksz8863_get_diffserv(int port)
 	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
 		return -1;
 
-	return (data | KSZ8863REG_ENABLE_DIFFSERV_MSK) ? 1 : 0;
+	return (data & KSZ8863REG_ENABLE_DIFFSERV_MSK) ? 1 : 0;
 }
-
 
 /**
  * librouter_ksz8863_set_taginsert
@@ -864,7 +858,7 @@ int librouter_ksz8863_get_taginsert(int port)
 	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
 		return -1;
 
-	return (data | KSZ8863REG_ENABLE_TAGINSERT_MSK) ? 1 : 0;
+	return (data & KSZ8863REG_ENABLE_TAGINSERT_MSK) ? 1 : 0;
 }
 
 /**
@@ -925,7 +919,7 @@ int librouter_ksz8863_get_txqsplit(int port)
 	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
 		return -1;
 
-	return (data | KSZ8863REG_ENABLE_TXQSPLIT_MSK) ? 1 : 0;
+	return (data & KSZ8863REG_ENABLE_TXQSPLIT_MSK) ? 1 : 0;
 }
 
 /**
@@ -953,7 +947,7 @@ int librouter_ksz8863_set_dscp_prio(int dscp, int prio)
 	}
 
 	reg = KSZ8863REG_TOS_PRIORITY_CONTROL;
-	reg += dscp/4;
+	reg += dscp / 4;
 
 	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
 		return -1;
@@ -996,7 +990,7 @@ int librouter_ksz8863_get_dscp_prio(int dscp)
 	}
 
 	reg = KSZ8863REG_TOS_PRIORITY_CONTROL;
-	reg += dscp/4;
+	reg += dscp / 4;
 
 	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
 		return -1;
@@ -1031,7 +1025,7 @@ int librouter_ksz8863_set_cos_prio(int cos, int prio)
 	}
 
 	reg = KSZ8863REG_GLOBAL_CONTROL10;
-	reg += cos/4;
+	reg += cos / 4;
 
 	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
 		return -1;
@@ -1074,7 +1068,7 @@ int librouter_ksz8863_get_cos_prio(int cos)
 	}
 
 	reg = KSZ8863REG_GLOBAL_CONTROL10;
-	reg += cos/4;
+	reg += cos / 4;
 
 	if (_ksz8863_reg_read(reg, &data, sizeof(data)))
 		return -1;
@@ -1144,7 +1138,7 @@ static int _get_vlan_table(unsigned int entry, struct vlan_table_t *t)
  *
  * @param table
  * @param t
- * @return
+ * @return 0 if success, -1 if failure
  */
 static int _set_vlan_table(unsigned int table, struct vlan_table_t *t)
 {
@@ -1164,7 +1158,6 @@ static int _set_vlan_table(unsigned int table, struct vlan_table_t *t)
 	if (_ksz8863_reg_write(KSZ8863REG_INDIRECT_DATA0, &data, sizeof(data)))
 		return -1;
 
-
 	data = t->vid >> 8;
 	data |= t->fid << 4;
 	if (_ksz8863_reg_write(KSZ8863REG_INDIRECT_DATA1, &data, sizeof(data)))
@@ -1181,7 +1174,29 @@ static int _set_vlan_table(unsigned int table, struct vlan_table_t *t)
 
 	data = (__u8) table;
 	if (_ksz8863_reg_write(KSZ8863REG_INDIRECT_ACCESS_CONTROL1, &data, sizeof(data)))
-		return -1;
+	return -1;
+
+	return 0;
+}
+
+/**
+ * _init_vlan_table
+ *
+ * Make all VLAN entries invalid
+ *
+ * @return 0 if success, -1 if failure
+ */
+static int _init_vlan_table(void)
+{
+	int i;
+	struct vlan_table_t vlan;
+
+	vlan.valid = 0;
+	vlan.vid = 0;
+
+	/* Search for the same VID in a existing entry */
+	for (i = 0; i < KSZ8863_NUM_VLAN_TABLES; i++)
+		_set_vlan_table(i, &vlan);
 
 	return 0;
 }
@@ -1293,42 +1308,28 @@ int librouter_ksz8863_del_table(struct vlan_config_t *vconfig)
  * @param vconfig
  * @return 0 if success, -1 if error
  */
-int librouter_ksz8863_get_table(int entry, struct vlan_config_t *vconfig)
+int librouter_ksz8863_get_table(int entry, struct vlan_table_t *v)
 {
-	struct vlan_table_t t;
-
-	if (vconfig == NULL) {
+	if (v == NULL) {
 		printf("%% Invalid VLAN config\n");
 		return -1;
 	}
 
-	if (_get_vlan_table(entry, &t) < 0)
+	if (_get_vlan_table(entry, v) < 0)
 		return -1;
 
-	vconfig->vid = t.vid;
-	vconfig->membership = t.membership;
+	ksz8863_dbg("Getting entry %d\n", entry);
+	ksz8863_dbg(" -- > valid : %d\n", v->valid);
+	ksz8863_dbg(" -- > membership : %d\n", v->membership);
+	ksz8863_dbg(" -- > vid : %d\n", v->vid);
+	ksz8863_dbg(" -- > fid : %d\n", v->fid);
 
 	return 0;
 }
-
-
 
 /*********************************************/
 /******* Initialization functions ************/
 /*********************************************/
-
-/**
- * librouter_ksz8863_set_default_config
- *
- * Configure switch to system default
- *
- * @return 0 if success, -1 if error
- */
-int librouter_ksz8863_set_default_config(void)
-{
-	return 0;
-}
-
 
 /**
  * librouter_ksz8863_probe	Probe for the KSZ8863 Chip
@@ -1356,6 +1357,108 @@ int librouter_ksz8863_probe(void)
 		return 1;
 
 	return 0;
+}
+
+/**
+ * librouter_ksz8863_set_default_config
+ *
+ * Configure switch to system default
+ *
+ * @return 0 if success, -1 if error
+ */
+int librouter_ksz8863_set_default_config(void)
+{
+	if (librouter_ksz8863_probe())
+		_init_vlan_table();
+
+	return 0;
+}
+
+
+static void _dump_port_config(FILE *out, int port)
+{
+	int i;
+
+	fprintf(out, " switch-port %d\n", port);
+
+	if (librouter_ksz8863_get_8021p(port))
+		fprintf(out, "  802.1p\n");
+
+	if (librouter_ksz8863_get_diffserv(port))
+		fprintf(out, "  diffserv\n");
+
+	for (i = 0; i < 4; i++) {
+		int rate = librouter_ksz8863_get_ingress_rate_limit(port, i);
+		if (rate != 100000)
+			fprintf(out, "  rate-limit %d %d\n", i, rate);
+	}
+
+	for (i = 0; i < 4; i++) {
+		int rate = librouter_ksz8863_get_egress_rate_limit(port, i);
+		if (rate != 100000)
+			fprintf(out, "  traffic-shape %d %d\n", i, rate);
+	}
+
+	if (librouter_ksz8863_get_txqsplit(port))
+		fprintf(out, "  txqueue-split\n");
+
+	i = librouter_ksz8863_get_default_vid(port);
+	if (i)
+		fprintf(out, "  vlan-default %d\n", i);
+
+}
+
+int librouter_ksz8863_dump_config(FILE *out)
+{
+	int i;
+
+	/* Is device present ? */
+	if (librouter_ksz8863_probe() == 0)
+		return 0;
+
+	if (librouter_ksz8863_get_8021q())
+		fprintf(out, " switch-config 802.1q\n");
+
+	i = librouter_ksz8863_get_storm_protect_rate();
+	if (i != 1)
+		fprintf(out, " switch-config storm-protect-rate %d\n", i);
+
+	for (i = 0; i < 8; i++) {
+		int prio = librouter_ksz8863_get_cos_prio(i);
+		if (prio != i / 2)
+			fprintf(out, " switch-config cos-prio %d %d\n", i, prio);
+	}
+
+	for (i = 0; i < 64; i++) {
+		int prio = librouter_ksz8863_get_dscp_prio(i);
+		if (prio)
+			fprintf(out, " switch-config dscp-prio %d %d\n", i, prio);
+	}
+
+	if (librouter_ksz8863_get_multicast_storm_protect())
+		fprintf(out, " switch-config multicast-storm-protect\n");
+
+	if (librouter_ksz8863_get_replace_null_vid())
+		fprintf(out, " switch-config replace-null-vid\n");
+
+
+	for (i = 0; i < KSZ8863_NUM_VLAN_TABLES; i++) {
+		struct vlan_table_t v;
+
+		librouter_ksz8863_get_table(i, &v);
+		if (v.valid)
+			fprintf(out, " switch-config vlan %d %s%s%s\n",
+				v.vid, (v.membership & KSZ8863REG_VLAN_MEMBERSHIP_PORT1_MSK) ? "port-1 " : "",
+				(v.membership & KSZ8863REG_VLAN_MEMBERSHIP_PORT2_MSK) ? "port-2 " : "",
+				(v.membership & KSZ8863REG_VLAN_MEMBERSHIP_PORT3_MSK) ? "internal" : "");
+	}
+
+	if (librouter_ksz8863_get_wfq())
+		fprintf(out, " switch-config wfq\n");
+
+
+	for (i = 0; i < 2; i++)
+		_dump_port_config(out, i);
 }
 
 #endif /* OPTION_MANAGED_SWITCH */
