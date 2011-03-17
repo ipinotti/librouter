@@ -53,7 +53,7 @@
 
 
 #else
-#error "No such 3G Board!"
+#error "No 3G board defined!"
 #endif
 
 #elif defined(CONFIG_DIGISTAR_EFM)
@@ -63,15 +63,34 @@
 #define OPTION_EFM
 #define OPTION_MANAGED_SWITCH
 #define OPTION_NUM_ETHERNET_IFACES	1
-
-#define OPTION_IP_ROUTING
-
 #undef OPTION_PPPOE
 #undef OPTION_PPTP
 
-#define OPTION_MODEM3G
-#define OPTION_PPP
-#define OPTION_NUM_3G_IFACES	1
+#if defined(CONFIG_DIGISTAR_EFM2000)
+#define OPTION_NUM_EFM_CHANNELS	1
+#undef OPTION_IP_ROUTING
+#undef OPTION_MODEM3G
+#undef OPTION_PPP
+//#define OPTION_NUM_3G_IFACES	1
+#elif defined(CONFIG_DIGISTAR_EFM4000)
+#define OPTION_NUM_EFM_CHANNELS	2
+#undef OPTION_IP_ROUTING
+#undef OPTION_MODEM3G
+#undef OPTION_PPP
+//#define OPTION_NUM_3G_IFACES	1
+#elif defined(CONFIG_DIGISTAR_EFM8000)
+#define OPTION_NUM_EFM_CHANNELS	4
+#undef OPTION_IP_ROUTING
+#undef OPTION_MODEM3G
+#undef OPTION_PPP
+//#define OPTION_NUM_3G_IFACES	1
+#else
+#error "No EFM board defined!"
+#endif
+
+
+
+
 #undef OPTION_DUAL_SIM
 
 /* TODO */
