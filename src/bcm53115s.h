@@ -8,6 +8,7 @@
 #ifndef BCM53115S_H_
 #define BCM53115S_H_
 
+#include <stdint.h>
 
 /* DEBUG Function */
 #define BCM53115S_DEBUG
@@ -44,9 +45,6 @@ typedef enum
 #define BCM_PORT_4 4
 #define BCM_PORT_5 5
 #define BCM_PORT_IMP 6
-
-
-
 
 
 #define BCM53115S_NUM_VLAN_TABLES		16
@@ -128,11 +126,11 @@ struct vlan_table_t {
 	unsigned int fid:4;
 	unsigned int vid:12;
 };
-//
-///* For tests only */
-//int librouter_bcm53115s_read(__u8 reg);
-//int librouter_bcm53115s_write(__u8 reg, __u8 data);
-//
+
+int librouter_bcm53115s_read_test(uint8_t page, uint8_t offset, int len);
+int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint8_t data, int len);
+
+
 ///* Global Control 2 */
 //int librouter_bcm53115s_set_multicast_storm_protect(int enable);
 //int librouter_bcm53115s_get_multicast_storm_protect(void);
@@ -198,8 +196,8 @@ struct vlan_table_t {
 //
 //
 ///* Initialization */
-//int librouter_bcm53115s_probe(void);
-//int librouter_bcm53115s_set_default_config(void);
+int librouter_bcm53115s_probe(void);
+int librouter_bcm53115s_set_default_config(void);
 
 
 #endif

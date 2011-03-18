@@ -4,7 +4,6 @@
  *  Created on: Mar 1, 2011
  *      Author: Igor Kramer Pinotti (ipinotti@pd3.com.br)
  */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,10 +24,9 @@
 #include <linux/spi/spidev.h>
 #include <linux/types.h>
 
-
 #include "options.h"
 
-//#ifdef OPTION_MANAGED_SWITCH
+#ifdef OPTION_MANAGED_SWITCH
 
 #include "bcm53115s.h"
 #include "bcm53115s_etc.h"
@@ -43,32 +41,105 @@ static uint8_t bits = 8;
 static uint32_t speed = 500000;
 static uint16_t delay;
 
-static int clear_buff(uint8_t buff[])
+static uint8_t endian_swap_8bits(uint8_t * val)
 {
-	int j;
+	return ((* val << 4) | (* val >> 4));
+}
 
-	for (j=0; j < ARRAY_SIZE(buff); j++)
-		buff[j] = 0;
+static uint16_t endian_swap_16bits(uint16_t * val)
+{
+	return ((* val << 8) | (* val >> 8));
+}
+
+static uint32_t endian_swap_32bits(uint32_t * val)
+{
+	 return ((((*val) & 0xff000000) >> 24) |
+			(((*val) & 0x00ff0000) >>  8) |
+			(((*val) & 0x0000ff00) <<  8) |
+			(((*val) & 0x000000ff) << 24));
+}
+
+static int clear_buff(uint8_t buff[], int size_of)
+{
+	memset(buff, 0, size_of);
 
 	return 0;
 }
 
-static int clear_tx_rx(uint8_t tx[], uint8_t rx[])
+static int clear_tx_rx(uint8_t tx[], uint8_t rx[], int size_of_TxRx)
 {
-	clear_buff(tx);
-	clear_buff(rx);
+	clear_buff(tx, size_of_TxRx);
+	clear_buff(rx, size_of_TxRx);
 
 	return 0;
+}
+
+static void printf_buffer_data(uint8_t buff[], int size_of_buff)
+{
+	int i = 0;
+
+	printf("Size - Buffer data: %d \n", size_of_buff);
+	for (i = 0; i < size_of_buff; i++) {
+		if (!(i % 6))
+			printf("");
+		printf("%.2X ", buff[i]);
+	}
+	printf("\n");
+}
+
+static void printf_spi_buffers(uint8_t tx[], uint8_t rx[], int size_of_TxRx)
+{
+	int i = 0;
+
+	printf("Size - Buffer de envio: %d \n", size_of_TxRx);
+	for (i = 0; i < size_of_TxRx; i++) {
+		if (!(i % 6))
+			printf("");
+		printf("%.2X ", tx[i]);
+	}
+
+	printf("\nSize - Buffer de resposta: %d \n", size_of_TxRx);
+	for (i = 0; i < size_of_TxRx; i++) {
+		if (!(i % 6))
+			printf("");
+		printf("%.2X ", rx[i]);
+	}
+
+	printf("\n");
+}
+
+static int _bcm53115s_spi_mode (int dev)
+{
+	uint8_t mode = 0;
+	int ret = 0;
+
+	ret = ioctl(dev, SPI_IOC_RD_MODE, &mode);
+	if (ret < 0)
+		goto end;
+
+	mode |= SPI_CPOL;
+	mode |= SPI_CPHA;
+
+	ret = ioctl(dev, SPI_IOC_WR_MODE, &mode);
+
+end:
+	if (ret < 0){
+		bcm53115s_dbg("Could not set SPI mode : %s\n", strerror(errno));
+		return -1;
+	}
+	else
+		return 0;
 }
 
 /* Low level I2C functions */
-static int _bcm53115s_spi_transfer(uint8_t tx[], uint8_t rx[])
+static int _bcm53115s_spi_transfer(uint8_t tx[], uint8_t rx[], int size_of_TxRx)
 {
 	int dev, i;
+
 	struct spi_ioc_transfer tr = {
 		.tx_buf = (unsigned long)tx,
 		.rx_buf = (unsigned long)rx,
-		.len = ARRAY_SIZE(tx),
+		.len = size_of_TxRx,
 		.delay_usecs = delay,
 		.speed_hz = speed,
 		.bits_per_word = bits,
@@ -80,43 +151,36 @@ static int _bcm53115s_spi_transfer(uint8_t tx[], uint8_t rx[])
 		return -1;
 	}
 
-	if (ioctl(dev, SPI_IOC_MESSAGE(1), &tr) != 0){
-		bcm53115s_dbg("Could not read from device : %s\n", strerror(errno));
+	if (_bcm53115s_spi_mode(dev) < 0){
+		bcm53115s_dbg("Could not read from device / can't send spi message : %s\n", strerror(errno));
 		close(dev);
 		return -1;
 	}
 
-#ifdef BCM53115S_DEBUG
-
-	bcm53115s_dbg("Size - Buffer de envio: %d", ARRAY_SIZE(tx));
-	for (i = 0; i < ARRAY_SIZE(tx); i++) {
-		if (!(i % 6))
-			bcm53115s_dbg("");
-		bcm53115s_dbg("%.2X ", tx[i]);
+	if (ioctl(dev, SPI_IOC_MESSAGE(1), &tr) < 0){
+		bcm53115s_dbg("Could not read from device / can't send spi message : %s\n", strerror(errno));
+		close(dev);
+		return -1;
 	}
 
-	bcm53115s_dbg("Size - Buffer de resposta: %d", ARRAY_SIZE(rx));
-	for (i = 0; i < ARRAY_SIZE(rx); i++) {
-		if (!(i % 6))
-			bcm53115s_dbg("");
-		printf("%.2X ", rx[i]);
-	}
-
+#ifdef BCM53115S_DEBUG_CODE
+	printf_spi_buffers(tx, rx, size_of_TxRx);
 #endif
 
+	close(dev);
 	return 0;
-
 }
 
-
-static int _bcm53115s_reg_read(int page, int offset, uint8_t *buf, int len)
+static int _bcm53115s_spi_reg_read_raw(uint8_t page, uint8_t offset, uint8_t *buf, int len)
 {
-	uint8_t tx[3] = {0};
-	uint8_t rx[3] = {0};
-	uint8_t tx_5_step[2] = {0};
-	uint8_t rx_5_step[2] = {0};
-	uint8_t * buff_rx_data = NULL;
+	uint8_t tx[3];
+	uint8_t rx[3];
+	uint8_t tx_5_step[len+2];
+	uint8_t rx_5_step[len+2];
 	int i;
+
+	clear_tx_rx(tx,rx,sizeof(tx));
+	clear_tx_rx(tx_5_step,rx_5_step,sizeof(rx_5_step));
 
 	/*
 	 * Normal SPI Mode (Command Byte)
@@ -131,31 +195,30 @@ static int _bcm53115s_reg_read(int page, int offset, uint8_t *buf, int len)
 	tx[0] = CMD_SPI_BYTE_RD;
 	tx[1] = ROBO_SPI_STATUS_PAGE;
 	tx[2] = 0x00;
-
 	do {
-		_bcm53115s_spi_transfer(tx,rx);
+		_bcm53115s_spi_transfer(tx, rx, sizeof(tx));
 		usleep(100);
 	} while ((rx[2] >> ROBO_SPIF_BIT) & 1) ; // wait SPI bit to 0
 
-	clear_tx_rx(tx,rx);
+	clear_tx_rx(tx, rx, sizeof(tx));
 
 	/* 2. Issue a normal write command(0x61) to write the register page value
 		  into the SPI page register(0xFF) 	 */
 	tx[0] = CMD_SPI_BYTE_WR;
 	tx[1] = ROBO_PAGE_PAGE;
 	tx[2] = page;
-	_bcm53115s_spi_transfer(tx, rx);
+	_bcm53115s_spi_transfer(tx, rx, sizeof(tx));
 
-	clear_tx_rx(tx,rx);
+	clear_tx_rx(tx, rx, sizeof(tx));
 
 	/* 3. Issue a normal read command(0x60) to setup the required RobiSwitch register
 		  address 	 */
 	tx[0] = CMD_SPI_BYTE_RD;
 	tx[1] = offset;
 	tx[2] = 0x00;
-	_bcm53115s_spi_transfer(tx, rx);
+	_bcm53115s_spi_transfer(tx, rx, sizeof(tx));
 
-	clear_tx_rx(tx,rx);
+	clear_tx_rx(tx, rx, sizeof(tx));
 
 	/* 4. Issue a normal read command(0x60) to poll the RACK bit in the
 	      SPI status register(0XFE) to determine the completion of read 	 */
@@ -164,47 +227,36 @@ static int _bcm53115s_reg_read(int page, int offset, uint8_t *buf, int len)
 		tx[0] = CMD_SPI_BYTE_RD;
 		tx[1] = ROBO_SPI_STATUS_PAGE;
 		tx[2] = 0x00;
-		_bcm53115s_spi_transfer(tx, rx);
+		_bcm53115s_spi_transfer(tx, rx, sizeof(tx));
 		usleep(100);
 	}while (((rx[2] >> ROBO_RACK_BIT) & 1) == 0); // wait RACK bit to 1
 
-	clear_tx_rx(tx,rx);
+	clear_tx_rx(tx, rx, sizeof(tx));
 
 	/* 5. Issue a normal read command(0x60) to read the specific register's conternt
 		  placed in the SPI data I/O register(0xF0) 	 */
 	tx_5_step[0] = CMD_SPI_BYTE_RD;
-	rx_5_step[1] = ROBO_SPI_DATA_IO_0_PAGE;
-	_bcm53115s_spi_transfer(tx_5_step, rx_5_step);
+	tx_5_step[1] = ROBO_SPI_DATA_IO_0_PAGE;
+	_bcm53115s_spi_transfer(tx_5_step, rx_5_step, sizeof(tx_5_step));
 
 	/* 6. Copy returned info to buff */
-
-	buff_rx_data = (uint8_t *) malloc(sizeof(int) * len);
-	if(buff_rx_data == NULL){
-		fprintf(stderr, "Could not allocate memory.\n");
-		return -1;
-	}
-
-	_bcm53115s_spi_transfer(buff_rx_data, buff_rx_data);
-
 	for (i=0; i<len; i++)
-		buf[i] = buff_rx_data[i];
-
-	free (buff_rx_data);
-	buff_rx_data = NULL;
+		buf[i] = rx_5_step[2+i];
 
 	return 0;
-
 }
 
 
-static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
+static int _bcm53115s_spi_reg_write_raw(uint8_t page, uint8_t offset, uint8_t *buf, int len)
 {
-	uint8_t tx[3]= {0};
-	uint8_t rx[3]= {0};
-	uint8_t tx_3_step[2] = {0};
-	uint8_t rx_3_step[2] = {0};
-	uint8_t * buff_rx_data;
+	uint8_t tx[3];
+	uint8_t rx[3];
+	uint8_t tx_3_step[len+2];
+	uint8_t rx_3_step[len+2];
 	int i;
+
+	clear_tx_rx(tx,rx,sizeof(tx));
+	clear_tx_rx(tx_3_step,rx_3_step,sizeof(tx_3_step));
 
 	/*
 	 * Normal SPI Mode (Command Byte)
@@ -221,61 +273,69 @@ static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
 	tx[2] = 0x00;
 
 	do {
-		_bcm53115s_spi_transfer(tx,rx);
+		_bcm53115s_spi_transfer(tx,rx, sizeof(tx));
 		usleep(100);
 	} while ((rx[2] >> ROBO_SPIF_BIT) & 1) ; // wait SPI bit to 0
 
-	clear_tx_rx(tx,rx);
+	clear_tx_rx(tx,rx,sizeof(tx));
 
 	/* 2. Issue a normal write command(0x61) to write the register page value
 		  into the SPI page register(0xFF) 	 */
 	tx[0] = CMD_SPI_BYTE_WR;
 	tx[1] = ROBO_PAGE_PAGE;
 	tx[2] = page;
-	_bcm53115s_spi_transfer(tx, rx);
+	_bcm53115s_spi_transfer(tx,rx, sizeof(tx));
 
-	clear_tx_rx(tx,rx);
+	clear_tx_rx(tx,rx,sizeof(tx));
 
 	/* 3. Issue a normal write command(0x61) and write the address of the accessed
 		  register followed by the write content starting from a lower byte */
 	tx_3_step[0] = CMD_SPI_BYTE_WR;
 	tx_3_step[1] = offset;
-	_bcm53115s_spi_transfer(tx_3_step, rx_3_step);
 
-	/* 4. Write content */
+	for(i=0; i < len; i++)
+		tx_3_step[i+2] = buf[i];
 
-	buff_rx_data = (uint8_t *) malloc(sizeof(int) * len);
-	if(buff_rx_data == NULL){
-		fprintf(stderr, "Could not allocate memory.\n");
-		return -1;
-	}
-
-	_bcm53115s_spi_transfer(buf, buff_rx_data);
-
-	free(buff_rx_data);
-	buff_rx_data = NULL;
+	_bcm53115s_spi_transfer(tx_3_step, rx_3_step, sizeof(tx_3_step));
 
 	return 0;
 }
 
+int static _bcm53115s_reg_read(uint8_t page, uint8_t offset, int len)
+{
+	uint32_t data = 0;
 
-///******************/
-///* For tests only */
-///******************/
-//int librouter_bcm53115s_read(__u8 reg)
-//{
-//	__u8 data;
-//
-//	_bcm53115s_reg_read(reg, &data, sizeof(data));
-//
-//	return data;
-//}
-//
-//int librouter_bcm53115s_write(__u8 reg, __u8 data)
-//{
-//	return _bcm53115s_reg_write(reg, &data, sizeof(data));
-//}
-//
+	_bcm53115s_spi_reg_read_raw(page, offset,(uint8_t *)&data,len);
+
+	printf("raw data -> %x\n", data);
+
+	data = endian_swap_32bits((uint32_t *)&data);
+
+	return data;
+}
+
+int static _bcm53115s_reg_write(uint8_t page, uint8_t offset, uint8_t * data, int len)
+{
+
+}
+
+
+
+/******************/
+/* For tests only */
+/******************/
+int librouter_bcm53115s_read_test(uint8_t page, uint8_t offset, int len)
+{
+	return _bcm53115s_reg_read(page,offset,len);
+}
+
+int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint8_t data, int len)
+{
+
+}
+
+
+
 ///******************************************************/
 ///********** Exported functions ************************/
 ///******************************************************/
@@ -1488,35 +1548,35 @@ static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
 //
 //	return 0;
 //}
-//
-//
-//
-///*********************************************/
-///******* Initialization functions ************/
-///*********************************************/
-//
-///**
-// * librouter_bcm53115s_set_default_config
-// *
-// * Configure switch to system default
-// *
-// * @return 0 if success, -1 if error
-// */
-//int librouter_bcm53115s_set_default_config(void)
-//{
-//	return 0;
-//}
-//
-//
-///**
-// * librouter_bcm53115s_probe	Probe for the BCM53115S Chip
-// *
-// * Read ID registers to determine if chip is present
-// *
-// * @return 1 if chip was detected, 0 if not, -1 if error
-// */
-//int librouter_bcm53115s_probe(void)
-//{
+
+
+
+/*********************************************/
+/******* Initialization functions ************/
+/*********************************************/
+
+/**
+ * librouter_bcm53115s_set_default_config
+ *
+ * Configure switch to system default
+ *
+ * @return 0 if success, -1 if error
+ */
+int librouter_bcm53115s_set_default_config(void)
+{
+	return 0;
+}
+
+
+/**
+ * librouter_bcm53115s_probe	Probe for the BCM53115S Chip
+ *
+ * Read ID registers to determine if chip is present
+ *
+ * @return 1 if chip was detected, 0 if not, -1 if error
+ */
+int librouter_bcm53115s_probe(void)
+{
 //	__u8 reg = 0x0;
 //	__u8 id_u, id_l;
 //	__u16 id;
@@ -1531,9 +1591,9 @@ static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
 //	id = (id_u << 8) | id_l;
 //
 //	if (id == BCM53115S_ID)
-//		return 1;
+		return 1;
 //
 //	return 0;
-//}
+}
 
-//#endif /* OPTION_MANAGED_SWITCH */
+#endif /* OPTION_MANAGED_SWITCH */
