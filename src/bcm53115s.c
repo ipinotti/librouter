@@ -271,7 +271,6 @@ static int _bcm53115s_spi_reg_write_raw(uint8_t page, uint8_t offset, uint8_t *b
 	tx[0] = CMD_SPI_BYTE_RD;
 	tx[1] = ROBO_SPI_STATUS_PAGE;
 	tx[2] = 0x00;
-
 	do {
 		_bcm53115s_spi_transfer(tx,rx, sizeof(tx));
 		usleep(100);
@@ -301,22 +300,28 @@ static int _bcm53115s_spi_reg_write_raw(uint8_t page, uint8_t offset, uint8_t *b
 	return 0;
 }
 
-int static _bcm53115s_reg_read(uint8_t page, uint8_t offset, int len)
+static int _bcm53115s_reg_read(uint8_t page, uint8_t offset, int len)
 {
 	uint32_t data = 0;
 
 	_bcm53115s_spi_reg_read_raw(page, offset,(uint8_t *)&data,len);
-
-	printf("raw data -> %x\n", data);
 
 	data = endian_swap_32bits((uint32_t *)&data);
 
 	return data;
 }
 
-int static _bcm53115s_reg_write(uint8_t page, uint8_t offset, uint8_t * data, int len)
+static int _bcm53115s_reg_write(uint8_t page, uint8_t offset, uint32_t * data, int len)
 {
+	uint32_t data_raw = 0;
 
+//	printf("Input data --> %.2X ===> swapped data --> %.2x\n\n", *data, endian_swap_32bits((uint32_t *) data));
+
+	data_raw = endian_swap_32bits((uint32_t *)data);
+
+	_bcm53115s_spi_reg_write_raw(page, offset,(uint8_t *)&data_raw,len);
+
+	return 0;
 }
 
 
@@ -329,9 +334,9 @@ int librouter_bcm53115s_read_test(uint8_t page, uint8_t offset, int len)
 	return _bcm53115s_reg_read(page,offset,len);
 }
 
-int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint8_t data, int len)
+int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, int len)
 {
-
+	return _bcm53115s_reg_write(page,offset,&data,len);
 }
 
 

@@ -128,7 +128,7 @@ struct vlan_table_t {
 };
 
 int librouter_bcm53115s_read_test(uint8_t page, uint8_t offset, int len);
-int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint8_t data, int len);
+int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, int len);
 
 
 ///* Global Control 2 */
