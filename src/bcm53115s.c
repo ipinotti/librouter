@@ -344,20 +344,20 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 ///******************************************************/
 ///********** Exported functions ************************/
 ///******************************************************/
-///**
-// * librouter_bcm53115s_set_broadcast_storm_protect
-// *
-// * Enable or Disable Broadcast Storm protection
-// *
-// * @param enable
-// * @param port:	from 0 to 2
-// * @return 0 on success, -1 otherwise
-// */
+/**
+ * librouter_bcm53115s_set_broadcast_storm_protect
+ *
+ * Enable or Disable Broadcast Storm protection
+ *
+ * @param enable
+ * @param port:	from 0 to 3
+ * @return 0 on success, -1 otherwise
+ */
 //int librouter_bcm53115s_set_broadcast_storm_protect(int enable, int port)
 //{
-//	__u8 reg, data;
+//	uint8_t reg, data;
 //
-//	if (port > 2) {
+//	if (port > 3) {
 //		printf("%% No such port : %d\n", port);
 //		return -1;
 //	}
@@ -378,15 +378,15 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 //
 //	return 0;
 //}
-//
-///**
-// * librouter_bcm53115s_get_broadcast_storm_protect
-// *
-// * Get if Broadcast Storm protection is enabled or disabled
-// *
-// * @param port: from 0 to 2
-// * @return 1 if enabled, 0 if disabled, -1 if error
-// */
+
+/**
+ * librouter_bcm53115s_get_broadcast_storm_protect
+ *
+ * Get if Broadcast Storm protection is enabled or disabled
+ *
+ * @param port: from 0 to 2
+ * @return 1 if enabled, 0 if disabled, -1 if error
+ */
 //int librouter_bcm53115s_get_broadcast_storm_protect(int port)
 //{
 //	__u8 reg, data;
@@ -404,7 +404,7 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 //
 //	return (data | BCM53115SREG_ENABLE_BC_STORM_PROTECT_MSK) ? 1 : 0;
 //}
-//
+
 //int librouter_bcm53115s_set_storm_protect_rate(unsigned int percentage)
 //{
 //	__u8 reg, data;
@@ -1327,19 +1327,19 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 //	return prio;
 //}
 //
-///***********************************************/
-///********* VLAN table manipulation *************/
-///***********************************************/
-//
-///**
-// * _get_vlan_table	Fetch VLAN table from switch
-// *
-// * When successful, data is written to the structure pointed by t
-// *
-// * @param table
-// * @param t
-// * @return 0 if success, -1 if failure
-// */
+/***********************************************/
+/********* VLAN table manipulation *************/
+/***********************************************/
+
+/**
+ * _get_vlan_table	Fetch VLAN table from switch
+ *
+ * When successful, data is written to the structure pointed by t
+ *
+ * @param table
+ * @param t
+ * @return 0 if success, -1 if failure
+ */
 //static int _get_vlan_table(unsigned int entry, struct vlan_table_t *t)
 //{
 //	__u8 data;
@@ -1354,25 +1354,25 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 //		return -1;
 //	}
 //
-//	data = BCM53115SREG_READ_OPERATION | BCM53115SREG_VLAN_TABLE_SELECT;
-//	if (_bcm53115s_reg_write(BCM53115SREG_INDIRECT_ACCESS_CONTROL0, &data, sizeof(data)))
+//	data = BCM53115S3REG_READ_OPERATION | BCM53115S3REG_VLAN_TABLE_SELECT;
+//	if (_bcm53115s_reg_write(BCM53115S3REG_INDIRECT_ACCESS_CONTROL0, &data, sizeof(data)))
 //		return -1;
 //
 //	data = (__u8) entry;
-//	if (_bcm53115s_reg_write(BCM53115SREG_INDIRECT_ACCESS_CONTROL1, &data, sizeof(data)))
+//	if (_bcm53115s_reg_write(BCM53115S3REG_INDIRECT_ACCESS_CONTROL1, &data, sizeof(data)))
 //		return -1;
 //
 //
-//	if (_bcm53115s_reg_read(BCM53115SREG_INDIRECT_DATA0, &data, sizeof(data)))
+//	if (_bcm53115s_reg_read(BCM53115S3REG_INDIRECT_DATA0, &data, sizeof(data)))
 //		return -1;
 //	t->vid = data;
 //
-//	if (_bcm53115s_reg_read(BCM53115SREG_INDIRECT_DATA1, &data, sizeof(data)))
+//	if (_bcm53115s_reg_read(BCM53115S3REG_INDIRECT_DATA1, &data, sizeof(data)))
 //		return -1;
 //	t->vid |= (data & 0x0F) << 8;
 //	t->fid = (data & 0xF0) >> 4;
 //
-//	if (_bcm53115s_reg_read(BCM53115SREG_INDIRECT_DATA2, &data, sizeof(data)))
+//	if (_bcm53115s_reg_read(BCM53115S3REG_INDIRECT_DATA2, &data, sizeof(data)))
 //		return -1;
 //	t->membership = data & 0x07;
 //	t->valid = (data & 0x08) >> 3;
@@ -1387,7 +1387,7 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 // *
 // * @param table
 // * @param t
-// * @return
+// * @return 0 if success, -1 if failure
 // */
 //static int _set_vlan_table(unsigned int table, struct vlan_table_t *t)
 //{
@@ -1404,27 +1404,48 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 //	}
 //
 //	data = t->vid;
-//	if (_bcm53115s_reg_write(BCM53115SREG_INDIRECT_DATA0, &data, sizeof(data)))
+//	if (_bcm53115s_reg_write(BCM53115S3REG_INDIRECT_DATA0, &data, sizeof(data)))
 //		return -1;
-//
 //
 //	data = t->vid >> 8;
 //	data |= t->fid << 4;
-//	if (_bcm53115s_reg_write(BCM53115SREG_INDIRECT_DATA1, &data, sizeof(data)))
+//	if (_bcm53115s_reg_write(BCM53115S3REG_INDIRECT_DATA1, &data, sizeof(data)))
 //		return -1;
 //
 //	data = t->membership;
 //	data |= t->valid << 3;
-//	if (_bcm53115s_reg_write(BCM53115SREG_INDIRECT_DATA2, &data, sizeof(data)))
+//	if (_bcm53115s_reg_write(BCM53115S3REG_INDIRECT_DATA2, &data, sizeof(data)))
 //		return -1;
 //
-//	data = BCM53115SREG_WRITE_OPERATION | BCM53115SREG_VLAN_TABLE_SELECT;
-//	if (_bcm53115s_reg_write(BCM53115SREG_INDIRECT_ACCESS_CONTROL0, &data, sizeof(data)))
+//	data = BCM53115S3REG_WRITE_OPERATION | BCM53115S3REG_VLAN_TABLE_SELECT;
+//	if (_bcm53115s_reg_write(BCM53115S3REG_INDIRECT_ACCESS_CONTROL0, &data, sizeof(data)))
 //		return -1;
 //
 //	data = (__u8) table;
-//	if (_bcm53115s_reg_write(BCM53115SREG_INDIRECT_ACCESS_CONTROL1, &data, sizeof(data)))
-//		return -1;
+//	if (_bcm53115s_reg_write(BCM53115S3REG_INDIRECT_ACCESS_CONTROL1, &data, sizeof(data)))
+//	return -1;
+//
+//	return 0;
+//}
+//
+///**
+// * _init_vlan_table
+// *
+// * Make all VLAN entries invalid
+// *
+// * @return 0 if success, -1 if failure
+// */
+//static int _init_vlan_table(void)
+//{
+//	int i;
+//	struct vlan_table_t vlan;
+//
+//	vlan.valid = 0;
+//	vlan.vid = 0;
+//
+//	/* Search for the same VID in a existing entry */
+//	for (i = 0; i < BCM53115S3_NUM_VLAN_TABLES; i++)
+//		_set_vlan_table(i, &vlan);
 //
 //	return 0;
 //}
@@ -1453,7 +1474,7 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 //	new_t.vid = vconfig->vid;
 //
 //	/* Search for the same VID in a existing entry */
-//	for (i = 0; i < BCM53115S_NUM_VLAN_TABLES; i++) {
+//	for (i = 0; i < BCM53115S3_NUM_VLAN_TABLES; i++) {
 //		_get_vlan_table(i, &exist_t);
 //
 //		if (!exist_t.valid)
@@ -1469,13 +1490,13 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 //	}
 //
 //	/* No more free entries ? */
-//	if (active == BCM53115S_NUM_VLAN_TABLES) {
+//	if (active == BCM53115S3_NUM_VLAN_TABLES) {
 //		printf("%% Already reached maximum number of entries\n");
 //		return -1;
 //	}
 //
 //	/* The same VID was not found, just add in the first entry available */
-//	for (i = 0; i < BCM53115S_NUM_VLAN_TABLES; i++) {
+//	for (i = 0; i < BCM53115S3_NUM_VLAN_TABLES; i++) {
 //		if (_get_vlan_table(i, &exist_t) < 0)
 //			return -1;
 //
@@ -1511,7 +1532,7 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 //	vid = vconfig->vid;
 //
 //	/* Search for an existing entry */
-//	for (i = 0; i < BCM53115S_NUM_VLAN_TABLES; i++) {
+//	for (i = 0; i < BCM53115S3_NUM_VLAN_TABLES; i++) {
 //		if (_get_vlan_table(i, &t) < 0)
 //			return -1;
 //
@@ -1536,20 +1557,21 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 // * @param vconfig
 // * @return 0 if success, -1 if error
 // */
-//int librouter_bcm53115s_get_table(int entry, struct vlan_config_t *vconfig)
+//int librouter_bcm53115s_get_table(int entry, struct vlan_table_t *v)
 //{
-//	struct vlan_table_t t;
-//
-//	if (vconfig == NULL) {
+//	if (v == NULL) {
 //		printf("%% Invalid VLAN config\n");
 //		return -1;
 //	}
 //
-//	if (_get_vlan_table(entry, &t) < 0)
+//	if (_get_vlan_table(entry, v) < 0)
 //		return -1;
 //
-//	vconfig->vid = t.vid;
-//	vconfig->membership = t.membership;
+//	bcm53115s_dbg("Getting entry %d\n", entry);
+//	bcm53115s_dbg(" -- > valid : %d\n", v->valid);
+//	bcm53115s_dbg(" -- > membership : %d\n", v->membership);
+//	bcm53115s_dbg(" -- > vid : %d\n", v->vid);
+//	bcm53115s_dbg(" -- > fid : %d\n", v->fid);
 //
 //	return 0;
 //}
@@ -1569,9 +1591,11 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
  */
 int librouter_bcm53115s_set_default_config(void)
 {
+	if (librouter_bcm53115s_probe())
+	//	_init_vlan_table();
+
 	return 0;
 }
-
 
 /**
  * librouter_bcm53115s_probe	Probe for the BCM53115S Chip
@@ -1582,23 +1606,15 @@ int librouter_bcm53115s_set_default_config(void)
  */
 int librouter_bcm53115s_probe(void)
 {
-//	__u8 reg = 0x0;
-//	__u8 id_u, id_l;
-//	__u16 id;
-//
-//	if (_bcm53115s_reg_read(reg, &id_u, sizeof(id_u)))
-//		return -1;
-//
-//	if (_bcm53115s_reg_read(reg + 1, &id_l, sizeof(id_l)))
-//		return -1;
-//
-//	id_l &= 0xf0; /* Take only bits 7-4 for the lower part */
-//	id = (id_u << 8) | id_l;
-//
-//	if (id == BCM53115S_ID)
+	uint32_t id = 0;
+
+	if ((id = _bcm53115s_reg_read(0x02, 0x30, 4)) == -1)
+		return -1;
+
+	if (id == BCM53115S_ID)
 		return 1;
-//
-//	return 0;
+
+	return 0;
 }
 
 #endif /* OPTION_MANAGED_SWITCH */

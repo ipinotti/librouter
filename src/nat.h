@@ -10,7 +10,7 @@
 
 #include "config_mapper.h"
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 #define nat_dbg(x,...) \
 		syslog(LOG_INFO, "%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__);

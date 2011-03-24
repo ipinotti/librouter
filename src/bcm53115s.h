@@ -51,7 +51,7 @@ typedef enum
 #define BCM53115S_SPI_DEV	"/dev/spidev28672.0"
 #define BCM53115S_SPI_ADDR	0x5f
 
-#define BCM53115S_ID	0x8830
+#define BCM53115S_ID	0x53115
 
 #define BCM53115SREG_GLOBAL_CONTROL0	0x02
 #define BCM53115SREG_GLOBAL_CONTROL1	0x03
@@ -192,9 +192,9 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 //int librouter_bcm53115s_get_table(int entry, struct vlan_config_t *vconfig);
 //int librouter_bcm53115s_del_table(struct vlan_config_t *vconfig);
 //int librouter_bcm53115s_add_table(struct vlan_config_t *vconfig);
-//
-//
-//
+
+
+
 ///* Initialization */
 int librouter_bcm53115s_probe(void);
 int librouter_bcm53115s_set_default_config(void);
