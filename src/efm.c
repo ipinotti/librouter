@@ -20,6 +20,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <linux/sockios.h>
+#include <syslog.h>
 
 #include "options.h"
 
@@ -70,6 +71,7 @@ int librouter_efm_set_mode(int mode)
 
 	if (stat[0].channel_st != CHANNEL_STATE_SHUTDOWN) {
 		printf("(EFM) Interface must be shutdown first\n");
+		syslog(LOG_ERR, "(EFM) Interface must be shutdown first\n");
 		return -1;
 	}
 

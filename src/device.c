@@ -26,13 +26,27 @@
 dev_family _devices[] = {
 	{ eth, "ethernet", "eth", "Ethernet" },
 	{ lo, "loopback", "lo", "Loopback" },
+#ifdef OPTION_TUNNEL
 	{ tun, "tun", "tun", "Tunnel" },
+#endif
+#ifdef OPTION_IPSEC
 	{ ipsec, "ipsec", "ipsec", "IPSec" },
+#endif
+#ifdef OPTION_PPP
 	{ ppp, "m3G", "ppp", "3GModem" },
+#endif
+#ifdef OPTION_EFM
 	{ efm, "efm", "eth", "EFM" },
+#endif
+#ifdef OPTION_PPTP
 	{ pptp, "pptp", "ppp", "PPTP" },
+#endif
+#ifdef OPTION_PPPOE
 	{ pppoe, "pppoe", "ppp", "PPPoE" },
+#endif
+#ifdef OPTION_BRIDGE
 	{ bridge, "bridge", "bridge", "Bridge"},
+#endif
 	{ none, NULL, NULL, NULL }
 };
 

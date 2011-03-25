@@ -30,13 +30,8 @@ static debuginfo DEBUG[] = { /* !!! Check cish_defines.h */
 #else
 	{"dhcp","dhcpd:","DHCP service", 0},
 #endif
-	{"ethernet0","kernel: ethernet0:","Ethernet daemon", 0},
-	{"ethernet1","kernel: ethernet1:","Ethernet daemon", 0},
-	{"frelay","kernel: (fr)","Frame-relay daemon", 0},
-	{"hdlc","kernel: (cisco)","HDLC daemon", 0},
-#ifdef CONFIG_DEVELOPMENT
-	{"lapb","kernel: lapb","LAPB events", 0},
-#endif
+	{"ethernet0","kernel: eth0:","Ethernet daemon", 0},
+	{"efm0","kernel: (EFM:","EFM daemon", 0},
 #ifdef OPTION_IPSEC
 	{"l2tp","l2tpd","L2TP daemon", 0},
 #endif
@@ -44,17 +39,16 @@ static debuginfo DEBUG[] = { /* !!! Check cish_defines.h */
 #ifdef OPTION_NTPD
 	{"ntp","ntpd[","NTP daemon", 0},
 #endif
+#ifdef OPTION_ROUTER
 	{"ospf","ospfd[","OSPF routing service", 0},
-	{"ppp","pppd[","PPP daemon", 0},
-	{"rfc1356","rfc1356[","RFC1356 tunnel", 0},
-	{"rip","ripd[","RIP routing service", 0},
-	{"ppp","kernel: (sppp)","PPP daemon", 0},
-#ifdef OPTION_OPENSSH
-	{"ssh","sshd","SSH service", 0},
-#else
-	{"ssh","dropbear[","SSH service", 0},
 #endif
-	{"systty","systtyd[","System control service", 0},
+#ifdef OPTION_PPP
+	{"ppp","pppd[","PPP daemon", 0},
+#endif
+#ifdef OPTION_ROUTER
+	{"rip","ripd[","RIP routing service", 0},
+#endif
+	{"ssh","sshd","SSH service", 0},
 #ifdef OPTION_VRRP
 	{"vrrp","Keepalived_vrrp","VRRP service", 0},
 #endif
@@ -75,12 +69,12 @@ static int _librouter_find_debug(const char *name)
 
 char *librouter_debug_find_token(char *logline, char *name, int enabled)
 {
-	char *p;
+	char *p, *l;
 	debuginfo *dk;
 
+
 	for (dk = DEBUG; dk->name; dk++) {
-		if ((enabled || dk->enabled) &&
-			(strncmp(logline, dk->token, strlen(dk->token)) == 0)) {
+		if ((enabled || dk->enabled) &&	(l = strstr(logline, dk->token))) {
 
 			p = strchr(logline + strlen(dk->token), ' ');
 
@@ -91,6 +85,11 @@ char *librouter_debug_find_token(char *logline, char *name, int enabled)
 			strcat(name, ": ");
 
 			return (p + 1); /* log info! */
+
+			printf("logline = %s\n", logline);
+			printf("l = %s\n", l);
+			printf("p = %s\n", p);
+			printf("name = %s\n", name);
 		}
 	}
 	return NULL;
