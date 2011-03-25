@@ -1,7 +1,7 @@
 #ifndef _LIB_ACL_H
 #define _LIB_ACL_H
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 #define acl_dbg(x,...) \
 		syslog(LOG_INFO, "%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__);

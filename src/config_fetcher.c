@@ -1228,7 +1228,7 @@ static void _dump_tunnel_config(FILE *out, struct interface_conf *conf)
 }
 #endif
 
-#ifdef OPTION_PPP
+#if defined (OPTION_PPP)
 static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 {
 	ppp_config cfg;
@@ -1246,7 +1246,9 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 
 	librouter_config_rip_dump_interface(out, osdev);
 	librouter_config_ospf_dump_interface(out, osdev);
-#if defined(CONFIG_DIGISTAR_3G)
+
+#if defined(OPTION_MODEM3G)
+#if defined (CONFIG_DIGISTAR_3G)
 	if (serial_no != BTIN_M3G_ALIAS) {
 		if (strcmp(cfg.sim_main.apn, "") != 0)
 			fprintf(out, " apn set %s\n", cfg.sim_main.apn);
@@ -1281,6 +1283,7 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 				fprintf(out, " sim-order %d\n",
 				                librouter_modem3g_sim_order_get_mainsim());
 	}
+
 #elif defined(CONFIG_DIGISTAR_EFM)
 	if (strcmp(cfg.sim_main.apn, "") != 0)
 		fprintf(out, " apn set %s\n", cfg.sim_main.apn);
@@ -1309,6 +1312,7 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 		fprintf(out, " no default-gateway\n");
 
 	fprintf(out, " %sshutdown\n", cfg.up ? "no " : "");
+#endif
 }
 #endif /*OPTION_PPP */
 
@@ -1350,14 +1354,13 @@ static void _dump_pppoe_config(FILE * out, struct interface_conf *conf)
 }
 #endif
 
-
 /**
  * Show interface configuration
  *
  * @param out File descriptor to be written
  * @param conf Interface information
  */
-static void librouter_config_dump_interface(FILE *out, struct interface_conf *conf)
+void librouter_config_dump_interface(FILE *out, struct interface_conf *conf)
 {
 	char *description;
 	char *cish_dev;

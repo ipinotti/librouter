@@ -27,6 +27,7 @@
 /* ------ Digistar 3G Product Models Declaration ------ */
 /* RCG1000 */
 #if defined(CONFIG_DIGISTAR_RCG1000)
+#define OPTION_MANAGED_SWITCH
 #define OPTION_ETHERNET_WAN
 #define OPTION_MODEM3G
 #define OPTION_DUAL_SIM
@@ -36,7 +37,7 @@
 
 /* RCG800 */
 #elif defined(CONFIG_DIGISTAR_RCG800)
-#define OPTION_ETHERNET_WAN
+#define OPTION_MANAGED_SWITCH
 #define OPTION_MODEM3G
 #define OPTION_DUAL_SIM
 #define OPTION_PPP
@@ -45,6 +46,7 @@
 
 /* RCG700 */
 #elif defined(CONFIG_DIGISTAR_RCG700)
+#define OPTION_MANAGED_SWITCH
 #define OPTION_ETHERNET_WAN
 #define OPTION_PPP
 #define OPTION_NUM_ETHERNET_IFACES	2

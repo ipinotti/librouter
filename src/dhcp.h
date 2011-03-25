@@ -83,7 +83,7 @@ enum {
 #endif
 
 #define DHCRELAY_DAEMON "dhcrelay"
-#define DHCPC_DAEMON "udhcpc -i %s"
+#define DHCPC_DAEMON "udhcpc -f -i %s"
 
 #define DHCPD_CONFIG_FILE "/etc/dhcpd.conf"
 
