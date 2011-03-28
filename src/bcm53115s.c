@@ -743,46 +743,46 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 //
 //	return rate;
 //}
-//
+
 /**
  * librouter_bcm53115s_set_8021q	Enable/disable 802.1q (VLAN)
  *
  * @param enable
  * @return 0 if success, -1 if error
  */
-//int librouter_bcm53115s_set_8021q(int enable)
-//{
-//	__u8 data;
-//
-//	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL3, &data, sizeof(data)))
-//		return -1;
-//
-//	if (enable)
-//		data |= BCM53115S_ENABLE_8021Q_MSK;
-//	else
-//		data &= ~BCM53115S_ENABLE_8021Q_MSK;
-//
-//	if (_bcm53115s_reg_write(BCM53115SREG_GLOBAL_CONTROL3, &data, sizeof(data)))
-//		return -1;
-//
-//	return 0;
-//}
-//
-///**
-// * librouter_bcm53115s_get_8021q	Get if 802.1q is enabled or disabled
-// *
-// * @return 1 if enabled, 0 if disabled, -1 if error
-// */
-//int librouter_bcm53115s_get_8021q(void)
-//{
-//	__u8 data;
-//
-//	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL3, &data, sizeof(data)))
-//		return -1;
-//
-//	return ((data | BCM53115S_ENABLE_8021Q_MSK) ? 1 : 0);
-//}
-//
+int librouter_bcm53115s_set_8021q(int enable)
+{
+	uint32_t data = 0;
+
+	if (_bcm53115s_reg_read(ROBO_VLAN_PAGE, 0x00, &data,1))
+		return -1;
+
+	if (enable)
+		data |= BCM53115S_ENABLE_8021Q_MSK;
+	else
+		data &= ~BCM53115S_ENABLE_8021Q_MSK;
+
+	if (_bcm53115s_reg_write(ROBO_VLAN_PAGE, 0x00, &data,1))
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_get_8021q	Get if 802.1q is enabled or disabled
+ *
+ * @return 1 if enabled, 0 if disabled, -1 if error
+ */
+int librouter_bcm53115s_get_8021q(void)
+{
+	uint32_t data;
+
+	if (_bcm53115s_reg_read(ROBO_VLAN_PAGE, 0x00, &data, sizeof(data)))
+		return -1;
+
+	return ((data | BCM53115S_ENABLE_8021Q_MSK) ? 1 : 0);
+}
+
 ///**
 // * librouter_bcm53115s_set_wfq	Enable/disable Weighted Fair Queueing
 // *

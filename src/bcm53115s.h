@@ -147,9 +147,9 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 //int librouter_bcm53115s_get_multicast_storm_protect(void);
 //
 ///* Global Control 3 */
-//int librouter_bcm53115s_get_8021q(void);
-//int librouter_bcm53115s_set_8021q(int enable);
-//
+int librouter_bcm53115s_get_8021q(void);
+int librouter_bcm53115s_set_8021q(int enable);
+
 //int librouter_bcm53115s_get_wfq(void);
 //int librouter_bcm53115s_set_wfq(int enable);
 //
@@ -163,10 +163,10 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 ///* Port n Control 1*/
 //int librouter_bcm53115s_get_broadcast_storm_protect(int port);
 //int librouter_bcm53115s_set_broadcast_storm_protect(int enable, int port);
-//
+
 //int librouter_bcm53115s_get_8021p(int port);
 //int librouter_bcm53115s_set_8021p(int enable, int port);
-//
+
 //int librouter_bcm53115s_get_diffserv(int port);
 //int librouter_bcm53115s_set_diffserv(int enable, int port);
 //
