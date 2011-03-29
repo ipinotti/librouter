@@ -1358,9 +1358,53 @@ int librouter_bcm53115s_get_8021q(void)
 //	return prio;
 //}
 //
+
 /***********************************************/
 /********* VLAN table manipulation *************/
 /***********************************************/
+
+static int _set_vlan_table_reg_addr_index (int entry)
+{
+	uint32_t data;
+
+	if (_bcm53115s_reg_read(BCM53115SREG_PAGE_VLAN_TABLE_INDEX,BCM53115SREG_OFFSET_VLAN_TABLE_INDEX, &data,2))
+		return -1;
+
+	data |= (uint8_t) entry;
+
+	if (_bcm53115s_reg_write(BCM53115SREG_PAGE_VLAN_TABLE_INDEX,BCM53115SREG_OFFSET_VLAN_TABLE_INDEX, &data,2))
+		return -1;
+
+	return 0;
+}
+
+static int _set_vlan_table_reg_Rd_Wr_Clr (int operator)
+{
+	if (_bcm53115s_reg_read(BCM53115SREG_PAGE_VLAN_TABLE_INDEX,BCM53115SREG_OFFSET_VLAN_TABLE_INDEX, &data,2))
+		return -1;
+
+	data |= (1 << VLAN_START_BIT);
+
+	switch (operator){
+	case 0:
+		data &= (0 << VLAN_RD_WR_BIT_0);
+		data &= (0 << VLAN_RD_WR_BIT_1);
+		break;
+	case 1:
+		data |= (1 << VLAN_RD_WR_BIT_0);
+		data &= (0 << VLAN_RD_WR_BIT_1);
+		break;
+	case 2:
+		data &= (0 << VLAN_RD_WR_BIT_0);
+		data |= (1 << VLAN_RD_WR_BIT_1);
+		break;
+	}
+
+	if (_bcm53115s_reg_write(BCM53115SREG_PAGE_VLAN_TABLE_INDEX,BCM53115SREG_OFFSET_VLAN_TABLE_INDEX, &data,2))
+		return -1;
+
+	return 0;
+}
 
 /**
  * _get_vlan_table	Fetch VLAN table from switch
@@ -1371,46 +1415,46 @@ int librouter_bcm53115s_get_8021q(void)
  * @param t
  * @return 0 if success, -1 if failure
  */
-//static int _get_vlan_table(unsigned int entry, struct vlan_table_t *t)
-//{
-//	__u8 data;
-//
-//	if (entry > 15) {
-//		printf("%% Invalid VLAN table : %d\n", entry);
-//		return -1;
-//	}
-//
-//	if (t == NULL) {
-//		printf("%% NULL table pointer\n");
-//		return -1;
-//	}
-//
-//	data = BCM53115S3REG_READ_OPERATION | BCM53115S3REG_VLAN_TABLE_SELECT;
-//	if (_bcm53115s_reg_write(BCM53115S3REG_INDIRECT_ACCESS_CONTROL0, &data, sizeof(data)))
-//		return -1;
-//
-//	data = (__u8) entry;
-//	if (_bcm53115s_reg_write(BCM53115S3REG_INDIRECT_ACCESS_CONTROL1, &data, sizeof(data)))
-//		return -1;
-//
-//
-//	if (_bcm53115s_reg_read(BCM53115S3REG_INDIRECT_DATA0, &data, sizeof(data)))
-//		return -1;
-//	t->vid = data;
-//
-//	if (_bcm53115s_reg_read(BCM53115S3REG_INDIRECT_DATA1, &data, sizeof(data)))
-//		return -1;
-//	t->vid |= (data & 0x0F) << 8;
-//	t->fid = (data & 0xF0) >> 4;
-//
-//	if (_bcm53115s_reg_read(BCM53115S3REG_INDIRECT_DATA2, &data, sizeof(data)))
-//		return -1;
-//	t->membership = data & 0x07;
-//	t->valid = (data & 0x08) >> 3;
-//
-//	return 0;
-//}
-//
+static int _get_vlan_table(unsigned int entry, struct vlan_bcm_table_t *t)
+{
+	uint32_t data = 0;
+
+	if (entry > 15) {
+		printf("%% Invalid VLAN table : %d\n", entry);
+		return -1;
+	}
+
+	if (t == NULL) {
+		printf("%% NULL table pointer\n");
+		return -1;
+	}
+
+	/* Set VLAN Table Address Index Register */
+	if (_set_vlan_table_reg_addr_index(entry) < 0)
+		return -1;
+
+	/* Set VLAN Table Read/Write/Clear Control Register */
+	if (_set_vlan_table_reg_Rd_Wr_Clr() < 0)
+		return -1;
+
+
+	if (_bcm53115s_reg_read(BCM53115S3REG_INDIRECT_DATA0, &data, sizeof(data)))
+		return -1;
+	t->vid = data;
+
+	if (_bcm53115s_reg_read(BCM53115S3REG_INDIRECT_DATA1, &data, sizeof(data)))
+		return -1;
+	t->vid |= (data & 0x0F) << 8;
+	t->fid = (data & 0xF0) >> 4;
+
+	if (_bcm53115s_reg_read(BCM53115S3REG_INDIRECT_DATA2, &data, sizeof(data)))
+		return -1;
+	t->membership = data & 0x07;
+	t->valid = (data & 0x08) >> 3;
+
+	return 0;
+}
+
 /**
  * _set_vlan_table	Configure a VLAN table in the switch
  *

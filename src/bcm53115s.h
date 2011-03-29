@@ -40,6 +40,8 @@
 
 #define VLAN_START_BIT 7
 #define VLAN_WRITE_CMD 0
+#define VLAN_RD_WR_BIT_1 0
+#define VLAN_RD_WR_BIT_1 1
 
 //#define BCM_PORT_1G 2
 typedef enum
@@ -121,21 +123,26 @@ typedef enum
 #define BCM53115SREG_READ_OPERATION		0x10
 #define BCM53115SREG_WRITE_OPERATION		0x00
 #define BCM53115SREG_VLAN_TABLE_SELECT		0x04
+#define BCM53115SREG_PAGE_VLAN_TABLE_INDEX	0x05
+#define BCM53115SREG_OFFSET_VLAN_TABLE_INDEX	0x81
+#define BCM53115SREG_PAGE_VLAN_TABLE_RD_WR_CL	0x05
+#define BCM53115SREG_OFFSET_VLAN_TABLE_RD_WR_CL	0x80
+
 
 #define BCM53115SREG_VLAN_MEMBERSHIP_PORT1_MSK	0x01
 #define BCM53115SREG_VLAN_MEMBERSHIP_PORT2_MSK	0x02
 #define BCM53115SREG_VLAN_MEMBERSHIP_PORT3_MSK	0x04
 
-struct vlan_config_t {
-	int vid;
+struct vlan_bcm_config_t {
+	int vid; /*vlan id*/
 	int membership;
 };
 
-struct vlan_table_t {
-	unsigned int valid:1;
-	unsigned int membership:3;
-	unsigned int fid:4;
-	unsigned int vid:12;
+struct vlan_bcm_table_t {
+	unsigned int fwd_mode:1;
+	unsigned int mspt_index:3;
+	unsigned int untag_map:8;
+	unsigned int fwd_map:8;
 };
 
 int librouter_bcm53115s_read_test(uint8_t page, uint8_t offset, uint32_t * data_buf, int len);
