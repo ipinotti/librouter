@@ -1601,7 +1601,7 @@ static int _init_vlan_table(void)
  * @param vconfig
  * @return 0 if success, -1 if error
  */
-//int librouter_bcm53115s_add_table(struct vlan_config_t *vconfig)
+//int librouter_bcm53115s_add_table(int table, struct vlan_bcm_table_t *vconfig)
 //{
 //	struct vlan_table_t new_t, exist_t;
 //	int active = 0, i;
@@ -1654,43 +1654,29 @@ static int _init_vlan_table(void)
 //	return -1;
 //}
 
-///**
-// * librouter_bcm53115s_del_table
-// *
-// * Delete a table entry for a certain VID
-// *
-// * @param vconfig
-// * @return 0 if success, -1 if error
-// */
-//int librouter_bcm53115s_del_table(struct vlan_config_t *vconfig)
+/**
+ * librouter_bcm53115s_del_table
+ *
+ * Delete a table entry for a certain VID
+ *
+ * @param vconfig
+ * @return 0 if success, -1 if error
+ */
+//int librouter_bcm53115s_del_table(struct vlan_bcm_config_t *vconfig)
 //{
-//	struct vlan_table_t t;
-//	int i, vid;
+//	struct vlan_bcm_table_t t;
+//	int i = 0;
 //
 //	if (vconfig == NULL) {
 //		printf("%% Invalid VLAN config\n");
 //		return -1;
 //	}
 //
-//	vid = vconfig->vid;
-//
 //	/* Search for an existing entry */
-//	for (i = 0; i < BCM53115S3_NUM_VLAN_TABLES; i++) {
-//		if (_get_vlan_table(i, &t) < 0)
-//			return -1;
-//
-//		if (!t.valid)
-//			continue;
-//
-//		if (t.vid == vid) {
-//			t.valid = 0; /* Make this entry invalid */
-//			return _set_vlan_table(i, &t);
-//		}
-//	}
 //
 //	return 0;
 //}
-//
+
 ///**
 // * librouter_bcm53115s_get_table
 // *
