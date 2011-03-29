@@ -819,45 +819,46 @@ int librouter_bcm53115s_get_8021q(void)
 	return ((data | BCM53115S_ENABLE_8021Q_MSK) ? 1 : 0);
 }
 
-///**
-// * librouter_bcm53115s_set_wfq	Enable/disable Weighted Fair Queueing
-// *
-// * @param enable
-// * @return 0 if success, -1 otherwise
-// */
-//int librouter_bcm53115s_set_wfq(int enable)
-//{
-//	__u8 data;
-//
-//	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL3, &data, sizeof(data)))
-//		return -1;
-//
-//	if (enable)
-//		data |= BCM53115S_ENABLE_WFQ_MSK;
-//	else
-//		data &= ~BCM53115S_ENABLE_WFQ_MSK;
-//
-//	if (_bcm53115s_reg_write(BCM53115SREG_GLOBAL_CONTROL3, &data, sizeof(data)))
-//		return -1;
-//
-//	return 0;
-//}
-//
-///**
-// * librouter_bcm53115s_get_wfq	Get if WFQ is enabled or disabled
-// *
-// * @return 1 if enabled, 0 if disabled, -1 if error
-// */
-//int librouter_bcm53115s_get_wfq(void)
-//{
-//	__u8 data;
-//
-//	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL3, &data, sizeof(data)))
-//		return -1;
-//
-//	return ((data | BCM53115S_ENABLE_WFQ_MSK) ? 1 : 0);
-//}
-//
+/**
+ * librouter_bcm53115s_set_wrr	Enable/disable Weighted Round Robin
+ *
+ * @param enable
+ * @return 0 if success, -1 otherwise
+ */
+int librouter_bcm53115s_set_wrr(int enable)
+{
+	uint8_t data;
+
+	if (_bcm53115s_reg_read(BCM53115S_QOS_PAGE, BCM53115S_QOS_TXQ_CONTROL_REG, &data, sizeof(data)))
+		return -1;
+
+	/* 53115S-DS Page 259: When these bits are cleared, WRR are enabled in all 4 queues */
+	if (enable)
+		data &= ~BCM53115S_QOS_TXQ_CONTROL_WRR_MSK;
+	else
+		data |= BCM53115S_QOS_TXQ_CONTROL_WRR_MSK; /* Strict priority */
+
+	if (_bcm53115s_reg_write(BCM53115S_QOS_PAGE, BCM53115S_QOS_TXQ_CONTROL_REG, &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_get_wfq	Get if WRR is enabled or disabled
+ *
+ * @return 1 if enabled, 0 if disabled, -1 if error
+ */
+int librouter_bcm53115s_get_wrr(void)
+{
+	uint8_t data;
+
+	if (_bcm53115s_reg_read(BCM53115S_QOS_PAGE, BCM53115S_QOS_TXQ_CONTROL_REG, &data, sizeof(data)))
+		return -1;
+
+	return ((data & BCM53115S_QOS_TXQ_CONTROL_WRR_MSK) ? 0 : 1);
+}
+
 ///**
 // * librouter_bcm53115s_set_default_vid	Set port default 802.1q VID
 // *
