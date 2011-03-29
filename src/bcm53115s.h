@@ -92,6 +92,9 @@ typedef enum
 
 #define BCM53115S_QOS_DIFFSERV_PRIOMAP_REG	0x30
 
+#define BCM53115S_QOS_TXQ_CONTROL_REG		0x80
+#define BCM53115S_QOS_TXQ_CONTROL_WRR_MSK	0x03
+
 
 
 
@@ -146,8 +149,8 @@ int librouter_bcm53115s_get_multicast_storm_protect(int port);
 int librouter_bcm53115s_get_8021q(void);
 int librouter_bcm53115s_set_8021q(int enable);
 
-//int librouter_bcm53115s_get_wfq(void);
-//int librouter_bcm53115s_set_wfq(int enable);
+int librouter_bcm53115s_get_wrr(void);
+int librouter_bcm53115s_set_wrr(int enable);
 //
 ///* Global Control 4 & 5 */
 //int librouter_bcm53115s_get_replace_null_vid(void);
