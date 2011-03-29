@@ -160,6 +160,14 @@ int librouter_ksz8863_get_broadcast_storm_protect(int port)
 	return (data & KSZ8863REG_ENABLE_BC_STORM_PROTECT_MSK) ? 1 : 0;
 }
 
+/**
+ * librouter_ksz8863_set_storm_protect_rate
+ *
+ * Set maximum incoming rate for broadcast packets
+ *
+ * @param percentage: 0 to 100
+ * @return 0 if success, -1 if failure
+ */
 int librouter_ksz8863_set_storm_protect_rate(unsigned int percentage)
 {
 	__u8 reg, data;
@@ -190,6 +198,13 @@ int librouter_ksz8863_set_storm_protect_rate(unsigned int percentage)
 	return 0;
 }
 
+/**
+ * librouter_ksz8863_get_storm_protect_rate
+ *
+ * Get maximum incoming rate for broadcast packets
+ *
+ * @return -1 if error, rate percentage otherwise
+ */
 int librouter_ksz8863_get_storm_protect_rate(void)
 {
 	__u8 rate_u, rate_l;
