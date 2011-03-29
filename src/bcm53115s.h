@@ -8,15 +8,27 @@
 #ifndef BCM53115S_H_
 #define BCM53115S_H_
 
+#include <stdint.h>
 
-/* DEBUG Function */
-#define BCM53115S_DEBUG
-#ifdef BCM53115S_DEBUG
-#define bcm53115s_dbg(x,...) \
+/* DEBUG Functions */
+//#define BCM53115S_DEBUG_PRINTF
+#define BCM53115S_DEBUG_SYSLOG
+
+#ifdef BCM53115S_DEBUG_PRINTF
+#define bcm53115s_dbg_printf(x,...) \
 		printf("%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__);
 #else
-#define bcm53115s_dbg(x,...)
+#define bcm53115s_dbg_printf(x,...)
 #endif
+
+#ifdef BCM53115S_DEBUG_SYSLOG
+#define bcm53115s_dbg_syslog(x,...) \
+		syslog(LOG_INFO,  "%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__);
+#else
+#define bcm53115s_dbg_syslog(x,...)
+#endif
+/* End DEBUG Functions */
+
 
 //BCM53115S DEFINES
 
@@ -46,14 +58,11 @@ typedef enum
 #define BCM_PORT_IMP 6
 
 
-
-
-
 #define BCM53115S_NUM_VLAN_TABLES		16
 #define BCM53115S_SPI_DEV	"/dev/spidev28672.0"
 #define BCM53115S_SPI_ADDR	0x5f
 
-#define BCM53115S_ID	0x8830
+#define BCM53115S_ID	0x53115
 
 #define BCM53115SREG_GLOBAL_CONTROL0	0x02
 #define BCM53115SREG_GLOBAL_CONTROL1	0x03
@@ -128,19 +137,19 @@ struct vlan_table_t {
 	unsigned int fid:4;
 	unsigned int vid:12;
 };
-//
-///* For tests only */
-//int librouter_bcm53115s_read(__u8 reg);
-//int librouter_bcm53115s_write(__u8 reg, __u8 data);
-//
+
+int librouter_bcm53115s_read_test(uint8_t page, uint8_t offset, uint32_t * data_buf, int len);
+int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, int len);
+
+
 ///* Global Control 2 */
 //int librouter_bcm53115s_set_multicast_storm_protect(int enable);
 //int librouter_bcm53115s_get_multicast_storm_protect(void);
 //
 ///* Global Control 3 */
-//int librouter_bcm53115s_get_8021q(void);
-//int librouter_bcm53115s_set_8021q(int enable);
-//
+int librouter_bcm53115s_get_8021q(void);
+int librouter_bcm53115s_set_8021q(int enable);
+
 //int librouter_bcm53115s_get_wfq(void);
 //int librouter_bcm53115s_set_wfq(int enable);
 //
@@ -154,10 +163,10 @@ struct vlan_table_t {
 ///* Port n Control 1*/
 //int librouter_bcm53115s_get_broadcast_storm_protect(int port);
 //int librouter_bcm53115s_set_broadcast_storm_protect(int enable, int port);
-//
+
 //int librouter_bcm53115s_get_8021p(int port);
 //int librouter_bcm53115s_set_8021p(int enable, int port);
-//
+
 //int librouter_bcm53115s_get_diffserv(int port);
 //int librouter_bcm53115s_set_diffserv(int enable, int port);
 //
@@ -194,12 +203,12 @@ struct vlan_table_t {
 //int librouter_bcm53115s_get_table(int entry, struct vlan_config_t *vconfig);
 //int librouter_bcm53115s_del_table(struct vlan_config_t *vconfig);
 //int librouter_bcm53115s_add_table(struct vlan_config_t *vconfig);
-//
-//
-//
+
+
+
 ///* Initialization */
-//int librouter_bcm53115s_probe(void);
-//int librouter_bcm53115s_set_default_config(void);
+int librouter_bcm53115s_probe(void);
+int librouter_bcm53115s_set_default_config(void);
 
 
 #endif

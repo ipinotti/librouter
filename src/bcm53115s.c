@@ -4,7 +4,6 @@
  *  Created on: Mar 1, 2011
  *      Author: Igor Kramer Pinotti (ipinotti@pd3.com.br)
  */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,14 +24,14 @@
 #include <linux/spi/spidev.h>
 #include <linux/types.h>
 
-
 #include "options.h"
 
-//#ifdef OPTION_MANAGED_SWITCH
+#ifdef OPTION_MANAGED_SWITCH
 
 #include "bcm53115s.h"
 #include "bcm53115s_etc.h"
 
+#define TIMEOUT_SPI_LIMIT 10
 #define ARGS_1 1
 #define ARGS_2 2
 #define ARGS_3 3
@@ -42,33 +41,107 @@ static uint8_t mode;
 static uint8_t bits = 8;
 static uint32_t speed = 500000;
 static uint16_t delay;
+const int timeout_spi_limit = 100;
 
-static int clear_buff(uint8_t buff[])
+static uint8_t endian_swap_8bits(uint8_t * val)
 {
-	int j;
+	return ((* val << 4) | (* val >> 4));
+}
 
-	for (j=0; j < ARRAY_SIZE(buff); j++)
-		buff[j] = 0;
+static uint16_t endian_swap_16bits(uint16_t * val)
+{
+	return ((* val << 8) | (* val >> 8));
+}
+
+static uint32_t endian_swap_32bits(uint32_t * val)
+{
+	 return ((((*val) & 0xff000000) >> 24) |
+			(((*val) & 0x00ff0000) >>  8) |
+			(((*val) & 0x0000ff00) <<  8) |
+			(((*val) & 0x000000ff) << 24));
+}
+
+static int clear_buff(uint8_t buff[], int size_of)
+{
+	memset(buff, 0, size_of);
 
 	return 0;
 }
 
-static int clear_tx_rx(uint8_t tx[], uint8_t rx[])
+static int clear_tx_rx(uint8_t tx[], uint8_t rx[], int size_of_TxRx)
 {
-	clear_buff(tx);
-	clear_buff(rx);
+	clear_buff(tx, size_of_TxRx);
+	clear_buff(rx, size_of_TxRx);
 
 	return 0;
+}
+
+static void printf_buffer_data(uint8_t buff[], int size_of_buff)
+{
+	int i = 0;
+
+	printf("Size - Buffer data: %d \n", size_of_buff);
+	for (i = 0; i < size_of_buff; i++) {
+		if (!(i % 6))
+			printf("");
+		printf("%.2X ", buff[i]);
+	}
+	printf("\n");
+}
+
+static void printf_spi_buffers(uint8_t tx[], uint8_t rx[], int size_of_TxRx)
+{
+	int i = 0;
+
+	printf("Size - Buffer de envio: %d \n", size_of_TxRx);
+	for (i = 0; i < size_of_TxRx; i++) {
+		if (!(i % 6))
+			printf("");
+		printf("%.2X ", tx[i]);
+	}
+
+	printf("\nSize - Buffer de resposta: %d \n", size_of_TxRx);
+	for (i = 0; i < size_of_TxRx; i++) {
+		if (!(i % 6))
+			printf("");
+		printf("%.2X ", rx[i]);
+	}
+
+	printf("\n");
+}
+
+static int _bcm53115s_spi_mode (int dev)
+{
+	uint8_t mode = 0;
+	int ret = 0;
+
+	ret = ioctl(dev, SPI_IOC_RD_MODE, &mode);
+	if (ret < 0)
+		goto end;
+
+	mode |= SPI_CPOL;
+	mode |= SPI_CPHA;
+
+	ret = ioctl(dev, SPI_IOC_WR_MODE, &mode);
+
+end:
+	if (ret < 0){
+		bcm53115s_dbg_syslog("Could not set SPI mode : %s\n", strerror(errno));
+		return -1;
+	}
+	else
+		return 0;
 }
 
 /* Low level I2C functions */
-static int _bcm53115s_spi_transfer(uint8_t tx[], uint8_t rx[])
+static int _bcm53115s_spi_transfer(uint8_t tx[], uint8_t rx[], int size_of_TxRx)
 {
 	int dev, i;
+
 	struct spi_ioc_transfer tr = {
 		.tx_buf = (unsigned long)tx,
 		.rx_buf = (unsigned long)rx,
-		.len = ARRAY_SIZE(tx),
+		.len = size_of_TxRx,
 		.delay_usecs = delay,
 		.speed_hz = speed,
 		.bits_per_word = bits,
@@ -76,47 +149,41 @@ static int _bcm53115s_spi_transfer(uint8_t tx[], uint8_t rx[])
 
 	dev = open(BCM53115S_SPI_DEV, O_RDWR);
 	if (dev < 0){
-		bcm53115s_dbg("error opening %s: %s\n", BCM53115S_SPI_DEV, strerror(errno));
+		bcm53115s_dbg_syslog("error opening %s: %s\n", BCM53115S_SPI_DEV, strerror(errno));
 		return -1;
 	}
 
-	if (ioctl(dev, SPI_IOC_MESSAGE(1), &tr) != 0){
-		bcm53115s_dbg("Could not read from device : %s\n", strerror(errno));
+	if (_bcm53115s_spi_mode(dev) < 0){
+		bcm53115s_dbg_syslog("Could not read from device / can't send spi message : %s\n", strerror(errno));
 		close(dev);
 		return -1;
 	}
 
-#ifdef BCM53115S_DEBUG
-
-	bcm53115s_dbg("Size - Buffer de envio: %d", ARRAY_SIZE(tx));
-	for (i = 0; i < ARRAY_SIZE(tx); i++) {
-		if (!(i % 6))
-			bcm53115s_dbg("");
-		bcm53115s_dbg("%.2X ", tx[i]);
+	if (ioctl(dev, SPI_IOC_MESSAGE(1), &tr) < 0){
+		bcm53115s_dbg_syslog("Could not read from device / can't send spi message : %s\n", strerror(errno));
+		close(dev);
+		return -1;
 	}
 
-	bcm53115s_dbg("Size - Buffer de resposta: %d", ARRAY_SIZE(rx));
-	for (i = 0; i < ARRAY_SIZE(rx); i++) {
-		if (!(i % 6))
-			bcm53115s_dbg("");
-		printf("%.2X ", rx[i]);
-	}
-
+#ifdef BCM53115S_DEBUG_CODE
+	printf_spi_buffers(tx, rx, size_of_TxRx);
 #endif
 
+	close(dev);
 	return 0;
-
 }
 
-
-static int _bcm53115s_reg_read(int page, int offset, uint8_t *buf, int len)
+static int _bcm53115s_spi_reg_read_raw(uint8_t page, uint8_t offset, uint8_t *buf, int len)
 {
-	uint8_t tx[3] = {0};
-	uint8_t rx[3] = {0};
-	uint8_t tx_5_step[2] = {0};
-	uint8_t rx_5_step[2] = {0};
-	uint8_t * buff_rx_data = NULL;
+	uint8_t tx[3];
+	uint8_t rx[3];
+	uint8_t tx_5_step[len+2];
+	uint8_t rx_5_step[len+2];
 	int i;
+	int timeout = 0;
+
+	clear_tx_rx(tx,rx,sizeof(tx));
+	clear_tx_rx(tx_5_step,rx_5_step,sizeof(rx_5_step));
 
 	/*
 	 * Normal SPI Mode (Command Byte)
@@ -131,31 +198,35 @@ static int _bcm53115s_reg_read(int page, int offset, uint8_t *buf, int len)
 	tx[0] = CMD_SPI_BYTE_RD;
 	tx[1] = ROBO_SPI_STATUS_PAGE;
 	tx[2] = 0x00;
-
 	do {
-		_bcm53115s_spi_transfer(tx,rx);
+		_bcm53115s_spi_transfer(tx, rx, sizeof(tx));
+		if ( (timeout++) == timeout_spi_limit)
+			return -1;
 		usleep(100);
-	} while ((rx[2] >> ROBO_SPIF_BIT) & 1) ; // wait SPI bit to 0
+	} while ((rx[2] >> ROBO_SPIF_BIT) & 1); // wait SPI bit to 0
 
-	clear_tx_rx(tx,rx);
+	clear_tx_rx(tx, rx, sizeof(tx));
+	timeout = 0;
 
 	/* 2. Issue a normal write command(0x61) to write the register page value
 		  into the SPI page register(0xFF) 	 */
 	tx[0] = CMD_SPI_BYTE_WR;
 	tx[1] = ROBO_PAGE_PAGE;
 	tx[2] = page;
-	_bcm53115s_spi_transfer(tx, rx);
+	if (_bcm53115s_spi_transfer(tx, rx, sizeof(tx)) < 0)
+		return -1;
 
-	clear_tx_rx(tx,rx);
+	clear_tx_rx(tx, rx, sizeof(tx));
 
 	/* 3. Issue a normal read command(0x60) to setup the required RobiSwitch register
 		  address 	 */
 	tx[0] = CMD_SPI_BYTE_RD;
 	tx[1] = offset;
 	tx[2] = 0x00;
-	_bcm53115s_spi_transfer(tx, rx);
+	if (_bcm53115s_spi_transfer(tx, rx, sizeof(tx)) < 0)
+		return -1;
 
-	clear_tx_rx(tx,rx);
+	clear_tx_rx(tx, rx, sizeof(tx));
 
 	/* 4. Issue a normal read command(0x60) to poll the RACK bit in the
 	      SPI status register(0XFE) to determine the completion of read 	 */
@@ -164,47 +235,41 @@ static int _bcm53115s_reg_read(int page, int offset, uint8_t *buf, int len)
 		tx[0] = CMD_SPI_BYTE_RD;
 		tx[1] = ROBO_SPI_STATUS_PAGE;
 		tx[2] = 0x00;
-		_bcm53115s_spi_transfer(tx, rx);
+		_bcm53115s_spi_transfer(tx, rx, sizeof(tx));
+		if ( (timeout++) == timeout_spi_limit)
+			return -1;
 		usleep(100);
 	}while (((rx[2] >> ROBO_RACK_BIT) & 1) == 0); // wait RACK bit to 1
 
-	clear_tx_rx(tx,rx);
+	clear_tx_rx(tx, rx, sizeof(tx));
+	timeout = 0;
 
 	/* 5. Issue a normal read command(0x60) to read the specific register's conternt
 		  placed in the SPI data I/O register(0xF0) 	 */
 	tx_5_step[0] = CMD_SPI_BYTE_RD;
-	rx_5_step[1] = ROBO_SPI_DATA_IO_0_PAGE;
-	_bcm53115s_spi_transfer(tx_5_step, rx_5_step);
+	tx_5_step[1] = ROBO_SPI_DATA_IO_0_PAGE;
+	if (_bcm53115s_spi_transfer(tx_5_step, rx_5_step, sizeof(tx_5_step)) < 0)
+		return -1;
 
 	/* 6. Copy returned info to buff */
-
-	buff_rx_data = (uint8_t *) malloc(sizeof(int) * len);
-	if(buff_rx_data == NULL){
-		fprintf(stderr, "Could not allocate memory.\n");
-		return -1;
-	}
-
-	_bcm53115s_spi_transfer(buff_rx_data, buff_rx_data);
-
 	for (i=0; i<len; i++)
-		buf[i] = buff_rx_data[i];
-
-	free (buff_rx_data);
-	buff_rx_data = NULL;
+		buf[i] = rx_5_step[2+i];
 
 	return 0;
-
 }
 
 
-static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
+static int _bcm53115s_spi_reg_write_raw(uint8_t page, uint8_t offset, uint8_t *buf, int len)
 {
-	uint8_t tx[3]= {0};
-	uint8_t rx[3]= {0};
-	uint8_t tx_3_step[2] = {0};
-	uint8_t rx_3_step[2] = {0};
-	uint8_t * buff_rx_data;
+	uint8_t tx[3];
+	uint8_t rx[3];
+	uint8_t tx_3_step[len+2];
+	uint8_t rx_3_step[len+2];
 	int i;
+	int timeout = 0;
+
+	clear_tx_rx(tx,rx,sizeof(tx));
+	clear_tx_rx(tx_3_step,rx_3_step,sizeof(tx_3_step));
 
 	/*
 	 * Normal SPI Mode (Command Byte)
@@ -219,80 +284,111 @@ static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
 	tx[0] = CMD_SPI_BYTE_RD;
 	tx[1] = ROBO_SPI_STATUS_PAGE;
 	tx[2] = 0x00;
-
 	do {
-		_bcm53115s_spi_transfer(tx,rx);
+		_bcm53115s_spi_transfer(tx,rx, sizeof(tx));
+		if ( (timeout++) == timeout_spi_limit)
+			return -1;
 		usleep(100);
-	} while ((rx[2] >> ROBO_SPIF_BIT) & 1) ; // wait SPI bit to 0
+	} while ((rx[2] >> ROBO_SPIF_BIT) & 1); // wait SPI bit to 0
 
-	clear_tx_rx(tx,rx);
+	clear_tx_rx(tx,rx,sizeof(tx));
+	timeout = 0;
 
 	/* 2. Issue a normal write command(0x61) to write the register page value
 		  into the SPI page register(0xFF) 	 */
 	tx[0] = CMD_SPI_BYTE_WR;
 	tx[1] = ROBO_PAGE_PAGE;
 	tx[2] = page;
-	_bcm53115s_spi_transfer(tx, rx);
+	if (_bcm53115s_spi_transfer(tx,rx, sizeof(tx)) < 0)
+		return -1;
 
-	clear_tx_rx(tx,rx);
+	clear_tx_rx(tx,rx,sizeof(tx));
 
 	/* 3. Issue a normal write command(0x61) and write the address of the accessed
 		  register followed by the write content starting from a lower byte */
 	tx_3_step[0] = CMD_SPI_BYTE_WR;
 	tx_3_step[1] = offset;
-	_bcm53115s_spi_transfer(tx_3_step, rx_3_step);
 
-	/* 4. Write content */
+	for(i=0; i < len; i++)
+		tx_3_step[i+2] = buf[i];
 
-	buff_rx_data = (uint8_t *) malloc(sizeof(int) * len);
-	if(buff_rx_data == NULL){
-		fprintf(stderr, "Could not allocate memory.\n");
+	if (_bcm53115s_spi_transfer(tx_3_step, rx_3_step, sizeof(tx_3_step)) < 0)
 		return -1;
-	}
 
-	_bcm53115s_spi_transfer(buf, buff_rx_data);
+	return 0;
+}
 
-	free(buff_rx_data);
-	buff_rx_data = NULL;
+static int _bcm53115s_reg_read_data_return(uint8_t page, uint8_t offset, int len)
+{
+	uint32_t data = 0;
+
+	_bcm53115s_spi_reg_read_raw(page, offset,(uint8_t *)&data,len);
+
+	data = endian_swap_32bits((uint32_t *)&data);
+
+	return data;
+}
+
+static int _bcm53115s_reg_read(uint8_t page, uint8_t offset, uint32_t * data_buf, int len)
+{
+	uint32_t data = 0;
+
+	if (_bcm53115s_spi_reg_read_raw(page, offset,(uint8_t *)&data,len) < 0)
+		return -1;
+
+	*data_buf = endian_swap_32bits((uint32_t *)&data);
+
+	return 0;
+}
+
+static int _bcm53115s_reg_write(uint8_t page, uint8_t offset, uint32_t * data, int len)
+{
+	uint32_t data_raw = 0;
+
+//	printf("Input data --> %.2X ===> swapped data --> %.2x\n\n", *data, endian_swap_32bits((uint32_t *) data));
+
+	data_raw = endian_swap_32bits((uint32_t *)data);
+
+	if (_bcm53115s_spi_reg_write_raw(page, offset,(uint8_t *)&data_raw,len) < 0)
+		return -1;
 
 	return 0;
 }
 
 
-///******************/
-///* For tests only */
-///******************/
-//int librouter_bcm53115s_read(__u8 reg)
-//{
-//	__u8 data;
-//
-//	_bcm53115s_reg_read(reg, &data, sizeof(data));
-//
-//	return data;
-//}
-//
-//int librouter_bcm53115s_write(__u8 reg, __u8 data)
-//{
-//	return _bcm53115s_reg_write(reg, &data, sizeof(data));
-//}
-//
+
+/******************/
+/* For tests only */
+/******************/
+int librouter_bcm53115s_read_test(uint8_t page, uint8_t offset, uint32_t * data_buf, int len)
+{
+	return _bcm53115s_reg_read(page,offset,data_buf,len);
+}
+
+int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, int len)
+{
+	return _bcm53115s_reg_write(page,offset,&data,len);
+}
+
+
+
 ///******************************************************/
 ///********** Exported functions ************************/
 ///******************************************************/
-///**
-// * librouter_bcm53115s_set_broadcast_storm_protect
-// *
-// * Enable or Disable Broadcast Storm protection
-// *
-// * @param enable
-// * @param port:	from 0 to 2
-// * @return 0 on success, -1 otherwise
-// */
+/**
+ * librouter_bcm53115s_set_broadcast_storm_protect
+ *
+ * Enable or Disable Broadcast Storm protection
+ *
+ * @param enable
+ * @param port:	from 0 to 3
+ * @return 0 on success, -1 otherwise
+ */
 //int librouter_bcm53115s_set_broadcast_storm_protect(int enable, int port)
 //{
-//	__u8 reg, data;
+//	uint8_t reg, data;
 //
-//	if (port > 2) {
+//	if (port > 3) {
 //		printf("%% No such port : %d\n", port);
 //		return -1;
 //	}
@@ -313,15 +409,15 @@ static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
 //
 //	return 0;
 //}
-//
-///**
-// * librouter_bcm53115s_get_broadcast_storm_protect
-// *
-// * Get if Broadcast Storm protection is enabled or disabled
-// *
-// * @param port: from 0 to 2
-// * @return 1 if enabled, 0 if disabled, -1 if error
-// */
+
+/**
+ * librouter_bcm53115s_get_broadcast_storm_protect
+ *
+ * Get if Broadcast Storm protection is enabled or disabled
+ *
+ * @param port: from 0 to 2
+ * @return 1 if enabled, 0 if disabled, -1 if error
+ */
 //int librouter_bcm53115s_get_broadcast_storm_protect(int port)
 //{
 //	__u8 reg, data;
@@ -339,7 +435,7 @@ static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
 //
 //	return (data | BCM53115SREG_ENABLE_BC_STORM_PROTECT_MSK) ? 1 : 0;
 //}
-//
+
 //int librouter_bcm53115s_set_storm_protect_rate(unsigned int percentage)
 //{
 //	__u8 reg, data;
@@ -647,46 +743,46 @@ static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
 //
 //	return rate;
 //}
-//
-///**
-// * librouter_bcm53115s_set_8021q	Enable/disable 802.1q (VLAN)
-// *
-// * @param enable
-// * @return 0 if success, -1 if error
-// */
-//int librouter_bcm53115s_set_8021q(int enable)
-//{
-//	__u8 data;
-//
-//	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL3, &data, sizeof(data)))
-//		return -1;
-//
-//	if (enable)
-//		data |= BCM53115S_ENABLE_8021Q_MSK;
-//	else
-//		data &= ~BCM53115S_ENABLE_8021Q_MSK;
-//
-//	if (_bcm53115s_reg_write(BCM53115SREG_GLOBAL_CONTROL3, &data, sizeof(data)))
-//		return -1;
-//
-//	return 0;
-//}
-//
-///**
-// * librouter_bcm53115s_get_8021q	Get if 802.1q is enabled or disabled
-// *
-// * @return 1 if enabled, 0 if disabled, -1 if error
-// */
-//int librouter_bcm53115s_get_8021q(void)
-//{
-//	__u8 data;
-//
-//	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL3, &data, sizeof(data)))
-//		return -1;
-//
-//	return ((data | BCM53115S_ENABLE_8021Q_MSK) ? 1 : 0);
-//}
-//
+
+/**
+ * librouter_bcm53115s_set_8021q	Enable/disable 802.1q (VLAN)
+ *
+ * @param enable
+ * @return 0 if success, -1 if error
+ */
+int librouter_bcm53115s_set_8021q(int enable)
+{
+	uint32_t data = 0;
+
+	if (_bcm53115s_reg_read(ROBO_VLAN_PAGE, 0x00, &data,1))
+		return -1;
+
+	if (enable)
+		data |= BCM53115S_ENABLE_8021Q_MSK;
+	else
+		data &= ~BCM53115S_ENABLE_8021Q_MSK;
+
+	if (_bcm53115s_reg_write(ROBO_VLAN_PAGE, 0x00, &data,1))
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_get_8021q	Get if 802.1q is enabled or disabled
+ *
+ * @return 1 if enabled, 0 if disabled, -1 if error
+ */
+int librouter_bcm53115s_get_8021q(void)
+{
+	uint32_t data;
+
+	if (_bcm53115s_reg_read(ROBO_VLAN_PAGE, 0x00, &data, sizeof(data)))
+		return -1;
+
+	return ((data | BCM53115S_ENABLE_8021Q_MSK) ? 1 : 0);
+}
+
 ///**
 // * librouter_bcm53115s_set_wfq	Enable/disable Weighted Fair Queueing
 // *
@@ -1262,19 +1358,19 @@ static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
 //	return prio;
 //}
 //
-///***********************************************/
-///********* VLAN table manipulation *************/
-///***********************************************/
-//
-///**
-// * _get_vlan_table	Fetch VLAN table from switch
-// *
-// * When successful, data is written to the structure pointed by t
-// *
-// * @param table
-// * @param t
-// * @return 0 if success, -1 if failure
-// */
+/***********************************************/
+/********* VLAN table manipulation *************/
+/***********************************************/
+
+/**
+ * _get_vlan_table	Fetch VLAN table from switch
+ *
+ * When successful, data is written to the structure pointed by t
+ *
+ * @param table
+ * @param t
+ * @return 0 if success, -1 if failure
+ */
 //static int _get_vlan_table(unsigned int entry, struct vlan_table_t *t)
 //{
 //	__u8 data;
@@ -1289,25 +1385,25 @@ static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
 //		return -1;
 //	}
 //
-//	data = BCM53115SREG_READ_OPERATION | BCM53115SREG_VLAN_TABLE_SELECT;
-//	if (_bcm53115s_reg_write(BCM53115SREG_INDIRECT_ACCESS_CONTROL0, &data, sizeof(data)))
+//	data = BCM53115S3REG_READ_OPERATION | BCM53115S3REG_VLAN_TABLE_SELECT;
+//	if (_bcm53115s_reg_write(BCM53115S3REG_INDIRECT_ACCESS_CONTROL0, &data, sizeof(data)))
 //		return -1;
 //
 //	data = (__u8) entry;
-//	if (_bcm53115s_reg_write(BCM53115SREG_INDIRECT_ACCESS_CONTROL1, &data, sizeof(data)))
+//	if (_bcm53115s_reg_write(BCM53115S3REG_INDIRECT_ACCESS_CONTROL1, &data, sizeof(data)))
 //		return -1;
 //
 //
-//	if (_bcm53115s_reg_read(BCM53115SREG_INDIRECT_DATA0, &data, sizeof(data)))
+//	if (_bcm53115s_reg_read(BCM53115S3REG_INDIRECT_DATA0, &data, sizeof(data)))
 //		return -1;
 //	t->vid = data;
 //
-//	if (_bcm53115s_reg_read(BCM53115SREG_INDIRECT_DATA1, &data, sizeof(data)))
+//	if (_bcm53115s_reg_read(BCM53115S3REG_INDIRECT_DATA1, &data, sizeof(data)))
 //		return -1;
 //	t->vid |= (data & 0x0F) << 8;
 //	t->fid = (data & 0xF0) >> 4;
 //
-//	if (_bcm53115s_reg_read(BCM53115SREG_INDIRECT_DATA2, &data, sizeof(data)))
+//	if (_bcm53115s_reg_read(BCM53115S3REG_INDIRECT_DATA2, &data, sizeof(data)))
 //		return -1;
 //	t->membership = data & 0x07;
 //	t->valid = (data & 0x08) >> 3;
@@ -1315,15 +1411,15 @@ static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
 //	return 0;
 //}
 //
-///**
-// * _set_vlan_table	Configure a VLAN table in the switch
-// *
-// * Configuration is present in the structure pointed by t
-// *
-// * @param table
-// * @param t
-// * @return
-// */
+/**
+ * _set_vlan_table	Configure a VLAN table in the switch
+ *
+ * Configuration is present in the structure pointed by t
+ *
+ * @param table
+ * @param t
+ * @return 0 if success, -1 if failure
+ */
 //static int _set_vlan_table(unsigned int table, struct vlan_table_t *t)
 //{
 //	__u8 data;
@@ -1339,31 +1435,52 @@ static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
 //	}
 //
 //	data = t->vid;
-//	if (_bcm53115s_reg_write(BCM53115SREG_INDIRECT_DATA0, &data, sizeof(data)))
+//	if (_bcm53115s_reg_write(BCM53115S3REG_INDIRECT_DATA0, &data, sizeof(data)))
 //		return -1;
-//
 //
 //	data = t->vid >> 8;
 //	data |= t->fid << 4;
-//	if (_bcm53115s_reg_write(BCM53115SREG_INDIRECT_DATA1, &data, sizeof(data)))
+//	if (_bcm53115s_reg_write(BCM53115S3REG_INDIRECT_DATA1, &data, sizeof(data)))
 //		return -1;
 //
 //	data = t->membership;
 //	data |= t->valid << 3;
-//	if (_bcm53115s_reg_write(BCM53115SREG_INDIRECT_DATA2, &data, sizeof(data)))
+//	if (_bcm53115s_reg_write(BCM53115S3REG_INDIRECT_DATA2, &data, sizeof(data)))
 //		return -1;
 //
-//	data = BCM53115SREG_WRITE_OPERATION | BCM53115SREG_VLAN_TABLE_SELECT;
-//	if (_bcm53115s_reg_write(BCM53115SREG_INDIRECT_ACCESS_CONTROL0, &data, sizeof(data)))
+//	data = BCM53115S3REG_WRITE_OPERATION | BCM53115S3REG_VLAN_TABLE_SELECT;
+//	if (_bcm53115s_reg_write(BCM53115S3REG_INDIRECT_ACCESS_CONTROL0, &data, sizeof(data)))
 //		return -1;
 //
 //	data = (__u8) table;
-//	if (_bcm53115s_reg_write(BCM53115SREG_INDIRECT_ACCESS_CONTROL1, &data, sizeof(data)))
-//		return -1;
+//	if (_bcm53115s_reg_write(BCM53115S3REG_INDIRECT_ACCESS_CONTROL1, &data, sizeof(data)))
+//	return -1;
 //
 //	return 0;
 //}
+
+/**
+ * _init_vlan_table
+ *
+ * Make all VLAN entries invalid
+ *
+ * @return 0 if success, -1 if failure
+ */
+//static int _init_vlan_table(void)
+//{
+//	int i;
+//	struct vlan_table_t vlan;
 //
+//	vlan.valid = 0;
+//	vlan.vid = 0;
+//
+//	/* Search for the same VID in a existing entry */
+//	for (i = 0; i < BCM53115S3_NUM_VLAN_TABLES; i++)
+//		_set_vlan_table(i, &vlan);
+//
+//	return 0;
+//}
+
 ///**
 // * librouter_bcm53115s_add_table
 // *
@@ -1388,7 +1505,7 @@ static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
 //	new_t.vid = vconfig->vid;
 //
 //	/* Search for the same VID in a existing entry */
-//	for (i = 0; i < BCM53115S_NUM_VLAN_TABLES; i++) {
+//	for (i = 0; i < BCM53115S3_NUM_VLAN_TABLES; i++) {
 //		_get_vlan_table(i, &exist_t);
 //
 //		if (!exist_t.valid)
@@ -1404,13 +1521,13 @@ static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
 //	}
 //
 //	/* No more free entries ? */
-//	if (active == BCM53115S_NUM_VLAN_TABLES) {
+//	if (active == BCM53115S3_NUM_VLAN_TABLES) {
 //		printf("%% Already reached maximum number of entries\n");
 //		return -1;
 //	}
 //
 //	/* The same VID was not found, just add in the first entry available */
-//	for (i = 0; i < BCM53115S_NUM_VLAN_TABLES; i++) {
+//	for (i = 0; i < BCM53115S3_NUM_VLAN_TABLES; i++) {
 //		if (_get_vlan_table(i, &exist_t) < 0)
 //			return -1;
 //
@@ -1446,7 +1563,7 @@ static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
 //	vid = vconfig->vid;
 //
 //	/* Search for an existing entry */
-//	for (i = 0; i < BCM53115S_NUM_VLAN_TABLES; i++) {
+//	for (i = 0; i < BCM53115S3_NUM_VLAN_TABLES; i++) {
 //		if (_get_vlan_table(i, &t) < 0)
 //			return -1;
 //
@@ -1471,69 +1588,64 @@ static int _bcm53115s_reg_write(int page, int offset, uint8_t *buf, int len)
 // * @param vconfig
 // * @return 0 if success, -1 if error
 // */
-//int librouter_bcm53115s_get_table(int entry, struct vlan_config_t *vconfig)
+//int librouter_bcm53115s_get_table(int entry, struct vlan_table_t *v)
 //{
-//	struct vlan_table_t t;
-//
-//	if (vconfig == NULL) {
+//	if (v == NULL) {
 //		printf("%% Invalid VLAN config\n");
 //		return -1;
 //	}
 //
-//	if (_get_vlan_table(entry, &t) < 0)
+//	if (_get_vlan_table(entry, v) < 0)
 //		return -1;
 //
-//	vconfig->vid = t.vid;
-//	vconfig->membership = t.membership;
-//
-//	return 0;
-//}
-//
-//
-//
-///*********************************************/
-///******* Initialization functions ************/
-///*********************************************/
-//
-///**
-// * librouter_bcm53115s_set_default_config
-// *
-// * Configure switch to system default
-// *
-// * @return 0 if success, -1 if error
-// */
-//int librouter_bcm53115s_set_default_config(void)
-//{
-//	return 0;
-//}
-//
-//
-///**
-// * librouter_bcm53115s_probe	Probe for the BCM53115S Chip
-// *
-// * Read ID registers to determine if chip is present
-// *
-// * @return 1 if chip was detected, 0 if not, -1 if error
-// */
-//int librouter_bcm53115s_probe(void)
-//{
-//	__u8 reg = 0x0;
-//	__u8 id_u, id_l;
-//	__u16 id;
-//
-//	if (_bcm53115s_reg_read(reg, &id_u, sizeof(id_u)))
-//		return -1;
-//
-//	if (_bcm53115s_reg_read(reg + 1, &id_l, sizeof(id_l)))
-//		return -1;
-//
-//	id_l &= 0xf0; /* Take only bits 7-4 for the lower part */
-//	id = (id_u << 8) | id_l;
-//
-//	if (id == BCM53115S_ID)
-//		return 1;
+//	bcm53115s_dbg("Getting entry %d\n", entry);
+//	bcm53115s_dbg(" -- > valid : %d\n", v->valid);
+//	bcm53115s_dbg(" -- > membership : %d\n", v->membership);
+//	bcm53115s_dbg(" -- > vid : %d\n", v->vid);
+//	bcm53115s_dbg(" -- > fid : %d\n", v->fid);
 //
 //	return 0;
 //}
 
-//#endif /* OPTION_MANAGED_SWITCH */
+
+
+/*********************************************/
+/******* Initialization functions ************/
+/*********************************************/
+
+/**
+ * librouter_bcm53115s_set_default_config
+ *
+ * Configure switch to system default
+ *
+ * @return 0 if success, -1 if error
+ */
+int librouter_bcm53115s_set_default_config(void)
+{
+	if (librouter_bcm53115s_probe())
+	//	_init_vlan_table();
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_probe	Probe for the BCM53115S Chip
+ *
+ * Read ID registers to determine if chip is present
+ *
+ * @return 1 if chip was detected, 0 if not, -1 if error
+ */
+int librouter_bcm53115s_probe(void)
+{
+	uint32_t id = 0;
+
+	if (_bcm53115s_reg_read(0x02, 0x30, &id, 4) < 0)
+		return -1;
+
+	if (id == BCM53115S_ID)
+		return 1;
+
+	return 0;
+}
+
+#endif /* OPTION_MANAGED_SWITCH */
