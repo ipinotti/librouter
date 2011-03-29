@@ -31,6 +31,7 @@
 #include "bcm53115s.h"
 #include "bcm53115s_etc.h"
 
+#define TIMEOUT_SPI_LIMIT 10
 #define ARGS_1 1
 #define ARGS_2 2
 #define ARGS_3 3
@@ -40,6 +41,7 @@ static uint8_t mode;
 static uint8_t bits = 8;
 static uint32_t speed = 500000;
 static uint16_t delay;
+const int timeout_spi_limit = 100;
 
 static uint8_t endian_swap_8bits(uint8_t * val)
 {
@@ -124,7 +126,7 @@ static int _bcm53115s_spi_mode (int dev)
 
 end:
 	if (ret < 0){
-		bcm53115s_dbg("Could not set SPI mode : %s\n", strerror(errno));
+		bcm53115s_dbg_syslog("Could not set SPI mode : %s\n", strerror(errno));
 		return -1;
 	}
 	else
@@ -147,18 +149,18 @@ static int _bcm53115s_spi_transfer(uint8_t tx[], uint8_t rx[], int size_of_TxRx)
 
 	dev = open(BCM53115S_SPI_DEV, O_RDWR);
 	if (dev < 0){
-		bcm53115s_dbg("error opening %s: %s\n", BCM53115S_SPI_DEV, strerror(errno));
+		bcm53115s_dbg_syslog("error opening %s: %s\n", BCM53115S_SPI_DEV, strerror(errno));
 		return -1;
 	}
 
 	if (_bcm53115s_spi_mode(dev) < 0){
-		bcm53115s_dbg("Could not read from device / can't send spi message : %s\n", strerror(errno));
+		bcm53115s_dbg_syslog("Could not read from device / can't send spi message : %s\n", strerror(errno));
 		close(dev);
 		return -1;
 	}
 
 	if (ioctl(dev, SPI_IOC_MESSAGE(1), &tr) < 0){
-		bcm53115s_dbg("Could not read from device / can't send spi message : %s\n", strerror(errno));
+		bcm53115s_dbg_syslog("Could not read from device / can't send spi message : %s\n", strerror(errno));
 		close(dev);
 		return -1;
 	}
@@ -178,6 +180,7 @@ static int _bcm53115s_spi_reg_read_raw(uint8_t page, uint8_t offset, uint8_t *bu
 	uint8_t tx_5_step[len+2];
 	uint8_t rx_5_step[len+2];
 	int i;
+	int timeout = 0;
 
 	clear_tx_rx(tx,rx,sizeof(tx));
 	clear_tx_rx(tx_5_step,rx_5_step,sizeof(rx_5_step));
@@ -197,17 +200,21 @@ static int _bcm53115s_spi_reg_read_raw(uint8_t page, uint8_t offset, uint8_t *bu
 	tx[2] = 0x00;
 	do {
 		_bcm53115s_spi_transfer(tx, rx, sizeof(tx));
+		if ( (timeout++) == timeout_spi_limit)
+			return -1;
 		usleep(100);
-	} while ((rx[2] >> ROBO_SPIF_BIT) & 1) ; // wait SPI bit to 0
+	} while ((rx[2] >> ROBO_SPIF_BIT) & 1); // wait SPI bit to 0
 
 	clear_tx_rx(tx, rx, sizeof(tx));
+	timeout = 0;
 
 	/* 2. Issue a normal write command(0x61) to write the register page value
 		  into the SPI page register(0xFF) 	 */
 	tx[0] = CMD_SPI_BYTE_WR;
 	tx[1] = ROBO_PAGE_PAGE;
 	tx[2] = page;
-	_bcm53115s_spi_transfer(tx, rx, sizeof(tx));
+	if (_bcm53115s_spi_transfer(tx, rx, sizeof(tx)) < 0)
+		return -1;
 
 	clear_tx_rx(tx, rx, sizeof(tx));
 
@@ -216,7 +223,8 @@ static int _bcm53115s_spi_reg_read_raw(uint8_t page, uint8_t offset, uint8_t *bu
 	tx[0] = CMD_SPI_BYTE_RD;
 	tx[1] = offset;
 	tx[2] = 0x00;
-	_bcm53115s_spi_transfer(tx, rx, sizeof(tx));
+	if (_bcm53115s_spi_transfer(tx, rx, sizeof(tx)) < 0)
+		return -1;
 
 	clear_tx_rx(tx, rx, sizeof(tx));
 
@@ -228,16 +236,20 @@ static int _bcm53115s_spi_reg_read_raw(uint8_t page, uint8_t offset, uint8_t *bu
 		tx[1] = ROBO_SPI_STATUS_PAGE;
 		tx[2] = 0x00;
 		_bcm53115s_spi_transfer(tx, rx, sizeof(tx));
+		if ( (timeout++) == timeout_spi_limit)
+			return -1;
 		usleep(100);
 	}while (((rx[2] >> ROBO_RACK_BIT) & 1) == 0); // wait RACK bit to 1
 
 	clear_tx_rx(tx, rx, sizeof(tx));
+	timeout = 0;
 
 	/* 5. Issue a normal read command(0x60) to read the specific register's conternt
 		  placed in the SPI data I/O register(0xF0) 	 */
 	tx_5_step[0] = CMD_SPI_BYTE_RD;
 	tx_5_step[1] = ROBO_SPI_DATA_IO_0_PAGE;
-	_bcm53115s_spi_transfer(tx_5_step, rx_5_step, sizeof(tx_5_step));
+	if (_bcm53115s_spi_transfer(tx_5_step, rx_5_step, sizeof(tx_5_step)) < 0)
+		return -1;
 
 	/* 6. Copy returned info to buff */
 	for (i=0; i<len; i++)
@@ -254,6 +266,7 @@ static int _bcm53115s_spi_reg_write_raw(uint8_t page, uint8_t offset, uint8_t *b
 	uint8_t tx_3_step[len+2];
 	uint8_t rx_3_step[len+2];
 	int i;
+	int timeout = 0;
 
 	clear_tx_rx(tx,rx,sizeof(tx));
 	clear_tx_rx(tx_3_step,rx_3_step,sizeof(tx_3_step));
@@ -273,17 +286,21 @@ static int _bcm53115s_spi_reg_write_raw(uint8_t page, uint8_t offset, uint8_t *b
 	tx[2] = 0x00;
 	do {
 		_bcm53115s_spi_transfer(tx,rx, sizeof(tx));
+		if ( (timeout++) == timeout_spi_limit)
+			return -1;
 		usleep(100);
-	} while ((rx[2] >> ROBO_SPIF_BIT) & 1) ; // wait SPI bit to 0
+	} while ((rx[2] >> ROBO_SPIF_BIT) & 1); // wait SPI bit to 0
 
 	clear_tx_rx(tx,rx,sizeof(tx));
+	timeout = 0;
 
 	/* 2. Issue a normal write command(0x61) to write the register page value
 		  into the SPI page register(0xFF) 	 */
 	tx[0] = CMD_SPI_BYTE_WR;
 	tx[1] = ROBO_PAGE_PAGE;
 	tx[2] = page;
-	_bcm53115s_spi_transfer(tx,rx, sizeof(tx));
+	if (_bcm53115s_spi_transfer(tx,rx, sizeof(tx)) < 0)
+		return -1;
 
 	clear_tx_rx(tx,rx,sizeof(tx));
 
@@ -295,12 +312,13 @@ static int _bcm53115s_spi_reg_write_raw(uint8_t page, uint8_t offset, uint8_t *b
 	for(i=0; i < len; i++)
 		tx_3_step[i+2] = buf[i];
 
-	_bcm53115s_spi_transfer(tx_3_step, rx_3_step, sizeof(tx_3_step));
+	if (_bcm53115s_spi_transfer(tx_3_step, rx_3_step, sizeof(tx_3_step)) < 0)
+		return -1;
 
 	return 0;
 }
 
-static int _bcm53115s_reg_read(uint8_t page, uint8_t offset, int len)
+static int _bcm53115s_reg_read_data_return(uint8_t page, uint8_t offset, int len)
 {
 	uint32_t data = 0;
 
@@ -311,6 +329,18 @@ static int _bcm53115s_reg_read(uint8_t page, uint8_t offset, int len)
 	return data;
 }
 
+static int _bcm53115s_reg_read(uint8_t page, uint8_t offset, uint32_t * data_buf, int len)
+{
+	uint32_t data = 0;
+
+	if (_bcm53115s_spi_reg_read_raw(page, offset,(uint8_t *)&data,len) < 0)
+		return -1;
+
+	*data_buf = endian_swap_32bits((uint32_t *)&data);
+
+	return 0;
+}
+
 static int _bcm53115s_reg_write(uint8_t page, uint8_t offset, uint32_t * data, int len)
 {
 	uint32_t data_raw = 0;
@@ -319,7 +349,8 @@ static int _bcm53115s_reg_write(uint8_t page, uint8_t offset, uint32_t * data, i
 
 	data_raw = endian_swap_32bits((uint32_t *)data);
 
-	_bcm53115s_spi_reg_write_raw(page, offset,(uint8_t *)&data_raw,len);
+	if (_bcm53115s_spi_reg_write_raw(page, offset,(uint8_t *)&data_raw,len) < 0)
+		return -1;
 
 	return 0;
 }
@@ -329,9 +360,9 @@ static int _bcm53115s_reg_write(uint8_t page, uint8_t offset, uint32_t * data, i
 /******************/
 /* For tests only */
 /******************/
-int librouter_bcm53115s_read_test(uint8_t page, uint8_t offset, int len)
+int librouter_bcm53115s_read_test(uint8_t page, uint8_t offset, uint32_t * data_buf, int len)
 {
-	return _bcm53115s_reg_read(page,offset,len);
+	return _bcm53115s_reg_read(page,offset,data_buf,len);
 }
 
 int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, int len)
@@ -712,46 +743,46 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 //
 //	return rate;
 //}
-//
-///**
-// * librouter_bcm53115s_set_8021q	Enable/disable 802.1q (VLAN)
-// *
-// * @param enable
-// * @return 0 if success, -1 if error
-// */
-//int librouter_bcm53115s_set_8021q(int enable)
-//{
-//	__u8 data;
-//
-//	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL3, &data, sizeof(data)))
-//		return -1;
-//
-//	if (enable)
-//		data |= BCM53115S_ENABLE_8021Q_MSK;
-//	else
-//		data &= ~BCM53115S_ENABLE_8021Q_MSK;
-//
-//	if (_bcm53115s_reg_write(BCM53115SREG_GLOBAL_CONTROL3, &data, sizeof(data)))
-//		return -1;
-//
-//	return 0;
-//}
-//
-///**
-// * librouter_bcm53115s_get_8021q	Get if 802.1q is enabled or disabled
-// *
-// * @return 1 if enabled, 0 if disabled, -1 if error
-// */
-//int librouter_bcm53115s_get_8021q(void)
-//{
-//	__u8 data;
-//
-//	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL3, &data, sizeof(data)))
-//		return -1;
-//
-//	return ((data | BCM53115S_ENABLE_8021Q_MSK) ? 1 : 0);
-//}
-//
+
+/**
+ * librouter_bcm53115s_set_8021q	Enable/disable 802.1q (VLAN)
+ *
+ * @param enable
+ * @return 0 if success, -1 if error
+ */
+int librouter_bcm53115s_set_8021q(int enable)
+{
+	uint32_t data = 0;
+
+	if (_bcm53115s_reg_read(ROBO_VLAN_PAGE, 0x00, &data,1))
+		return -1;
+
+	if (enable)
+		data |= BCM53115S_ENABLE_8021Q_MSK;
+	else
+		data &= ~BCM53115S_ENABLE_8021Q_MSK;
+
+	if (_bcm53115s_reg_write(ROBO_VLAN_PAGE, 0x00, &data,1))
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_get_8021q	Get if 802.1q is enabled or disabled
+ *
+ * @return 1 if enabled, 0 if disabled, -1 if error
+ */
+int librouter_bcm53115s_get_8021q(void)
+{
+	uint32_t data;
+
+	if (_bcm53115s_reg_read(ROBO_VLAN_PAGE, 0x00, &data, sizeof(data)))
+		return -1;
+
+	return ((data | BCM53115S_ENABLE_8021Q_MSK) ? 1 : 0);
+}
+
 ///**
 // * librouter_bcm53115s_set_wfq	Enable/disable Weighted Fair Queueing
 // *
@@ -1380,15 +1411,15 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 //	return 0;
 //}
 //
-///**
-// * _set_vlan_table	Configure a VLAN table in the switch
-// *
-// * Configuration is present in the structure pointed by t
-// *
-// * @param table
-// * @param t
-// * @return 0 if success, -1 if failure
-// */
+/**
+ * _set_vlan_table	Configure a VLAN table in the switch
+ *
+ * Configuration is present in the structure pointed by t
+ *
+ * @param table
+ * @param t
+ * @return 0 if success, -1 if failure
+ */
 //static int _set_vlan_table(unsigned int table, struct vlan_table_t *t)
 //{
 //	__u8 data;
@@ -1427,14 +1458,14 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 //
 //	return 0;
 //}
-//
-///**
-// * _init_vlan_table
-// *
-// * Make all VLAN entries invalid
-// *
-// * @return 0 if success, -1 if failure
-// */
+
+/**
+ * _init_vlan_table
+ *
+ * Make all VLAN entries invalid
+ *
+ * @return 0 if success, -1 if failure
+ */
 //static int _init_vlan_table(void)
 //{
 //	int i;
@@ -1449,7 +1480,7 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 //
 //	return 0;
 //}
-//
+
 ///**
 // * librouter_bcm53115s_add_table
 // *
@@ -1608,7 +1639,7 @@ int librouter_bcm53115s_probe(void)
 {
 	uint32_t id = 0;
 
-	if ((id = _bcm53115s_reg_read(0x02, 0x30, 4)) == -1)
+	if (_bcm53115s_reg_read(0x02, 0x30, &id, 4) < 0)
 		return -1;
 
 	if (id == BCM53115S_ID)

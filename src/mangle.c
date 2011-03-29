@@ -11,9 +11,12 @@
 #include <ctype.h>
 #include <arpa/inet.h>
 
+#include "options.h"
 #include "args.h"
 #include "ip.h"
 #include "qos.h"
+
+#ifdef OPTION_QOS
 
 int librouter_mangle_rule_exists_by_name(char *mangle_rule)
 {
@@ -530,3 +533,4 @@ int librouter_mangle_get_iface_rules(char *iface,
 	pclose(F);
 	return 0;
 }
+#endif /* OPTION_QOS */

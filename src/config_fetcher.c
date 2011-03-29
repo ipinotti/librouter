@@ -286,6 +286,8 @@ void librouter_config_dump_log(FILE *f)
 		fprintf(f, "logging remote %s\n!\n", buf);
 }
 
+#ifdef OPTION_ROUTER
+#ifdef OPTION_BGP
 void librouter_config_bgp_dump_router(FILE *f, int main_nip)
 {
 	FILE *fd;
@@ -313,7 +315,10 @@ void librouter_config_bgp_dump_router(FILE *f, int main_nip)
 
 	fprintf(f, "!\n");
 }
+#endif /* OPTION_BGP */
+#endif /* OPTION_ROUTER */
 
+#ifdef OPTION_ROUTER
 void librouter_config_dump_ip(FILE *f, int conf_format)
 {
 	int val;
@@ -344,20 +349,6 @@ void librouter_config_dump_ip(FILE *f, int conf_format)
 	val = _get_procip_val("icmp_ignore_bogus_error_responses");
 	fprintf(f, val ? "ip icmp ignore bogus\n" : "no ip icmp ignore bogus\n");
 
-#if 0 /* This are not present in earlier kernel versions ... is this PD3 invention ? */
-	val = _get_procip_val ("icmp_destunreach_rate");
-	fprintf (f, "ip icmp rate dest-unreachable %i\n", val);
-
-	val = _get_procip_val ("icmp_echoreply_rate");
-	fprintf (f, "ip icmp rate echo-reply %i\n", val);
-
-	val = _get_procip_val ("icmp_paramprob_rate");
-	fprintf (f, "ip icmp rate param-prob %i\n", val);
-
-	val = _get_procip_val ("icmp_timeexceed_rate");
-	fprintf (f, "ip icmp rate time-exceed %i\n", val);
-#endif
-
 	val = _get_procip_val("ipfrag_high_thresh");
 	fprintf(f, "ip fragment high %i\n", val);
 
@@ -375,6 +366,7 @@ void librouter_config_dump_ip(FILE *f, int conf_format)
 
 	fprintf(f, "!\n");
 }
+#endif /* OPTION_ROUTER */
 
 void librouter_config_dump_snmp(FILE *f, int conf_format)
 {
@@ -917,23 +909,27 @@ static void _dump_intf_iptables_config(FILE *out, struct interface_conf *conf)
 {
 	struct iptables_t *ipt = &conf->ipt;
 
+#ifdef OPTION_FIREWALL
 	if (ipt->in_acl[0])
 		fprintf(out, " ip access-group %s in\n", ipt->in_acl);
 
 	if (ipt->out_acl[0])
 		fprintf(out, " ip access-group %s out\n", ipt->out_acl);
-
+#endif
+#ifdef OPTION_QOS
 	if (ipt->in_mangle[0])
 		fprintf(out, " ip mark %s in\n", ipt->in_mangle);
 
 	if (ipt->out_mangle[0])
 		fprintf(out, " ip mark %s out\n", ipt->out_mangle);
-
+#endif
+#ifdef OPTION_NAT
 	if (ipt->in_nat[0])
 		fprintf(out, " ip nat %s in\n", ipt->in_nat);
 
 	if (ipt->out_nat[0])
 		fprintf(out, " ip nat %s out\n", ipt->out_nat);
+#endif
 }
 
 static void _dump_intf_secondary_ipaddr_config(FILE *out, struct interface_conf *conf)
@@ -1365,13 +1361,19 @@ void librouter_config_dump_interface(FILE *out, struct interface_conf *conf)
 	char *description;
 	char *cish_dev;
 	char pppid[10];
+	int txqueuelen;
 
 	/* Get iptables config */
 
+#ifdef OPTION_FIREWALL
 	librouter_acl_get_iface_rules(conf->name, conf->ipt.in_acl, conf->ipt.out_acl);
+#endif
+#ifdef OPTION_QOS
 	librouter_mangle_get_iface_rules(conf->name, conf->ipt.in_mangle, conf->ipt.out_mangle);
+#endif
+#ifdef OPTION_NAT
 	librouter_nat_get_iface_rules(conf->name, conf->ipt.in_nat, conf->ipt.out_nat);
-
+#endif
 
 	cish_dev = librouter_device_linux_to_cli(conf->name, 0);
 
@@ -1384,6 +1386,10 @@ void librouter_config_dump_interface(FILE *out, struct interface_conf *conf)
 
 	if (description)
 		fprintf(out, " description %s\n", description);
+
+	txqueuelen = librouter_dev_get_qlen(conf->name);
+	if (txqueuelen != 100 | txqueuelen != 0)
+		fprintf(out, " txqueuelen %d\n", txqueuelen);
 
 	switch (conf->linktype) {
 #ifdef OPTION_PPP
@@ -1514,7 +1520,9 @@ int librouter_config_write(char *filename, struct router_config *cfg)
 #ifdef OPTION_BGP
 	librouter_config_bgp_dump_router(f, 0);
 #endif
+#ifdef OPTION_ROUTER
 	librouter_config_dump_ip(f, 1);
+#endif
 
 	/* SNMP */
 	librouter_config_dump_snmp(f, 1);
@@ -1527,15 +1535,21 @@ int librouter_config_write(char *filename, struct router_config *cfg)
 	librouter_config_dump_chatscripts(f);
 
 	/* iptables */
+#ifdef OPTION_FIREWALL
 	librouter_acl_dump_policy(f);
 	librouter_acl_dump(0, f, 1);
+#endif
+#ifdef OPTION_NAT
 	librouter_nat_dump(0, f, 1);
+#endif
+#ifdef OPTION_QOS
 	librouter_mangle_dump(0, f, 1);
-
-	/* qos */
 	librouter_qos_dump_config(f);
+#endif
 
+#ifdef OPTION_NAT
 	librouter_nat_dump_helper(f, cfg);
+#endif
 
 	/* Quagga */
 	librouter_config_rip_dump_router(f);

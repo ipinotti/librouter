@@ -20,9 +20,27 @@
 #define OPTION_ETHERNET /* Enables ethernet interfaces */
 #define OPTION_ETHERNET_LAN_INDEX 0
 #define OPTION_GIGAETHERNET /* Enable gigabit options */
-#define OPTION_IP_ROUTING
 #define OPTION_PPPOE
 #define OPTION_PPTP
+#define OPTION_TUNNEL
+#define OPTION_ROUTER /* ip forwarding, enable dynamic routing protocols, etc. */
+#define OPTION_SMCROUTE /* static multicast routing */
+
+/* IPSec */
+#define OPTION_IPSEC
+#define N_IPSEC_IF 5
+
+/* BGP */
+#define OPTION_BGP
+
+/* PIM */
+#define OPTION_PIMD
+
+/* IPtables */
+#define OPTION_FIREWALL
+#define OPTION_NAT
+#define OPTION_QOS
+
 
 /* ------ Digistar 3G Product Models Declaration ------ */
 /* RCG1000 */
@@ -67,6 +85,12 @@
 #define OPTION_NUM_ETHERNET_IFACES	1
 #undef OPTION_PPPOE
 #undef OPTION_PPTP
+#undef OPTION_IPSEC
+#undef OPTION_FIREWALL
+#undef OPTION_NAT
+#undef OPTION_QOS
+#undef OPTION_ROUTER
+#undef OPTION_SMCROUTE
 
 #if defined(CONFIG_DIGISTAR_EFM2000)
 #define OPTION_NUM_EFM_CHANNELS	1
@@ -111,15 +135,8 @@
 /*****************************************************************************/
 /*****************************************************************************/
 
-/* BGP */
-#define OPTION_BGP
-
 /* Bridging */
 #define OPTION_BRIDGE
-
-/* IPSec */
-#define OPTION_IPSEC 1
-#define N_IPSEC_IF 5
 
 #define OPTION_FULL_CONSOLE_LOG 0
 
@@ -140,9 +157,7 @@
 #endif
 
 #define OPTION_OPENSSH
-#define OPTION_PIMD
 #define OPTION_RMON
-#define OPTION_SMCROUTE
 #undef OPTION_VRRP
 #define OPTION_HTTP
 #define OPTION_HTTPS

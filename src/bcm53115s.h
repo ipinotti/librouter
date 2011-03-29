@@ -10,14 +10,25 @@
 
 #include <stdint.h>
 
-/* DEBUG Function */
-#define BCM53115S_DEBUG
-#ifdef BCM53115S_DEBUG
-#define bcm53115s_dbg(x,...) \
+/* DEBUG Functions */
+//#define BCM53115S_DEBUG_PRINTF
+#define BCM53115S_DEBUG_SYSLOG
+
+#ifdef BCM53115S_DEBUG_PRINTF
+#define bcm53115s_dbg_printf(x,...) \
 		printf("%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__);
 #else
-#define bcm53115s_dbg(x,...)
+#define bcm53115s_dbg_printf(x,...)
 #endif
+
+#ifdef BCM53115S_DEBUG_SYSLOG
+#define bcm53115s_dbg_syslog(x,...) \
+		syslog(LOG_INFO,  "%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__);
+#else
+#define bcm53115s_dbg_syslog(x,...)
+#endif
+/* End DEBUG Functions */
+
 
 //BCM53115S DEFINES
 
@@ -127,7 +138,7 @@ struct vlan_table_t {
 	unsigned int vid:12;
 };
 
-int librouter_bcm53115s_read_test(uint8_t page, uint8_t offset, int len);
+int librouter_bcm53115s_read_test(uint8_t page, uint8_t offset, uint32_t * data_buf, int len);
 int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, int len);
 
 
@@ -136,9 +147,9 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 //int librouter_bcm53115s_get_multicast_storm_protect(void);
 //
 ///* Global Control 3 */
-//int librouter_bcm53115s_get_8021q(void);
-//int librouter_bcm53115s_set_8021q(int enable);
-//
+int librouter_bcm53115s_get_8021q(void);
+int librouter_bcm53115s_set_8021q(int enable);
+
 //int librouter_bcm53115s_get_wfq(void);
 //int librouter_bcm53115s_set_wfq(int enable);
 //
@@ -152,10 +163,10 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 ///* Port n Control 1*/
 //int librouter_bcm53115s_get_broadcast_storm_protect(int port);
 //int librouter_bcm53115s_set_broadcast_storm_protect(int enable, int port);
-//
+
 //int librouter_bcm53115s_get_8021p(int port);
 //int librouter_bcm53115s_set_8021p(int enable, int port);
-//
+
 //int librouter_bcm53115s_get_diffserv(int port);
 //int librouter_bcm53115s_set_diffserv(int enable, int port);
 //

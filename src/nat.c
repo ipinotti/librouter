@@ -13,10 +13,12 @@
 
 #include <arpa/inet.h>
 
+#include "options.h"
 #include "args.h"
 #include "nat.h"
 #include "ip.h"
 
+#ifdef OPTION_NAT
 int librouter_nat_rule_exists(char *nat_rule)
 {
 	FILE *f;
@@ -843,3 +845,4 @@ int librouter_nat_get_iface_rules(char *iface, char *in_acl, char *out_acl)
 	pclose(f);
 	return 0;
 }
+#endif /* OPTION_NAT */

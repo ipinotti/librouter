@@ -921,11 +921,11 @@ int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf,
 	char daemon_dhcpc[32];
 
 	ip_dbg("Getting config for interface %s\n", interface);
-
-	if (strstr(interface, ".") != NULL) /* Is sub-interface? */
-		conf->is_subiface = 1;
-
 	memset(conf, 0, sizeof(struct interface_conf));
+
+	if (strstr(interface, ".") != NULL) {/* Is sub-interface? */
+		conf->is_subiface = 1;
+	}
 
 	/* Get all information if it hasn't been passed to us */
 	if (info == NULL) {

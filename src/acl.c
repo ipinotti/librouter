@@ -11,6 +11,7 @@
 #include "exec.h"
 #include "ip.h"
 
+#ifdef OPTION_FIREWALL
 int librouter_acl_ppp_backupd_apply_chain_tofile(int dev, char *chain, int direction)
 {
 	char * buf = malloc(256);
@@ -1180,3 +1181,4 @@ void librouter_acl_cleanup_modules(void)
 {
 	delete_module(NULL); /* clean unused modules! */
 }
+#endif /* OPTION_FIREWALL */
