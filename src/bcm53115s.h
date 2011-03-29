@@ -32,16 +32,20 @@
 
 //BCM53115S DEFINES
 
-#define CMD_SPI_BYTE_RD 0x60
-#define CMD_SPI_BYTE_WR 0x61
-#define ROBO_SPIF_BIT 7
-#define BCM53115_SPI_CHANNEL 1
-#define ROBO_RACK_BIT 5
+#define CMD_SPI_BYTE_RD 	0x60
+#define CMD_SPI_BYTE_WR 	0x61
+#define ROBO_SPIF_BIT 		7
+#define BCM53115_SPI_CHANNEL 	1
+#define ROBO_RACK_BIT 		5
 
-#define VLAN_START_BIT 7
-#define VLAN_WRITE_CMD 0
-#define VLAN_RD_WR_BIT_1 0
-#define VLAN_RD_WR_BIT_1 1
+#define VLAN_START_BIT 		7
+#define VLAN_WRITE_CMD 		0
+#define VLAN_READ_CMD		1
+#define VLAN_CLR_TABLE_CMD 	2
+#define VLAN_RD_WR_BIT_0 	0
+#define VLAN_RD_WR_BIT_1 	1
+
+
 
 //#define BCM_PORT_1G 2
 typedef enum
@@ -127,6 +131,7 @@ typedef enum
 #define BCM53115SREG_OFFSET_VLAN_TABLE_INDEX	0x81
 #define BCM53115SREG_PAGE_VLAN_TABLE_RD_WR_CL	0x05
 #define BCM53115SREG_OFFSET_VLAN_TABLE_RD_WR_CL	0x80
+#define BCM53115SREG_OFFSET_VLAN_TABLE_ENTRY	0x83
 
 
 #define BCM53115SREG_VLAN_MEMBERSHIP_PORT1_MSK	0x01
@@ -139,10 +144,11 @@ struct vlan_bcm_config_t {
 };
 
 struct vlan_bcm_table_t {
+	unsigned int reserved:10;
 	unsigned int fwd_mode:1;
 	unsigned int mspt_index:3;
-	unsigned int untag_map:8;
-	unsigned int fwd_map:8;
+	unsigned int untag_map:9;
+	unsigned int fwd_map:9;
 };
 
 int librouter_bcm53115s_read_test(uint8_t page, uint8_t offset, uint32_t * data_buf, int len);
