@@ -313,17 +313,6 @@ static int _bcm53115s_spi_reg_write_raw(uint8_t page, uint8_t offset, uint8_t *b
 	return 0;
 }
 
-static int _bcm53115s_reg_read_data_return(uint8_t page, uint8_t offset, int len)
-{
-	uint32_t data = 0;
-
-	_bcm53115s_spi_reg_read_raw(page, offset,(uint8_t *)&data,len);
-
-	data = endian_swap_32bits((uint32_t *)&data);
-
-	return data;
-}
-
 static int _bcm53115s_reg_read(uint8_t page, uint8_t offset, void *data_buf, int len)
 {
 	uint32_t data = 0;
@@ -362,36 +351,15 @@ static int _bcm53115s_reg_write(uint8_t page, uint8_t offset, void *data_buf, in
 	return 0;
 }
 
+/******************************************************/
+/********** Exported functions ************************/
+/******************************************************/
 
-
-/******************/
-/* For tests only */
-/******************/
-int librouter_bcm53115s_read_test(uint8_t page, uint8_t offset, uint32_t * data_buf, int len)
-{
-	return _bcm53115s_reg_read(page,offset,data_buf,len);
-}
-
-int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, int len)
-{
-	return _bcm53115s_reg_write(page,offset,&data,len);
-}
-
-
-
-///******************************************************/
-///********** Exported functions ************************/
-///******************************************************/
-#define BCM53115S_STORM_PROTECT_PAGE			0x41
-
-#define BCM53115S_STORM_PROTECT_INGRESS_RATE_CTRL_REG	0x00
-#define BCM53115S_STORM_PROTECT_RESERVED_MASK		0xFFF90080
-#define BCM53115S_STORM_PROTECT_BC_SUPP_EN		0x00000008
-#define BCM53115S_STORM_PROTECT_BC_SUPP_NORMALIZED	0x00000100
-
-#define BCM53115S_STORM_PROTECT_PORT_CTRL_REG		0x10
-#define BCM53115S_STORM_PROTECT_PORT_CTRL_SUPR_EN	0x10000000
-
+/**
+ * _set_storm_protect_defaults
+ *
+ * Set storm protect registers to the desired default
+ */
 static int _set_storm_protect_defaults(void)
 {
 	uint8_t reg, page;
@@ -404,6 +372,7 @@ static int _set_storm_protect_defaults(void)
 		return -1;
 
 	data &= BCM53115S_STORM_PROTECT_RESERVED_MASK;
+	data |= BCM53115S_STORM_PROTECT_MC_SUPP_EN;
 	data |= BCM53115S_STORM_PROTECT_BC_SUPP_EN;
 	data |= BCM53115S_STORM_PROTECT_BC_SUPP_NORMALIZED;
 
@@ -422,8 +391,6 @@ static int _set_storm_protect_defaults(void)
  * @param port:	from 0 to 3
  * @return 0 on success, -1 otherwise
  */
-
-
 int librouter_bcm53115s_set_broadcast_storm_protect(int enable, int port)
 {
 	uint8_t reg, page;
@@ -442,9 +409,9 @@ int librouter_bcm53115s_set_broadcast_storm_protect(int enable, int port)
 		return -1;
 
 	if (enable)
-		data |= BCM53115S_STORM_PROTECT_PORT_CTRL_SUPR_EN;
+		data |= BCM53115S_STORM_PROTECT_PORT_CTRL_BC_SUPR_EN;
 	else
-		data &= ~BCM53115S_STORM_PROTECT_PORT_CTRL_SUPR_EN;
+		data &= ~BCM53115S_STORM_PROTECT_PORT_CTRL_BC_SUPR_EN;
 
 	if (_bcm53115s_reg_write(page, reg, &data, sizeof(data)))
 		return -1;
@@ -460,119 +427,146 @@ int librouter_bcm53115s_set_broadcast_storm_protect(int enable, int port)
  * @param port: from 0 to 2
  * @return 1 if enabled, 0 if disabled, -1 if error
  */
-//int librouter_bcm53115s_get_broadcast_storm_protect(int port)
-//{
-//	__u8 reg, data;
-//
-//	if (port > 2) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_PORT_CONTROL;
-//	reg += port * 0x10;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	return (data | BCM53115SREG_ENABLE_BC_STORM_PROTECT_MSK) ? 1 : 0;
-//}
+int librouter_bcm53115s_get_broadcast_storm_protect(int port)
+{
+	uint8_t reg, page;
+	uint32_t data;
 
-//int librouter_bcm53115s_set_storm_protect_rate(unsigned int percentage)
-//{
-//	__u8 reg, data;
-//	__u16 tmp;
-//
-//	if (percentage > 100) {
-//		printf("%% Invalid percentage value : %d\n", percentage);
-//		return -1;
-//	}
-//
-//	/* 99 packets/interval corresponds to 1% - See Page 52 */
-//	tmp = percentage * 99;
-//
-//	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL4, &data, sizeof(data)))
-//		return -1;
-//
-//	data &= ~0x03; /* Clear old rate value - first 3 bits */
-//	data |= (tmp >> 8); /* Get the 3 most significant bits */
-//
-//	if (_bcm53115s_reg_write(BCM53115SREG_GLOBAL_CONTROL4, &data, sizeof(data)))
-//		return -1;
-//
-//	/* Now write the less significant bits */
-//	data = (__u8) (tmp & 0x00ff);
-//	if (_bcm53115s_reg_write(BCM53115SREG_GLOBAL_CONTROL5, &data, sizeof(data)))
-//		return -1;
-//
-//	return 0;
-//}
-//
-//int librouter_bcm53115s_get_storm_protect_rate(unsigned int *percentage)
-//{
-//	__u8 rate_u, rate_l;
-//
-//	if (percentage == NULL) {
-//		printf("%% Percentage points to NULL\n");
-//		return -1;
-//	}
-//
-//	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL4, &rate_u, sizeof(rate_u)))
-//		return -1;
-//
-//	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL5, &rate_l, sizeof(rate_l)))
-//		return -1;
-//
-//	rate_u &= 0x03; /* Get rate bits [2-0] */
-//	*percentage = (unsigned int)((rate_u << 8) | rate_l);
-//
-//	return 0;
-//}
-//
-//
-///**
-// * librouter_bcm53115s_set_multicast_storm_protect
-// *
-// * Enable or Disable Multicast Storm protection
-// *
-// * @param enable
-// * @return 0 on success, -1 otherwise
-// */
-//int librouter_bcm53115s_set_multicast_storm_protect(int enable)
-//{
-//	__u8 data;
-//
-//	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL2, &data, sizeof(data)))
-//		return -1;
-//
-//	if (enable)
-//		data |= BCM53115SREG_ENABLE_MC_STORM_PROTECT_MSK;
-//	else
-//		data &= ~BCM53115SREG_ENABLE_MC_STORM_PROTECT_MSK;
-//
-//	if (_bcm53115s_reg_write(BCM53115SREG_GLOBAL_CONTROL2, &data, sizeof(data)))
-//		return -1;
-//
-//	return 0;
-//}
-//
-///**
-// * librouter_bcm53115s_get_multicast_storm_protect
-// *
-// * Get if Multicast Storm protection is enabled or disabled
-// *
-// * @param void
-// * @return 1 if enabled, 0 if disabled, -1 if error
-// */
-//int librouter_bcm53115s_get_multicast_storm_protect(void)
-//{
-//	__u8 data;
-//
-//	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL2, &data, sizeof(data)))
-//		return -1;
-//
-//	return ((data | BCM53115SREG_ENABLE_MC_STORM_PROTECT_MSK) ? 1 : 0);
-//}
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	page = BCM53115S_STORM_PROTECT_PAGE;
+	reg = BCM53115S_STORM_PROTECT_PORT_CTRL_REG;
+	reg += port * 0x4;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return (data & BCM53115S_STORM_PROTECT_PORT_CTRL_BC_SUPR_EN) ? 1 : 0;
+}
+
+
+
+int librouter_bcm53115s_set_storm_protect_rate(unsigned char rate, int port)
+{
+	uint8_t reg, page;
+	uint32_t data;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	page = BCM53115S_STORM_PROTECT_PAGE;
+	reg = BCM53115S_STORM_PROTECT_PORT_CTRL_REG;
+	reg += port * 0x4;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	data &= ~BCM53115S_STORM_PROTECT_PORT_CTRL_RATE_MSK; /* Clear old limit */
+	data |= rate & BCM53115S_STORM_PROTECT_PORT_CTRL_RATE_MSK;
+
+	if (_bcm53115s_reg_write(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_get_storm_protect_rate
+ *
+ * Get acceptable incoming rate for bcast packets in kbps
+ */
+int librouter_bcm53115s_get_storm_protect_rate(unsigned char *rate, int port)
+{
+	uint8_t reg, page;
+	uint32_t data;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	page = BCM53115S_STORM_PROTECT_PAGE;
+	reg = BCM53115S_STORM_PROTECT_PORT_CTRL_REG;
+	reg += port * 0x4;
+
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	*rate = (unsigned char) (data & BCM53115S_STORM_PROTECT_PORT_CTRL_RATE_MSK);
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_set_multicast_storm_protect
+ *
+ * Enable or Disable Multicast Storm protection
+ *
+ * @param enable
+ * @return 0 on success, -1 otherwise
+ */
+int librouter_bcm53115s_set_multicast_storm_protect(int enable, int port)
+{
+	uint8_t reg, page;
+	uint32_t data;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	page = BCM53115S_STORM_PROTECT_PAGE;
+	reg = BCM53115S_STORM_PROTECT_PORT_CTRL_REG;
+	reg += port * 0x4;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	if (enable)
+		data |= BCM53115S_STORM_PROTECT_PORT_CTRL_MC_SUPR_EN;
+	else
+		data &= ~BCM53115S_STORM_PROTECT_PORT_CTRL_MC_SUPR_EN;
+
+	if (_bcm53115s_reg_write(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_get_multicast_storm_protect
+ *
+ * Get if Multicast Storm protection is enabled or disabled
+ *
+ * @param void
+ * @return 1 if enabled, 0 if disabled, -1 if error
+ */
+int librouter_bcm53115s_get_multicast_storm_protect(int port)
+{
+	uint8_t reg, page;
+	uint32_t data;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+
+		return -1;
+	}
+
+	page = BCM53115S_STORM_PROTECT_PAGE;
+	reg = BCM53115S_STORM_PROTECT_PORT_CTRL_REG;
+	reg += port * 0x4;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return ((data & BCM53115S_STORM_PROTECT_PORT_CTRL_MC_SUPR_EN) ? 1 : 0);
+}
 //
 ///**
 // * librouter_bcm53115s_set_replace_null_vid
@@ -634,7 +628,7 @@ int librouter_bcm53115s_set_broadcast_storm_protect(int enable, int port)
 //{
 //	__u8 reg, data;
 //
-//	if (port < 0 || port > 2) {
+//	if (port < 0 || port > 3) {
 //		printf("%% No such port : %d\n", port);
 //		return -1;
 //	}
@@ -675,7 +669,7 @@ int librouter_bcm53115s_set_broadcast_storm_protect(int enable, int port)
 //	__u8 reg, data;
 //	int rate;
 //
-//	if (port < 0 || port > 2) {
+//	if (port < 0 || port > 3) {
 //		printf("%% No such port : %d\n", port);
 //		return -1;
 //	}
@@ -718,7 +712,7 @@ int librouter_bcm53115s_set_broadcast_storm_protect(int enable, int port)
 //{
 //	__u8 reg, data;
 //
-//	if (port < 0 || port > 2) {
+//	if (port < 0 || port > 3) {
 //		printf("%% No such port : %d\n", port);
 //		return -1;
 //	}
@@ -759,7 +753,7 @@ int librouter_bcm53115s_set_broadcast_storm_protect(int enable, int port)
 //	__u8 reg, data;
 //	int rate;
 //
-//	if (port < 0 || port > 2) {
+//	if (port < 0 || port > 3) {
 //		printf("%% No such port : %d\n", port);
 //		return -1;
 //	}
@@ -876,7 +870,7 @@ int librouter_bcm53115s_get_8021q(void)
 //	__u8 vid_l, vid_u;
 //	__u8 reg, data;
 //
-//	if (port < 0 || port > 2) {
+//	if (port < 0 || port > 3) {
 //		printf("%% No such port : %d\n", port);
 //		return -1;
 //	}
@@ -918,7 +912,7 @@ int librouter_bcm53115s_get_8021q(void)
 //	__u8 vid_l, vid_u;
 //	__u8 reg, data;
 //
-//	if (port < 0 || port > 2) {
+//	if (port < 0 || port > 3) {
 //		printf("%% No such port : %d\n", port);
 //		return -1;
 //	}
@@ -950,7 +944,7 @@ int librouter_bcm53115s_get_8021q(void)
 //{
 //	__u8 reg, data;
 //
-//	if (port < 0 || port > 2) {
+//	if (port < 0 || port > 3) {
 //		printf("%% No such port : %d\n", port);
 //		return -1;
 //	}
@@ -985,7 +979,7 @@ int librouter_bcm53115s_get_8021q(void)
 //{
 //	__u8 reg, data;
 //
-//	if (port < 0 || port > 2) {
+//	if (port < 0 || port > 3) {
 //		printf("%% No such port : %d\n", port);
 //		return -1;
 //	}
@@ -998,128 +992,132 @@ int librouter_bcm53115s_get_8021q(void)
 //
 //	return ((int) (data >> 5));
 //}
-//
-///**
-// * librouter_bcm53115s_set_8021p
-// *
-// * Enable or Disable 802.1p classification
-// *
-// * @param enable
-// * @param port:	from 0 to 2
-// * @return 0 on success, -1 otherwise
-// */
-//int librouter_bcm53115s_set_8021p(int enable, int port)
-//{
-//	__u8 reg, data;
-//
-//	if (port > 2) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_PORT_CONTROL;
-//	reg += port * 0x10;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	if (enable)
-//		data |= BCM53115SREG_ENABLE_8021P_MSK;
-//	else
-//		data &= ~BCM53115SREG_ENABLE_8021P_MSK;
-//
-//	if (_bcm53115s_reg_write(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	return 0;
-//}
-//
-///**
-// * librouter_bcm53115s_get_8021p
-// *
-// * Get if 802.1p classification is enabled or disabled
-// *
-// * @param port: from 0 to 2
-// * @return 1 if enabled, 0 if disabled, -1 if error
-// */
-//int librouter_bcm53115s_get_8021p(int port)
-//{
-//	__u8 reg, data;
-//
-//	if (port > 2) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_PORT_CONTROL;
-//	reg += port * 0x10;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	return (data | BCM53115SREG_ENABLE_8021P_MSK) ? 1 : 0;
-//}
-//
-///**
-// * librouter_bcm53115s_set_diffserv
-// *
-// * Enable or Disable Diff Service classification
-// *
-// * @param enable
-// * @param port:	from 0 to 2
-// * @return 0 on success, -1 otherwise
-// */
-//int librouter_bcm53115s_set_diffserv(int enable, int port)
-//{
-//	__u8 reg, data;
-//
-//	if (port > 2) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_PORT_CONTROL;
-//	reg += port * 0x10;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	if (enable)
-//		data |= BCM53115SREG_ENABLE_DIFFSERV_MSK;
-//	else
-//		data &= ~BCM53115SREG_ENABLE_DIFFSERV_MSK;
-//
-//	if (_bcm53115s_reg_write(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	return 0;
-//}
-//
-///**
-// * librouter_bcm53115s_get_diffserv
-// *
-// * Get if Diff Service classification is enabled or disabled
-// *
-// * @param port: from 0 to 2
-// * @return 1 if enabled, 0 if disabled, -1 if error
-// */
-//int librouter_bcm53115s_get_diffserv(int port)
-//{
-//	__u8 reg, data;
-//
-//	if (port > 2) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_PORT_CONTROL;
-//	reg += port * 0x10;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	return (data | BCM53115SREG_ENABLE_DIFFSERV_MSK) ? 1 : 0;
-//}
+
+/**
+ * librouter_bcm53115s_set_8021p
+ *
+ * Enable or Disable 802.1p classification
+ *
+ * @param enable
+ * @param port:	from 0 to 2
+ * @return 0 on success, -1 otherwise
+ */
+int librouter_bcm53115s_set_8021p(int enable, int port)
+{
+	uint8_t page, reg;
+	uint16_t data;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	page = BCM53115S_QOS_PAGE;
+	reg = BCM53115S_QOS_8021P_ENABLE_REG;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	if (enable)
+		data |= 1 << port;
+	else
+		data &= ~(1 << port);
+
+	if (_bcm53115s_reg_write(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_get_8021p
+ *
+ * Get if 802.1p classification is enabled or disabled
+ *
+ * @param port: from 0 to 2
+ * @return 1 if enabled, 0 if disabled, -1 if error
+ */
+int librouter_bcm53115s_get_8021p(int port)
+{
+	uint8_t page, reg;
+	uint16_t data;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	page = BCM53115S_QOS_PAGE;
+	reg = BCM53115S_QOS_8021P_ENABLE_REG;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return (data & (1 << port)) ? 1 : 0;
+}
+
+/**
+ * librouter_bcm53115s_set_diffserv
+ *
+ * Enable or Disable Diff Service classification
+ *
+ * @param enable
+ * @param port:	from 0 to 2
+ * @return 0 on success, -1 otherwise
+ */
+int librouter_bcm53115s_set_diffserv(int enable, int port)
+{
+	uint8_t page, reg;
+	uint16_t data;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	page = BCM53115S_QOS_PAGE;
+	reg = BCM53115S_QOS_DIFFSERV_ENABLE_REG;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	if (enable)
+		data |= 1 << port;
+	else
+		data &= ~(1 << port);
+
+	if (_bcm53115s_reg_write(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_get_diffserv
+ *
+ * Get if Diff Service classification is enabled or disabled
+ *
+ * @param port: from 0 to 2
+ * @return 1 if enabled, 0 if disabled, -1 if error
+ */
+int librouter_bcm53115s_get_diffserv(int port)
+{
+	uint8_t page, reg;
+	uint16_t data;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	page = BCM53115S_QOS_PAGE;
+	reg = BCM53115S_QOS_DIFFSERV_ENABLE_REG;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return (data & (1 << port)) ? 1 : 0;
+}
 //
 //
 ///**
@@ -1135,7 +1133,7 @@ int librouter_bcm53115s_get_8021q(void)
 //{
 //	__u8 reg, data;
 //
-//	if (port > 2) {
+//	if (port > 3) {
 //		printf("%% No such port : %d\n", port);
 //		return -1;
 //	}
@@ -1169,7 +1167,7 @@ int librouter_bcm53115s_get_8021q(void)
 //{
 //	__u8 reg, data;
 //
-//	if (port > 2) {
+//	if (port > 3) {
 //		printf("%% No such port : %d\n", port);
 //		return -1;
 //	}
@@ -1196,7 +1194,7 @@ int librouter_bcm53115s_get_8021q(void)
 //{
 //	__u8 reg, data;
 //
-//	if (port > 2) {
+//	if (port > 3) {
 //		printf("%% No such port : %d\n", port);
 //		return -1;
 //	}
@@ -1230,7 +1228,7 @@ int librouter_bcm53115s_get_8021q(void)
 //{
 //	__u8 reg, data;
 //
-//	if (port > 2) {
+//	if (port > 3) {
 //		printf("%% No such port : %d\n", port);
 //		return -1;
 //	}
@@ -1244,84 +1242,85 @@ int librouter_bcm53115s_get_8021q(void)
 //	return (data | BCM53115SREG_ENABLE_TXQSPLIT_MSK) ? 1 : 0;
 //}
 //
-///**
-// * librouter_bcm53115s_set_dscp_prio
-// *
-// * Set the packet priority based on DSCP value
-// *
-// * @param dscp
-// * @param prio
-// * @return 0 if success, -1 if error
-// */
-//int librouter_bcm53115s_set_dscp_prio(int dscp, int prio)
-//{
-//	__u8 reg, data, mask;
-//	int offset;
-//
-//	if (dscp < 0 || dscp > 63) {
-//		printf("%% Invalid DSCP value : %d\n", dscp);
-//		return -1;
-//	}
-//
-//	if (prio < 0 || prio > 3) {
-//		printf("%% Invalid priority : %d\n", prio);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_TOS_PRIORITY_CONTROL;
-//	reg += dscp/4;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	/*
-//	 * See BCM53115S Datasheet Page 65  for the register description
-//	 * (DSCP mod 4) will give the offset:
-//	 * 	- rest 0: bits [1-0]
-//	 * 	- rest 1: bits [3-2]
-//	 * 	- rest 2: bits [5-4]
-//	 * 	- rest 3: bits [7-6]
-//	 */
-//	offset = (dscp % 4) * 2;
-//	mask = 0x3 << offset;
-//	data &= ~mask; /* Clear current config */
-//	data |= (prio << offset);
-//
-//	if (_bcm53115s_reg_write(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	return 0;
-//}
-//
-///**
-// * librouter_bcm53115s_get_dscp_prio
-// *
-// * Get the packet priority based on DSCP value
-// *
-// * @param dscp
-// * @return priority value if success, -1 if error
-// */
-//int librouter_bcm53115s_get_dscp_prio(int dscp)
-//{
-//	__u8 reg, data;
-//	int prio;
-//
-//	if (dscp < 0 || dscp > 63) {
-//		printf("%% Invalid DSCP value : %d\n", dscp);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_TOS_PRIORITY_CONTROL;
-//	reg += dscp/4;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	prio = (int) ((data >> (dscp % 4) * 2) & 0x3);
-//
-//	return prio;
-//}
-//
+/**
+ * librouter_bcm53115s_set_dscp_prio
+ *
+ * Set the packet priority based on DSCP value
+ *
+ * @param dscp
+ * @param prio
+ * @return 0 if success, -1 if error
+ */
+int librouter_bcm53115s_set_dscp_prio(int dscp, int prio)
+{
+	uint8_t page, reg, offset;
+	uint32_t data, mask;
+
+	if (dscp < 0 || dscp > 63) {
+		printf("%% Invalid DSCP value : %d\n", dscp);
+		return -1;
+	}
+
+	if (prio < 0 || prio > 7) {
+		printf("%% Invalid priority : %d\n", prio);
+		return -1;
+	}
+
+	page = BCM53115S_QOS_PAGE;
+	reg = BCM53115S_QOS_DIFFSERV_PRIOMAP_REG;
+	reg += dscp/16;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	/* See 5311S-DS Page 255 for DiffServ mapping:
+	 * - 3 priority bits per DSCP priority
+	 * - 4 registers, 48bit each
+	 */
+
+	offset = (dscp % 16) * 3;
+	mask = 0x7 << offset;
+
+	data &= ~mask; /* Clear current config */
+	data |= (prio << offset);
+
+	if (_bcm53115s_reg_write(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_get_dscp_prio
+ *
+ * Get the packet priority based on DSCP value
+ *
+ * @param dscp
+ * @return priority value if success, -1 if error
+ */
+int librouter_bcm53115s_get_dscp_prio(int dscp)
+{
+	uint8_t page, reg, offset;
+	uint32_t data, mask;
+	int prio;
+
+	if (dscp < 0 || dscp > 63) {
+		printf("%% Invalid DSCP value : %d\n", dscp);
+		return -1;
+	}
+
+	page = BCM53115S_QOS_PAGE;
+	reg = BCM53115S_QOS_DIFFSERV_PRIOMAP_REG;
+	reg += dscp/16;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	prio = (int) ((data >> (dscp % 16) * 3) & 0x7);
+
+	return prio;
+}
+
 ///**
 // * librouter_bcm53115s_set_cos_prio
 // *
