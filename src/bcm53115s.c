@@ -43,14 +43,9 @@ static uint32_t speed = 500000;
 static uint16_t delay;
 const int timeout_spi_limit = 100;
 
-static uint8_t endian_swap_8bits(uint8_t * val)
-{
-	return ((* val << 4) | (* val >> 4));
-}
-
 static uint16_t endian_swap_16bits(uint16_t * val)
 {
-	return ((* val << 8) | (* val >> 8));
+	return ((* val << 8) | (* val >> 8)) & 0xffff;
 }
 
 static uint32_t endian_swap_32bits(uint32_t * val)
@@ -329,27 +324,39 @@ static int _bcm53115s_reg_read_data_return(uint8_t page, uint8_t offset, int len
 	return data;
 }
 
-static int _bcm53115s_reg_read(uint8_t page, uint8_t offset, uint32_t * data_buf, int len)
+static int _bcm53115s_reg_read(uint8_t page, uint8_t offset, void *data_buf, int len)
 {
 	uint32_t data = 0;
 
-	if (_bcm53115s_spi_reg_read_raw(page, offset,(uint8_t *)&data,len) < 0)
+	if (_bcm53115s_spi_reg_read_raw(page, offset, (uint8_t *) &data, len) < 0)
 		return -1;
 
-	*data_buf = endian_swap_32bits((uint32_t *)&data);
+	if (len == sizeof(uint32_t)) {
+		uint32_t data32 = endian_swap_32bits((uint32_t *) &data);
+		memcpy(data_buf, (void *) &data32, len);
+	} else if (len == sizeof(uint16_t)) {
+		uint16_t data16 = endian_swap_16bits((uint16_t *) &data);
+		memcpy(data_buf, (void *) &data16, len);
+	} else
+		memcpy(data_buf, (void *) &data, len);
 
 	return 0;
 }
 
-static int _bcm53115s_reg_write(uint8_t page, uint8_t offset, uint32_t * data, int len)
+static int _bcm53115s_reg_write(uint8_t page, uint8_t offset, void *data_buf, int len)
 {
-	uint32_t data_raw = 0;
+	void *data;
 
-//	printf("Input data --> %.2X ===> swapped data --> %.2x\n\n", *data, endian_swap_32bits((uint32_t *) data));
+	if (len == sizeof(uint32_t)) {
+		uint32_t data32 = endian_swap_32bits((uint32_t *)data_buf);
+		data = (void *) &data32;
+	} else if (len == sizeof(uint16_t)) {
+		uint16_t data16 = endian_swap_16bits((uint16_t *)data_buf);
+		data = (void *) &data16;
+	} else
+		data = data_buf;
 
-	data_raw = endian_swap_32bits((uint32_t *)data);
-
-	if (_bcm53115s_spi_reg_write_raw(page, offset,(uint8_t *)&data_raw,len) < 0)
+	if (_bcm53115s_spi_reg_write_raw(page, offset, (uint8_t *) data, len) < 0)
 		return -1;
 
 	return 0;
@@ -375,6 +382,37 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
 ///******************************************************/
 ///********** Exported functions ************************/
 ///******************************************************/
+#define BCM53115S_STORM_PROTECT_PAGE			0x41
+
+#define BCM53115S_STORM_PROTECT_INGRESS_RATE_CTRL_REG	0x00
+#define BCM53115S_STORM_PROTECT_RESERVED_MASK		0xFFF90080
+#define BCM53115S_STORM_PROTECT_BC_SUPP_EN		0x00000008
+#define BCM53115S_STORM_PROTECT_BC_SUPP_NORMALIZED	0x00000100
+
+#define BCM53115S_STORM_PROTECT_PORT_CTRL_REG		0x10
+#define BCM53115S_STORM_PROTECT_PORT_CTRL_SUPR_EN	0x10000000
+
+static int _set_storm_protect_defaults(void)
+{
+	uint8_t reg, page;
+	uint32_t data;
+
+	page = BCM53115S_STORM_PROTECT_PAGE;
+	reg = BCM53115S_STORM_PROTECT_INGRESS_RATE_CTRL_REG;
+
+	if (_bcm53115s_reg_read(page, reg, (void *) &data, sizeof(data)))
+		return -1;
+
+	data &= BCM53115S_STORM_PROTECT_RESERVED_MASK;
+	data |= BCM53115S_STORM_PROTECT_BC_SUPP_EN;
+	data |= BCM53115S_STORM_PROTECT_BC_SUPP_NORMALIZED;
+
+	if (_bcm53115s_reg_write(page, reg, (void *) &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
 /**
  * librouter_bcm53115s_set_broadcast_storm_protect
  *
@@ -384,31 +422,35 @@ int librouter_bcm53115s_write_test(uint8_t page, uint8_t offset, uint32_t data, 
  * @param port:	from 0 to 3
  * @return 0 on success, -1 otherwise
  */
-//int librouter_bcm53115s_set_broadcast_storm_protect(int enable, int port)
-//{
-//	uint8_t reg, data;
-//
-//	if (port > 3) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_PORT_CONTROL;
-//	reg += port * 0x10;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	if (enable)
-//		data |= BCM53115SREG_ENABLE_BC_STORM_PROTECT_MSK;
-//	else
-//		data &= ~BCM53115SREG_ENABLE_BC_STORM_PROTECT_MSK;
-//
-//	if (_bcm53115s_reg_write(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	return 0;
-//}
+
+
+int librouter_bcm53115s_set_broadcast_storm_protect(int enable, int port)
+{
+	uint8_t reg, page;
+	uint32_t data;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	page = BCM53115S_STORM_PROTECT_PAGE;
+	reg = BCM53115S_STORM_PROTECT_PORT_CTRL_REG;
+	reg += port * 0x4;
+
+	if (_bcm53115s_reg_read(page, reg, (void *) &data, sizeof(data)))
+		return -1;
+
+	if (enable)
+		data |= BCM53115S_STORM_PROTECT_PORT_CTRL_SUPR_EN;
+	else
+		data &= ~BCM53115S_STORM_PROTECT_PORT_CTRL_SUPR_EN;
+
+	if (_bcm53115s_reg_write(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
 
 /**
  * librouter_bcm53115s_get_broadcast_storm_protect
@@ -1614,21 +1656,6 @@ int librouter_bcm53115s_get_8021q(void)
 /*********************************************/
 
 /**
- * librouter_bcm53115s_set_default_config
- *
- * Configure switch to system default
- *
- * @return 0 if success, -1 if error
- */
-int librouter_bcm53115s_set_default_config(void)
-{
-	if (librouter_bcm53115s_probe())
-	//	_init_vlan_table();
-
-	return 0;
-}
-
-/**
  * librouter_bcm53115s_probe	Probe for the BCM53115S Chip
  *
  * Read ID registers to determine if chip is present
@@ -1644,6 +1671,24 @@ int librouter_bcm53115s_probe(void)
 
 	if (id == BCM53115S_ID)
 		return 1;
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_set_default_config
+ *
+ * Configure switch to system default
+ *
+ * @return 0 if success, -1 if error
+ */
+int librouter_bcm53115s_set_default_config(void)
+{
+	if (librouter_bcm53115s_probe()) {
+		/* Storm protect starts with Broadcasts only */
+		_set_storm_protect_defaults();
+	}
+	//	_init_vlan_table();
 
 	return 0;
 }
