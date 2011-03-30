@@ -1341,7 +1341,6 @@ static int _set_vlan_table(unsigned int table, struct vlan_bcm_table_t *vlan_tab
 {
 	int i = 0, ret = 0;
 
-
 	if (table > BCM53115S_NUM_VLAN_TABLES) {
 		printf("%% Invalid VLAN table : %d\n", table);
 		return -1;
@@ -1438,7 +1437,6 @@ static int _get_vlan_bcm_config_from_raw_struct(int table, struct vlan_bcm_confi
 	vconfig->vid = table;
 
 	return 0;
-
 }
 
 /**
@@ -1569,41 +1567,26 @@ int librouter_bcm53115s_set_default_config(void)
 	return 0;
 }
 
-//static void _dump_port_config(FILE *out, int port)
-//{
-//	int i;
-//
-//	fprintf(out, " switch-port %d\n", port);
-//
-//	if (librouter_bcm53115s_get_8021p(port))
-//		fprintf(out, "  802.1p\n");
-//
-//	if (librouter_bcm53115s_get_diffserv(port))
-//		fprintf(out, "  diffserv\n");
-//
-//	for (i = 0; i < 4; i++) {
-//		int rate = librouter_bcm53115s_get_ingress_rate_limit(port, i);
-//		if (rate != 100000)
-//			fprintf(out, "  rate-limit %d %d\n", i, rate);
-//	}
-//
-//	for (i = 0; i < 4; i++) {
-//		int rate = librouter_bcm53115s_get_egress_rate_limit(port, i);
-//		if (rate != 100000)
-//			fprintf(out, "  traffic-shape %d %d\n", i, rate);
-//	}
-//
-//	if (librouter_bcm53115s_get_txqsplit(port))
-//		fprintf(out, "  txqueue-split\n");
-//
-//	i = librouter_bcm53115s_get_default_vid(port);
-//	if (i)
-//		fprintf(out, "  vlan-default %d\n", i);
-//
-//}
-//
-//int librouter_bcm53115s_dump_config(FILE *out)
-//{
+static void _dump_port_config(FILE *out, int port)
+{
+	int i;
+
+	fprintf(out, " switch-port %d\n", port);
+
+	if (librouter_bcm53115s_get_8021p(port))
+		fprintf(out, "  802.1p\n");
+
+	if (librouter_bcm53115s_get_diffserv(port))
+		fprintf(out, "  diffserv\n");
+
+	i = librouter_bcm53115s_get_default_vid(port);
+	if (i)
+		fprintf(out, "  vlan-default %d\n", i);
+
+}
+
+int librouter_bcm53115s_dump_config(FILE *out)
+{
 //	int i;
 //
 //	/* Is device present ? */
@@ -1653,6 +1636,6 @@ int librouter_bcm53115s_set_default_config(void)
 //
 //	for (i = 0; i < 2; i++)
 //		_dump_port_config(out, i);
-//}
+}
 
 #endif /* OPTION_MANAGED_SWITCH */
