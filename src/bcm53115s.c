@@ -382,6 +382,59 @@ static int _set_storm_protect_defaults(void)
 	return 0;
 }
 
+
+/**
+ * _set_tc_to_cos_map
+ *
+ * Set Traffic-Class to Transmit queues map default configuration
+ */
+static int _set_tc_to_cos_map_defaults(void)
+{
+	uint8_t reg, page;
+	uint16_t data;
+
+	page = BCM53115S_QOS_PAGE;
+	reg = BCM53115S_TC_TO_COS_MAP_REG;
+
+	/* Make the following map:
+	 * - TC 0 and 1: 0
+	 * - TC 2 and 3: 1
+	 * - TC 4 and 5: 2
+	 * - TC 6 and 7: 3
+	 */
+	data = 0xf000;
+	data |= 0x0a00;
+	data |= 0x0050;
+
+	if (_bcm53115s_reg_write(page, reg, (void *) &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
+static int _set_qos_defaults(void)
+{
+	uint8_t reg, page;
+	uint8_t data;
+
+	page = BCM53115S_QOS_PAGE;
+	reg = BCM53115S_QOS_GLOBAL_CTRL_REG;
+
+	if (_bcm53115s_reg_read(page, reg, (void *) &data, sizeof(data)))
+		return -1;
+
+	data |= 0x80; /* Aggregation mode: IMP is a data interface */
+	data &= ~0x40; /* Disable Port-based QoS */
+
+	data &= ~0x0C;
+	data |= 0x08; /* QoS Priority selection: Use DiffServ first, then 802.1p */
+
+	if (_bcm53115s_reg_write(page, reg, (void *) &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
 /**
  * librouter_bcm53115s_set_broadcast_storm_protect
  *
@@ -1513,8 +1566,11 @@ int librouter_bcm53115s_set_default_config(void)
 	if (librouter_bcm53115s_probe()) {
 		/* Storm protect starts with Broadcasts only */
 		_set_storm_protect_defaults();
-	}
+		_set_qos_defaults();
+		_set_tc_to_cos_map_defaults();
 		_init_vlan_table();
+	}
+
 
 	return 0;
 }
