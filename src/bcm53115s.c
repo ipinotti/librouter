@@ -1612,7 +1612,8 @@ int librouter_bcm53115s_set_default_config(void)
 
 static void _dump_port_config(FILE *out, int port)
 {
-	int i;
+	int i = 0;
+	unsigned char rate = 0;
 
 	fprintf(out, " switch-port %d\n", port);
 
@@ -1622,63 +1623,62 @@ static void _dump_port_config(FILE *out, int port)
 	if (librouter_bcm53115s_get_diffserv(port))
 		fprintf(out, "  diffserv\n");
 
+	if (librouter_bcm53115s_get_multicast_storm_protect(port))
+		fprintf(out, " switch-config multicast-storm-protect\n");
+
+	//TODO Confirmar parametros e cmd do cish
+	if (librouter_bcm53115s_get_storm_protect_rate(&rate,port))
+		fprintf(out, " switch-config storm-protect-rate %d %c\n", port, rate);
+
 	i = librouter_bcm53115s_get_default_vid(port);
 	if (i)
 		fprintf(out, "  vlan-default %d\n", i);
-
 }
 
 int librouter_bcm53115s_dump_config(FILE *out)
 {
-//	int i;
-//
-//	/* Is device present ? */
-//	if (librouter_bcm53115s_probe() == 0)
-//		return 0;
-//
-//	if (librouter_bcm53115s_get_8021q())
-//		fprintf(out, " switch-config 802.1q\n");
-//
-//	i = librouter_bcm53115s_get_storm_protect_rate();
-//	if (i != 1)
-//		fprintf(out, " switch-config storm-protect-rate %d\n", i);
-//
-//	for (i = 0; i < 8; i++) {
-//		int prio = librouter_bcm53115s_get_cos_prio(i);
-//		if (prio != i / 2)
-//			fprintf(out, " switch-config cos-prio %d %d\n", i, prio);
-//	}
-//
-//	for (i = 0; i < 64; i++) {
-//		int prio = librouter_bcm53115s_get_dscp_prio(i);
-//		if (prio)
-//			fprintf(out, " switch-config dscp-prio %d %d\n", i, prio);
-//	}
-//
-//	if (librouter_bcm53115s_get_multicast_storm_protect())
-//		fprintf(out, " switch-config multicast-storm-protect\n");
-//
+	int i = 0;
+	struct vlan_bcm_config_t v;
+
+	/* Is device present ? */
+	if (librouter_bcm53115s_probe() == 0)
+		return 0;
+
+	if (librouter_bcm53115s_get_8021q())
+		fprintf(out, " switch-config 802.1q\n");
+
+	for (i = 0; i < 8; i++) {
+		int prio = librouter_bcm53115s_get_cos_prio(i);
+		if (prio != i / 2)
+			fprintf(out, " switch-config cos-prio %d %d\n", i, prio);
+	}
+
+	for (i = 0; i < 64; i++) {
+		int prio = librouter_bcm53115s_get_dscp_prio(i);
+		if (prio)
+			fprintf(out, " switch-config dscp-prio %d %d\n", i, prio);
+	}
+
+//TODO
 //	if (librouter_bcm53115s_get_replace_null_vid())
 //		fprintf(out, " switch-config replace-null-vid\n");
-//
-//
-//	for (i = 0; i < BCM53115S_NUM_VLAN_TABLES; i++) {
-//		struct vlan_bcm_table_t v;
-//
-//		librouter_bcm53115s_get_table(i, &v);
-//		if (v.valid)
-//			fprintf(out, " switch-config vlan %d %s%s%s\n",
-//				v.vid, (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT1_MSK) ? "port-1 " : "",
-//				(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT2_MSK) ? "port-2 " : "",
-//				(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT3_MSK) ? "internal" : "");
-//	}
-//
-//	if (librouter_bcm53115s_get_wfq())
-//		fprintf(out, " switch-config wfq\n");
-//
-//
-//	for (i = 0; i < 2; i++)
-//		_dump_port_config(out, i);
+
+	for (i = 0; i < BCM53115S_NUM_VLAN_TABLES; i++) {
+		librouter_bcm53115s_get_table(i, &v);
+		if (v.membership != 0)
+			fprintf(out, " switch-config vlan %d %s%s%s%s\n",
+				v.vid, (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT1_MSK) ? "port-1 " : "",
+				(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT2_MSK) ? "port-2 " : "",
+				(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT3_MSK) ? "port-3"  : "",
+				(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT4_MSK) ? "port-4 " : "");
+		memset(&v, 0, sizeof(struct vlan_bcm_config_t));
+	}
+
+	if (librouter_bcm53115s_get_wrr())
+		fprintf(out, " switch-config wfq\n");
+
+	for (i = 0; i < 4; i++)
+		_dump_port_config(out, i);
 }
 
 #endif /* OPTION_MANAGED_SWITCH */
