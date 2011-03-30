@@ -673,7 +673,7 @@ int librouter_bcm53115s_get_multicast_storm_protect(int port)
  */
 int librouter_bcm53115s_set_8021q(int enable)
 {
-	uint32_t data = 0;
+	uint8_t data = 0;
 
 	if (_bcm53115s_reg_read(ROBO_VLAN_PAGE, 0x00, &data,1))
 		return -1;
@@ -683,7 +683,7 @@ int librouter_bcm53115s_set_8021q(int enable)
 	else
 		data &= ~BCM53115S_ENABLE_8021Q_MSK;
 
-	if (_bcm53115s_reg_write(ROBO_VLAN_PAGE, 0x00, &data,1))
+	if (_bcm53115s_reg_write(ROBO_VLAN_PAGE, 0x00, &data, sizeof(data)))
 		return -1;
 
 	return 0;
@@ -696,7 +696,7 @@ int librouter_bcm53115s_set_8021q(int enable)
  */
 int librouter_bcm53115s_get_8021q(void)
 {
-	uint32_t data;
+	uint8_t data;
 
 	if (_bcm53115s_reg_read(ROBO_VLAN_PAGE, 0x00, &data, sizeof(data)))
 		return -1;
@@ -744,140 +744,134 @@ int librouter_bcm53115s_get_wrr(void)
 	return ((data & BCM53115S_QOS_TXQ_CONTROL_WRR_MSK) ? 0 : 1);
 }
 
-///**
-// * librouter_bcm53115s_set_default_vid	Set port default 802.1q VID
-// *
-// * @param port
-// * @param vid
-// * @return 0 if success, -1 if error
-// */
-//int librouter_bcm53115s_set_default_vid(int port, int vid)
-//{
-//	__u8 vid_l, vid_u;
-//	__u8 reg, data;
-//
-//	if (port < 0 || port > 3) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	if (vid > 4095) {
-//		printf("%% Invalid 802.1q VID : %d\n", vid);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_PORT_CONTROL3;
-//	reg += 0x10 * port;
-//
-//	vid_l = (__u8) (vid | 0xff);
-//	vid_u = (__u8) ((vid >> 8) | BCM53115SREG_DEFAULT_VID_UPPER_MSK);
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	/* Set upper part of VID */
-//	vid_u |= (data & (~BCM53115SREG_DEFAULT_VID_UPPER_MSK));
-//
-//	if (_bcm53115s_reg_write(reg, &vid_u, sizeof(vid_u)) < 0)
-//		return -1;
-//
-//	if (_bcm53115s_reg_write(reg+1, &vid_l, sizeof(vid_l)) < 0)
-//		return -1;
-//
-//	return 0;
-//}
-//
-///**
-// * librouter_bcm53115s_get_default_vid	Get port's default 802.1q VID
-// *
-// * @param port
-// * @return Default VID if success, -1 if error
-// */
-//int librouter_bcm53115s_get_default_vid(int port)
-//{
-//	__u8 vid_l, vid_u;
-//	__u8 reg, data;
-//
-//	if (port < 0 || port > 3) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_PORT_CONTROL3;
-//	reg += 0x10 * port;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	vid_u = data & BCM53115SREG_DEFAULT_VID_UPPER_MSK;
-//
-//	if (_bcm53115s_reg_read(++reg, &data, sizeof(data)))
-//		return -1;
-//
-//	vid_l = data;
-//
-//	return ((int) (vid_u << 8 | vid_l));
-//}
-//
-///**
-// * librouter_bcm53115s_set_default_cos	Set port default 802.1p CoS
-// *
-// * @param port
-// * @param cos
-// * @return 0 if success, -1 if error
-// */
-//int librouter_bcm53115s_set_default_cos(int port, int cos)
-//{
-//	__u8 reg, data;
-//
-//	if (port < 0 || port > 3) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	if (cos > 7) {
-//		printf("%% Invalid 802.1p CoS : %d\n", cos);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_PORT_CONTROL3;
-//	reg += 0x10 * port;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	data &= ~BCM53115SREG_DEFAULT_COS_MSK;
-//	data |= (cos << 5) & BCM53115SREG_DEFAULT_COS_MSK; /* Set bits [7-5] */
-//
-//	if (_bcm53115s_reg_write(reg, &data, sizeof(data)) < 0)
-//		return -1;
-//
-//	return 0;
-//}
-//
-///**
-// * librouter_bcm53115s_get_default_cos	Get port's default 802.1q CoS
-// *
-// * @param port
-// * @return Default CoS if success, -1 if error
-// */
-//int librouter_bcm53115s_get_default_cos(int port)
-//{
-//	__u8 reg, data;
-//
-//	if (port < 0 || port > 3) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_PORT_CONTROL3;
-//	reg += 0x10 * port;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	return ((int) (data >> 5));
-//}
+/**
+ * librouter_bcm53115s_set_default_vid	Set port default 802.1q VID
+ *
+ * @param port
+ * @param vid
+ * @return 0 if success, -1 if error
+ */
+int librouter_bcm53115s_set_default_vid(int port, int vid)
+{
+	uint8_t reg, page;
+	uint16_t data;
+
+	if (port < 0 || port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	if (vid > 4095) {
+		printf("%% Invalid 802.1q VID : %d\n", vid);
+		return -1;
+	}
+
+	page = BCM53115S_VLAN_PAGE;
+	reg = BCM53115S_VLAN_TAG_REG;
+	reg += 0x2 * port;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	reg &= ~BCM53115S_VLAN_DEFAULT_VID_MSK; /* Clear old VID */
+	reg |= (vid & BCM53115S_VLAN_DEFAULT_VID_MSK);
+
+	if (_bcm53115s_reg_write(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_get_default_vid	Get port's default 802.1q VID
+ *
+ * @param port
+ * @return Default VID if success, -1 if error
+ */
+int librouter_bcm53115s_get_default_vid(int port)
+{
+	uint8_t reg, page;
+	uint16_t data;
+
+	if (port < 0 || port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	page = BCM53115S_VLAN_PAGE;
+	reg = BCM53115S_VLAN_TAG_REG;
+	reg += 0x2 * port;
+
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return ((int) (data & BCM53115S_VLAN_DEFAULT_VID_MSK));
+}
+
+/**
+ * librouter_bcm53115s_set_default_cos	Set port default 802.1p CoS
+ *
+ * @param port
+ * @param cos
+ * @return 0 if success, -1 if error
+ */
+int librouter_bcm53115s_set_default_cos(int port, int cos)
+{
+	uint8_t reg, page;
+	uint16_t data;
+
+	if (port < 0 || port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	if (cos > 7) {
+		printf("%% Invalid 802.1p CoS : %d\n", cos);
+		return -1;
+	}
+
+	page = BCM53115S_VLAN_PAGE;
+	reg = BCM53115S_VLAN_TAG_REG;
+	reg += 0x2 * port;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)) < 0)
+		return -1;
+
+	data &= ~BCM53115S_VLAN_DEFAULT_COS_MSK;
+	data |= (cos << 13) & BCM53115S_VLAN_DEFAULT_COS_MSK; /* Set bits [15-13] */
+
+	if (_bcm53115s_reg_write(page, reg, &data, sizeof(data)) < 0)
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_get_default_cos	Get port's default 802.1q CoS
+ *
+ * @param port
+ * @return Default CoS if success, -1 if error
+ */
+int librouter_bcm53115s_get_default_cos(int port)
+{
+	uint8_t reg, page;
+	uint16_t data;
+
+	if (port < 0 || port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	page = BCM53115S_VLAN_PAGE;
+	reg = BCM53115S_VLAN_TAG_REG;
+	reg += 0x2 * port;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return ((int) (data >> 13));
+}
 
 /**
  * librouter_bcm53115s_set_8021p
@@ -1066,6 +1060,55 @@ int librouter_bcm53115s_get_diffserv(int port)
 //
 //	return (data | BCM53115SREG_ENABLE_TAGINSERT_MSK) ? 1 : 0;
 //}
+
+int librouter_bcm53115s_get_drop_untagged(int port)
+{
+	uint8_t page, reg;
+	uint16_t data, mask;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	page = BCM53115S_VLAN_PAGE;
+	reg = BCM53115S_VLAN_DROPUNTAG_REG;
+	mask = 1 << port;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return (data & mask) ? 1 : 0;
+}
+
+int librouter_bcm53115s_set_drop_untagged(int enable, int port)
+{
+	uint8_t page, reg;
+	uint16_t data, mask;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	page = BCM53115S_VLAN_PAGE;
+	reg = BCM53115S_VLAN_DROPUNTAG_REG;
+	mask = 1 << port;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+
+	if (enable)
+		data |= mask;
+	else
+		data &= ~mask;
+
+	if (_bcm53115s_reg_write(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
 
 /**
  * librouter_bcm53115s_set_dscp_prio

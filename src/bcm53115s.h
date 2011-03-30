@@ -88,7 +88,14 @@ typedef enum
 #define ROBO_VLAN_PAGE				0x34 /* VLAN Registers */
 #define BCM53115S_VLAN_PAGE			ROBO_VLAN_PAGE
 #define BCM53115S_ENABLE_8021Q_MSK		0x80
-#define BCM53115S_ENABLE_WFQ_MSK		0x08
+
+
+#define BCM53115S_VLAN_DROPUNTAG_REG		0x03
+
+#define BCM53115S_VLAN_TAG_REG			0x10
+#define BCM53115S_VLAN_DEFAULT_COS_MSK		0xE000
+#define BCM53115S_VLAN_DEFAULT_VID_MSK		0x0FFF
+
 
 /* QoS Registers Page 30h */
 #define ROBO_QOS_PAGE				0x30 /* QoS Registers */
@@ -120,8 +127,7 @@ typedef enum
 #define BCM53115SREG_ENABLE_TXQSPLIT_MSK		0x01
 
 /* Port n Control 3 */
-#define BCM53115SREG_DEFAULT_COS_MSK		0xE0
-#define BCM53115SREG_DEFAULT_VID_UPPER_MSK	0x0F
+
 
 /* Indirect Access Control */
 #define BCM53115SREG_READ_OPERATION		0x10
@@ -188,19 +194,21 @@ int librouter_bcm53115s_set_8021p(int enable, int port);
 int librouter_bcm53115s_get_diffserv(int port);
 int librouter_bcm53115s_set_diffserv(int enable, int port);
 //
-//int librouter_bcm53115s_get_default_vid(int port);
-//int librouter_bcm53115s_set_default_vid(int port, int vid);
+int librouter_bcm53115s_get_default_vid(int port);
+int librouter_bcm53115s_set_default_vid(int port, int vid);
 //
 //
 //int librouter_bcm53115s_get_taginsert(int port);
 //int librouter_bcm53115s_set_taginsert(int enable, int port);
+
+int librouter_bcm53115s_set_drop_untagged(int enable, int port);
+int librouter_bcm53115s_get_drop_untagged(int port);
 //
-///* Port n Control 3 */
-//int librouter_bcm53115s_get_default_vid(int port);
-//int librouter_bcm53115s_set_default_vid(int port, int vid);
-//
-//int librouter_bcm53115s_get_default_cos(int port);
-//int librouter_bcm53115s_set_default_cos(int port, int cos);
+int librouter_bcm53115s_get_default_vid(int port);
+int librouter_bcm53115s_set_default_vid(int port, int vid);
+
+int librouter_bcm53115s_get_default_cos(int port);
+int librouter_bcm53115s_set_default_cos(int port, int cos);
 
 int librouter_bcm53115s_get_cos_prio(int cos);
 int librouter_bcm53115s_set_cos_prio(int cos, int prio);
