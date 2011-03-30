@@ -96,6 +96,7 @@ typedef enum
 #define BCM53115S_QOS_8021P_ENABLE_REG		0x04
 #define BCM53115S_QOS_DIFFSERV_ENABLE_REG	0x06
 
+#define BCM53115S_QOS_COS_PRIOMAP_REG		0x10
 #define BCM53115S_QOS_DIFFSERV_PRIOMAP_REG	0x30
 
 #define BCM53115S_QOS_TXQ_CONTROL_REG		0x80
@@ -183,8 +184,6 @@ int librouter_bcm53115s_set_diffserv(int enable, int port);
 //int librouter_bcm53115s_get_default_vid(int port);
 //int librouter_bcm53115s_set_default_vid(int port, int vid);
 //
-//int librouter_bcm53115s_get_txqsplit(int port);
-//int librouter_bcm53115s_set_txqsplit(int enable, int port);
 //
 //int librouter_bcm53115s_get_taginsert(int port);
 //int librouter_bcm53115s_set_taginsert(int enable, int port);
@@ -195,17 +194,10 @@ int librouter_bcm53115s_set_diffserv(int enable, int port);
 //
 //int librouter_bcm53115s_get_default_cos(int port);
 //int librouter_bcm53115s_set_default_cos(int port, int cos);
-//
-//int librouter_bcm53115s_get_cos_prio(int cos);
-//int librouter_bcm53115s_set_cos_prio(int cos, int prio);
-//
-///* ------------------ */
-//int librouter_bcm53115s_get_egress_rate_limit(int port, int prio);
-//int librouter_bcm53115s_set_egress_rate_limit(int port, int prio, int rate);
-//
-//int librouter_bcm53115s_get_ingress_rate_limit(int port, int prio);
-//int librouter_bcm53115s_set_ingress_rate_limit(int port, int prio, int rate);
-//
+
+int librouter_bcm53115s_get_cos_prio(int cos);
+int librouter_bcm53115s_set_cos_prio(int cos, int prio);
+
 int librouter_bcm53115s_get_dscp_prio(int dscp);
 int librouter_bcm53115s_set_dscp_prio(int dscp, int prio);
 //
