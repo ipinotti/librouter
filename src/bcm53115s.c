@@ -382,6 +382,59 @@ static int _set_storm_protect_defaults(void)
 	return 0;
 }
 
+
+/**
+ * _set_tc_to_cos_map
+ *
+ * Set Traffic-Class to Transmit queues map default configuration
+ */
+static int _set_tc_to_cos_map_defaults(void)
+{
+	uint8_t reg, page;
+	uint16_t data;
+
+	page = BCM53115S_QOS_PAGE;
+	reg = BCM53115S_TC_TO_COS_MAP_REG;
+
+	/* Make the following map:
+	 * - TC 0 and 1: 0
+	 * - TC 2 and 3: 1
+	 * - TC 4 and 5: 2
+	 * - TC 6 and 7: 3
+	 */
+	data = 0xf000;
+	data |= 0x0a00;
+	data |= 0x0050;
+
+	if (_bcm53115s_reg_write(page, reg, (void *) &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
+static int _set_qos_defaults(void)
+{
+	uint8_t reg, page;
+	uint8_t data;
+
+	page = BCM53115S_QOS_PAGE;
+	reg = BCM53115S_QOS_GLOBAL_CTRL_REG;
+
+	if (_bcm53115s_reg_read(page, reg, (void *) &data, sizeof(data)))
+		return -1;
+
+	data |= 0x80; /* Aggregation mode: IMP is a data interface */
+	data &= ~0x40; /* Disable Port-based QoS */
+
+	data &= ~0x0C;
+	data |= 0x08; /* QoS Priority selection: Use DiffServ first, then 802.1p */
+
+	if (_bcm53115s_reg_write(page, reg, (void *) &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
 /**
  * librouter_bcm53115s_set_broadcast_storm_protect
  *
@@ -610,174 +663,6 @@ int librouter_bcm53115s_get_multicast_storm_protect(int port)
 //		return -1;
 //
 //	return ((data | BCM53115S_ENABLE_REPLACE_NULL_VID_MSK) ? 1 : 0);
-//}
-//
-///**
-// * librouter_bcm53115s_set_egress_rate_limit
-// *
-// * Set rate limit for a certain port and priority queue.
-// * The rate will be rounded to multiples of 1Mbps or
-// * multiples of 64kbps if values are lower than 1Mbps.
-// *
-// * @param port	From 0 to 2
-// * @param prio	From 0 to 3
-// * @param rate	In Kbps
-// * @return 0 on success, -1 otherwise
-// */
-//int librouter_bcm53115s_set_egress_rate_limit(int port, int prio, int rate)
-//{
-//	__u8 reg, data;
-//
-//	if (port < 0 || port > 3) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	if (prio > 3) {
-//		printf("%% No such priority : %d\n", prio);
-//		return -1;
-//	}
-//
-//	/* Calculate reg offset */
-//	reg = BCM53115SREG_INGRESS_RATE_LIMIT;
-//	reg += 0x4 * port;
-//	reg += prio;
-//
-//	if (!rate) {
-//		data = (__u8) 0;
-//	} else if (rate >= 1000) {
-//		data = (__u8) rate/1000;
-//	} else {
-//		data = 0x65;
-//		data += (__u8) (rate/64 - 1);
-//	}
-//
-//	return _bcm53115s_reg_write(reg, &data, sizeof(data));
-//}
-//
-///**
-// * librouter_bcm53115s_get_egress_rate_limit
-// *
-// * Get rate limit from a certain port and priority queue
-// *
-// * @param port
-// * @param prio
-// * @return The configured rate limit or -1 if error
-// */
-//int librouter_bcm53115s_get_egress_rate_limit(int port, int prio)
-//{
-//	__u8 reg, data;
-//	int rate;
-//
-//	if (port < 0 || port > 3) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	if (prio > 3) {
-//		printf("%% No such priority : %d\n", prio);
-//		return -1;
-//	}
-//
-//	/* Calculate reg offset */
-//	reg = BCM53115SREG_INGRESS_RATE_LIMIT;
-//	reg += 0x4 * port;
-//	reg += prio;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data) < 0))
-//		return -1;
-//	if (!data)
-//		rate = 100000;
-//	else if (data < 0x65)
-//		rate = data * 1000;
-//	else
-//		rate = data * 64;
-//
-//	return rate;
-//}
-//
-///**
-// * librouter_bcm53115s_set_ingress_rate_limit
-// *
-// * Set rate limit for a certain port and priority queue.
-// * The rate will be rounded to multiples of 1Mbps or
-// * multiples of 64kbps if values are lower than 1Mbps.
-// *
-// * @param port	From 0 to 2
-// * @param prio	From 0 to 3
-// * @param rate	In Kbps
-// * @return 0 on success, -1 otherwise
-// */
-//int librouter_bcm53115s_set_ingress_rate_limit(int port, int prio, int rate)
-//{
-//	__u8 reg, data;
-//
-//	if (port < 0 || port > 3) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	if (prio > 3) {
-//		printf("%% No such priority : %d\n", prio);
-//		return -1;
-//	}
-//
-//	/* Calculate reg offset */
-//	reg = BCM53115SREG_INGRESS_RATE_LIMIT;
-//	reg += 0x10 * port;
-//	reg += prio;
-//
-//	if (!rate) {
-//		data = (__u8) 0;
-//	} else if (rate >= 1000) {
-//		data = (__u8) rate/1000;
-//	} else {
-//		data = 0x65;
-//		data += (__u8) (rate/64 - 1);
-//	}
-//
-//	return _bcm53115s_reg_write(reg, &data, sizeof(data));
-//}
-//
-///**
-// * librouter_bcm53115s_get_ingress_rate_limit
-// *
-// * Get ingress rate limit from a certain port and priority queue
-// *
-// * @param port
-// * @param prio
-// * @return The configured rate limit or -1 if error
-// */
-//int librouter_bcm53115s_get_ingress_rate_limit(int port, int prio)
-//{
-//	__u8 reg, data;
-//	int rate;
-//
-//	if (port < 0 || port > 3) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	if (prio > 3) {
-//		printf("%% No such priority : %d\n", prio);
-//		return -1;
-//	}
-//
-//	/* Calculate reg offset */
-//	reg = BCM53115SREG_INGRESS_RATE_LIMIT;
-//	reg += 0x10 * port;
-//	reg += prio;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data) < 0))
-//		return -1;
-//	if (!data)
-//		rate = 100000;
-//	else if (data < 0x65)
-//		rate = data * 1000;
-//	else
-//		rate = data * 64;
-//
-//	return rate;
 //}
 
 /**
@@ -1181,68 +1066,7 @@ int librouter_bcm53115s_get_diffserv(int port)
 //
 //	return (data | BCM53115SREG_ENABLE_TAGINSERT_MSK) ? 1 : 0;
 //}
-//
-///**
-// * librouter_bcm53115s_set_txqsplit
-// *
-// * Enable or Disable TXQ Split into 4 queues
-// *
-// * @param enable
-// * @param port:	from 0 to 2
-// * @return 0 on success, -1 otherwise
-// */
-//int librouter_bcm53115s_set_txqsplit(int enable, int port)
-//{
-//	__u8 reg, data;
-//
-//	if (port > 3) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_PORT_CONTROL;
-//	reg += port * 0x10;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	if (enable)
-//		data |= BCM53115SREG_ENABLE_TXQSPLIT_MSK;
-//	else
-//		data &= ~BCM53115SREG_ENABLE_TXQSPLIT_MSK;
-//
-//	if (_bcm53115s_reg_write(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	return 0;
-//}
-//
-///**
-// * librouter_bcm53115s_get_txqsplit
-// *
-// * Get if TXQ split configuration
-// *
-// * @param port: from 0 to 2
-// * @return 1 if enabled, 0 if disabled, -1 if error
-// */
-//int librouter_bcm53115s_get_txqsplit(int port)
-//{
-//	__u8 reg, data;
-//
-//	if (port > 3) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_PORT_CONTROL;
-//	reg += port * 0x10;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	return (data | BCM53115SREG_ENABLE_TXQSPLIT_MSK) ? 1 : 0;
-//}
-//
+
 /**
  * librouter_bcm53115s_set_dscp_prio
  *
@@ -1322,84 +1146,82 @@ int librouter_bcm53115s_get_dscp_prio(int dscp)
 	return prio;
 }
 
-///**
-// * librouter_bcm53115s_set_cos_prio
-// *
-// * Set the packet priority based on DSCP value
-// *
-// * @param cos
-// * @param prio
-// * @return 0 if success, -1 if error
-// */
-//int librouter_bcm53115s_set_cos_prio(int cos, int prio)
-//{
-//	__u8 reg, data, mask;
-//	int offset;
-//
-//	if (cos < 0 || cos > 7) {
-//		printf("%% Invalid CoS value : %d\n", cos);
-//		return -1;
-//	}
-//
-//	if (prio < 0 || prio > 3) {
-//		printf("%% Invalid priority : %d\n", prio);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_GLOBAL_CONTROL10;
-//	reg += cos/4;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	/*
-//	 * See BCM53115S Datasheet Page 53  for the register description
-//	 * (CoS mod 4) will give the offset:
-//	 * 	- mod 0: bits [1-0]
-//	 * 	- mod 1: bits [3-2]
-//	 * 	- mod 2: bits [5-4]
-//	 * 	- mod 3: bits [7-6]
-//	 */
-//	offset = (cos % 4) * 2;
-//	mask = 0x3 << offset;
-//	data &= ~mask; /* Clear current config */
-//	data |= (prio << offset);
-//
-//	if (_bcm53115s_reg_write(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	return 0;
-//}
-//
-///**
-// * librouter_bcm53115s_get_dscp_prio
-// *
-// * Get the packet priority based on CoS value
-// *
-// * @param cos
-// * @return priority value if success, -1 if error
-// */
-//int librouter_bcm53115s_get_cos_prio(int cos)
-//{
-//	__u8 reg, data;
-//	int prio;
-//
-//	if (cos < 0 || cos > 7) {
-//		printf("%% Invalid DSCP value : %d\n", cos);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_GLOBAL_CONTROL10;
-//	reg += cos/4;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	prio = (int) ((data >> (cos % 4) * 2) & 0x3);
-//
-//	return prio;
-//}
-//
+/**
+ * librouter_bcm53115s_set_cos_prio
+ *
+ * Set the packet priority based on DSCP value
+ *
+ * @param cos
+ * @param prio
+ * @return 0 if success, -1 if error
+ */
+int librouter_bcm53115s_set_cos_prio(int cos, int prio)
+{
+	uint8_t page, reg, offset;
+	uint32_t data, mask;
+	int i;
+
+	if (cos < 0 || cos > 7) {
+		printf("%% Invalid CoS value : %d\n", cos);
+		return -1;
+	}
+
+	if (prio < 0 || prio > 7) {
+		printf("%% Invalid priority : %d\n", prio);
+		return -1;
+	}
+
+	page = BCM53115S_QOS_PAGE;
+
+	/* Set the same CoS map to all ports */
+	for (i = 0; i < 7; i++) {
+		reg = BCM53115S_QOS_COS_PRIOMAP_REG + 0x4 * i;
+		if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+			return -1;
+		/*
+		 * See BCM53115S Datasheet Page 254  for the register description
+		 */
+		offset = cos * 3;
+		mask = 0x7 << offset;
+		data &= ~mask; /* Clear current config */
+		data |= (prio << offset);
+
+		if (_bcm53115s_reg_write(page, reg, &data, sizeof(data)))
+			return -1;
+	}
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_get_dscp_prio
+ *
+ * Get the packet priority based on CoS value
+ *
+ * @param cos
+ * @return priority value if success, -1 if error
+ */
+int librouter_bcm53115s_get_cos_prio(int cos)
+{
+	uint8_t page, reg, offset;
+	uint32_t data, mask;
+	int prio;
+
+	if (cos < 0 || cos > 7) {
+		printf("%% Invalid DSCP value : %d\n", cos);
+		return -1;
+	}
+
+	page = BCM53115S_QOS_PAGE;
+	reg = BCM53115S_QOS_COS_PRIOMAP_REG;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	prio = (int) ((data >> (cos * 3)) & 0x7);
+
+	return prio;
+}
 
 /***********************************************/
 /********* VLAN table manipulation *************/
@@ -1738,8 +1560,11 @@ int librouter_bcm53115s_set_default_config(void)
 	if (librouter_bcm53115s_probe()) {
 		/* Storm protect starts with Broadcasts only */
 		_set_storm_protect_defaults();
-	}
+		_set_qos_defaults();
+		_set_tc_to_cos_map_defaults();
 		_init_vlan_table();
+	}
+
 
 	return 0;
 }
