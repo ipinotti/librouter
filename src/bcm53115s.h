@@ -64,7 +64,7 @@ typedef enum
 #define BCM_PORT_IMP 6
 
 
-#define BCM53115S_NUM_VLAN_TABLES		16
+#define BCM53115S_NUM_VLAN_TABLES		4094
 #define BCM53115S_SPI_DEV	"/dev/spidev28672.0"
 #define BCM53115S_ID	0x53115
 
@@ -134,6 +134,7 @@ typedef enum
 #define BCM53115SREG_VLAN_MEMBERSHIP_PORT1_MSK	0x01
 #define BCM53115SREG_VLAN_MEMBERSHIP_PORT2_MSK	0x02
 #define BCM53115SREG_VLAN_MEMBERSHIP_PORT3_MSK	0x04
+#define BCM53115SREG_VLAN_MEMBERSHIP_PORT4_MSK  0x08
 
 struct vlan_bcm_config_t {
 	int vid; /*vlan id*/
@@ -144,8 +145,12 @@ struct vlan_bcm_table_t {
 	unsigned int reserved:10;
 	unsigned int fwd_mode:1;
 	unsigned int mspt_index:3;
-	unsigned int untag_map:9;
-	unsigned int fwd_map:9;
+	unsigned int untag_map_cpu_port:1;
+	unsigned int untag_map_reserved:3;
+	unsigned int untag_map_ports:5;
+	unsigned int fwd_map_cpu_port:1;
+	unsigned int fwd_map_reserved:3;
+	unsigned int fwd_map_ports:5;
 };
 
 /* Page 41h: Broadcast Storm Suppresion Register */

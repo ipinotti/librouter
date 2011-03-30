@@ -1455,6 +1455,7 @@ static int _verify_operation_done_vlan_table_reg_Rd_Wr_Clr(void)
 	uint8_t data_rd_wr_ctrl = 1;
 
 	_bcm53115s_reg_read(BCM53115SREG_PAGE_VLAN_TABLE_RD_WR_CL,BCM53115SREG_OFFSET_VLAN_TABLE_RD_WR_CL, &data_rd_wr_ctrl, sizeof(uint8_t));
+
 	if (((data_rd_wr_ctrl >> VLAN_START_BIT) & 1) == 0)
 		return 1;
 	else
@@ -1464,7 +1465,7 @@ static int _verify_operation_done_vlan_table_reg_Rd_Wr_Clr(void)
 /**
  * _get_vlan_table	Fetch VLAN table from switch
  *
- * When successful, data is written to the structure pointed by t
+ * When successful, data is written to the structure pointed by vlan_table
  *
  * @param table
  * @param t
@@ -1474,7 +1475,7 @@ static int _get_vlan_table(unsigned int table, struct vlan_bcm_table_t *vlan_tab
 {
 	int i = 0;
 
-	if (table > 15) {
+	if (table > BCM53115S_NUM_VLAN_TABLES) {
 		printf("%% Invalid VLAN table : %d\n", table);
 		return -1;
 	}
@@ -1493,7 +1494,7 @@ static int _get_vlan_table(unsigned int table, struct vlan_bcm_table_t *vlan_tab
 		return -1;
 
 	for (i=0; i < timeout_spi_limit; i++){
-		_bcm53115s_reg_read(BCM53115SREG_PAGE_VLAN_TABLE_RD_WR_CL,BCM53115SREG_OFFSET_VLAN_TABLE_ENTRY, vlan_table, sizeof(uint32_t));
+		_bcm53115s_reg_read(BCM53115SREG_PAGE_VLAN_TABLE_RD_WR_CL,BCM53115SREG_OFFSET_VLAN_TABLE_ENTRY, (uint32_t *)vlan_table, sizeof(uint32_t));
 		/* Verify if Read command is completed */
 		if (_verify_operation_done_vlan_table_reg_Rd_Wr_Clr())
 			break;
@@ -1519,7 +1520,7 @@ static int _set_vlan_table(unsigned int table, struct vlan_bcm_table_t *vlan_tab
 	int i = 0, ret = 0;
 
 
-	if (table > 15) {
+	if (table > BCM53115S_NUM_VLAN_TABLES) {
 		printf("%% Invalid VLAN table : %d\n", table);
 		return -1;
 	}
@@ -1530,7 +1531,7 @@ static int _set_vlan_table(unsigned int table, struct vlan_bcm_table_t *vlan_tab
 	}
 
 	/* Set VLAN Table Entry Register */
-	if(_bcm53115s_reg_write(BCM53115SREG_PAGE_VLAN_TABLE_RD_WR_CL,BCM53115SREG_OFFSET_VLAN_TABLE_ENTRY, vlan_table, sizeof(uint32_t)) < 0 )
+	if(_bcm53115s_reg_write(BCM53115SREG_PAGE_VLAN_TABLE_RD_WR_CL,BCM53115SREG_OFFSET_VLAN_TABLE_ENTRY, (uint32_t *)vlan_table, sizeof(uint32_t)) < 0 )
 		return -1;
 
 	/* Set VLAN Table Address Index Register */
@@ -1556,6 +1557,11 @@ static int _set_vlan_table(unsigned int table, struct vlan_bcm_table_t *vlan_tab
 static int _clear_vlan_table(int table)
 {
 	int i = 0, ret = 0;
+
+	if (table > BCM53115S_NUM_VLAN_TABLES) {
+		printf("%% Invalid VLAN table : %d\n", table);
+		return -1;
+	}
 
 	/* Set VLAN Table Address Index Register */
 	if (_set_vlan_table_reg_addr_index(table) < 0)
@@ -1594,6 +1600,25 @@ static int _init_vlan_table(void)
 	return 0;
 }
 
+static int _get_vlan_bcm_config_from_raw_struct(int table, struct vlan_bcm_config_t *vconfig)
+{
+	struct vlan_bcm_table_t t_raw;
+
+	if (table > BCM53115S_NUM_VLAN_TABLES) {
+		printf("%% Invalid VLAN table : %d\n", table);
+		return -1;
+	}
+
+	if (_get_vlan_table((unsigned int) table, &t_raw) < 0)
+		return -1;
+
+	vconfig->membership = t_raw.fwd_map_ports;
+	vconfig->vid = table;
+
+	return 0;
+
+}
+
 /**
  * librouter_bcm53115s_add_table
  *
@@ -1602,58 +1627,30 @@ static int _init_vlan_table(void)
  * @param vconfig
  * @return 0 if success, -1 if error
  */
-//int librouter_bcm53115s_add_table(int table, struct vlan_bcm_table_t *vconfig)
-//{
-//	struct vlan_table_t new_t, exist_t;
-//	int active = 0, i;
-//
-//	if (vconfig == NULL) {
-//		printf("%% Invalid VLAN config\n");
-//		return -1;
-//	}
-//
-//	/* Initiate table data */
-//	new_t.valid = 1;
-//	new_t.membership = vconfig->membership;
-//	new_t.vid = vconfig->vid;
-//
-//	/* Search for the same VID in a existing entry */
-//	for (i = 0; i < BCM53115S3_NUM_VLAN_TABLES; i++) {
-//		_get_vlan_table(i, &exist_t);
-//
-//		if (!exist_t.valid)
-//			continue;
-//
-//		if (new_t.vid == exist_t.vid) {
-//			/* Found the same VID, just update this entry */
-//			new_t.fid = i;
-//			return _set_vlan_table(i, &new_t);
-//		}
-//
-//		active++;
-//	}
-//
-//	/* No more free entries ? */
-//	if (active == BCM53115S3_NUM_VLAN_TABLES) {
-//		printf("%% Already reached maximum number of entries\n");
-//		return -1;
-//	}
-//
-//	/* The same VID was not found, just add in the first entry available */
-//	for (i = 0; i < BCM53115S3_NUM_VLAN_TABLES; i++) {
-//		if (_get_vlan_table(i, &exist_t) < 0)
-//			return -1;
-//
-//		if (exist_t.valid)
-//			continue;
-//
-//		new_t.fid = i;
-//		return _set_vlan_table(i, &new_t);
-//	}
-//
-//	/* Should not be reached */
-//	return -1;
-//}
+int librouter_bcm53115s_add_table(struct vlan_bcm_config_t *vconfig)
+{
+	struct vlan_bcm_table_t vlan_table;
+	int i = 0, active = 0;
+
+	if (vconfig == NULL) {
+		printf("%% Invalid VLAN config\n");
+		return -1;
+	}
+
+	if (vconfig->vid > BCM53115S_NUM_VLAN_TABLES)
+		return -1;
+
+	if(_get_vlan_table(vconfig->vid, &vlan_table) < 0)
+		return -1;
+
+	/* Write data to table data */
+	vlan_table.fwd_map_ports = vconfig->membership;
+
+	if (_set_vlan_table(vconfig->vid, &vlan_table) < 0)
+		return -1;
+
+	return 0;
+}
 
 /**
  * librouter_bcm53115s_del_table
@@ -1663,48 +1660,45 @@ static int _init_vlan_table(void)
  * @param vconfig
  * @return 0 if success, -1 if error
  */
-//int librouter_bcm53115s_del_table(struct vlan_bcm_config_t *vconfig)
-//{
-//	struct vlan_bcm_table_t t;
-//	int i = 0;
-//
-//	if (vconfig == NULL) {
-//		printf("%% Invalid VLAN config\n");
-//		return -1;
-//	}
-//
-//	/* Search for an existing entry */
-//
-//	return 0;
-//}
+int librouter_bcm53115s_del_table(struct vlan_bcm_config_t *vconfig)
+{
+	if (vconfig == NULL) {
+		printf("%% Invalid VLAN config\n");
+		return -1;
+	}
 
-///**
-// * librouter_bcm53115s_get_table
-// *
-// * Get a table entry and fill the data in vconfig
-// *
-// * @param entry
-// * @param vconfig
-// * @return 0 if success, -1 if error
-// */
-//int librouter_bcm53115s_get_table(int entry, struct vlan_table_t *v)
-//{
-//	if (v == NULL) {
-//		printf("%% Invalid VLAN config\n");
-//		return -1;
-//	}
-//
-//	if (_get_vlan_table(entry, v) < 0)
-//		return -1;
-//
-//	bcm53115s_dbg("Getting entry %d\n", entry);
-//	bcm53115s_dbg(" -- > valid : %d\n", v->valid);
-//	bcm53115s_dbg(" -- > membership : %d\n", v->membership);
-//	bcm53115s_dbg(" -- > vid : %d\n", v->vid);
-//	bcm53115s_dbg(" -- > fid : %d\n", v->fid);
-//
-//	return 0;
-//}
+	if (_clear_vlan_table(vconfig->vid) < 0)
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_get_table
+ *
+ * Get a table entry and fill the data in vconfig
+ *
+ * @param entry
+ * @param vconfig
+ * @return 0 if success, -1 if error
+ */
+int librouter_bcm53115s_get_table(int table_entry, struct vlan_bcm_config_t *v)
+{
+	struct vlan_bcm_table_t raw_t;
+
+	if (v == NULL) {
+		printf("%% Invalid VLAN config\n");
+		return -1;
+	}
+
+	if (_get_vlan_bcm_config_from_raw_struct(table_entry, v) < 0)
+		return -1;
+
+	bcm53115s_dbg("Vlan Vid / Entry %d\n", v->vid);
+	bcm53115s_dbg(" -- > membership : %d\n", v->membership);
+
+	return 0;
+}
 
 
 
@@ -1749,5 +1743,91 @@ int librouter_bcm53115s_set_default_config(void)
 
 	return 0;
 }
+
+//static void _dump_port_config(FILE *out, int port)
+//{
+//	int i;
+//
+//	fprintf(out, " switch-port %d\n", port);
+//
+//	if (librouter_bcm53115s_get_8021p(port))
+//		fprintf(out, "  802.1p\n");
+//
+//	if (librouter_bcm53115s_get_diffserv(port))
+//		fprintf(out, "  diffserv\n");
+//
+//	for (i = 0; i < 4; i++) {
+//		int rate = librouter_bcm53115s_get_ingress_rate_limit(port, i);
+//		if (rate != 100000)
+//			fprintf(out, "  rate-limit %d %d\n", i, rate);
+//	}
+//
+//	for (i = 0; i < 4; i++) {
+//		int rate = librouter_bcm53115s_get_egress_rate_limit(port, i);
+//		if (rate != 100000)
+//			fprintf(out, "  traffic-shape %d %d\n", i, rate);
+//	}
+//
+//	if (librouter_bcm53115s_get_txqsplit(port))
+//		fprintf(out, "  txqueue-split\n");
+//
+//	i = librouter_bcm53115s_get_default_vid(port);
+//	if (i)
+//		fprintf(out, "  vlan-default %d\n", i);
+//
+//}
+//
+//int librouter_bcm53115s_dump_config(FILE *out)
+//{
+//	int i;
+//
+//	/* Is device present ? */
+//	if (librouter_bcm53115s_probe() == 0)
+//		return 0;
+//
+//	if (librouter_bcm53115s_get_8021q())
+//		fprintf(out, " switch-config 802.1q\n");
+//
+//	i = librouter_bcm53115s_get_storm_protect_rate();
+//	if (i != 1)
+//		fprintf(out, " switch-config storm-protect-rate %d\n", i);
+//
+//	for (i = 0; i < 8; i++) {
+//		int prio = librouter_bcm53115s_get_cos_prio(i);
+//		if (prio != i / 2)
+//			fprintf(out, " switch-config cos-prio %d %d\n", i, prio);
+//	}
+//
+//	for (i = 0; i < 64; i++) {
+//		int prio = librouter_bcm53115s_get_dscp_prio(i);
+//		if (prio)
+//			fprintf(out, " switch-config dscp-prio %d %d\n", i, prio);
+//	}
+//
+//	if (librouter_bcm53115s_get_multicast_storm_protect())
+//		fprintf(out, " switch-config multicast-storm-protect\n");
+//
+//	if (librouter_bcm53115s_get_replace_null_vid())
+//		fprintf(out, " switch-config replace-null-vid\n");
+//
+//
+//	for (i = 0; i < BCM53115S_NUM_VLAN_TABLES; i++) {
+//		struct vlan_bcm_table_t v;
+//
+//		librouter_bcm53115s_get_table(i, &v);
+//		if (v.valid)
+//			fprintf(out, " switch-config vlan %d %s%s%s\n",
+//				v.vid, (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT1_MSK) ? "port-1 " : "",
+//				(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT2_MSK) ? "port-2 " : "",
+//				(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT3_MSK) ? "internal" : "");
+//	}
+//
+//	if (librouter_bcm53115s_get_wfq())
+//		fprintf(out, " switch-config wfq\n");
+//
+//
+//	for (i = 0; i < 2; i++)
+//		_dump_port_config(out, i);
+//}
 
 #endif /* OPTION_MANAGED_SWITCH */
