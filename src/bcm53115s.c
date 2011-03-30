@@ -1061,26 +1061,15 @@ int librouter_bcm53115s_get_diffserv(int port)
 //	return (data | BCM53115SREG_ENABLE_TAGINSERT_MSK) ? 1 : 0;
 //}
 
-int librouter_bcm53115s_get_drop_untagged(int port)
-{
-	uint8_t page, reg;
-	uint16_t data, mask;
-
-	if (port > 3) {
-		printf("%% No such port : %d\n", port);
-		return -1;
-	}
-
-	page = BCM53115S_VLAN_PAGE;
-	reg = BCM53115S_VLAN_DROPUNTAG_REG;
-	mask = 1 << port;
-
-	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
-		return -1;
-
-	return (data & mask) ? 1 : 0;
-}
-
+/**
+ * librouter_bcm53115s_set_drop_untagged
+ *
+ * Set if untagged packets will be dropped
+ *
+ * @param enable
+ * @param port
+ * @return 0 if success, -1 if error
+ */
 int librouter_bcm53115s_set_drop_untagged(int enable, int port)
 {
 	uint8_t page, reg;
@@ -1109,6 +1098,35 @@ int librouter_bcm53115s_set_drop_untagged(int enable, int port)
 
 	return 0;
 }
+
+/**
+ * librouter_bcm53115s_get_drop_untagged
+ *
+ * Get if untagged packets will be dropped
+ *
+ * @param port
+ * @return 1 if enabled, 0 if disabled, -1 if error
+ */
+int librouter_bcm53115s_get_drop_untagged(int port)
+{
+	uint8_t page, reg;
+	uint16_t data, mask;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	page = BCM53115S_VLAN_PAGE;
+	reg = BCM53115S_VLAN_DROPUNTAG_REG;
+	mask = 1 << port;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return (data & mask) ? 1 : 0;
+}
+
 
 /**
  * librouter_bcm53115s_set_dscp_prio
