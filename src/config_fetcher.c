@@ -44,9 +44,13 @@
 #include "config_mapper.h"
 #include "acl.h"
 
-#ifdef OPTION_EFM
+#ifdef OPTION_MANAGED_SWITCH
+#if defined(CONFIG_DIGISTAR_EFM)
 #include "ksz8863.h"
+#elif defined(CONFIG_DIGISTAR_3G)
+#include "bcm53115s.h"
 #endif
+#endif /* OPTION_MANAGED_SWITCH */
 
 #define PPPDEV "ppp"
 
@@ -1080,10 +1084,15 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	/* Finally, return if interface is on or off */
 	fprintf(out, " %sshutdown\n", conf->up ? "no " : "");
 
-#if defined(OPTION_EFM) && defined(OPTION_MANAGED_SWITCH)
+#ifdef OPTION_MANAGED_SWITCH
+#if defined(CONFIG_DIGISTAR_EFM)
 	if (!strcmp(osdev, KSZ8863_ETH_IFACE)) /* Check for the right network interface */
 		librouter_ksz8863_dump_config(out);
+#elif defined(CONFIG_DIGISTAR_3G)
+	if (!strcmp(osdev, BCM53115S_ETH_IFACE)) /* Check for the right network interface */
+		librouter_bcm53115s_dump_config(out);
 #endif
+#endif /* OPTION_MANAGED_SWITCH */
 	return;
 }
 
