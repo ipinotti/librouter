@@ -67,6 +67,7 @@ typedef enum
 #define BCM53115S_NUM_VLAN_TABLES		4094
 #define BCM53115S_SPI_DEV	"/dev/spidev28672.0"
 #define BCM53115S_ID	0x53115
+#define BCM53115S_ETH_IFACE	"eth0"
 
 /* Storm protect */
 #define BCM53115S_STORM_PROTECT_PAGE			0x41
