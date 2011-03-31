@@ -168,8 +168,8 @@ int librouter_dev_get_qlen(char *dev)
 	strcpy(ifr.ifr_name, dev);
 
 	if (ioctl(s, SIOCGIFTXQLEN, &ifr) < 0) {
-		printf("dev_get_qlen: %s ", dev); /* !!! */
-		perror("SIOCGIFXQLEN");
+		//printf("dev_get_qlen: %s ", dev); /* !!! */
+		//perror("SIOCGIFXQLEN");
 		close(s);
 		return 0;
 	}
