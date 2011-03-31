@@ -31,7 +31,6 @@
 #include "bcm53115s.h"
 #include "bcm53115s_etc.h"
 
-#define TIMEOUT_SPI_LIMIT 10
 #define ARGS_1 1
 #define ARGS_2 2
 #define ARGS_3 3
@@ -605,50 +604,118 @@ int librouter_bcm53115s_get_multicast_storm_protect(int port)
 
 	return ((data & BCM53115S_STORM_PROTECT_PORT_CTRL_MC_SUPR_EN) ? 1 : 0);
 }
-//
-///**
-// * librouter_bcm53115s_set_replace_null_vid
-// *
-// * Enable or Disable NULL VID replacement with port VID
-// *
-// * @param enable
-// * @return 0 on success, -1 otherwise
-// */
-//int librouter_bcm53115s_set_replace_null_vid(int enable)
-//{
-//	__u8 data;
-//
-//	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL2, &data, sizeof(data)))
-//		return -1;
-//
-//	if (enable)
-//		data |= BCM53115S_ENABLE_REPLACE_NULL_VID_MSK;
-//	else
-//		data &= ~BCM53115S_ENABLE_REPLACE_NULL_VID_MSK;
-//
-//	if (_bcm53115s_reg_write(BCM53115SREG_GLOBAL_CONTROL4, &data, sizeof(data)))
-//		return -1;
-//
-//	return 0;
-//}
-//
-///**
-// * librouter_bcm53115s_get_replace_null_vid
-// *
-// * Get NULL VID replacement configuration
-// *
-// * @param void
-// * @return 1 if enabled, 0 if disabled, -1 if error
-// */
-//int librouter_bcm53115s_get_replace_null_vid(void)
-//{
-//	__u8 data;
-//
-//	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL4, &data, sizeof(data)))
-//		return -1;
-//
-//	return ((data & BCM53115S_ENABLE_REPLACE_NULL_VID_MSK) ? 1 : 0);
-//}
+
+
+//TODO
+#ifdef NOT_IMPLEMENTED_YET
+/**
+ * librouter_bcm53115s_set_replace_null_vid
+ *
+ * Enable or Disable NULL VID replacement with port VID
+ *
+ * @param enable
+ * @return 0 on success, -1 otherwise
+ */
+int librouter_bcm53115s_set_replace_null_vid(int enable)
+{
+	__u8 data;
+
+	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL2, &data, sizeof(data)))
+		return -1;
+
+	if (enable)
+		data |= BCM53115S_ENABLE_REPLACE_NULL_VID_MSK;
+	else
+		data &= ~BCM53115S_ENABLE_REPLACE_NULL_VID_MSK;
+
+	if (_bcm53115s_reg_write(BCM53115SREG_GLOBAL_CONTROL4, &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_get_replace_null_vid
+ *
+ * Get NULL VID replacement configuration
+ *
+ * @param void
+ * @return 1 if enabled, 0 if disabled, -1 if error
+ */
+int librouter_bcm53115s_get_replace_null_vid(void)
+{
+	__u8 data;
+
+	if (_bcm53115s_reg_read(BCM53115SREG_GLOBAL_CONTROL4, &data, sizeof(data)))
+		return -1;
+
+	return ((data & BCM53115S_ENABLE_REPLACE_NULL_VID_MSK) ? 1 : 0);
+}
+
+/**
+ * librouter_bcm53115s_set_taginsert
+ *
+ * Enable or Disable 802.1p/q tag insertion on untagged packets
+ *
+ * @param enable
+ * @param port:	from 0 to 2
+ * @return 0 on success, -1 otherwise
+ */
+int librouter_bcm53115s_set_taginsert(int enable, int port)
+{
+	__u8 reg, data;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	reg = BCM53115SREG_PORT_CONTROL;
+	reg += port * 0x10;
+
+	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
+		return -1;
+
+	if (enable)
+		data |= BCM53115SREG_ENABLE_TAGINSERT_MSK;
+	else
+		data &= ~BCM53115SREG_ENABLE_TAGINSERT_MSK;
+
+	if (_bcm53115s_reg_write(reg, &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
+/**
+ * librouter_bcm53115s_get_taginsert
+ *
+ * Get if 802.1p/q tag insertion on untagged packets is enabled or disabled
+ *
+ * @param port: from 0 to 2
+ * @return 1 if enabled, 0 if disabled, -1 if error
+ */
+int librouter_bcm53115s_get_taginsert(int port)
+{
+	__u8 reg, data;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	reg = BCM53115SREG_PORT_CONTROL;
+	reg += port * 0x10;
+
+	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
+		return -1;
+
+	return (data | BCM53115SREG_ENABLE_TAGINSERT_MSK) ? 1 : 0;
+}
+
+#endif
+
+
 
 /**
  * librouter_bcm53115s_set_8021q	Enable/disable 802.1q (VLAN)
@@ -985,68 +1052,6 @@ int librouter_bcm53115s_get_diffserv(int port)
 
 	return (data & (1 << port)) ? 1 : 0;
 }
-//
-//
-///**
-// * librouter_bcm53115s_set_taginsert
-// *
-// * Enable or Disable 802.1p/q tag insertion on untagged packets
-// *
-// * @param enable
-// * @param port:	from 0 to 2
-// * @return 0 on success, -1 otherwise
-// */
-//int librouter_bcm53115s_set_taginsert(int enable, int port)
-//{
-//	__u8 reg, data;
-//
-//	if (port > 3) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_PORT_CONTROL;
-//	reg += port * 0x10;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	if (enable)
-//		data |= BCM53115SREG_ENABLE_TAGINSERT_MSK;
-//	else
-//		data &= ~BCM53115SREG_ENABLE_TAGINSERT_MSK;
-//
-//	if (_bcm53115s_reg_write(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	return 0;
-//}
-//
-///**
-// * librouter_bcm53115s_get_taginsert
-// *
-// * Get if 802.1p/q tag insertion on untagged packets is enabled or disabled
-// *
-// * @param port: from 0 to 2
-// * @return 1 if enabled, 0 if disabled, -1 if error
-// */
-//int librouter_bcm53115s_get_taginsert(int port)
-//{
-//	__u8 reg, data;
-//
-//	if (port > 3) {
-//		printf("%% No such port : %d\n", port);
-//		return -1;
-//	}
-//
-//	reg = BCM53115SREG_PORT_CONTROL;
-//	reg += port * 0x10;
-//
-//	if (_bcm53115s_reg_read(reg, &data, sizeof(data)))
-//		return -1;
-//
-//	return (data | BCM53115SREG_ENABLE_TAGINSERT_MSK) ? 1 : 0;
-//}
 
 /**
  * librouter_bcm53115s_set_drop_untagged
@@ -1275,18 +1280,11 @@ int librouter_bcm53115s_get_cos_prio(int cos)
 
 static int _set_vlan_table_reg_addr_index(int entry)
 {
-	uint16_t data;
-
-	if (_bcm53115s_reg_read(BCM53115SREG_PAGE_VLAN_TABLE_INDEX,
-	                BCM53115SREG_OFFSET_VLAN_TABLE_INDEX, &data, sizeof(uint16_t)))
-		return -1;
-
-	data |= entry;
+	uint16_t data = entry;
 
 	if (_bcm53115s_reg_write(BCM53115SREG_PAGE_VLAN_TABLE_INDEX,
 	                BCM53115SREG_OFFSET_VLAN_TABLE_INDEX, &data, sizeof(uint16_t)))
 		return -1;
-
 	return 0;
 }
 
@@ -1321,6 +1319,49 @@ static int _set_vlan_table_reg_Rd_Wr_Clr(int operator)
 
 	return 0;
 }
+
+#ifdef TeSt
+static int _set_vlan_table_reg_Rd_Wr_Clr(int operator)
+{
+	uint8_t data = 0;
+
+	if (_bcm53115s_reg_read(BCM53115SREG_PAGE_VLAN_TABLE_RD_WR_CL,
+	                BCM53115SREG_OFFSET_VLAN_TABLE_RD_WR_CL, &data, sizeof(uint8_t)))
+		return -1;
+
+	switch (operator) {
+	case 0:/*Write*/
+		data &= (0 << VLAN_RD_WR_BIT_0);
+		data &= (0 << VLAN_RD_WR_BIT_1);
+		break;
+	case 1:/*Read*/
+		data |= (1 << VLAN_RD_WR_BIT_0);
+		data &= (0 << VLAN_RD_WR_BIT_1);
+		break;
+	case 2:/*Clear Table*/
+		data &= (0 << VLAN_RD_WR_BIT_0);
+		data |= (1 << VLAN_RD_WR_BIT_1);
+		break;
+	}
+
+	if (_bcm53115s_reg_write(BCM53115SREG_PAGE_VLAN_TABLE_RD_WR_CL,
+	                BCM53115SREG_OFFSET_VLAN_TABLE_RD_WR_CL, &data, sizeof(uint8_t)))
+		return -1;
+
+	data = 0;
+
+	if (_bcm53115s_reg_read(BCM53115SREG_PAGE_VLAN_TABLE_RD_WR_CL,
+		                BCM53115SREG_OFFSET_VLAN_TABLE_RD_WR_CL, &data, sizeof(uint8_t)))
+			return -1;
+
+	data |= (1 << VLAN_START_BIT);
+
+	if (_bcm53115s_reg_write(BCM53115SREG_PAGE_VLAN_TABLE_RD_WR_CL,
+		                BCM53115SREG_OFFSET_VLAN_TABLE_RD_WR_CL, &data, sizeof(uint8_t)))
+			return -1;
+	return 0;
+}
+#endif
 
 static int _verify_operation_done_vlan_table_reg_Rd_Wr_Clr(void)
 {
@@ -1406,8 +1447,8 @@ static int _set_vlan_table(unsigned int table, struct vlan_bcm_table_t *vlan_tab
 
 	/* Set VLAN Table Entry Register */
 	if (_bcm53115s_reg_write(BCM53115SREG_PAGE_VLAN_TABLE_RD_WR_CL,
-	                BCM53115SREG_OFFSET_VLAN_TABLE_ENTRY, (uint32_t *) vlan_table,
-	                sizeof(uint32_t)) < 0)
+			BCM53115SREG_OFFSET_VLAN_TABLE_ENTRY, (uint32_t *) vlan_table,
+			sizeof(uint32_t)) < 0)
 		return -1;
 
 	/* Set VLAN Table Address Index Register */
@@ -1433,6 +1474,9 @@ static int _set_vlan_table(unsigned int table, struct vlan_bcm_table_t *vlan_tab
 static int _clear_vlan_table(int table)
 {
 	int i = 0, ret = 0;
+	struct vlan_bcm_table_t v_table;
+
+	memset(&v_table, 0, sizeof(v_table));
 
 	if (table > BCM53115S_NUM_VLAN_TABLES) {
 		printf("%% Invalid VLAN table : %d\n", table);
@@ -1441,6 +1485,12 @@ static int _clear_vlan_table(int table)
 
 	/* Set VLAN Table Address Index Register */
 	if (_set_vlan_table_reg_addr_index(table) < 0)
+		return -1;
+
+	/* Set VLAN Table Entry Register */
+	if (_bcm53115s_reg_write(BCM53115SREG_PAGE_VLAN_TABLE_RD_WR_CL,
+			BCM53115SREG_OFFSET_VLAN_TABLE_ENTRY, &v_table,
+			sizeof(uint32_t)) < 0)
 		return -1;
 
 	/* Set VLAN Table Read/Write/Clear Control Register */
@@ -1489,6 +1539,7 @@ static int _get_vlan_bcm_config_from_raw_struct(int table, struct vlan_bcm_confi
 		return -1;
 
 	vconfig->membership = t_raw.fwd_map_ports;
+	vconfig->membership |= t_raw.fwd_map_cpu_port << VLAN_FWD_MAP_CPU_MII_BIT;
 	vconfig->vid = table;
 
 	return 0;
@@ -1505,7 +1556,9 @@ static int _get_vlan_bcm_config_from_raw_struct(int table, struct vlan_bcm_confi
 int librouter_bcm53115s_add_table(struct vlan_bcm_config_t *vconfig)
 {
 	struct vlan_bcm_table_t vlan_table;
-	int i = 0, active = 0;
+	int i = 0;
+
+	memset(&vlan_table, 0, sizeof(vlan_table));
 
 	if (vconfig == NULL) {
 		printf("%% Invalid VLAN config\n");
@@ -1520,6 +1573,7 @@ int librouter_bcm53115s_add_table(struct vlan_bcm_config_t *vconfig)
 
 	/* Write data to table data */
 	vlan_table.fwd_map_ports = vconfig->membership;
+	vlan_table.fwd_map_cpu_port = (vconfig->membership >> VLAN_FWD_MAP_CPU_MII_BIT) & 1;
 
 	if (_set_vlan_table(vconfig->vid, &vlan_table) < 0)
 		return -1;
@@ -1557,16 +1611,16 @@ int librouter_bcm53115s_del_table(struct vlan_bcm_config_t *vconfig)
  * @param vconfig
  * @return 0 if success, -1 if error
  */
-int librouter_bcm53115s_get_table(int table_entry, struct vlan_bcm_config_t *v)
+int librouter_bcm53115s_get_table(int table_entry, struct vlan_bcm_config_t *vconfig)
 {
 	struct vlan_bcm_table_t raw_t;
 
-	if (v == NULL) {
+	if (vconfig == NULL) {
 		printf("%% Invalid VLAN config\n");
 		return -1;
 	}
 
-	if (_get_vlan_bcm_config_from_raw_struct(table_entry, v) < 0)
+	if (_get_vlan_bcm_config_from_raw_struct(table_entry, vconfig) < 0)
 		return -1;
 
 	//bcm53115s_dbg_syslog("Vlan Vid / Entry %d\n", v->vid);
@@ -1635,21 +1689,25 @@ static void _dump_port_config(FILE *out, int port)
 	if (librouter_bcm53115s_get_multicast_storm_protect(port))
 		fprintf(out, " switch-config multicast-storm-protect\n");
 
-	//TODO Confirmar parametros e cmd do cish
+//TODO Confirmar parametros e cmd do cish
 	if (librouter_bcm53115s_get_storm_protect_rate(&rate, port))
 		fprintf(out, " switch-config storm-protect-rate %d %c\n", port, rate);
 
-#if 0 /* Not implemented on CISH yet */
+//TODO
+#if NOT_IMPLEMENTED_YET /* Not implemented on CISH yet */
 	i = librouter_bcm53115s_get_default_vid(port);
 	if (i)
 	fprintf(out, "  vlan-default %d\n", i);
 #endif
+
 }
 
 int librouter_bcm53115s_dump_config(FILE *out)
 {
 	int i = 0;
 	struct vlan_bcm_config_t v;
+
+	memset(&v, 0, sizeof(struct vlan_bcm_config_t));
 
 	/* Is device present ? */
 	if (librouter_bcm53115s_probe() == 0)
@@ -1670,21 +1728,25 @@ int librouter_bcm53115s_dump_config(FILE *out)
 			fprintf(out, " switch-config dscp-prio %d %d\n", i, prio);
 	}
 
-	//TODO
-	//	if (librouter_bcm53115s_get_replace_null_vid())
-	//		fprintf(out, " switch-config replace-null-vid\n");
+//TODO
+#ifdef NOT_IMPLEMENTED_YET
+	if (librouter_bcm53115s_get_replace_null_vid())
+		fprintf(out, " switch-config replace-null-vid\n");
+#endif
 
-	for (i = 0; i < BCM53115S_NUM_VLAN_TABLES; i++) {
+//	for (i = 0; i < BCM53115S_NUM_VLAN_TABLES; i++) {
+	for (i = 0; i < 5; i++) {
 		librouter_bcm53115s_get_table(i, &v);
 		if (v.membership != 0)
 			fprintf(
 			                out,
-			                " switch-config vlan %d %s%s%s%s\n",
+			                " switch-config vlan %d %s%s%s%s%s\n",
 			                v.vid,
-			                (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT1_MSK) ? "port-1 " : "",
-			                (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT2_MSK) ? "port-2 " : "",
-			                (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT3_MSK) ? "port-3" : "",
-			                (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT4_MSK) ? "port-4 " : "");
+			                (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT_INTERNAL_MSK) ? "pI " : "0 ",
+			                (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT1_MSK) ? "p1 " : "0 ",
+			                (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT2_MSK) ? "p2 " : "0 ",
+			                (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT3_MSK) ? "p3 " : "0 ",
+			                (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT4_MSK) ? "p4 " : "0 ");
 		memset(&v, 0, sizeof(struct vlan_bcm_config_t));
 	}
 

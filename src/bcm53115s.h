@@ -12,7 +12,6 @@
 
 /* DEBUG Functions */
 //#define BCM53115S_DEBUG_PRINTF
-#define BCM53115S_DEBUG_SYSLOG
 
 #ifdef BCM53115S_DEBUG_PRINTF
 #define bcm53115s_dbg_printf(x,...) \
@@ -20,6 +19,9 @@
 #else
 #define bcm53115s_dbg_printf(x,...)
 #endif
+
+
+#define BCM53115S_DEBUG_SYSLOG
 
 #ifdef BCM53115S_DEBUG_SYSLOG
 #define bcm53115s_dbg_syslog(x,...) \
@@ -30,7 +32,7 @@
 /* End DEBUG Functions */
 
 
-//BCM53115S DEFINES
+/* BCM53115S DEFINES */
 
 #define CMD_SPI_BYTE_RD 	0x60
 #define CMD_SPI_BYTE_WR 	0x61
@@ -38,16 +40,14 @@
 #define BCM53115_SPI_CHANNEL 	1
 #define ROBO_RACK_BIT 		5
 
-#define VLAN_START_BIT 		7
-#define VLAN_WRITE_CMD 		0
-#define VLAN_READ_CMD		1
-#define VLAN_CLR_TABLE_CMD 	2
-#define VLAN_RD_WR_BIT_0 	0
-#define VLAN_RD_WR_BIT_1 	1
+#define VLAN_START_BIT 			7
+#define VLAN_WRITE_CMD 			0
+#define VLAN_READ_CMD			1
+#define VLAN_CLR_TABLE_CMD 		2
+#define VLAN_RD_WR_BIT_0 		0
+#define VLAN_RD_WR_BIT_1 		1
+#define VLAN_FWD_MAP_CPU_MII_BIT	8
 
-
-
-//#define BCM_PORT_1G 2
 typedef enum
 {
    BCM_PORT_10M = 0,
@@ -64,20 +64,18 @@ typedef enum
 #define BCM_PORT_IMP 6
 
 
-#define BCM53115S_NUM_VLAN_TABLES		4094
+#define BCM53115S_NUM_VLAN_TABLES		4095
 #define BCM53115S_SPI_DEV	"/dev/spidev28672.0"
 #define BCM53115S_ID	0x53115
 #define BCM53115S_ETH_IFACE	"eth0"
 
 /* Storm protect */
 #define BCM53115S_STORM_PROTECT_PAGE			0x41
-
 #define BCM53115S_STORM_PROTECT_INGRESS_RATE_CTRL_REG	0x00
 #define BCM53115S_STORM_PROTECT_RESERVED_MASK		0xFFF90080
 #define BCM53115S_STORM_PROTECT_MC_SUPP_EN		0x00000002
 #define BCM53115S_STORM_PROTECT_BC_SUPP_EN		0x00000008
 #define BCM53115S_STORM_PROTECT_BC_SUPP_NORMALIZED	0x00000100
-
 #define BCM53115S_STORM_PROTECT_PORT_CTRL_REG		0x10
 
 /* Storm suppressing, bc storm suppresion and bucket 0 */
@@ -89,7 +87,6 @@ typedef enum
 #define ROBO_VLAN_PAGE				0x34 /* VLAN Registers */
 #define BCM53115S_VLAN_PAGE			ROBO_VLAN_PAGE
 #define BCM53115S_ENABLE_8021Q_MSK		0x80
-
 
 #define BCM53115S_VLAN_DROPUNTAG_REG		0x03
 
@@ -112,10 +109,6 @@ typedef enum
 #define BCM53115S_QOS_TXQ_CONTROL_REG		0x80
 #define BCM53115S_QOS_TXQ_CONTROL_WRR_MSK	0x03
 
-
-
-
-/* DELETE!!! DELETE!!! DELETE!!! */
 /* Global Control 4 */
 #define BCM53115S_ENABLE_REPLACE_NULL_VID_MSK	0x08
 
@@ -129,7 +122,6 @@ typedef enum
 
 /* Port n Control 3 */
 
-
 /* Indirect Access Control */
 #define BCM53115SREG_READ_OPERATION		0x10
 #define BCM53115SREG_WRITE_OPERATION		0x00
@@ -140,11 +132,11 @@ typedef enum
 #define BCM53115SREG_OFFSET_VLAN_TABLE_RD_WR_CL	0x80
 #define BCM53115SREG_OFFSET_VLAN_TABLE_ENTRY	0x83
 
-
-#define BCM53115SREG_VLAN_MEMBERSHIP_PORT1_MSK	0x01
-#define BCM53115SREG_VLAN_MEMBERSHIP_PORT2_MSK	0x02
-#define BCM53115SREG_VLAN_MEMBERSHIP_PORT3_MSK	0x04
-#define BCM53115SREG_VLAN_MEMBERSHIP_PORT4_MSK  0x08
+#define BCM53115SREG_VLAN_MEMBERSHIP_PORT1_MSK			0x01
+#define BCM53115SREG_VLAN_MEMBERSHIP_PORT2_MSK			0x02
+#define BCM53115SREG_VLAN_MEMBERSHIP_PORT3_MSK			0x04
+#define BCM53115SREG_VLAN_MEMBERSHIP_PORT4_MSK  		0x08
+#define BCM53115SREG_VLAN_MEMBERSHIP_PORT_INTERNAL_MSK  	0x100
 
 struct vlan_bcm_config_t {
 	int vid; /*vlan id*/
@@ -156,11 +148,11 @@ struct vlan_bcm_table_t {
 	unsigned int fwd_mode:1;
 	unsigned int mspt_index:3;
 	unsigned int untag_map_cpu_port:1;
-	unsigned int untag_map_reserved:3;
-	unsigned int untag_map_ports:5;
+	unsigned int untag_map_reserved:2;
+	unsigned int untag_map_ports:6;
 	unsigned int fwd_map_cpu_port:1;
-	unsigned int fwd_map_reserved:3;
-	unsigned int fwd_map_ports:5;
+	unsigned int fwd_map_reserved:2;
+	unsigned int fwd_map_ports:6;
 };
 
 /* Page 41h: Broadcast Storm Suppresion Register */
@@ -172,22 +164,22 @@ int librouter_bcm53115s_set_storm_protect_rate(unsigned char rate, int port);
 
 int librouter_bcm53115s_set_multicast_storm_protect(int enable, int port);
 int librouter_bcm53115s_get_multicast_storm_protect(int port);
-//
-///* Global Control 3 */
+
+/* Global Control 3 */
 int librouter_bcm53115s_get_8021q(void);
 int librouter_bcm53115s_set_8021q(int enable);
 
 int librouter_bcm53115s_get_wrr(void);
 int librouter_bcm53115s_set_wrr(int enable);
-//
-///* Global Control 4 & 5 */
-//int librouter_bcm53115s_get_replace_null_vid(void);
-//int librouter_bcm53115s_set_replace_null_vid(int enable);
-//
 
-//
-///* Port n Control 1*/
+//TODO
+#ifdef NOT_IMPLEMENTED_YET
+/* Global Control 4 & 5 */
+int librouter_bcm53115s_get_replace_null_vid(void);
+int librouter_bcm53115s_set_replace_null_vid(int enable);
+#endif
 
+/* Port n Control 1*/
 
 int librouter_bcm53115s_get_8021p(int port);
 int librouter_bcm53115s_set_8021p(int enable, int port);
@@ -197,14 +189,16 @@ int librouter_bcm53115s_set_diffserv(int enable, int port);
 //
 int librouter_bcm53115s_get_default_vid(int port);
 int librouter_bcm53115s_set_default_vid(int port, int vid);
-//
-//
-//int librouter_bcm53115s_get_taginsert(int port);
-//int librouter_bcm53115s_set_taginsert(int enable, int port);
+
+//TODO
+#ifdef NOT_IMPLEMENTED_YET
+int librouter_bcm53115s_get_taginsert(int port);
+int librouter_bcm53115s_set_taginsert(int enable, int port);
+#endif
 
 int librouter_bcm53115s_set_drop_untagged(int enable, int port);
 int librouter_bcm53115s_get_drop_untagged(int port);
-//
+
 int librouter_bcm53115s_get_default_vid(int port);
 int librouter_bcm53115s_set_default_vid(int port, int vid);
 
@@ -216,15 +210,13 @@ int librouter_bcm53115s_set_cos_prio(int cos, int prio);
 
 int librouter_bcm53115s_get_dscp_prio(int dscp);
 int librouter_bcm53115s_set_dscp_prio(int dscp, int prio);
-//
-///* VLAN */
-//int librouter_bcm53115s_get_table(int entry, struct vlan_config_t *vconfig);
-//int librouter_bcm53115s_del_table(struct vlan_config_t *vconfig);
-//int librouter_bcm53115s_add_table(struct vlan_config_t *vconfig);
 
+/* VLAN */
+int librouter_bcm53115s_get_table(int table_entry, struct vlan_bcm_config_t *vconfig);
+int librouter_bcm53115s_del_table(struct vlan_bcm_config_t *vconfig);
+int librouter_bcm53115s_add_table(struct vlan_bcm_config_t *vconfig);
 
-
-///* Initialization */
+/* Initialization */
 int librouter_bcm53115s_probe(void);
 int librouter_bcm53115s_set_default_config(void);
 
