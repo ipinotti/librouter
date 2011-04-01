@@ -1445,14 +1445,14 @@ static int _set_vlan_table(unsigned int table, struct vlan_bcm_table_t *vlan_tab
 		return -1;
 	}
 
+	/* Set VLAN Table Address Index Register */
+	if (_set_vlan_table_reg_addr_index(table) < 0)
+		return -1;
+
 	/* Set VLAN Table Entry Register */
 	if (_bcm53115s_reg_write(BCM53115SREG_PAGE_VLAN_TABLE_RD_WR_CL,
 			BCM53115SREG_OFFSET_VLAN_TABLE_ENTRY, (uint32_t *) vlan_table,
 			sizeof(uint32_t)) < 0)
-		return -1;
-
-	/* Set VLAN Table Address Index Register */
-	if (_set_vlan_table_reg_addr_index(table) < 0)
 		return -1;
 
 	/* Set VLAN Table Read/Write/Clear Control Register */
@@ -1554,7 +1554,6 @@ static int _add_vlan_entry_file_control(int table_entry)
 
 	if ((fd = fopen((const char *) vlan_filename, "w+")) < 0) {
 		syslog(LOG_ERR, "Could not create vlan switch control file\n");
-		fclose(fd);
 		return -1;
 	}
 
@@ -1582,7 +1581,6 @@ static int _verify_vlan_entry_file_control(int table_entry)
 	snprintf(vlan_filename, 40, "%s%d",BCM53115S_VLAN_ENTRY_FILE_CONTROL,table_entry);
 
 	if ((fd = fopen((const char *)vlan_filename, "r")) == NULL) {
-		fclose(fd);
 		return 0;
 	}
 
