@@ -220,6 +220,7 @@ int librouter_bcm53115s_set_dscp_prio(int dscp, int prio);
 int librouter_bcm53115s_get_table(int table_entry, struct vlan_bcm_config_t *vconfig);
 int librouter_bcm53115s_del_table(struct vlan_bcm_config_t *vconfig);
 int librouter_bcm53115s_add_table(struct vlan_bcm_config_t *vconfig);
+int librouter_bcm53115s_erase_all_tables(void);
 
 /* Initialization */
 int librouter_bcm53115s_probe(void);
