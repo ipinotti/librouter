@@ -1545,6 +1545,51 @@ static int _get_vlan_bcm_config_from_raw_struct(int table, struct vlan_bcm_confi
 	return 0;
 }
 
+static int _add_vlan_entry_file_control(int table_entry)
+{
+	FILE *fd;
+	char vlan_filename[40];
+
+	snprintf(vlan_filename, 40, "%s%d",BCM53115S_VLAN_ENTRY_FILE_CONTROL,table_entry);
+
+	if ((fd = fopen((const char *) vlan_filename, "w+")) < 0) {
+		syslog(LOG_ERR, "Could not create vlan switch control file\n");
+		fclose(fd);
+		return -1;
+	}
+
+	fclose(fd);
+
+	return 0;
+}
+
+static int _del_vlan_entry_file_control(int table_entry)
+{
+	char vlan_filename[40];
+
+	snprintf(vlan_filename, 40, "%s%d",BCM53115S_VLAN_ENTRY_FILE_CONTROL,table_entry);
+
+	unlink(vlan_filename);
+
+	return 0;
+}
+
+static int _verify_vlan_entry_file_control(int table_entry)
+{
+	FILE *fd;
+	char vlan_filename[40];
+
+	snprintf(vlan_filename, 40, "%s%d",BCM53115S_VLAN_ENTRY_FILE_CONTROL,table_entry);
+
+	if ((fd = fopen((const char *)vlan_filename, "r")) == NULL) {
+		fclose(fd);
+		return 0;
+	}
+
+	fclose(fd);
+
+	return 1;
+}
 /**
  * librouter_bcm53115s_add_table
  *
@@ -1578,6 +1623,9 @@ int librouter_bcm53115s_add_table(struct vlan_bcm_config_t *vconfig)
 	if (_set_vlan_table(vconfig->vid, &vlan_table) < 0)
 		return -1;
 
+	if (_add_vlan_entry_file_control(vconfig->vid) < 0)
+		return -1;
+
 	return 0;
 }
 
@@ -1597,6 +1645,9 @@ int librouter_bcm53115s_del_table(struct vlan_bcm_config_t *vconfig)
 	}
 
 	if (_clear_vlan_table(vconfig->vid) < 0)
+		return -1;
+
+	if (_del_vlan_entry_file_control(vconfig->vid) < 0)
 		return -1;
 
 	return 0;
@@ -1619,6 +1670,9 @@ int librouter_bcm53115s_get_table(int table_entry, struct vlan_bcm_config_t *vco
 		printf("%% Invalid VLAN config\n");
 		return -1;
 	}
+
+	if (!_verify_vlan_entry_file_control(table_entry))
+		return -1;
 
 	if (_get_vlan_bcm_config_from_raw_struct(table_entry, vconfig) < 0)
 		return -1;
@@ -1734,20 +1788,20 @@ int librouter_bcm53115s_dump_config(FILE *out)
 		fprintf(out, " switch-config replace-null-vid\n");
 #endif
 
-//	for (i = 0; i < BCM53115S_NUM_VLAN_TABLES; i++) {
-	for (i = 0; i < 5; i++) {
-		librouter_bcm53115s_get_table(i, &v);
-		if (v.membership != 0)
-			fprintf(
-			                out,
-			                " switch-config vlan %d %s%s%s%s%s\n",
-			                v.vid,
-			                (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT_INTERNAL_MSK) ? "pI " : "0 ",
-			                (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT1_MSK) ? "p1 " : "0 ",
-			                (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT2_MSK) ? "p2 " : "0 ",
-			                (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT3_MSK) ? "p3 " : "0 ",
-			                (v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT4_MSK) ? "p4 " : "0 ");
-		memset(&v, 0, sizeof(struct vlan_bcm_config_t));
+	for (i = 0; i < BCM53115S_NUM_VLAN_TABLES; i++) {
+		if (librouter_bcm53115s_get_table(i, &v) == 0){
+			if (v.membership != 0)
+				fprintf(
+						out,
+						" switch-config vlan %d %s%s%s%s%s\n",
+						v.vid,
+						(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT_INTERNAL_MSK) ? "pI " : "0 ",
+						(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT1_MSK) ? "p1 " : "0 ",
+						(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT2_MSK) ? "p2 " : "0 ",
+						(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT3_MSK) ? "p3 " : "0 ",
+						(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT4_MSK) ? "p4 " : "0 ");
+			memset(&v, 0, sizeof(struct vlan_bcm_config_t));
+		}
 	}
 
 	if (librouter_bcm53115s_get_wrr())
