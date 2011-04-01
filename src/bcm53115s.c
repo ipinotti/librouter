@@ -1734,25 +1734,20 @@ static void _dump_port_config(FILE *out, int port)
 
 	if (librouter_bcm53115s_get_diffserv(port))
 		fprintf(out, "  diffserv\n");
-//TODO
-//FIX THIS
 	if (librouter_bcm53115s_get_broadcast_storm_protect(port))
-		fprintf(out, "  switch-port \n");
-//===========
+		fprintf(out, "  storm-control\n");
 
 	if (librouter_bcm53115s_get_multicast_storm_protect(port))
-		fprintf(out, "  switch-config multicast-storm-protect\n");
+		fprintf(out, "  multicast-storm-protect\n");
 
 	if (librouter_bcm53115s_get_storm_protect_rate(&rate, port) == 0)
-		fprintf(out, "  switch-config storm-protect-rate %d %d\n", port, rate);
+		fprintf(out, "  storm-protect-rate %d %d\n", port, rate);
 
-//TODO
 #if NOT_IMPLEMENTED_YET /* Not implemented on CISH yet */
 	i = librouter_bcm53115s_get_default_vid(port);
 	if (i)
 	fprintf(out, "  vlan-default %d\n", i);
 #endif
-
 }
 
 int librouter_bcm53115s_dump_config(FILE *out)
