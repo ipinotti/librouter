@@ -47,6 +47,10 @@
 #define VLAN_RD_WR_BIT_0 		0
 #define VLAN_RD_WR_BIT_1 		1
 #define VLAN_FWD_MAP_CPU_MII_BIT	8
+#define VLAN_WR_RD_MASK			0x03
+#define VLAN_RD_BIT			0x01
+#define VLAN_CLR_BIT			0x02
+
 
 typedef enum
 {
