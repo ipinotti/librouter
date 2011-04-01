@@ -133,6 +133,7 @@ static int _bcm53115s_spi_transfer(uint8_t tx[], uint8_t rx[], int size_of_TxRx)
 	                .bits_per_word = bits, };
 
 	dev = open(BCM53115S_SPI_DEV, O_RDWR);
+
 	if (dev < 0) {
 		bcm53115s_dbg_syslog("error opening %s: %s\n", BCM53115S_SPI_DEV, strerror(errno));
 		return -1;
@@ -714,8 +715,6 @@ int librouter_bcm53115s_get_taginsert(int port)
 }
 
 #endif
-
-
 
 /**
  * librouter_bcm53115s_set_8021q	Enable/disable 802.1q (VLAN)
@@ -1340,7 +1339,7 @@ static int _verify_operation_done_vlan_table_reg_Rd_Wr_Clr(void)
  * @param t
  * @return 0 if success, -1 if failure
  */
-static int _get_vlan_table(unsigned int table, struct vlan_bcm_table_t *vlan_table)
+static int _get_vlan_table_entry(unsigned int table, struct vlan_bcm_table_t *vlan_table)
 {
 	int i = 0;
 
@@ -1386,7 +1385,7 @@ static int _get_vlan_table(unsigned int table, struct vlan_bcm_table_t *vlan_tab
  * @param t
  * @return 0 if success, -1 if failure
  */
-static int _set_vlan_table(unsigned int table, struct vlan_bcm_table_t *vlan_table)
+static int _set_vlan_table_entry(unsigned int table, struct vlan_bcm_table_t *vlan_table)
 {
 	int i = 0, ret = 0;
 
@@ -1426,7 +1425,7 @@ static int _set_vlan_table(unsigned int table, struct vlan_bcm_table_t *vlan_tab
 	return 0;
 }
 
-static int _del_vlan_entry(int table)
+static int _del_vlan_table_entry(int table)
 {
 	int i = 0, ret = 0;
 	struct vlan_bcm_table_t v_table;
@@ -1510,7 +1509,7 @@ static int _get_vlan_bcm_config_from_raw_struct(int table, struct vlan_bcm_confi
 		return -1;
 	}
 
-	if (_get_vlan_table((unsigned int) table, &t_raw) < 0)
+	if (_get_vlan_table_entry((unsigned int) table, &t_raw) < 0)
 		return -1;
 
 	vconfig->membership = t_raw.fwd_map_ports;
@@ -1598,14 +1597,14 @@ int librouter_bcm53115s_add_table(struct vlan_bcm_config_t *vconfig)
 	if (vconfig->vid > BCM53115S_NUM_VLAN_TABLES)
 		return -1;
 
-	if (_get_vlan_table(vconfig->vid, &vlan_table) < 0)
+	if (_get_vlan_table_entry(vconfig->vid, &vlan_table) < 0)
 		return -1;
 
 	/* Write data to table data */
 	vlan_table.fwd_map_ports = vconfig->membership;
 	vlan_table.fwd_map_cpu_port = (vconfig->membership >> VLAN_FWD_MAP_CPU_MII_BIT) & 1;
 
-	if (_set_vlan_table(vconfig->vid, &vlan_table) < 0)
+	if (_set_vlan_table_entry(vconfig->vid, &vlan_table) < 0)
 		return -1;
 
 	if (_add_vlan_entry_file_control(vconfig->vid) < 0)
@@ -1629,7 +1628,7 @@ int librouter_bcm53115s_del_table(struct vlan_bcm_config_t *vconfig)
 		return -1;
 	}
 
-	if (_del_vlan_entry(vconfig->vid) < 0)
+	if (_del_vlan_table_entry(vconfig->vid) < 0)
 		return -1;
 
 	if (_del_vlan_entry_file_control(vconfig->vid) < 0)
