@@ -24,6 +24,9 @@
 #define OSPFD_RO_CONF "/etc.ro/quagga/ospfd.conf"
 #define BGPD_RO_CONF "/etc.ro/quagga/bgpd.conf"
 
+#define QUAGGA_OWNER_VALUE 	500
+#define QUAGGA_GROUP_VALUE	500
+
 int librouter_quagga_connect_daemon(char *);
 int librouter_quagga_execute_client(char *, FILE *, char *, int);
 void librouter_quagga_close_daemon(void);

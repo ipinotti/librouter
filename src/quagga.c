@@ -671,7 +671,7 @@ FILE * librouter_quagga_get_conf(char *filename, char *key)
 	int len, found = 0;
 	char buf[1024];
 
-	f = fopen(filename, "rt");
+	f = fopen(filename, "r");
 
 	if (!f)
 		return f;
