@@ -31,9 +31,6 @@
 #include "bcm53115s.h"
 #include "bcm53115s_etc.h"
 
-#define ARGS_1 1
-#define ARGS_2 2
-#define ARGS_3 3
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
 static uint8_t mode;
@@ -42,17 +39,32 @@ static uint32_t speed = 2000000;
 static uint16_t delay;
 const int timeout_spi_limit = 100;
 
+/**
+ * endian_swap_16bits
+ *
+ * Convert endian 16 bits value
+ */
 static uint16_t endian_swap_16bits(uint16_t * val)
 {
 	return ((*val << 8) | (*val >> 8)) & 0xffff;
 }
 
+/**
+ * endian_swap_32bits
+ *
+ * Convert endian 32 bits value
+ */
 static uint32_t endian_swap_32bits(uint32_t * val)
 {
 	return ((((*val) & 0xff000000) >> 24) | (((*val) & 0x00ff0000) >> 8) | (((*val)
 	                & 0x0000ff00) << 8) | (((*val) & 0x000000ff) << 24));
 }
 
+/**
+ * clear_buff
+ *
+ * Clear 8 bits buffer
+ */
 static int clear_buff(uint8_t buff[], int size_of)
 {
 	memset(buff, 0, size_of);
@@ -60,6 +72,11 @@ static int clear_buff(uint8_t buff[], int size_of)
 	return 0;
 }
 
+/**
+ * clear_tx_rx
+ *
+ * Clear tx & rx 8 bits buffers by the same size
+ */
 static int clear_tx_rx(uint8_t tx[], uint8_t rx[], int size_of_TxRx)
 {
 	clear_buff(tx, size_of_TxRx);
@@ -68,6 +85,11 @@ static int clear_tx_rx(uint8_t tx[], uint8_t rx[], int size_of_TxRx)
 	return 0;
 }
 
+/**
+ * printf_buffer_data
+ *
+ * Show 8 bits buffer content in hexa
+ */
 static void printf_buffer_data(uint8_t buff[], int size_of_buff)
 {
 	int i = 0;
@@ -81,6 +103,11 @@ static void printf_buffer_data(uint8_t buff[], int size_of_buff)
 	printf("\n");
 }
 
+/**
+ * printf_spi_buffers
+ *
+ * Show SPI tx & rx 8 bits buffers content in hexa
+ */
 static void printf_spi_buffers(uint8_t tx[], uint8_t rx[], int size_of_TxRx)
 {
 	int i = 0;
@@ -102,6 +129,11 @@ static void printf_spi_buffers(uint8_t tx[], uint8_t rx[], int size_of_TxRx)
 	printf("\n");
 }
 
+/**
+ * _bcm53115s_spi_mode
+ *
+ * Configure SPI mode for transaction with the BCM53115s
+ */
 static int _bcm53115s_spi_mode(int dev)
 {
 	uint8_t mode = 0;
@@ -123,7 +155,11 @@ static int _bcm53115s_spi_mode(int dev)
 		return 0;
 }
 
-/* Low level I2C functions */
+/**
+ * _bcm53115s_spi_transfer
+ *
+ * Sends message (tx & rx SPI buffer) through SPI connection via IOCTL
+ */
 static int _bcm53115s_spi_transfer(uint8_t tx[], uint8_t rx[], int size_of_TxRx)
 {
 	int dev, i;
@@ -159,6 +195,11 @@ static int _bcm53115s_spi_transfer(uint8_t tx[], uint8_t rx[], int size_of_TxRx)
 	return 0;
 }
 
+/**
+ * _bcm53115s_spi_reg_read_raw
+ *
+ * Read (low level) bcm53115s (SPI) registers by page and offset, returning little endia value
+ */
 static int _bcm53115s_spi_reg_read_raw(uint8_t page, uint8_t offset, uint8_t *buf, int len)
 {
 	uint8_t tx[3];
@@ -243,6 +284,11 @@ static int _bcm53115s_spi_reg_read_raw(uint8_t page, uint8_t offset, uint8_t *bu
 	return 0;
 }
 
+/**
+ * _bcm53115s_spi_reg_write_raw
+ *
+ * Write (low level) little endian values in bcm53115s (SPI) registers by page and offset
+ */
 static int _bcm53115s_spi_reg_write_raw(uint8_t page, uint8_t offset, uint8_t *buf, int len)
 {
 	uint8_t tx[3];
@@ -302,6 +348,11 @@ static int _bcm53115s_spi_reg_write_raw(uint8_t page, uint8_t offset, uint8_t *b
 	return 0;
 }
 
+/**
+ * _bcm53115s_reg_read
+ *
+ * Read register value by page and offset, returning big endian value
+ */
 static int _bcm53115s_reg_read(uint8_t page, uint8_t offset, void *data_buf, int len)
 {
 	uint32_t data = 0;
@@ -321,6 +372,11 @@ static int _bcm53115s_reg_read(uint8_t page, uint8_t offset, void *data_buf, int
 	return 0;
 }
 
+/**
+ * _bcm53115s_reg_write
+ *
+ * Write value in register by page and offset
+ */
 static int _bcm53115s_reg_write(uint8_t page, uint8_t offset, void *data_buf, int len)
 {
 	void *data;
@@ -400,6 +456,11 @@ static int _set_tc_to_cos_map_defaults(void)
 	return 0;
 }
 
+/**
+ * _set_qos_defaults
+ *
+ * Set QOS default values on bcm53115s
+ */
 static int _set_qos_defaults(void)
 {
 	uint8_t reg, page;
@@ -488,6 +549,15 @@ int librouter_bcm53115s_get_broadcast_storm_protect(int port)
 	return (data & BCM53115S_STORM_PROTECT_PORT_CTRL_BC_SUPR_EN) ? 1 : 0;
 }
 
+/**
+ * librouter_bcm53115s_set_storm_protect_rate
+ *
+ * Set Storm protect rate by each port
+ *
+ * @param rate
+ * @param port: from 0 to 3
+ * @return 0 if ok, -1 if not
+ */
 int librouter_bcm53115s_set_storm_protect_rate(unsigned char rate, int port)
 {
 	uint8_t reg, page;
@@ -517,7 +587,11 @@ int librouter_bcm53115s_set_storm_protect_rate(unsigned char rate, int port)
 /**
  * librouter_bcm53115s_get_storm_protect_rate
  *
- * Get acceptable incoming rate for bcast packets in kbps
+ * Get Storm protect rate by each port
+ *
+ * @param rate
+ * @param port: from 0 to 3
+ * @return 0 if ok, -1 if not
  */
 int librouter_bcm53115s_get_storm_protect_rate(unsigned char *rate, int port)
 {
@@ -544,9 +618,10 @@ int librouter_bcm53115s_get_storm_protect_rate(unsigned char *rate, int port)
 /**
  * librouter_bcm53115s_set_multicast_storm_protect
  *
- * Enable or Disable Multicast Storm protection
+ * Enable or Disable Multicast Storm protection by each port
  *
  * @param enable
+ * @param port: from 0 to 3
  * @return 0 on success, -1 otherwise
  */
 int librouter_bcm53115s_set_multicast_storm_protect(int enable, int port)
@@ -580,9 +655,9 @@ int librouter_bcm53115s_set_multicast_storm_protect(int enable, int port)
 /**
  * librouter_bcm53115s_get_multicast_storm_protect
  *
- * Get if Multicast Storm protection is enabled or disabled
+ * Get if Multicast Storm protection is enabled or disabled by each port
  *
- * @param void
+ * @param port: from 0 to 3
  * @return 1 if enabled, 0 if disabled, -1 if error
  */
 int librouter_bcm53115s_get_multicast_storm_protect(int port)
@@ -801,7 +876,7 @@ int librouter_bcm53115s_get_wrr(void)
 /**
  * librouter_bcm53115s_set_default_vid	Set port default 802.1q VID
  *
- * @param port
+ * @param port: from 0 to 3
  * @param vid
  * @return 0 if success, -1 if error
  */
@@ -837,9 +912,9 @@ int librouter_bcm53115s_set_default_vid(int port, int vid)
 }
 
 /**
- * librouter_bcm53115s_get_default_vid	Get port's default 802.1q VID
+ * librouter_bcm53115s_get_default_vid	Get port's default 802.1q VID by each port
  *
- * @param port
+ * @param port: from 0 to 3
  * @return Default VID if success, -1 if error
  */
 int librouter_bcm53115s_get_default_vid(int port)
@@ -863,9 +938,9 @@ int librouter_bcm53115s_get_default_vid(int port)
 }
 
 /**
- * librouter_bcm53115s_set_default_cos	Set port default 802.1p CoS
+ * librouter_bcm53115s_set_default_cos	Set port default 802.1p CoS by each port
  *
- * @param port
+ * @param port: from 0 to 3
  * @param cos
  * @return 0 if success, -1 if error
  */
@@ -901,9 +976,9 @@ int librouter_bcm53115s_set_default_cos(int port, int cos)
 }
 
 /**
- * librouter_bcm53115s_get_default_cos	Get port's default 802.1q CoS
+ * librouter_bcm53115s_get_default_cos	Get port's default 802.1q CoS by each port
  *
- * @param port
+ * @param port: from 0 to 3
  * @return Default CoS if success, -1 if error
  */
 int librouter_bcm53115s_get_default_cos(int port)
@@ -929,10 +1004,10 @@ int librouter_bcm53115s_get_default_cos(int port)
 /**
  * librouter_bcm53115s_set_8021p
  *
- * Enable or Disable 802.1p classification
+ * Enable or Disable 802.1p classification by each port
  *
  * @param enable
- * @param port:	from 0 to 2
+ * @param port:	from 0 to 3
  * @return 0 on success, -1 otherwise
  */
 int librouter_bcm53115s_set_8021p(int enable, int port)
@@ -965,9 +1040,9 @@ int librouter_bcm53115s_set_8021p(int enable, int port)
 /**
  * librouter_bcm53115s_get_8021p
  *
- * Get if 802.1p classification is enabled or disabled
+ * Get if 802.1p classification is enabled or disabled by each port
  *
- * @param port: from 0 to 2
+ * @param port: from 0 to 3
  * @return 1 if enabled, 0 if disabled, -1 if error
  */
 int librouter_bcm53115s_get_8021p(int port)
@@ -992,10 +1067,10 @@ int librouter_bcm53115s_get_8021p(int port)
 /**
  * librouter_bcm53115s_set_diffserv
  *
- * Enable or Disable Diff Service classification
+ * Enable or Disable Diff Service classification by each port
  *
  * @param enable
- * @param port:	from 0 to 2
+ * @param port:	from 0 to 3
  * @return 0 on success, -1 otherwise
  */
 int librouter_bcm53115s_set_diffserv(int enable, int port)
@@ -1028,9 +1103,9 @@ int librouter_bcm53115s_set_diffserv(int enable, int port)
 /**
  * librouter_bcm53115s_get_diffserv
  *
- * Get if Diff Service classification is enabled or disabled
+ * Get if Diff Service classification is enabled or disabled by each port
  *
- * @param port: from 0 to 2
+ * @param port: from 0 to 3
  * @return 1 if enabled, 0 if disabled, -1 if error
  */
 int librouter_bcm53115s_get_diffserv(int port)
@@ -1055,10 +1130,10 @@ int librouter_bcm53115s_get_diffserv(int port)
 /**
  * librouter_bcm53115s_set_drop_untagged
  *
- * Set if untagged packets will be dropped
+ * Set if untagged packets will be dropped by each port
  *
  * @param enable
- * @param port
+ * @param port: from 0 to 3
  * @return 0 if success, -1 if error
  */
 int librouter_bcm53115s_set_drop_untagged(int enable, int port)
@@ -1092,9 +1167,9 @@ int librouter_bcm53115s_set_drop_untagged(int enable, int port)
 /**
  * librouter_bcm53115s_get_drop_untagged
  *
- * Get if untagged packets will be dropped
+ * Get if untagged packets will be dropped by each port
  *
- * @param port
+ * @param port: from 0 to 3
  * @return 1 if enabled, 0 if disabled, -1 if error
  */
 int librouter_bcm53115s_get_drop_untagged(int port)
@@ -1277,6 +1352,11 @@ int librouter_bcm53115s_get_cos_prio(int cos)
 /********* VLAN table manipulation *************/
 /***********************************************/
 
+/**
+ * _set_vlan_table_reg_addr_index
+ *
+ * Set Vlan Table Address index in register by table entry
+ */
 static int _set_vlan_table_reg_addr_index(int entry)
 {
 	uint16_t data = entry;
@@ -1287,6 +1367,11 @@ static int _set_vlan_table_reg_addr_index(int entry)
 	return 0;
 }
 
+/**
+ * _set_vlan_table_reg_Rd_Wr_Clr
+ *
+ * Set Vlan Table Read/Write/Clear Table register by operator (0-write; 1-read ; 2-clear table)
+ */
 static int _set_vlan_table_reg_Rd_Wr_Clr(int operator)
 {
 	uint8_t data = 0;
@@ -1317,6 +1402,11 @@ static int _set_vlan_table_reg_Rd_Wr_Clr(int operator)
 	return 0;
 }
 
+/**
+ * _verify_operation_done_vlan_table_reg_Rd_Wr_Clr
+ *
+ * Verify if Read/Write/Clear Table operation is done
+ */
 static int _verify_operation_done_vlan_table_reg_Rd_Wr_Clr(void)
 {
 	uint8_t data_rd_wr_ctrl = 1;
@@ -1336,7 +1426,7 @@ static int _verify_operation_done_vlan_table_reg_Rd_Wr_Clr(void)
  * When successful, data is written to the structure pointed by vlan_table
  *
  * @param table
- * @param t
+ * @param vlan_table
  * @return 0 if success, -1 if failure
  */
 static int _get_vlan_table_entry(unsigned int table, struct vlan_bcm_table_t *vlan_table)
@@ -1379,10 +1469,10 @@ static int _get_vlan_table_entry(unsigned int table, struct vlan_bcm_table_t *vl
 /**
  * _set_vlan_table	Configure a VLAN table in the switch
  *
- * Configuration is present in the structure pointed by t
+ * Configuration is present in the structure pointed by vlan_table
  *
  * @param table
- * @param t
+ * @param vlan_table
  * @return 0 if success, -1 if failure
  */
 static int _set_vlan_table_entry(unsigned int table, struct vlan_bcm_table_t *vlan_table)
@@ -1425,6 +1515,12 @@ static int _set_vlan_table_entry(unsigned int table, struct vlan_bcm_table_t *vl
 	return 0;
 }
 
+/**
+ * _del_vlan_table_entry	Remove a VLAN table in the switch by table entry
+ *
+ * @param table
+ * @return 0 if success, -1 if failure
+ */
 static int _del_vlan_table_entry(int table)
 {
 	int i = 0, ret = 0;
@@ -1463,6 +1559,11 @@ static int _del_vlan_table_entry(int table)
 	return 0;
 }
 
+/**
+ * _erase_vlan_table	Flush the entire VLANs table
+ *
+ * @return 0 if success, -1 if failure
+ */
 static int _erase_vlan_table(void)
 {
 	int i = 0, ret = 0;
@@ -1498,6 +1599,15 @@ static int _init_vlan_table(void)
 	return 0;
 }
 
+/**
+ * _get_vlan_bcm_config_from_raw_struct
+ *
+ * Get Vlan_bcm_config_struct from the raw SPI bcm53115s struct
+ *
+ * @param table
+ * @param vconfig
+ * @return 0 if success, -1 if failure
+ */
 static int _get_vlan_bcm_config_from_raw_struct(int table, struct vlan_bcm_config_t *vconfig)
 {
 	struct vlan_bcm_table_t t_raw;
@@ -1519,6 +1629,14 @@ static int _get_vlan_bcm_config_from_raw_struct(int table, struct vlan_bcm_confi
 	return 0;
 }
 
+/**
+ * _add_vlan_entry_file_control
+ *
+ * Add file control refered by table_entry Vlan
+ *
+ * @param table_entry
+ * @return 0 if success, -1 if failure
+ */
 static int _add_vlan_entry_file_control(int table_entry)
 {
 	FILE *fd;
@@ -1536,6 +1654,14 @@ static int _add_vlan_entry_file_control(int table_entry)
 	return 0;
 }
 
+/**
+ * _del_vlan_entry_file_control
+ *
+ * Remove file control refered by table_entry Vlan
+ *
+ * @param table_entry
+ * @return 0 if success, -1 if failure
+ */
 static int _del_vlan_entry_file_control(int table_entry)
 {
 	char vlan_filename[40];
@@ -1547,6 +1673,13 @@ static int _del_vlan_entry_file_control(int table_entry)
 	return 0;
 }
 
+/**
+ * _erase_all_vlan_entry_file_control
+ *
+ * Flush all files control refered by table_entry Vlans
+ *
+ * @return 0 if success, -1 if failure
+ */
 static int _erase_all_vlan_entry_file_control(void)
 {
 	int i = 0;
@@ -1559,6 +1692,13 @@ static int _erase_all_vlan_entry_file_control(void)
 	return 0;
 }
 
+/**
+ * _verify_vlan_entry_file_control
+ *
+ * Verify the existence of a file Vlan Control by table_entry
+ *
+ * @return 1 if exist, 0 if not
+ */
 static int _verify_vlan_entry_file_control(int table_entry)
 {
 	FILE *fd;
@@ -1642,7 +1782,7 @@ int librouter_bcm53115s_del_table(struct vlan_bcm_config_t *vconfig)
  *
  * Get a table entry and fill the data in vconfig
  *
- * @param entry
+ * @param table_entry
  * @param vconfig
  * @return 0 if success, -1 if error
  */
@@ -1667,6 +1807,13 @@ int librouter_bcm53115s_get_table(int table_entry, struct vlan_bcm_config_t *vco
 	return 0;
 }
 
+/**
+ * librouter_bcm53115s_erase_all_tables
+ *
+ * Flush all entries in Vlan Table
+ *
+ * @return 0 if success, -1 if error
+ */
 int librouter_bcm53115s_erase_all_tables(void)
 {
 	if (_erase_vlan_table() < 0)
@@ -1722,6 +1869,15 @@ int librouter_bcm53115s_set_default_config(void)
 	return 0;
 }
 
+/**
+ * _dump_port_config
+ *
+ * Dump the port configuration
+ *
+ * @param *out
+ * @param port
+ * @return
+ */
 static void _dump_port_config(FILE *out, int port)
 {
 	int i = 0;
@@ -1734,6 +1890,7 @@ static void _dump_port_config(FILE *out, int port)
 
 	if (librouter_bcm53115s_get_diffserv(port))
 		fprintf(out, "  diffserv\n");
+
 	if (librouter_bcm53115s_get_broadcast_storm_protect(port))
 		fprintf(out, "  storm-control\n");
 
@@ -1750,6 +1907,14 @@ static void _dump_port_config(FILE *out, int port)
 #endif
 }
 
+/**
+ * librouter_bcm53115s_dump_config
+ *
+ * Dump switch bcm53115s configuration
+ *
+ * @param *out
+ * @return
+ */
 int librouter_bcm53115s_dump_config(FILE *out)
 {
 	int i = 0;
