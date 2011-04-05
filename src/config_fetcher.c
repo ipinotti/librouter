@@ -166,25 +166,25 @@ void librouter_config_dump_aaa(FILE *f, struct router_config *cfg)
 	/* Dump aaa authentication login mode */
 	switch (librouter_pam_get_current_mode(FILE_PAM_GENERIC)) {
 	case AAA_AUTH_NONE:
-		fprintf(f, "aaa authentication login default none\n");
+		fprintf(f, "aaa authentication cli default none\n");
 		break;
 	case AAA_AUTH_LOCAL:
-		fprintf(f, "aaa authentication login default local\n");
+		fprintf(f, "aaa authentication cli default local\n");
 		break;
 	case AAA_AUTH_RADIUS:
-		fprintf(f, "aaa authentication login group radius\n");
+		fprintf(f, "aaa authentication cli group radius\n");
 		break;
 	case AAA_AUTH_RADIUS_LOCAL:
-		fprintf(f, "aaa authentication login group radius local\n");
+		fprintf(f, "aaa authentication cli group radius local\n");
 		break;
 	case AAA_AUTH_TACACS:
-		fprintf(f, "aaa authentication login default group tacacs+\n");
+		fprintf(f, "aaa authentication cli default group tacacs+\n");
 		break;
 	case AAA_AUTH_TACACS_LOCAL:
-		fprintf(f, "aaa authentication login default group tacacs+ local\n");
+		fprintf(f, "aaa authentication cli default group tacacs+ local\n");
 		break;
 	default:
-		fprintf(f, "aaa authentication login none\n");
+		fprintf(f, "aaa authentication cli none\n");
 		break;
 	}
 
