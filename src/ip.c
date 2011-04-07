@@ -350,6 +350,45 @@ static int _has_ppp_intf(int index, struct intf_info *info)
 	return 0; /* Not found */
 }
 
+static int _clear_ppp_link_value_ (int index, struct intf_info *info)
+{
+	char intf[8];
+	int i;
+
+	sprintf(intf, "ppp%d", index);
+
+	for (i=0; info->link[i].ifname[0] != 0; i++) {
+		if (!strcmp(info->link[i].ifname, intf)){
+			if (librouter_dev_get_link_running(intf) != IFF_RUNNING){
+				info->link[i].flags = 0;
+				return 1;
+			}
+		}
+	}
+
+	return 0; /* Not found */
+}
+
+static int _clear_ppp_ipaddr_value_ (int index, struct intf_info *info)
+{
+	char intf[8];
+	int i;
+
+	sprintf(intf, "ppp%d", index);
+
+	for (i=0; info->ipaddr[i].ifname[0] != 0; i++) {
+		if (!strcmp(info->ipaddr[i].ifname, intf)){
+			if (librouter_dev_get_link_running(intf) != IFF_RUNNING){
+				memset(&info->ipaddr[i], 0, sizeof(struct ipaddr_table));
+				return 1;
+			}
+		}
+	}
+
+	return 0; /* Not found */
+}
+
+
 int librouter_ip_get_if_list(struct intf_info *info)
 {
 	int link_index, ip_index, i;
@@ -395,6 +434,20 @@ int librouter_ip_get_if_list(struct intf_info *info)
 		free(tmp);
 	}
 
+	for (a = ainfo; a;) {
+		/* Update ipaddr pointer if __get_addrinfo succeeds */
+		if (!_get_addrinfo(&a->h, ipaddr)) {
+			ip_dbg("__getaddrinfo succeeded for %s\n", ipaddr->ifname);
+			ip_dbg("ip address is %s\n", inet_ntoa(ipaddr->local));
+			ip_dbg("bitmask is %d\n", ipaddr->bitlen);
+			ipaddr++;
+		}
+		tmp = a;
+		a = a->next;
+		free(tmp);
+	}
+
+
 #ifdef OPTION_PPTP
 	/*
 	 * Search for PPTP interfaces. They may not exist in the kernel,
@@ -406,6 +459,10 @@ int librouter_ip_get_if_list(struct intf_info *info)
 		sprintf(link->ifname, "ppp%d", PPTP_PPP_START);
 		link->type = ARPHRD_PPP;
 		link++;
+	}
+	else {
+		_clear_ppp_link_value_(PPTP_PPP_START,info);
+		_clear_ppp_ipaddr_value_(PPTP_PPP_START,info);
 	}
 #endif	/* OPTION PPTP */
 
@@ -422,6 +479,10 @@ int librouter_ip_get_if_list(struct intf_info *info)
 		link->type = ARPHRD_PPP;
 		link++;
 	}
+	else {
+		_clear_ppp_link_value_(PPPOE_PPP_START,info);
+		_clear_ppp_ipaddr_value_(PPPOE_PPP_START,info);
+	}
 #endif	/* OPTION PPPOE */
 
 
@@ -437,21 +498,12 @@ int librouter_ip_get_if_list(struct intf_info *info)
 			link->type = ARPHRD_PPP;
 			link++;
 		}
+		else{
+			_clear_ppp_link_value_(i,info);
+			_clear_ppp_ipaddr_value_(i,info);
+		}
 	}
 #endif
-
-	for (a = ainfo; a;) {
-		/* Update ipaddr pointer if __get_addrinfo succeeds */
-		if (!_get_addrinfo(&a->h, ipaddr)) {
-			ip_dbg("__getaddrinfo succeeded for %s\n", ipaddr->ifname);
-			ip_dbg("ip address is %s\n", inet_ntoa(ipaddr->local));
-			ip_dbg("bitmask is %d\n", ipaddr->bitlen);
-			ipaddr++;
-		}
-		tmp = a;
-		a = a->next;
-		free(tmp);
-	}
 
 	rtnl_close(&rth);
 	return 0;
