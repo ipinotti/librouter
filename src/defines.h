@@ -120,9 +120,17 @@
 #define PROG_PLUTO			"pluto"
 #define PROC_MPC180			"/proc/mpc180"
 
+#define SNMP_THIN_CONF
+#ifdef SNMP_THIN_CONF
+#define FILE_SNMPD_CONF                 "/etc/snmp/snmpd.conf"
+#define FILE_SNMPD_DATA_CONF    	FILE_SNMPD_CONF
+#define FILE_SNMPD_STORE_CONF   	FILE_SNMPD_CONF
+#else
 #define FILE_SNMPD_CONF                 "/etc/snmp/snmpd.conf"
 #define FILE_SNMPD_DATA_CONF    	"/etc/snmpdata/snmp/snmpd.conf"
 #define FILE_SNMPD_STORE_CONF   	"/etc/snmpstore/snmpd.conf"
+#endif
+
 #define SNMP_USERKEY_FILE               "/var/run/snmp.userkeys"
 #define PROG_SNMPD			"snmpd"
 #define TRAPCONF			"/etc/trap.cfg"
