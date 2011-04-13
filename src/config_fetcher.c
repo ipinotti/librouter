@@ -172,10 +172,10 @@ void librouter_config_dump_aaa(FILE *f, struct router_config *cfg)
 		fprintf(f, "aaa authentication cli default local\n");
 		break;
 	case AAA_AUTH_RADIUS:
-		fprintf(f, "aaa authentication cli group radius\n");
+		fprintf(f, "aaa authentication cli default group radius\n");
 		break;
 	case AAA_AUTH_RADIUS_LOCAL:
-		fprintf(f, "aaa authentication cli group radius local\n");
+		fprintf(f, "aaa authentication cli default group radius local\n");
 		break;
 	case AAA_AUTH_TACACS:
 		fprintf(f, "aaa authentication cli default group tacacs+\n");
@@ -197,10 +197,10 @@ void librouter_config_dump_aaa(FILE *f, struct router_config *cfg)
 		fprintf(f, "aaa authentication web default local\n");
 		break;
 	case AAA_AUTH_RADIUS:
-		fprintf(f, "aaa authentication web group radius\n");
+		fprintf(f, "aaa authentication web default group radius\n");
 		break;
 	case AAA_AUTH_RADIUS_LOCAL:
-		fprintf(f, "aaa authentication web group radius local\n");
+		fprintf(f, "aaa authentication web default group radius local\n");
 		break;
 	case AAA_AUTH_TACACS:
 		fprintf(f, "aaa authentication web default group tacacs+\n");

@@ -264,6 +264,7 @@ int librouter_time_get_uptime(char * time_buf)
 	FILE *tf;
 	int ret = 0;
 	char timeup [256];
+	char *tmp;
 
 	tf = popen("/bin/uptime", "r");
 
@@ -276,8 +277,13 @@ int librouter_time_get_uptime(char * time_buf)
 		timeup[0] = 0;
 		fgets(timeup, 255, tf);
 		timeup[255] = 0;
+
+		tmp = strchr(timeup, ',');
+		if (tmp != NULL)
+			*tmp = 0;
+
 		if (strlen(timeup)){
-			ret = uptime_sprintf(time_buf,"%s",timeup);
+			ret = uptime_sprintf(time_buf,"%s",&timeup[12]);
 		}
 	}
 	if (tf)
