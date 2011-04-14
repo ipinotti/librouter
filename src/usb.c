@@ -36,6 +36,7 @@ port_family_usb _ports[] = {
 	{ non,  {0} }
 };
 #endif
+
 /**
  * Função retorna porta "alias" utilizada no cish e backupd através da
  * porta usb real correspondente passada por parâmetro

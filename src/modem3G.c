@@ -26,6 +26,58 @@
 #include "ppcio.h"
 #include "modem3G.h"
 
+/* type, slot[NUMBER_OF_SIMCARD]*/
+#if defined(CONFIG_DIGISTAR_3G)
+port_family_simcard _simcard_ports[] = {
+	{ real_sc,  {0,1} },
+	{ alias_sc, {2,1} },
+	{ non_sc,  {0,0} }
+};
+#elif defined(CONFIG_DIGISTAR_EFM)
+port_family_simcard _simcard_ports[] = {
+	{ real_sc,  {0} },
+	{ alias_sc, {0} },
+	{ non_sc,  {0} }
+};
+#endif
+/**
+ * Função retorna porta simcard "alias" utilizada no cish e web através da
+ * porta simcard real correspondente passada por parâmetro
+ *
+ * @param simcard_port
+ * @return alias_simcard_port if ok, -1 if not
+ */
+int librouter_modem3g_sim_get_aliasport_by_realport(int simcard_port)
+{
+	int i;
+
+	for (i=0; i < NUMBER_OF_SIMCARD_PORTS; i++){
+		if ( _simcard_ports[real_sc].port[i] == simcard_port ){
+			return _simcard_ports[alias_sc].port[i];
+		}
+	}
+	return -1;
+}
+
+/**
+ * Função retorna porta simcard correspondente através da porta "alias"
+ * utilizada no cish e web
+ *
+ * @param simcard_port
+ * @return real_simcard_port if ok, -1 if not
+ */
+int librouter_modem3g_sim_get_realport_by_aliasport(int simcard_port)
+{
+	int i;
+
+	for (i=0; i < NUMBER_OF_SIMCARD_PORTS; i++){
+		if ( _simcard_ports[alias_sc].port[i] == simcard_port ){
+			return _simcard_ports[real_sc].port[i];
+		}
+	}
+	return -1;
+}
+
 /**
  * Função seta todas informações responsaveis pela ordem dos SIM cards na M3G0
  * @param sim_main

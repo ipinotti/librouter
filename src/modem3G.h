@@ -25,6 +25,7 @@
 #endif
 
 
+
 #define SIZE_FIELDS_STRUCT 256
 #define BTIN_M3G_ALIAS 0
 
@@ -54,8 +55,10 @@
 
 #if defined(CONFIG_DIGISTAR_3G)
 #define GPIO_MODULE_RESET_PIN   12
+#define NUMBER_OF_SIMCARD_PORTS 2 /*2 portas SIMCARD reais*/
 #elif defined(CONFIG_DIGISTAR_EFM)
 #define GPIO_MODULE_RESET_PIN   17
+#define NUMBER_OF_SIMCARD_PORTS 1 /*2 portas SIMCARD reais*/
 #endif
 
 #define MODULE_STATUS_ON	1
@@ -82,6 +85,17 @@
 #define PING_ADDR_STR_LEN       strlen(PING_ADDR_STR)
 #define DEFAULT_ROUTE_STR_LEN   strlen(DEFAULT_ROUTE_STR)
 #define ROUTE_DISTANCE_STR_LEN  strlen(ROUTE_DISTANCE_STR)
+
+typedef enum {
+	real_sc, alias_sc, non_sc
+} port_simcard_type;
+
+typedef struct {
+	port_simcard_type type;
+	const int port[NUMBER_OF_SIMCARD_PORTS];
+} port_family_simcard;
+
+extern port_family_simcard _simcard_ports[];
 
 /*
  * Which methodology to use? For now
@@ -126,7 +140,6 @@ struct bckp_conf_t {
         int default_route_distance;
 };
 
-
 struct sim_conf {
 	int sim_num;
 	char apn[SIZE_FIELDS_STRUCT];
@@ -141,6 +154,8 @@ int librouter_modem3g_set_username (char * username, int devnum);
 int librouter_modem3g_get_password (char * password, int devnum);
 int librouter_modem3g_set_password (char * password, int devnum);
 int librouter_modem3g_set_all_info_inchat(struct sim_conf * sim, int devnum);
+int librouter_modem3g_sim_get_realport_by_aliasport(int simcard_port);
+int librouter_modem3g_sim_get_aliasport_by_realport(int simcard_port);
 int librouter_modem3g_sim_set_info_infile(int sim, char * field, char * info);
 int librouter_modem3g_sim_get_info_fromfile(struct sim_conf * sim_card);
 int librouter_modem3g_sim_order_set_mainsim(int sim);
@@ -153,7 +168,6 @@ int librouter_modem3g_sim_set_all_info_inchat(int simcard, int m3g);
 int librouter_modem3g_sim_order_set_allinfo(int sim_main, int sim_back, char * interface, int intfnumber);
 int librouter_modem3g_module_reset (void);
 int librouter_modem3g_module_set_status (int status);
-
 
 
 #endif

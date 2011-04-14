@@ -26,6 +26,13 @@
 #include "i2c-dev.h"
 #include "ksz8863.h"
 
+/* type, port[NUMBER_OF_SWITCH_PORTS]*/
+port_family_switch _switch_ksz_ports[] = {
+	{ real_sw,  {0,1} },
+	{ alias_sw, {1,2} },
+	{ non_sw,   {0,0} }
+};
+
 /* Low level I2C functions */
 static int _ksz8863_reg_read(__u8 reg, __u8 *buf, __u8 len)
 {
@@ -99,6 +106,45 @@ int librouter_ksz8863_write(__u8 reg, __u8 data)
 /******************************************************/
 /********** Exported functions ************************/
 /******************************************************/
+
+/**
+ * Função retorna porta switch "alias" utilizada no cish e web através da
+ * porta switch real correspondente passada por parâmetro
+ *
+ * @param switch_port
+ * @return alias_switch_port if ok, -1 if not
+ */
+int librouter_ksz8863_get_aliasport_by_realport(int switch_port)
+{
+	int i;
+
+	for (i=0; i < NUMBER_OF_SWITCH_PORTS; i++){
+		if ( _switch_ksz_ports[real_sw].port[i] == switch_port ){
+			return _switch_ksz_ports[alias_sw].port[i];
+		}
+	}
+	return -1;
+}
+
+/**
+ * Função retorna porta switch correspondente através da porta "alias"
+ * utilizada no cish e web
+ *
+ * @param switch_port
+ * @return real_switch_port if ok, -1 if not
+ */
+int librouter_ksz8863_get_realport_by_aliasport(int switch_port)
+{
+	int i;
+
+	for (i=0; i < NUMBER_OF_SWITCH_PORTS; i++){
+		if ( _switch_ksz_ports[alias_sw].port[i] == switch_port ){
+			return _switch_ksz_ports[real_sw].port[i];
+		}
+	}
+	return -1;
+}
+
 /**
  * librouter_ksz8863_set_broadcast_storm_protect
  *
@@ -1393,8 +1439,9 @@ int librouter_ksz8863_set_default_config(void)
 static void _dump_port_config(FILE *out, int port)
 {
 	int i;
+	int port_alias = librouter_ksz8863_get_aliasport_by_realport(port);
 
-	fprintf(out, " switch-port %d\n", port);
+	fprintf(out, " switch-port %d\n", port_alias);
 
 	if (librouter_ksz8863_get_8021p(port))
 		fprintf(out, "  802.1p\n");
@@ -1456,6 +1503,8 @@ int librouter_ksz8863_dump_config(FILE *out)
 	if (librouter_ksz8863_get_replace_null_vid())
 		fprintf(out, " switch-config replace-null-vid\n");
 
+	if (librouter_ksz8863_get_wfq())
+		fprintf(out, " switch-config wfq\n");
 
 	for (i = 0; i < KSZ8863_NUM_VLAN_TABLES; i++) {
 		struct vlan_table_t v;
@@ -1467,10 +1516,6 @@ int librouter_ksz8863_dump_config(FILE *out)
 				(v.membership & KSZ8863REG_VLAN_MEMBERSHIP_PORT2_MSK) ? "port-2 " : "",
 				(v.membership & KSZ8863REG_VLAN_MEMBERSHIP_PORT3_MSK) ? "internal" : "");
 	}
-
-	if (librouter_ksz8863_get_wfq())
-		fprintf(out, " switch-config wfq\n");
-
 
 	for (i = 0; i < 2; i++)
 		_dump_port_config(out, i);

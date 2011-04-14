@@ -1240,6 +1240,11 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 	char *osdev = conf->name;
 	int serial_no;
 	char *intf_back=NULL;
+#if defined(OPTION_MODEM3G)
+#if defined (CONFIG_DIGISTAR_3G)
+	int simcard_main_alias = 0, simcard_bckp_alias = 0;
+#endif
+#endif
 
 	/* Get interface index */
 	serial_no = atoi(osdev + strlen(PPPDEV));
@@ -1257,36 +1262,46 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 	if (serial_no != BTIN_M3G_ALIAS) {
 		if (strcmp(cfg.sim_main.apn, "") != 0)
 			fprintf(out, " apn set %s\n", cfg.sim_main.apn);
+
 		if (strcmp(cfg.sim_main.username, "") != 0)
 			fprintf(out, " username set %s\n", cfg.sim_main.username);
+
 		if (strcmp(cfg.sim_main.password, "") != 0)
 			fprintf(out, " password set %s\n", cfg.sim_main.password);
+
 	} else {
+		simcard_main_alias = librouter_modem3g_sim_get_aliasport_by_realport(cfg.sim_main.sim_num);
+		simcard_bckp_alias = librouter_modem3g_sim_get_aliasport_by_realport(cfg.sim_backup.sim_num);
+
 		if (strcmp(cfg.sim_main.apn, "") != 0)
-			fprintf(out, " sim %d apn set %s\n", cfg.sim_main.sim_num, cfg.sim_main.apn);
+			fprintf(out, " sim %d apn set %s\n", simcard_main_alias, cfg.sim_main.apn);
+
 		if (strcmp(cfg.sim_main.username, "") != 0)
-			fprintf(out, " sim %d username set %s\n", cfg.sim_main.sim_num,
-			                cfg.sim_main.username);
+			fprintf(out, " sim %d username set %s\n", simcard_main_alias,
+							cfg.sim_main.username);
+
 		if (strcmp(cfg.sim_main.password, "") != 0)
-			fprintf(out, " sim %d password set %s\n", cfg.sim_main.sim_num,
-			                cfg.sim_main.password);
+			fprintf(out, " sim %d password set %s\n", simcard_main_alias,
+							cfg.sim_main.password);
+
 		if (strcmp(cfg.sim_backup.apn, "") != 0)
-			fprintf(out, " sim %d apn set %s\n", cfg.sim_backup.sim_num,
+			fprintf(out, " sim %d apn set %s\n", simcard_bckp_alias,
 			                cfg.sim_backup.apn);
+
 		if (strcmp(cfg.sim_backup.username, "") != 0)
-			fprintf(out, " sim %d username set %s\n", cfg.sim_backup.sim_num,
+			fprintf(out, " sim %d username set %s\n", simcard_bckp_alias,
 			                cfg.sim_backup.username);
+
 		if (strcmp(cfg.sim_backup.password, "") != 0)
-			fprintf(out, " sim %d password set %s\n", cfg.sim_backup.sim_num,
+			fprintf(out, " sim %d password set %s\n", simcard_bckp_alias,
 			                cfg.sim_backup.password);
+
 		if (strcmp(cfg.sim_main.apn, "") != 0)
 			if (librouter_modem3g_sim_order_is_enable())
-				fprintf(out, " sim-order %d %d\n",
-				                librouter_modem3g_sim_order_get_mainsim(),
-				                !librouter_modem3g_sim_order_get_mainsim());
+				fprintf(out, " sim-order %d %d\n", librouter_modem3g_sim_get_aliasport_by_realport(librouter_modem3g_sim_order_get_mainsim()),
+						librouter_modem3g_sim_get_aliasport_by_realport(!librouter_modem3g_sim_order_get_mainsim()));
 			else
-				fprintf(out, " sim-order %d\n",
-				                librouter_modem3g_sim_order_get_mainsim());
+				fprintf(out, " sim-order %d\n", librouter_modem3g_sim_get_aliasport_by_realport(librouter_modem3g_sim_order_get_mainsim()));
 	}
 
 #elif defined(CONFIG_DIGISTAR_EFM)

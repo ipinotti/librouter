@@ -129,6 +129,19 @@
 #define BCM53115SREG_VLAN_MEMBERSHIP_PORT4_MSK  		0x08
 #define BCM53115SREG_VLAN_MEMBERSHIP_PORT_INTERNAL_MSK  	0x100
 
+#define NUMBER_OF_SWITCH_PORTS 4
+
+typedef enum {
+	real_sw, alias_sw, non_sw
+} port_switch_type;
+
+typedef struct {
+	port_switch_type type;
+	const int port[NUMBER_OF_SWITCH_PORTS];
+} port_family_switch;
+
+extern port_family_switch _switch_bcm_ports[];
+
 typedef enum
 {
    BCM_PORT_10M = 0,
@@ -152,6 +165,11 @@ struct vlan_bcm_table_t {
 	unsigned int fwd_map_reserved:2;
 	unsigned int fwd_map_ports:6;
 };
+
+/* CLI and WEB show interfaces numbers translation */
+int librouter_bcm53115s_get_aliasport_by_realport(int switch_port);
+int librouter_bcm53115s_get_realport_by_aliasport(int switch_port);
+
 
 /* Page 41h: Broadcast Storm Suppresion Register */
 int librouter_bcm53115s_get_broadcast_storm_protect(int port);

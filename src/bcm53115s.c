@@ -39,6 +39,51 @@ static uint32_t speed = 2000000;
 static uint16_t delay;
 const int timeout_spi_limit = 100;
 
+/* type, port[NUMBER_OF_SWITCH_PORTS]*/
+port_family_switch _switch_bcm_ports[] = {
+	{ real_sw,  {0,1,2,3} },
+	{ alias_sw, {1,2,3,4} },
+	{ non_sw,   {0,0,0,0} }
+};
+
+/**
+ * Função retorna porta switch "alias" utilizada no cish e web através da
+ * porta switch real correspondente passada por parâmetro
+ *
+ * @param switch_port
+ * @return alias_switch_port if ok, -1 if not
+ */
+int librouter_bcm53115s_get_aliasport_by_realport(int switch_port)
+{
+	int i;
+
+	for (i=0; i < NUMBER_OF_SWITCH_PORTS; i++){
+		if ( _switch_bcm_ports[real_sw].port[i] == switch_port ){
+			return _switch_bcm_ports[alias_sw].port[i];
+		}
+	}
+	return -1;
+}
+
+/**
+ * Função retorna porta switch correspondente através da porta "alias"
+ * utilizada no cish e web
+ *
+ * @param switch_port
+ * @return real_switch_port if ok, -1 if not
+ */
+int librouter_bcm53115s_get_realport_by_aliasport(int switch_port)
+{
+	int i;
+
+	for (i=0; i < NUMBER_OF_SWITCH_PORTS; i++){
+		if ( _switch_bcm_ports[alias_sw].port[i] == switch_port ){
+			return _switch_bcm_ports[real_sw].port[i];
+		}
+	}
+	return -1;
+}
+
 /**
  * endian_swap_16bits
  *
@@ -1882,8 +1927,9 @@ static void _dump_port_config(FILE *out, int port)
 {
 	int i = 0;
 	unsigned char rate = 0;
+	int port_alias = librouter_bcm53115s_get_aliasport_by_realport(port);
 
-	fprintf(out, " switch-port %d\n", port);
+	fprintf(out, " switch-port %d\n", port_alias);
 
 	if (librouter_bcm53115s_get_8021p(port))
 		fprintf(out, "  802.1p\n");
@@ -1898,7 +1944,7 @@ static void _dump_port_config(FILE *out, int port)
 		fprintf(out, "  multicast-storm-protect\n");
 
 	if (librouter_bcm53115s_get_storm_protect_rate(&rate, port) == 0)
-		fprintf(out, "  storm-protect-rate %d %d\n", port, rate);
+		fprintf(out, "  storm-protect-rate %d %d\n", port_alias, rate);
 
 #if NOT_IMPLEMENTED_YET /* Not implemented on CISH yet */
 	i = librouter_bcm53115s_get_default_vid(port);
@@ -1947,6 +1993,9 @@ int librouter_bcm53115s_dump_config(FILE *out)
 		fprintf(out, " switch-config replace-null-vid\n");
 #endif
 
+	if (librouter_bcm53115s_get_wrr())
+			fprintf(out, " switch-config wrr\n");
+
 	for (i = 0; i < BCM53115S_NUM_VLAN_TABLES; i++) {
 		if (librouter_bcm53115s_get_table(i, &v) == 0){
 			if (v.membership != 0)
@@ -1955,16 +2004,13 @@ int librouter_bcm53115s_dump_config(FILE *out)
 						" switch-config vlan %d %s%s%s%s%s\n",
 						v.vid,
 						(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT_INTERNAL_MSK) ? "pI " : "0 ",
-						(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT1_MSK) ? "p0 " : "0 ",
-						(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT2_MSK) ? "p1 " : "0 ",
-						(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT3_MSK) ? "p2 " : "0 ",
-						(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT4_MSK) ? "p3 " : "0 ");
+						(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT1_MSK) ? "p1 " : "0 ",
+						(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT2_MSK) ? "p2 " : "0 ",
+						(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT3_MSK) ? "p3 " : "0 ",
+						(v.membership & BCM53115SREG_VLAN_MEMBERSHIP_PORT4_MSK) ? "p4 " : "0 ");
 			memset(&v, 0, sizeof(struct vlan_bcm_config_t));
 		}
 	}
-
-	if (librouter_bcm53115s_get_wrr())
-		fprintf(out, " switch-config wrr\n");
 
 	for (i = 0; i < 4; i++)
 		_dump_port_config(out, i);

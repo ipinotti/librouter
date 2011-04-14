@@ -85,6 +85,19 @@
 #define KSZ8863REG_VLAN_MEMBERSHIP_PORT2_MSK	0x02
 #define KSZ8863REG_VLAN_MEMBERSHIP_PORT3_MSK	0x04
 
+#define NUMBER_OF_SWITCH_PORTS 2
+
+typedef enum {
+	real_sw, alias_sw, non_sw
+} port_switch_type;
+
+typedef struct {
+	port_switch_type type;
+	const int port[NUMBER_OF_SWITCH_PORTS];
+} port_family_switch;
+
+extern port_family_switch _switch_ksz_ports[];
+
 struct vlan_config_t {
 	int vid;
 	int membership;
@@ -96,6 +109,11 @@ struct vlan_table_t {
 	unsigned int fid:4;
 	unsigned int vid:12;
 };
+
+/* CLI and WEB show interfaces numbers translation */
+int librouter_ksz8863_get_aliasport_by_realport(int switch_port);
+int librouter_ksz8863_get_realport_by_aliasport(int switch_port);
+
 
 /* For tests only */
 int librouter_ksz8863_read(__u8 reg);
