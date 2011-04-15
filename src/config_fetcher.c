@@ -1411,10 +1411,6 @@ void librouter_config_dump_interface(FILE *out, struct interface_conf *conf)
 	if (description)
 		fprintf(out, " description %s\n", description);
 
-	txqueuelen = librouter_dev_get_qlen(conf->name);
-	if (txqueuelen != 100 | txqueuelen != 0)
-		fprintf(out, " txqueuelen %d\n", txqueuelen);
-
 	switch (conf->linktype) {
 #ifdef OPTION_PPP
 	case ARPHRD_PPP:
@@ -1436,6 +1432,11 @@ void librouter_config_dump_interface(FILE *out, struct interface_conf *conf)
 			_dump_efm_config(out, conf);
 		else
 #endif
+
+		txqueuelen = librouter_dev_get_qlen(conf->name);
+		if (txqueuelen != 100 | txqueuelen != 0)
+			fprintf(out, " txqueuelen %d\n", txqueuelen);
+
 		_dump_ethernet_config(out, conf);
 		break;
 	case ARPHRD_LOOPBACK:
