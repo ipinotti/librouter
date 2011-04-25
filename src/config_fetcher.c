@@ -1060,22 +1060,22 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	_dump_vlans(out, conf);
 
 	/* Show line status if main interface. Avoid VLANs ... */
-	if (conf->is_subiface) {
-		struct lan_status st;
-		int phy_status;
+	if (!strcmp(conf->name,"eth1")){
+		if (!conf->is_subiface) {
+			struct lan_status st;
+			int phy_status;
 
-		phy_status = librouter_lan_get_status(conf->name, &st);
+			phy_status = librouter_lan_get_status(conf->name, &st);
 
-		if (phy_status < 0)
-			return;
+			if (phy_status < 0)
+				return;
 
-
-		if (st.autoneg)
-			fprintf(out, " speed auto\n");
-		else
-			fprintf(out, " speed %d %s\n", st.speed, st.duplex ? "full" : "half");
+			if (st.autoneg)
+				fprintf(out, " speed auto\n");
+			else
+				fprintf(out, " speed %d %s\n", st.speed, st.duplex ? "full" : "half");
+		}
 	}
-
 
 #ifdef OPTION_VRRP
 	dump_vrrp_interface(out, osdev);

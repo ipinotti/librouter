@@ -37,7 +37,7 @@
 #include "ppcio.h"
 #include "lan.h"
 
-//#define PHY_DEBUG
+#define PHY_DEBUG
 
 int librouter_lan_get_status(char *ifname, struct lan_status *st)
 {
