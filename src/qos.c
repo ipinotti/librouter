@@ -23,6 +23,8 @@
 #include <arpa/inet.h>
 
 #include "options.h"
+
+#ifdef OPTION_QOS
 #include "args.h"
 #include "defines.h"
 #include "device.h"
@@ -1406,4 +1408,5 @@ int librouter_qos_get_stats_by_devmark(char *dev_name, int mark)
 
 	return ret;
 }
+#endif /* OPTION_QOS */
 

@@ -885,6 +885,7 @@ void librouter_config_arp_dump(FILE *out)
 
 static void _dump_policy_interface(FILE *out, char *intf)
 {
+#ifdef OPTION_QOS
 	intf_qos_cfg_t *cfg;
 
 	/* Skip sub-interfaces, except frame-relay dlci's */
@@ -907,6 +908,7 @@ static void _dump_policy_interface(FILE *out, char *intf)
 
 		librouter_qos_release_config(cfg);
 	}
+#endif
 }
 
 static void _dump_intf_iptables_config(FILE *out, struct interface_conf *conf)
@@ -1155,30 +1157,15 @@ static void _dump_efm_config(FILE *out, struct interface_conf *conf)
 		fprintf(out, " txqueuelen %d\n", conf->txqueue);
 
 #ifdef OPTION_EFM
-	if (librouter_efm_get_mode())
-		fprintf(out, " mode cpe\n");
-	else
-		fprintf(out, " mode co\n");
+	if (!conf->is_subiface) {
+		if (librouter_efm_get_mode())
+			fprintf(out, " mode cpe\n");
+		else
+			fprintf(out, " mode co\n");
+	}
 #endif
 
 	_dump_vlans(out, conf);
-
-	/* Show line status if main interface. Avoid VLANs ... */
-	if (conf->is_subiface) {
-		struct lan_status st;
-		int phy_status;
-
-		phy_status = librouter_lan_get_status(conf->name, &st);
-
-		if (phy_status < 0)
-			return;
-
-
-		if (st.autoneg)
-			fprintf(out, " speed auto\n");
-		else
-			fprintf(out, " speed %d %s\n", st.speed, st.duplex ? "full" : "half");
-	}
 
 
 #ifdef OPTION_VRRP
@@ -1411,6 +1398,8 @@ void librouter_config_dump_interface(FILE *out, struct interface_conf *conf)
 	if (description)
 		fprintf(out, " description %s\n", description);
 
+	conf->txqueue = librouter_dev_get_qlen(conf->name);
+
 	switch (conf->linktype) {
 #ifdef OPTION_PPP
 	case ARPHRD_PPP:
@@ -1432,11 +1421,6 @@ void librouter_config_dump_interface(FILE *out, struct interface_conf *conf)
 			_dump_efm_config(out, conf);
 		else
 #endif
-
-		txqueuelen = librouter_dev_get_qlen(conf->name);
-		if (txqueuelen != 100 | txqueuelen != 0)
-			fprintf(out, " txqueuelen %d\n", txqueuelen);
-
 		_dump_ethernet_config(out, conf);
 		break;
 	case ARPHRD_LOOPBACK:

@@ -644,7 +644,9 @@ int librouter_arp_add(char *host, char *mac)
 
 int librouter_dev_shutdown(char *dev)
 {
+#ifdef OPTION_QOS
 	librouter_qos_tc_remove_all(dev);
+#endif
 	librouter_dev_set_link_down(dev);
 	return 0;
 
@@ -666,7 +668,9 @@ int librouter_dev_noshutdown(char *dev)
 	switch (fam->type) {
 	case eth:
 		librouter_udhcpd_reload(major); /* dhcp integration! force reload ethernet address */
+#ifdef OPTION_QOS
 		librouter_qos_tc_insert_all(dev);
+#endif
 		break;
 	default:
 		break;
