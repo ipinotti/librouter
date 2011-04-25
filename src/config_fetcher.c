@@ -1062,9 +1062,13 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	_dump_vlans(out, conf);
 
 	/* Show line status if main interface. Avoid VLANs ... */
-	if (conf->is_subiface) {
+	if (!conf->is_subiface) {
 		struct lan_status st;
 		int phy_status;
+#ifdef CONFIG_DIGISTAR_EFM
+		if (!librouter_phy_probe(conf->name))
+			return;
+#endif
 
 		phy_status = librouter_lan_get_status(conf->name, &st);
 

@@ -290,3 +290,16 @@ int librouter_fec_config_link(char *dev, int speed, int duplex)
 
 	return 0;
 }
+
+int librouter_phy_probe(char *ifname)
+{
+	u32 id = 0;
+
+	id = librouter_lan_get_phy_reg(ifname, MII_PHYSID1) & 0xffff;
+	id |= ((librouter_lan_get_phy_reg(ifname, MII_PHYSID2) & 0xffff) << 16);
+
+	if (id == 0x02430c50) /* Micrel KSZ8863 */
+		return 1;
+
+	return 0;
+}
