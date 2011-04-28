@@ -741,10 +741,15 @@ void librouter_ip_ethernet_set_addr(char *ifname, char *addr, char *mask) /* mai
 		}
 	}
 
+	ip_dbg("Adding IP address %s to %s\n", addr, dev);
 	ip_addr_add (dev, addr, NULL, mask); /* new address */
 
 	if (strcmp(dev, "eth0") == 0)
 		librouter_udhcpd_reload(0); /* udhcpd integration! */
+
+#ifdef OPTION_BRIDGE
+	librouter_br_update_ipaddr(ifname);
+#endif
 }
 
 void librouter_ip_ethernet_set_addr_secondary(char *ifname, char *addr, char *mask)
@@ -758,7 +763,12 @@ void librouter_ip_ethernet_set_no_addr(char *ifname)
 {
 	char *dev = librouter_ip_ethernet_get_dev(ifname); /* bridge x ethernet */
 
+	ip_dbg("Removing IP address from %s\n", dev);
 	librouter_ip_addr_flush(dev); /* Clear all interface addresses */
+
+#ifdef OPTION_BRIDGE
+	librouter_br_update_ipaddr(ifname);
+#endif
 }
 
 void librouter_ip_ethernet_set_no_addr_secondary(char *ifname, char *addr, char *mask)
