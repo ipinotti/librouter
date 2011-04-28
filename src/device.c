@@ -112,6 +112,32 @@ dev_family *librouter_device_get_family_by_type(device_type type)
 }
 
 /**
+ * librouter_device_get_minor	Get Minor number from interface name
+ * e.g. : ethernet0.100 -> 100
+ *
+ * @param name
+ * @param type
+ * @return interface minor number or -1 if failure
+ */
+int librouter_device_get_minor(const char *name, string_type type)
+{
+	dev_family *fam = librouter_device_get_family_by_name(name, type);
+	int minor;
+	char *n;
+
+	if (fam == NULL)
+		return -1;
+
+	n = strstr(name, "."); /* All sub-interfaces have a dot, e.g. eth1.50 */
+	if (n == NULL)
+		return -1;
+
+	minor = atoi(++n);
+
+	return minor;
+}
+
+/**
  * librouter_device_get_major	Get Major number from interface name
  * e.g. : ethernet0 -> 0
  *
