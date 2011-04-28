@@ -5,13 +5,122 @@
 #include <syslog.h>
 #include <asm/param.h>
 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include "error.h"
 #include "device.h"
 #include "defines.h"
 #include "options.h"
+#include "bridge.h"
 #include "libbridge/libbridge.h"
 
 #ifdef OPTION_BRIDGE
+static int _br_get_bkp_ip(struct ipa_t *ip)
+{
+	FILE *f;
+
+	memset(ip, 0, sizeof(struct ipa_t));
+
+	f = fopen(FILE_BRIDGE_IP, "r");
+	if (f == NULL)
+		return -1;
+
+	fread(ip, 1, sizeof(struct ipa_t), f);
+	fclose(f);
+
+	br_dbg("Getting bkp IP %s\n", ip->addr);
+
+	return 0;
+}
+
+static int _br_set_bkp_ip(struct ipa_t *ip)
+{
+	FILE *f;
+
+	br_dbg("Setting bkp IP to %s\n", ip->addr);
+
+	f = fopen(FILE_BRIDGE_IP, "w");
+	if (f == NULL)
+		return -1;
+
+	fwrite(ip, 1, sizeof(struct ipa_t), f);
+	fclose(f);
+
+	return 0;
+}
+
+int _br_del_bkp_ip(void)
+{
+	unlink(FILE_BRIDGE_IP);
+	return 0;
+}
+
+int librouter_br_get_ipaddr(char *brname, struct ipa_t *ip)
+{
+	const char ifname[] = "eth0";
+	int enable = librouter_dev_get_link(ifname);
+	FILE *f;
+
+	if (enable)
+		librouter_ip_interface_get_ip_addr(brname, ip->addr, ip->mask);
+	else
+		_br_get_bkp_ip(ip);
+
+	return 0;
+}
+
+int librouter_br_update_ipaddr(char *ifname)
+{
+	int i = 0;
+	char brname[16];
+	FILE *f;
+	struct ipa_t ip;
+	int enable = librouter_dev_get_link(ifname);
+
+	/* Only eth0 is relevant */
+	if (strcmp(ifname, "eth0"))
+		return 0;
+
+	for (i=0; i < MAX_BRIDGE; i++) {
+		sprintf(brname, "%s%d", BRIDGE_NAME, i);
+		if (librouter_br_checkif(brname, ifname))
+			break; /* found it */
+	}
+
+	if (i == MAX_BRIDGE)
+		return 0;
+
+	if (enable) {
+		/*
+		 * If physical eth0 is re-enabled and a backup IP exists,
+		 * apply saved IP address on bridge interface.
+		 */
+		if (_br_get_bkp_ip(&ip) < 0)
+			return -1;
+		librouter_ip_interface_set_addr(brname, ip.addr, ip.mask);
+		unlink(FILE_BRIDGE_IP);
+	} else {
+		/*
+		 * If physical eth0 is disabled, save IP address from bridge interface
+		 * and save it in a backup file to restore it later.
+		 */
+		struct in_addr addr;
+		librouter_ip_interface_get_ip_addr(brname, ip.addr, ip.mask);
+
+		/* Save the address, or just delete it if not valid */
+		if (inet_aton(ip.addr, &addr) && addr.s_addr)
+			_br_set_bkp_ip(&ip);
+		else
+			_br_del_bkp_ip();
+
+		librouter_ip_interface_set_no_addr(brname);
+	}
+
+	return 0;
+}
+
 int librouter_br_initbr(void)
 {
 	int err;
@@ -95,9 +204,14 @@ int librouter_br_addif(char *brname, char *ifname)
 {
 	int err;
 	int ifindex;
+	struct ipa_t ip;
 	struct bridge *br = _find_bridge(brname);
+
 	if (br == NULL)
 		return (-1);
+
+	/* Save ethernet IP address/mask */
+	librouter_ip_interface_get_ip_addr(ifname, ip.addr, ip.mask);
 
 	ifindex = if_nametoindex(ifname);
 	if (!ifindex) {
@@ -105,8 +219,15 @@ int librouter_br_addif(char *brname, char *ifname)
 		return (-1);
 	}
 
-	if ((err = br_add_interface(br, ifindex)) == 0)
+	if ((err = br_add_interface(br, ifindex)) == 0) {
+		librouter_ip_interface_set_no_addr(ifname); /* flush */
+
+		/* Set bridge IP address with the one from ethernet 0 */
+		if (!strcmp(ifname, "eth0"))
+			librouter_ip_ethernet_set_addr(brname, ip.addr, ip.mask);
+
 		return 0;
+	}
 
 	switch (err) {
 	case EBUSY:
@@ -118,6 +239,7 @@ int librouter_br_addif(char *brname, char *ifname)
 		librouter_pr_error(1, "br_add_interface");
 		break;
 	}
+
 	return (-err);
 }
 
@@ -125,9 +247,13 @@ int librouter_br_delif(char *brname, char *ifname)
 {
 	int err;
 	int ifindex;
+	struct ipa_t ip;
 	struct bridge *br = _find_bridge(brname);
+
 	if (br == NULL)
 		return (-1);
+
+	librouter_br_get_ipaddr(brname, &ip);
 
 	ifindex = if_nametoindex(ifname);
 	if (!ifindex) {
@@ -135,8 +261,16 @@ int librouter_br_delif(char *brname, char *ifname)
 		return (-1);
 	}
 
-	if ((err = br_del_interface(br, ifindex)) == 0)
+	if ((err = br_del_interface(br, ifindex)) == 0) {
+		librouter_ip_interface_set_no_addr(brname); /* flush */
+		/* Recover ip address from bridge */
+		if (!strcmp(ifname, "eth0")) {
+			librouter_ip_ethernet_set_addr(ifname, ip.addr, ip.mask);
+			_br_del_bkp_ip(); /* Remove IP address backup file, if it exists */
+		}
+
 		return 0;
+	}
 
 	switch (err) {
 	case EINVAL:
