@@ -984,7 +984,7 @@ int librouter_dhcp_set_server_local(int save_dns, char *cmdline)
 	}
 
 	fprintf(file, "#%s\n", cmdline);
-	fprintf(file, "interface loopback0\n");
+	fprintf(file, "interface lo0\n");
 	fprintf(file, "lease_file "FILE_DHCPDLEASES_LOCAL"\n");
 	fprintf(file, "pidfile "FILE_DHCPDPID_LOCAL"\n");
 	fprintf(file, "start %s\n", pool_start);
@@ -1028,6 +1028,7 @@ int librouter_dhcp_set_server_local(int save_dns, char *cmdline)
 
 	file = fopen(FILE_DHCPDLEASES_LOCAL, "r");
 	if (!file) {
+
 		/* cria o arquivo de leases em branco */
 		file = fopen(FILE_DHCPDLEASES_LOCAL, "w");
 	}

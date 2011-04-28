@@ -43,6 +43,7 @@
 #include "qos.h"
 #include "config_mapper.h"
 #include "acl.h"
+#include "bridge.h"
 
 #ifdef OPTION_MANAGED_SWITCH
 #if defined(CONFIG_DIGISTAR_EFM)
@@ -964,10 +965,11 @@ static void _dump_intf_ipaddr_config(FILE *out, struct interface_conf *conf)
 		else
 			fprintf(out, " no ip address\n");
 	} else {
-		char addr[32], mask[32];
-		librouter_ip_interface_get_ip_addr(dev, addr, mask);
-		if (addr[0])
-			fprintf(out, " ip address %s %s\n", addr, mask);
+		struct ipa_t ip;
+		librouter_br_get_ipaddr(dev, &ip);
+
+		if (ip.addr[0])
+			fprintf(out, " ip address %s %s\n", ip.addr, ip.mask);
 		else
 			fprintf(out, " no ip address\n");
 	}
@@ -1062,19 +1064,14 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	_dump_vlans(out, conf);
 
 	/* Show line status if main interface. Avoid VLANs ... */
-	if (!conf->is_subiface) {
+	if (!conf->is_subiface && librouter_phy_probe(conf->name)) {
 		struct lan_status st;
 		int phy_status;
-#ifdef CONFIG_DIGISTAR_EFM
-		if (!librouter_phy_probe(conf->name))
-			return;
-#endif
 
 		phy_status = librouter_lan_get_status(conf->name, &st);
 
 		if (phy_status < 0)
 			return;
-
 
 		if (st.autoneg)
 			fprintf(out, " speed auto\n");
