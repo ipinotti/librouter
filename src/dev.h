@@ -4,14 +4,22 @@
  *  Created on: Jun 23, 2010
  */
 
-#ifndef DEV_H_
-#define DEV_H_
+#ifndef LIBROUTER_DEV_H_
+#define LIBROUTER_DEV_H_
 
 #define DESCRIPTION_DIR "/var/run/description/"
 #define DESCRIPTION_FILE DESCRIPTION_DIR"%s"
 
 #include <linux/autoconf.h>
+#include "device.h"
 
+//#define DEV_DEBUG
+#ifdef DEV_DEBUG
+#define dev_dbg(x,...) \
+		syslog(LOG_INFO, "%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__);
+#else
+#define dev_dbg(x,...)
+#endif
 
 int librouter_dev_get_flags(char *dev, unsigned int *flags);
 int librouter_dev_set_qlen(char *dev, int qlen);
@@ -33,8 +41,8 @@ int librouter_arp_del(char *host);
 int librouter_arp_add(char *host, char *mac);
 int notify_driver_about_shutdown(char *dev);
 
-int librouter_dev_shutdown(char *dev);
-int librouter_dev_noshutdown(char *dev);
+int librouter_dev_shutdown(char *dev, dev_family *fam);
+int librouter_dev_noshutdown(char *dev, dev_family *fam);
 
 #ifdef CONFIG_BUFFERS_USE_STATS
 int librouter_dev_interface_get_buffers_use(char *dev,
@@ -52,4 +60,4 @@ int librouter_dev_set_weight(char *dev, int size);
 int librouter_dev_get_weight(char *dev);
 #endif
 
-#endif /* DEV_H_ */
+#endif /* LIBROUTER_DEV_H_ */

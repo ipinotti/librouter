@@ -18,6 +18,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <syslog.h>
 
 #include <linux/if.h>
 #include <linux/if_packet.h>
@@ -642,28 +643,91 @@ int librouter_arp_add(char *host, char *mac)
 	return (0);
 }
 
-int librouter_dev_shutdown(char *dev)
+/**
+ * librouter_dev_shutdown	Disable an interface
+ *
+ * @param dev
+ * @return 0 if success, -1 if error
+ */
+int librouter_dev_shutdown(char *dev, dev_family *fam)
 {
+	int major = librouter_device_get_major(dev, str_linux);
+	int minor = librouter_device_get_minor(dev, str_linux);
+	//dev_family *fam = librouter_device_get_family_by_name(dev, str_linux);
+
+	dev_dbg("Interface %s, major %d minor %d\n", dev, major, minor);
+
+	if (fam == NULL) {
+		printf("%s -- > ERROR: device family not found for dev %s\n", __FUNCTION__, dev);
+		return -1;
+	}
+
+	/* Is interface already down? */
+	if (!librouter_dev_get_link(dev))
+		return 0;
+
 #ifdef OPTION_QOS
 	librouter_qos_tc_remove_all(dev);
 #endif
+
 	librouter_dev_set_link_down(dev);
+
+	switch (fam->type) {
+#ifdef OPTION_EFM
+	case efm:
+		/* Ignore if sub-interface */
+		if (minor > 0)
+			break;
+
+		librouter_efm_enable(0);
+		break;
+#endif
+	case eth:
+#ifdef OPTION_BRIDGE
+		/* Existing bridges must have IP addresses removed */
+		librouter_br_update_ipaddr(dev);
+#endif
+		break;
+#ifdef OPTION_MODEM3G
+	case ppp:
+	/* FIXME This test is only for 3G interfaces, any other interface that
+	 * uses PPP will be affected here */
+	{
+		int p = librouter_usb_get_realport_by_aliasport(major);
+		if (librouter_usb_device_is_modem(p) < 0) {
+			printf("\n%% Warning: The interface is not connected or is not a modem\n\n");
+			syslog(LOG_WARNING, "\n%% Warning: The interface is not connected or is not a modem\n\n");
+		}
+
+	}
+#endif
+	default:
+		break;
+	}
+
 	return 0;
 
 }
 
-int librouter_dev_noshutdown(char *dev)
+int librouter_dev_noshutdown(char *dev, dev_family *fam)
 {
-	int major=0;
-	dev_family *fam = librouter_device_get_family_by_name(dev, str_linux);
+	int major = librouter_device_get_major(dev, str_linux);
+	int minor = librouter_device_get_minor(dev, str_linux);
+	//dev_family *fam = librouter_device_get_family_by_name(dev, str_linux);
+
+	dev_dbg("Interface %s, major %d minor %d\n", dev, major, minor);
+
+	if (fam == NULL) {
+		printf("%s -- > ERROR: device family not found for dev %s\n", __FUNCTION__, dev);
+		return -1;
+	}
+
+	/* Is interface already up? */
+	if (librouter_dev_get_link(dev))
+		return 0;
 
 	if (librouter_dev_set_link_up(dev) < 0)
 		return -1;
-
-	if (fam == NULL)
-		return 0;
-
-	major = librouter_device_get_major(dev, str_linux);
 
 	switch (fam->type) {
 	case eth:
@@ -671,7 +735,32 @@ int librouter_dev_noshutdown(char *dev)
 #ifdef OPTION_QOS
 		librouter_qos_tc_insert_all(dev);
 #endif
+#ifdef OPTION_BRIDGE
+		/* Existing bridges must have IP addresses restored */
+		librouter_br_update_ipaddr(dev);
+#endif
 		break;
+#ifdef OPTION_EFM
+	case efm:
+		/* Ignore if sub-interface */
+		if (minor > 0)
+			break;
+
+		librouter_efm_enable(1);
+		break;
+#endif
+#ifdef OPTION_MODEM3G
+	case ppp:
+	{
+		int p = librouter_usb_get_realport_by_aliasport(major);
+		if (librouter_usb_device_is_modem(p) < 0) {
+			printf("\n%% Warning: The interface is not connected or is not a modem\n\n");
+			syslog(LOG_WARNING, "\n%% Warning: The interface is not connected or is not a modem\n\n");
+		}
+
+	}
+	break;
+#endif
 	default:
 		break;
 	}
