@@ -1099,6 +1099,8 @@ void librouter_ipsec_dump(FILE *out)
 	ppp_config cfg;
 	char buf[256];
 
+	memset(&cfg, 0, sizeof(ppp_config));
+
 	fprintf(out, "crypto\n");
 #if 0
 	if (librouter_ipsec_get_interface(iface, 40) > 0) {

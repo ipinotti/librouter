@@ -26,6 +26,7 @@
 #define MAX_WAN_INTF 2 /* Numero de interfaces WAN (UCC HDLC Fast Mode)  */
 #define MAX_AUX_INTF 2 /* Numero de interfaces AUX (UART) */
 #define MAX_LAN_INTF 2 /* Numero de interfaces LAN (UCC Fast Ethernet Mode) */
+#define L2TP_INTF 40
 
 #define MAX_NUM_IPS 100
 #define MAX_NUM_LINKS 100
