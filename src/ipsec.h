@@ -7,6 +7,15 @@
 #ifndef IPSEC_H_
 #define IPSEC_H_
 
+//#define IPSEC_DEBUG
+#ifdef IPSEC_DEBUG
+#define ipsec_dbg(x,...) \
+		syslog(LOG_INFO, "%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__);
+#else
+#define ipsec_dbg(x,...)
+#endif
+
+
 enum {
 	STOP = 0, START, RESTART, RELOAD
 };

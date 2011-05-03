@@ -1162,6 +1162,8 @@ int librouter_ppp_l2tp_get_config(char *name, ppp_config *cfg)
 	FILE *f;
 	char file[50];
 
+	ipsec_dbg("sizeof ppp_config is %d\n", sizeof(ppp_config));
+
 	sprintf(file, L2TP_PPP_CFG_FILE, name);
 
 	f = fopen(file, "rb");
@@ -1172,6 +1174,8 @@ int librouter_ppp_l2tp_get_config(char *name, ppp_config *cfg)
 		fread(cfg, sizeof(ppp_config), 1, f);
 		fclose(f);
 	}
+
+	ipsec_dbg("Exiting \n");
 
 	return 0;
 }

@@ -125,7 +125,7 @@ typedef struct {
 int fragment_size;
 int priomarks[CONFIG_MAX_LFI_PRIORITY_MARKS];
 #endif
-} ppp_config;
+} __attribute__ ((aligned(8192))) ppp_config; /* L2TP Problem!! */
 
 int librouter_ppp_notify_systtyd(void);
 int librouter_ppp_notify_mgetty(int serial_no);
