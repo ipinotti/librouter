@@ -127,6 +127,7 @@ int priomarks[CONFIG_MAX_LFI_PRIORITY_MARKS];
 #endif
 } __attribute__ ((aligned(8192))) ppp_config; /* L2TP Problem!! */
 
+
 int librouter_ppp_notify_systtyd(void);
 int librouter_ppp_notify_mgetty(int serial_no);
 int librouter_ppp_get_config(int serial_no, ppp_config *cfg);
