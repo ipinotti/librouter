@@ -222,28 +222,27 @@ int librouter_pbr_flush_route_table(char * table)
 int librouter_pbr_route_add(librouter_pbr_struct * pbr)
 {
 	char cmd[256];
-
 	if (strlen(pbr->via_ipaddr) != 0){
 		if (strlen(pbr->dev) !=0){
 			if (strlen(pbr->network_opt_ipmask) !=0)
-				sprintf(cmd, "/bin/ip route add %s/%d via %s dev %s table %s ", pbr->network_opt, librouter_ip_netmask2cidr(pbr->network_opt_ipmask), pbr->via_ipaddr, pbr->dev, pbr->table);
+				sprintf(cmd, "/bin/ip route add %s/%d via %s dev %s table %s ", pbr->network_opt, librouter_ip_netmask2cidr_pbr(pbr->network_opt_ipmask), pbr->via_ipaddr, pbr->dev, pbr->table);
 			else
 				sprintf(cmd, "/bin/ip route add %s via %s dev %s table %s ", pbr->network_opt, pbr->via_ipaddr, pbr->dev, pbr->table);
 		}
 		else {
 			if (strlen(pbr->network_opt_ipmask) !=0)
-				sprintf(cmd, "/bin/ip route add %s/%d via %s table %s ", pbr->network_opt, librouter_ip_netmask2cidr(pbr->network_opt_ipmask), pbr->via_ipaddr, pbr->table);
+				sprintf(cmd, "/bin/ip route add %s/%d via %s table %s ", pbr->network_opt, librouter_ip_netmask2cidr_pbr(pbr->network_opt_ipmask), pbr->via_ipaddr, pbr->table);
 			else
 				sprintf(cmd, "/bin/ip route add %s via %s table %s ", pbr->network_opt, pbr->via_ipaddr, pbr->table);
 		}
 	}
 	else{
 		if (strlen(pbr->network_opt_ipmask) !=0)
-			sprintf(cmd, "/bin/ip route add %s/%d dev %s table %s ", pbr->network_opt, librouter_ip_netmask2cidr(pbr->network_opt_ipmask), pbr->dev, pbr->table);
+			sprintf(cmd, "/bin/ip route add %s/%d dev %s table %s ", pbr->network_opt, librouter_ip_netmask2cidr_pbr(pbr->network_opt_ipmask), pbr->dev, pbr->table);
 		else
 			sprintf(cmd, "/bin/ip route add %s dev %s table %s ", pbr->network_opt, pbr->dev, pbr->table);
 	}
-
+	pbr_dbgs("Mask entered: %s -- cidr %d \n\n",pbr->network_opt_ipmask,librouter_ip_netmask2cidr_pbr(pbr->network_opt_ipmask));
 	pbr_dbgs("Applying PBR command: %s\n", cmd);
 
 	/* Apply rule */
@@ -270,20 +269,20 @@ int librouter_pbr_route_del(librouter_pbr_struct *pbr)
 	if (strlen(pbr->via_ipaddr) != 0){
 		if (strlen(pbr->dev) !=0){
 			if (strlen(pbr->network_opt_ipmask) !=0)
-				sprintf(cmd, "/bin/ip route del %s/%d via %s dev %s table %s ", pbr->network_opt, librouter_ip_netmask2cidr(pbr->network_opt_ipmask), pbr->via_ipaddr, pbr->dev, pbr->table);
+				sprintf(cmd, "/bin/ip route del %s/%d via %s dev %s table %s ", pbr->network_opt, librouter_ip_netmask2cidr_pbr(pbr->network_opt_ipmask), pbr->via_ipaddr, pbr->dev, pbr->table);
 			else
 				sprintf(cmd, "/bin/ip route del %s via %s dev %s table %s ", pbr->network_opt, pbr->via_ipaddr, pbr->dev, pbr->table);
 		}
 		else {
 			if (strlen(pbr->network_opt_ipmask) !=0)
-				sprintf(cmd, "/bin/ip route del %s/%d via %s table %s ", pbr->network_opt, librouter_ip_netmask2cidr(pbr->network_opt_ipmask), pbr->via_ipaddr, pbr->table);
+				sprintf(cmd, "/bin/ip route del %s/%d via %s table %s ", pbr->network_opt, librouter_ip_netmask2cidr_pbr(pbr->network_opt_ipmask), pbr->via_ipaddr, pbr->table);
 			else
 				sprintf(cmd, "/bin/ip route del %s via %s table %s ", pbr->network_opt, pbr->via_ipaddr, pbr->table);
 		}
 	}
 	else{
 		if (strlen(pbr->network_opt_ipmask) !=0)
-			sprintf(cmd, "/bin/ip route del %s/%d dev %s table %s ", pbr->network_opt, librouter_ip_netmask2cidr(pbr->network_opt_ipmask), pbr->dev, pbr->table);
+			sprintf(cmd, "/bin/ip route del %s/%d dev %s table %s ", pbr->network_opt, librouter_ip_netmask2cidr_pbr(pbr->network_opt_ipmask), pbr->dev, pbr->table);
 		else
 			sprintf(cmd, "/bin/ip route del %s dev %s table %s ", pbr->network_opt, pbr->dev, pbr->table);
 	}
