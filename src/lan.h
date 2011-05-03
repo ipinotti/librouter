@@ -7,19 +7,27 @@
 #ifndef LAN_H_
 #define LAN_H_
 
+//#define LAN_DEBUG
+#ifdef LAN_DEBUG
+#define lan_dbg(x,...) \
+		syslog(LOG_INFO, "%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__); \
+		printf("%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__);
+#else
+#define lan_dbg(x,...)
+#endif
 
-/* Defines para os registros do PHY ethernet */
-#define MII_ADM7001_GPCR 0x10 /* Generic PHY Control/Configuration Register */
-#define MII_ADM7001_GPCR_XOVEN 0x0010 /* Cross Over Auto Detect Enable */
-#define MII_ADM7001_GPCR_DPMG 0x0001 /* Disable Power Management Feature */
-#define MII_ADM7001_PGSR 0x16 /* PHY Generic Status Register */
-#define MII_ADM7001_PGSR_MD 0x0400 /* Medium Detect */
-#define MII_ADM7001_PGSR_XOVER 0x0100 /* Cross Over status */
-#define MII_ADM7001_PGSR_CBLEN 0x00ff /* cable length */
-#define MII_ADM7001_PSSR 0x17 /* PHY Specific Status Register */
-#define MII_ADM7001_PSSR_SPD 0x0020 /* Operating speed */
+enum media_type {
+	MEDIA_TYPE_COPPER,
+	MEDIA_TYPE_FIBER
+};
 
-#include <linux/mii.h>
+struct lan_status {
+	char link;
+	char autoneg;
+	int speed;
+	char duplex;
+	enum media_type media;
+};
 
 /* prototipos de funcoes */
 int librouter_lan_get_status(char *ifname, struct lan_status *st);
@@ -28,11 +36,5 @@ int librouter_lan_set_phy_reg(char *ifname, unsigned short regnum, unsigned shor
 int librouter_fec_autonegotiate_link(char *dev);
 int librouter_fec_config_link(char *dev, int speed, int duplex);
 int librouter_phy_probe(char *ifname);
-
-#if 0
-int eth_switch_port_get_status(char *ifname, int *status);
-int eth_switch_ports_set(char *ifname, int conf);
-int eth_switch_extport_powerdown(char *ifname, int pwd);
-#endif
 
 #endif /* LAN_H_ */

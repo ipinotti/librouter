@@ -44,6 +44,7 @@
 #include "config_mapper.h"
 #include "acl.h"
 #include "bridge.h"
+#include "lan.h"
 
 #ifdef OPTION_MANAGED_SWITCH
 #if defined(CONFIG_DIGISTAR_EFM)

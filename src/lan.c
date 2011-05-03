@@ -37,10 +37,16 @@
 #include "ppcio.h"
 #include "lan.h"
 
-int librouter_lan_get_status(char *ifname, struct lan_status *st)
+/**
+ * _set_ethtool		Configure a interface via EthTool
+ *
+ * @param ifname
+ * @param cmd
+ * @return 0 if success, -1 if error
+ */
+static int _set_ethtool(char *ifname, struct ethtool_cmd *cmd)
 {
-	int fd, err;
-	char *p;
+	int fd;
 	struct ifreq ifr;
 
 	/* Create a socket to the INET kernel. */
@@ -51,32 +57,181 @@ int librouter_lan_get_status(char *ifname, struct lan_status *st)
 
 	memset(&ifr, 0, sizeof(ifr));
 	strcpy(ifr.ifr_name, ifname);
-	ifr.ifr_data = (void *) st;
 
-	/* vlan uses ethernetX status! */
-	if ((p = strchr(ifr.ifr_name, '.')) != NULL)
-		*p = 0;
+	cmd->cmd = ETHTOOL_SSET;
+	ifr.ifr_data = (void *) cmd;
 
-	err = ioctl(fd, SIOCGPHYSTATUS, &ifr);
-	close(fd);
+	lan_dbg("autoneg %d speed %d duplex %d\n", cmd->autoneg, cmd->speed, cmd->duplex);
 
-	if (err < 0) {
-		if (errno != ENODEV)
-			return 0;
-
-		librouter_pr_error(1, "SIOCGPHYSTATUS");
+	if (ioctl(fd, SIOCETHTOOL, &ifr) < 0) {
+		perror("ETHTOOL");
+		close(fd);
 		return -1;
 	}
+
+	close(fd);
+	return 0;
+}
+
+/**
+ * _get_ethtool		Get an interface configuration via EthTool
+ *
+ * @param ifname
+ * @param cmd
+ * @return 0 if success, -1 if error
+ */
+static int _get_ethtool(char *ifname,  struct ethtool_cmd *cmd)
+{
+	int fd;
+	struct ifreq ifr;
+
+	/* Create a socket to the INET kernel. */
+	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+		librouter_pr_error(1, "lan_get_status: socket");
+		return -1;
+	}
+
+	memset(&ifr, 0, sizeof(ifr));
+	strcpy(ifr.ifr_name, ifname);
+
+	cmd->cmd = ETHTOOL_GSET;
+	ifr.ifr_data = (void *) cmd;
+
+	if (ioctl(fd, SIOCETHTOOL, &ifr) < 0) {
+		perror("ETHTOOL");
+		close(fd);
+		return -1;
+	}
+
+	lan_dbg("autoneg %d speed %d duplex %d\n", cmd->autoneg, cmd->speed, cmd->duplex);
+
+	close(fd);
+	return 0;
+}
+
+/**
+ * _get_ethtool		Get an interface configuration via EthTool
+ *
+ * @param ifname
+ * @param cmd
+ * @return 0 if success, -1 if error
+ */
+static int _ethtool_get_link(char *ifname)
+{
+	int fd;
+	struct ifreq ifr;
+	struct ethtool_value data;
+
+	/* Create a socket to the INET kernel. */
+	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+		librouter_pr_error(1, "lan_get_status: socket");
+		return -1;
+	}
+
+	memset(&ifr, 0, sizeof(ifr));
+	strcpy(ifr.ifr_name, ifname);
+
+	data.cmd = ETHTOOL_GLINK;
+	ifr.ifr_data = (void *) &data;
+
+	if (ioctl(fd, SIOCETHTOOL, &ifr) < 0) {
+		perror("ETHTOOL");
+		close(fd);
+		return -1;
+	}
+
+	lan_dbg("link %d\n", data.data);
+
+	close(fd);
+	return data.data;
+}
+
+/**
+ * librouter_fec_autonegotiate_link	Enable autonegotiation on an interface
+ *
+ * @param dev
+ * @return 0 if success, -1 if error
+ */
+int librouter_fec_autonegotiate_link(char *dev)
+{
+	struct ethtool_cmd cmd;
+
+	_get_ethtool(dev, &cmd);
+
+	cmd.autoneg = AUTONEG_ENABLE;
+
+	_set_ethtool(dev, &cmd);
 
 	return 0;
 }
 
+/**
+ * librouter_fec_config_link	Set a fixed speed and duplex on an interface
+ *
+ * @param dev
+ * @param speed
+ * @param duplex
+ * @return 0 if success, -1 if error
+ */
+int librouter_fec_config_link(char *dev, int speed, int duplex)
+{
+	struct ethtool_cmd cmd;
+
+	_get_ethtool(dev, &cmd);
+
+	cmd.autoneg = AUTONEG_DISABLE;
+	ethtool_cmd_speed_set(&cmd, speed);
+	cmd.duplex = (duplex ? DUPLEX_FULL : DUPLEX_HALF);
+
+	_set_ethtool(dev, &cmd);
+
+	return 0;
+}
+
+/**
+ * librouter_lan_get_status	Get status of an ethernet interface
+ *
+ * @param ifname
+ * @param st
+ * @return 0 if success, -1 if error
+ */
+int librouter_lan_get_status(char *ifname, struct lan_status *st)
+{
+	struct ethtool_cmd cmd;
+	char *p, *real_iface;
+
+	/* VLAN uses ethernetX status */
+	real_iface = strdup(ifname);
+	if ((p = strchr(real_iface, '.')) != NULL)
+		*p = 0;
+
+	_get_ethtool(ifname, &cmd);
+
+	st->autoneg = cmd.autoneg;
+	st->speed = cmd.speed;
+	st->duplex = cmd.duplex;
+	st->link = _ethtool_get_link(ifname);
+
+	free(real_iface);
+
+	return 0;
+}
+
+/**
+ * librouter_lan_get_phy_reg	Read a PHY register
+ *
+ * Use ethtool functions whenever possible
+ *
+ * @param ifname
+ * @param regnum
+ * @return 0 if success, -1 if error
+ */
 int librouter_lan_get_phy_reg(char *ifname, u16 regnum)
 {
 	int fd;
 	char *p;
 	struct ifreq ifr;
-	struct mii_ioctl_data mii;
+	struct mii_ioctl_data *mii = (void *) &ifr.ifr_data;
 
 	/* Create a socket to the INET kernel. */
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -91,30 +246,37 @@ int librouter_lan_get_phy_reg(char *ifname, u16 regnum)
 	if ((p = strchr(ifr.ifr_name, '.')) != NULL)
 		*p = 0;
 
-	ifr.ifr_data = (char *) &mii;
-	mii.reg_num = regnum;
+	mii->reg_num = regnum;
 
 	if (ioctl(fd, SIOCGMIIPHY, &ifr) < 0) {
 		close(fd);
-#if 0
 		librouter_pr_error(1, "Error reading PHY register for %s: SIOCGMIIPHY", ifname);
-#endif
 		return -1;
 	}
-#ifdef PHY_DEBUG
-	printf("SIOCGMIIPHY (0x%02x=0x%04x)\n", mii.reg_num, mii.val_out);
-#endif
+
+	lan_dbg("SIOCGMIIPHY for %s --> (0x%02x=0x%04x)\n", ifname, mii->reg_num, mii->val_out);
+
 	close(fd);
 
-	return (mii.val_out);
+	return (mii->val_out);
 }
 
+/**
+ * librouter_lan_set_phy_reg	Set a PHY register
+ *
+ * Use ethtool functions whenever possible
+ *
+ * @param ifname
+ * @param regnum
+ * @param data
+ * @return 0 if success, -1 if error
+ */
 int librouter_lan_set_phy_reg(char *ifname, u16 regnum, u16 data)
 {
 	int fd;
 	char *p;
 	struct ifreq ifr;
-	struct mii_ioctl_data mii;
+	struct mii_ioctl_data *mii = (void *) &ifr.ifr_data;
 
 	/* Create a socket to the INET kernel. */
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -129,8 +291,7 @@ int librouter_lan_set_phy_reg(char *ifname, u16 regnum, u16 data)
 	if ((p = strchr(ifr.ifr_name, '.')) != NULL)
 		*p = 0;
 
-	ifr.ifr_data = (char *) &mii;
-	mii.reg_num = regnum;
+	mii->reg_num = regnum;
 
 	if (ioctl(fd, SIOCGMIIPHY, &ifr) < 0) {
 		close(fd);
@@ -138,7 +299,9 @@ int librouter_lan_set_phy_reg(char *ifname, u16 regnum, u16 data)
 		return -1;
 	}
 
-	mii.val_in = data;
+	lan_dbg("SIOCGMIIPHY for %s --> (0x%02x=0x%04x)\n", ifname, mii->reg_num, mii->val_out);
+
+	mii->val_in = data;
 
 	if (ioctl(fd, SIOCSMIIREG, &ifr) < 0) {
 		close(fd);
@@ -146,160 +309,36 @@ int librouter_lan_set_phy_reg(char *ifname, u16 regnum, u16 data)
 		return -1;
 	}
 
+	lan_dbg("SIOCSMIIREG for %s --> (0x%02x=0x%04x)\n", ifname, mii->reg_num, mii->val_in);
+
 	close(fd);
 	return 0;
 }
 
-#ifdef CONFIGURE_MDIX
-static void _configure_auto_mdix(char *dev)
-{
-	int gpcr;
-
-	if ((gpcr = librouter_lan_get_phy_reg(dev, MII_ADM7001_GPCR)) < 0)
-	return;
-
-	gpcr |= MII_ADM7001_GPCR_XOVEN;
-	librouter_lan_set_phy_reg(dev, MII_ADM7001_GPCR, gpcr);
-}
-#endif
-
-#undef ADVERTISE
-
-int librouter_fec_autonegotiate_link(char *dev)
-{
-	int bmcr;
-#ifdef ADVERTISE
-	int advertise
-#endif
-
-#ifdef CONFIG_MDIX
-	_configure_auto_mdix(dev);
-#endif
-#ifdef ADVERTISE
-	if ((advertise = librouter_lan_get_phy_reg(dev, MII_ADVERTISE)) < 0)
-	return -1;
-
-	advertise |= (ADVERTISE_10HALF | ADVERTISE_10FULL | ADVERTISE_100HALF | ADVERTISE_100FULL);
-
-	librouter_lan_set_phy_reg(dev, MII_ADVERTISE, advertise);
-#endif
-	if ((bmcr = librouter_lan_get_phy_reg(dev, MII_BMCR)) < 0)
-		return -1;
-
-	bmcr |= (BMCR_ANENABLE | BMCR_ANRESTART);
-
-	if (librouter_lan_set_phy_reg(dev, MII_BMCR, bmcr) < 0)
-		return -1;
-
-	return 0;
-}
-
-#undef VERIFY_LP
-
-int librouter_fec_config_link(char *dev, int speed, int duplex)
-{
-	int bmcr;
-#ifdef VERIFY_LP
-	int lpa , impossible = 0;
-#endif
-
-#ifdef CONFIG_MDIX
-	_configure_auto_mdix(dev);
-#endif
-#ifdef VERIFY_LP
-	/* Verify link partner */
-	if ((lpa = librouter_lan_get_phy_reg(dev, MII_LPA)) < 0)
-	return -1;
-
-	if (speed100) {
-		if (!(lpa & LPA_100))
-		impossible++;
-		else {
-			if (duplex) {
-				if (!(lpa & LPA_100FULL))
-				impossible++;
-			}
-		}
-	} else {
-		if (duplex) {
-			if (!(lpa & LPA_10FULL))
-			impossible++;
-		}
-	}
-
-	if (impossible) {
-		printf("%% Link partner abilities are not enough for this mode\n");
-		printf("%% Forcing mode anyway\n");
-	}
-#endif
-	if ((bmcr = librouter_lan_get_phy_reg(dev, MII_BMCR)) < 0)
-		return -1;
-
-	if (!(bmcr & BMCR_PDOWN)) {
-		/* backups */
-		int advertise, icsr;
-
-		if ((advertise = librouter_lan_get_phy_reg(dev, MII_ADVERTISE)) < 0)
-			return -1;
-
-		if ((icsr = librouter_lan_get_phy_reg(dev, 0x1b)) < 0)
-			return -1;
-
-		/* alert partner! */
-		bmcr |= BMCR_PDOWN;
-
-		if (librouter_lan_set_phy_reg(dev, MII_BMCR, bmcr) < 0)
-			return -1;
-
-		sleep(1);
-		bmcr &= (~BMCR_PDOWN);
-
-		/* wake-up! (delay!) */
-		if (librouter_lan_set_phy_reg(dev, MII_BMCR, bmcr) < 0)
-			return -1;
-
-		/* KS8721 re-sample io pins! */
-		/* restore! */
-		if (librouter_lan_set_phy_reg(dev, 0x1b, icsr) < 0)
-			return -1;
-
-		/* restore! */
-		if (librouter_lan_set_phy_reg(dev, MII_ADVERTISE, advertise) < 0)
-			return -1;
-	}
-
-	/* disable auto-negotiate */
-	bmcr &= ~BMCR_ANENABLE;
-
-	/* Clear speed bits */
-	bmcr &= ~BMCR_SPEED100;
-	bmcr &= ~BMCR_SPEED1000;
-	if (speed == 1000)
-		bmcr |= BMCR_SPEED1000;
-	else if (speed == 100)
-		bmcr |= BMCR_SPEED100;
-
-
-	if (duplex)
-		bmcr |= BMCR_FULLDPLX;
-	else
-		bmcr &= (~BMCR_FULLDPLX);
-
-	if (librouter_lan_set_phy_reg(dev, MII_BMCR, bmcr) < 0)
-		return -1;
-
-	return 0;
-}
-
+/**
+ * librouter_phy_probe	Probe for a PHY
+ *
+ * @param ifname
+ * @return 1 if PHY found, 0 otherwise
+ */
 int librouter_phy_probe(char *ifname)
 {
 	u32 id = 0;
 
-	id = librouter_lan_get_phy_reg(ifname, MII_PHYSID1) & 0xffff;
-	id |= ((librouter_lan_get_phy_reg(ifname, MII_PHYSID2) & 0xffff) << 16);
+	id = librouter_lan_get_phy_reg(ifname, MII_PHYSID2) & 0xffff;
+	id |= ((librouter_lan_get_phy_reg(ifname, MII_PHYSID1) & 0xffff) << 16);
 
+	lan_dbg("PHY ID : %08x\n", id);
+
+#if defined(CONFIG_DIGISTAR_EFM)
 	if (id == 0x02430c50) /* Micrel KSZ8863 */
+	return 1;
+#elif defined(CONFIG_DIGISTAR_3G)
+	id &= 0xfffffff0; /* Clear silicom revision nibble */
+	if (id == 0x002060C0) /* Broadcom BCM5461S */
 		return 1;
+#endif
+
 
 	return 0;
 }
