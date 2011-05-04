@@ -327,18 +327,17 @@ int librouter_phy_probe(char *ifname)
 
 	id = librouter_lan_get_phy_reg(ifname, MII_PHYSID2) & 0xffff;
 	id |= ((librouter_lan_get_phy_reg(ifname, MII_PHYSID1) & 0xffff) << 16);
+	id &= 0xfffffff0; /* Clear silicom revision nibble */
 
 	lan_dbg("PHY ID : %08x\n", id);
 
 #if defined(CONFIG_DIGISTAR_EFM)
 	if (id == 0x02430c50) /* Micrel KSZ8863 */
-	return 1;
+		return 1;
 #elif defined(CONFIG_DIGISTAR_3G)
-	id &= 0xfffffff0; /* Clear silicom revision nibble */
 	if (id == 0x002060C0) /* Broadcom BCM5461S */
 		return 1;
 #endif
-
 
 	return 0;
 }
