@@ -723,7 +723,7 @@ int librouter_dev_noshutdown(char *dev, dev_family *fam)
 	}
 
 	/* Is interface already up? */
-	if (librouter_dev_get_link(dev))
+	if (librouter_dev_get_link(dev) == IFF_UP)
 		return 0;
 
 	if (librouter_dev_set_link_up(dev) < 0)
