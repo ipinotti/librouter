@@ -13,17 +13,28 @@
 
 #define DEV_STARTUP_CONFIG "/dev/startup-config"
 
-#define MAGIC_CONFIG 0xf2572c30
-#define MAGIC_SECRET 0xf2572c31
-#define MAGIC_SLOT0 0xf2572c32
-#define MAGIC_SLOT1 0xf2572c33
-#define MAGIC_SLOT2 0xf2572c34
-#define MAGIC_SLOT3 0xf2572c35
-#define MAGIC_SLOT4 0xf2572c36
-#define MAGIC_SSH 0xf2572c37
-#define MAGIC_NTP 0xf2572c38
-#define MAGIC_SNMP 0xf2572c39
-#define MAGIC_UNUSED 0xFFFFFFFFUL
+enum {
+	MAGIC_CONFIG = 0xf2572c30,
+	MAGIC_IPSEC,
+	MAGIC_SLOT0,
+	MAGIC_SLOT1,
+	MAGIC_SLOT2,
+	MAGIC_SLOT3,
+	MAGIC_SLOT4,
+	MAGIC_SSH,
+	MAGIC_NTP,
+	MAGIC_SNMP,
+	MAGIC_BANNER_LOGIN,
+	MAGIC_BANNER_SYSTEM,
+	MAGIC_UNUSED = 0xFFFFFFFF,
+};
+
+//#define NV_DEBUG
+#ifdef NV_DEBUG
+#define nvdbg(x,...)	printf("%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__);
+#else
+#define nvdbg(x,...)
+#endif
 
 typedef struct {
 	u32 magic_number;
@@ -44,15 +55,13 @@ struct _nv {
 	long next_header;
 	cfg_pack config;
 	cfg_pack previousconfig;
-#ifdef OPTION_IPSEC
 	cfg_pack secret;
-#endif
-#if 1
 	cfg_pack slot[5];
-#endif
 	cfg_pack ssh;
 	cfg_pack ntp;
 	cfg_pack snmp;
+	cfg_pack banner_login;
+	cfg_pack banner_system;
 };
 
 /* features buffer */
@@ -78,16 +87,27 @@ char *get_serial_number(void);
 char *get_system_ID(int);
 char *librouter_nv_get_product_name(char * product_define);
 #endif
-#if defined(OPTION_IPSEC)
-int librouter_nv_save_ipsec_secret(char *secret);
-char *librouter_nv_get_rsakeys(void);
-#endif
+
+
+int librouter_nv_save_ipsec_secret(char *data);
+int librouter_nv_load_ipsec_secret(char *data);
+
 int librouter_nv_save_ssh_secret(char *filename);
 int librouter_nv_load_ssh_secret(char *filename);
+
 int librouter_nv_save_ntp_secret(char *filename);
 int librouter_nv_load_ntp_secret(char *filename);
+
 int librouter_nv_save_snmp_secret(char *filename);
 int librouter_nv_load_snmp_secret(char *filename);
+
+int librouter_nv_save_banner_login(char *filename);
+int librouter_nv_load_banner_login(char *filename);
+
+int librouter_nv_save_banner_system(char *filename);
+int librouter_nv_load_banner_system(char *filename);
+
+
 int get_starts_counter(char *store, unsigned int max_len);
 int get_uboot_env(char *name, char *store, int max_len);
 int get_trialminutes_counter(char *store, unsigned int max_len);

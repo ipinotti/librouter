@@ -373,7 +373,9 @@ int librouter_ipsec_create_secrets_file(char *name, int type, char *shared)
 		char token1[] = ": RSA	{\n";
 		char token2[] = "	}\n";
 
-		if ((rsa = librouter_nv_get_rsakeys()) == NULL) {
+		rsa = malloc(8192);
+
+		if (!librouter_nv_load_ipsec_secret(rsa)) {
 			fprintf(stderr,
 			                "%% ERROR: You must create RSA keys first (key generate rsa 1024).\n");
 			close(fd);

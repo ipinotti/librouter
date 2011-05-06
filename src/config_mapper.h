@@ -19,6 +19,9 @@ struct router_config {
 	char nat_helper_ftp_ports[48]; /* !!! find new location! */
 	char nat_helper_irc_ports[48]; /* !!! find new location! */
 	char nat_helper_tftp_ports[48]; /* !!! find new location! */
+
+	char banner_login[1024];
+	char banner_system[1024];
 };
 
 struct router_config *librouter_config_mmap_cfg(void);
