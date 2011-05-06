@@ -14,6 +14,7 @@
 #include "args.h"
 #include "ip.h"
 #include "pbr.h"
+#include "str.h"
 
 /**
  * librouter_pbr_rule_add	Função adiciona regra baseada em FWMARK nas tabelas disponiveis (table0-9)
@@ -41,6 +42,14 @@ int librouter_pbr_rule_add(int mark_no, char * table)
 	return 0;
 }
 
+int librouter_pbr_verify_rule_exist_in_log_entry(int mark_no, int table_no)
+{
+	char cmd_verify[128];
+
+	sprintf(cmd_verify," rule %d table %d", mark_no, table_no);
+	return (librouter_str_find_string_in_file_return_stat(PBR_RULES_ENTRY_FILE_CONTROL, cmd_verify));
+}
+
 /**
  * librouter_pbr_rule_del	Função remove regra baseada em FWMARK nas tabelas disponiveis (table0-9)
  *
@@ -57,7 +66,7 @@ int librouter_pbr_rule_del(int mark_no, char * table)
 //
 //	}
 
-	sprintf(cmd, "/bin/ip rule del fwmark %d table %s ", mark_no,table);
+	sprintf(cmd, "/bin/ip rule del fwmark %d table %s ", mark_no, table);
 
 	pbr_dbgs("Applying PBR rule: %s\n", cmd);
 
@@ -318,6 +327,154 @@ int librouter_pbr_flush_cache(void)
 	if (system(cmd) != 0)
 		return -1;
 
+	return 0;
+}
+
+int librouter_pbr_log_entry_route_add(char * command)
+{
+	if (librouter_str_find_string_in_file_return_stat(PBR_ROUTES_ENTRY_FILE_CONTROL,command))
+		return 0;
+	if (librouter_str_add_line_to_file(PBR_ROUTES_ENTRY_FILE_CONTROL," ") < 0)
+		return -1;
+	if (librouter_str_add_line_to_file(PBR_ROUTES_ENTRY_FILE_CONTROL,command) < 0)
+		return -1;
+	return librouter_str_add_line_to_file(PBR_ROUTES_ENTRY_FILE_CONTROL,"\n");
+
+}
+
+int librouter_pbr_log_entry_route_del(char * command)
+{
+	return librouter_str_del_line_in_file(PBR_ROUTES_ENTRY_FILE_CONTROL,command);
+}
+
+int librouter_pbr_log_entry_rule_add(char * command)
+{
+	if (librouter_str_find_string_in_file_return_stat(PBR_RULES_ENTRY_FILE_CONTROL,command))
+		return 0;
+	if (librouter_str_add_line_to_file(PBR_RULES_ENTRY_FILE_CONTROL," ") < 0)
+		return -1;
+	if (librouter_str_add_line_to_file(PBR_RULES_ENTRY_FILE_CONTROL,command) < 0)
+		return -1;
+	return librouter_str_add_line_to_file(PBR_RULES_ENTRY_FILE_CONTROL,"\n");
+}
+
+int librouter_pbr_log_entry_rule_del(char * command)
+{
+	return librouter_str_del_line_in_file(PBR_RULES_ENTRY_FILE_CONTROL,command);
+}
+
+int librouter_pbr_log_entry_flush_table(char * table_name)
+{
+	return librouter_str_del_line_in_file(PBR_ROUTES_ENTRY_FILE_CONTROL,table_name);
+}
+
+static int pbr_log_verify_entries(int opt)
+{
+	FILE *fd;
+
+	switch (opt){
+		case 0:
+				if ((fd = fopen(PBR_ROUTES_ENTRY_FILE_CONTROL, "r")) == NULL) {
+						syslog(LOG_ERR, "Could not open PBR_entry_routes_log file\n");
+						return -1;
+				}
+
+			    fseek (fd, 0, SEEK_END);
+				if (ftell(fd)){
+					fclose(fd);
+					return 1;
+				}
+				fclose(fd);
+				break;
+		case 1:
+				if ((fd = fopen(PBR_RULES_ENTRY_FILE_CONTROL, "r")) == NULL) {
+						syslog(LOG_ERR, "Could not open PBR_entry_rules_log file\n");
+						return -1;
+				}
+
+				fseek (fd, 0, SEEK_END);
+				if (ftell(fd)){
+					fclose(fd);
+					return 1;
+				}
+				fclose(fd);
+				break;
+		default:
+				return -1;
+				break;
+	}
+	return 0;
+}
+
+static int pbr_fetch_log_entries(int opt, char **buffer)
+{
+	FILE * pFile;
+	long lSize;
+	size_t result;
+
+	switch (opt){
+		case 0:
+				pFile = fopen (PBR_ROUTES_ENTRY_FILE_CONTROL, "r");
+				break;
+		case 1:
+				pFile = fopen (PBR_RULES_ENTRY_FILE_CONTROL, "r");
+				break;
+		default:
+				return -1;
+				break;
+	}
+
+	if (pFile == NULL){
+		syslog(LOG_ERR, "Could not open PBR_entry_log file\n");
+		return -1;
+	}
+
+	// obtain file size:
+	fseek (pFile , 0 , SEEK_END);
+	lSize = ftell(pFile) + 1;
+	rewind (pFile);
+
+	// allocate memory to contain the whole file:
+	*buffer = (char*) malloc (lSize + 1);
+	memset(*buffer, 0, lSize+1);
+	if (*buffer == NULL){
+		syslog(LOG_ERR, "Could not open PBR_entry_log file\n");
+		return -1;
+	}
+	// copy the file into the buffer:
+	result = fread (*buffer,1,lSize,pFile);
+	if (result != lSize){
+		syslog(LOG_ERR, "Could not open PBR_entry_log file\n");
+		return -1;
+	}
+	fclose (pFile);
+	return 0;
+}
+
+int librouter_pbr_dump(FILE *out)
+{
+	int rules = 0, routes = 0;
+	char * buffer = NULL;
+
+	routes = pbr_log_verify_entries(0);
+	rules = pbr_log_verify_entries(1);
+
+	if (routes == 1 || rules == 1){
+		fprintf(out, "policy-route\n");
+		if (routes){
+			pbr_fetch_log_entries(0, &buffer);
+			fprintf(out, "%s", buffer);
+			free(buffer);
+			buffer = NULL;
+		}
+		if (rules){
+			pbr_fetch_log_entries(1, &buffer);
+			fprintf(out, "%s", buffer);
+			free(buffer);
+			buffer = NULL;
+		}
+		fprintf(out, "!\n");
+	}
 	return 0;
 }
 

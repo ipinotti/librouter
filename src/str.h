@@ -24,5 +24,7 @@ unsigned int librouter_str_read_password(int echo_on,
 
 int librouter_str_add_line_to_file(char *filename, char *line);
 int librouter_str_del_line_in_file(char *filename, char *key);
+int librouter_str_find_string_in_file_return_stat(char *filename, char *key);
+
 
 #endif /* STR_H_ */

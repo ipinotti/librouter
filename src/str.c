@@ -212,6 +212,45 @@ int librouter_str_find_string_in_file(char *filename, char *key, char *buffer, i
 	goto end;
 }
 
+int librouter_str_find_string_in_file_return_stat(char *filename, char *key)
+{
+	int fd = 0, size;
+	char *buf = NULL, *p;
+	int ret = -1; /* error! */
+	struct stat st;
+
+	if ((fd = open(filename, O_RDONLY)) < 0) {
+		librouter_pr_error(1, "could not open %s", filename);
+		goto error;
+	}
+
+	if (fstat(fd, &st) < 0) {
+		librouter_pr_error(1, "fstat");
+		goto error;
+	}
+
+	if ((buf = malloc(st.st_size)) == NULL) {
+		librouter_pr_error(1, "could not alloc memory");
+		goto error;
+	}
+
+	read(fd, buf, st.st_size);
+	close(fd);
+
+	p = strstr(buf, key);
+	if (p == NULL)
+		ret = 0;
+	else
+		ret = 1;
+
+	end: if (buf)
+		free(buf);
+	return ret;
+	error: if (fd)
+		close(fd);
+	goto end;
+}
+
 /**
  * librouter_str_striplf	Removes line feed from string
  *
