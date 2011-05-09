@@ -253,9 +253,10 @@ static int _do_add_ioctl(int cmd, struct ip_tunnel_parm *p)
 	int fd;
 	int err;
 
-	if (cmd == SIOCCHGTUNNEL && p->name[0])
+	if (cmd == SIOCCHGTUNNEL && p->name[0]) {
+		tunnel_dbg("Tunnel change ==> interface %s\n", p->name);
 		strcpy(ifr.ifr_name, p->name);
-	else {
+	} else {
 		switch (p->iph.protocol) {
 		case IPPROTO_IPIP:
 			strcpy(ifr.ifr_name, "tunl0");
@@ -317,8 +318,14 @@ int librouter_tunnel_add(char *name)
 		p.iph.ihl = 5;
 		p.iph.frag_off = htons(IP_DF);
 		p.iph.protocol = IPPROTO_GRE; /* default is gre/ip */
+		p.i_key = atoi(name + strlen("tunnel")) + 1;
+
+		/* Must have a source IP when creating */
+		p.iph.saddr = 0x7f000001;
+
 		strncpy(p.name, name, IFNAMSIZ);
 
+		tunnel_dbg("Adding tunnel %s\n", name);
 		return _do_add_ioctl(SIOCADDTUNNEL, &p);
 	}
 	return 0;
@@ -347,6 +354,8 @@ int librouter_tunnel_change(char *name, tunnel_param_type type, void *param)
 	int err;
 	struct in_addr address;
 	struct ip_tunnel_parm p;
+
+	tunnel_dbg("tunnel change for interface --> %s\n", name);
 
 	if (librouter_dev_exists(name)) {
 		if ((err = _do_get_ioctl(name, &p))) {

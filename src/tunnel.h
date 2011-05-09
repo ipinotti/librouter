@@ -7,6 +7,14 @@
 #ifndef TUNNEL_H_
 #define TUNNEL_H_
 
+//#define TUNNEL_DEBUG
+#ifdef TUNNEL_DEBUG
+#define tunnel_dbg(x,...) \
+		syslog(LOG_INFO, "%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__);
+#else
+#define tunnel_dbg(x,...)
+#endif
+
 typedef enum {
 	TUNNEL_MODE,
 	TUNNEL_SOURCE,
