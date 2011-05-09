@@ -27,7 +27,7 @@ dev_family _devices[] = {
 	{ eth, "ethernet", "eth", "Ethernet" },
 	{ lo, "loopback", "lo", "Loopback" },
 #ifdef OPTION_TUNNEL
-	{ tun, "tun", "tunl", "Tunnel" },
+	{ tun, "tunnel", "tunnel", "Tunnel" },
 #endif
 #ifdef OPTION_IPSEC
 	{ ipsec, "ipsec", "ipsec", "IPSec" },
