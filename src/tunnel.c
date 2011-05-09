@@ -401,8 +401,8 @@ int librouter_tunnel_change(char *name, tunnel_param_type type, void *param)
 				                "%% Broadcast tunnel requires a source address.\n");
 				return -1;
 			}
-
 			break;
+
 		case TUNNEL_CHECKSUM:
 			if (param != NULL) {
 				p.i_flags |= GRE_CSUM;
@@ -412,6 +412,7 @@ int librouter_tunnel_change(char *name, tunnel_param_type type, void *param)
 				p.o_flags &= ~GRE_CSUM;
 			}
 			break;
+
 		case TUNNEL_SEQUENCE:
 			if (param != NULL) {
 				p.i_flags |= GRE_SEQ;
@@ -421,6 +422,7 @@ int librouter_tunnel_change(char *name, tunnel_param_type type, void *param)
 				p.o_flags &= ~GRE_SEQ;
 			}
 			break;
+
 		case TUNNEL_PMTU: /* CHANGE */
 			if (param != NULL) {
 				p.iph.frag_off = htons(IP_DF);
@@ -435,7 +437,8 @@ int librouter_tunnel_change(char *name, tunnel_param_type type, void *param)
 #endif
 				p.iph.frag_off = 0;
 			}
-			return _do_add_ioctl(SIOCCHGTUNNEL, &p);
+			break;
+
 		case TUNNEL_TTL: /* CHANGE */
 			if (param != NULL) {
 				p.iph.ttl = htonl(atoi((char *) param));
@@ -450,7 +453,8 @@ int librouter_tunnel_change(char *name, tunnel_param_type type, void *param)
 			} else {
 				p.iph.ttl = 0;
 			}
-			return _do_add_ioctl(SIOCCHGTUNNEL, &p);
+			break;
+
 		case TUNNEL_KEY:
 			if (param != NULL) {
 				p.i_flags |= GRE_KEY;
@@ -465,8 +469,7 @@ int librouter_tunnel_change(char *name, tunnel_param_type type, void *param)
 		default:
 			break;
 		}
-		_do_del_ioctl(p.name, &p); /* remove old tunnel param! */
-		return _do_add_ioctl(SIOCADDTUNNEL, &p); /* add new tunnel param! */
+		return _do_add_ioctl(SIOCCHGTUNNEL, &p);
 	}
 	return 0;
 }

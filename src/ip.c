@@ -684,6 +684,7 @@ const char *librouter_ip_extract_mask(char *cidrblock)
 	return masks[32];
 }
 
+//TODO Analisar função, pode resultar em BUG devido ao rmasks
 int librouter_ip_netmask2cidr(const char *netmask)
 {
 	int i;
@@ -692,6 +693,18 @@ int librouter_ip_netmask2cidr(const char *netmask)
 		if (strcmp(masks[i], netmask) == 0)
 			return i;
 		if (strcmp(rmasks[i], netmask) == 0)
+			return i;
+	}
+	return -1;
+}
+
+//TODO Função criada para evitar bug da função original, aplicado ao pbr (problema com mask 255.255.255.255 -- retornando 0) na func original
+int librouter_ip_netmask2cidr_pbr(const char *netmask)
+{
+	int i;
+
+	for (i = 0; i < 33; i++) {
+		if (strcmp(masks[i], netmask) == 0)
 			return i;
 	}
 	return -1;

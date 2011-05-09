@@ -122,6 +122,8 @@ int librouter_ip_get_mac(char *ifname, char *mac);
 const char *librouter_ip_ciscomask(const char *mask);
 const char *librouter_ip_extract_mask(char *cidrblock);
 int librouter_ip_netmask2cidr(const char *netmask);
+int librouter_ip_netmask2cidr_pbr(const char *netmask);
+
 
 extern const char *masks[33];
 extern const char *rmasks[33];

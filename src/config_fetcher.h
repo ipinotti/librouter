@@ -27,6 +27,8 @@ void librouter_config_rip_dump_interface(FILE *out, char *intf);
 
 void librouter_config_dump_routing(FILE *f);
 
+void librouter_config_dump_policy_route(FILE *f);
+
 int librouter_config_write(char *filename, struct router_config *cfg);
 
 #endif /* CONFIG_FETCHER_H_ */

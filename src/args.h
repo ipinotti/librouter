@@ -20,6 +20,7 @@ arglist *librouter_make_args(const char *);
 void librouter_destroy_args(arglist *);
 int librouter_parse_args_din(char *cmd_line, arg_list *rcv_p);
 void librouter_destroy_args_din(arg_list *rcv_buf);
+int librouter_args_parse_args_to_string(arglist * args, char * string);
 
 #endif /* ARGS_H_ */
 

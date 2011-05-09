@@ -45,6 +45,7 @@
 #include "acl.h"
 #include "bridge.h"
 #include "lan.h"
+#include "pbr.h"
 
 #ifdef OPTION_MANAGED_SWITCH
 #if defined(CONFIG_DIGISTAR_EFM)
@@ -1500,6 +1501,12 @@ void librouter_config_interfaces_dump(FILE *out)
 	}
 }
 
+void librouter_config_dump_policy_route(FILE *f)
+{
+	librouter_pbr_dump(f);
+}
+
+
 /********************************/
 /* End of Interface information */
 /********************************/
@@ -1569,6 +1576,10 @@ int librouter_config_write(char *filename, struct router_config *cfg)
 	librouter_config_bgp_dump_router(f, 1);
 #endif
 	librouter_config_dump_routing(f);
+
+#ifdef OPTION_ROUTER
+	librouter_config_dump_policy_route(f);
+#endif
 
 	/* Multicast */
 #ifdef OPTION_SMCROUTE

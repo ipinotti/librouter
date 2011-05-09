@@ -14,6 +14,29 @@
 
 #define isspace_local(c) ((c==' ')||(c=='\t'))
 
+int librouter_args_parse_args_to_string(arglist * args, char * string)
+{
+	int i=0;
+
+	if (string == NULL || args == NULL)
+		return -1;
+
+	for (i=0; i < args->argc; i++){
+		if (!strcmp(args->argv[i],""))
+			continue;
+
+		strcat(string,args->argv[i]);
+
+		if (i != args->argc-1)
+			strcat(string," ");
+	}
+	strcat(string,"\0");
+
+	return 0;
+}
+
+
+
 /*
  *  Strip whitespace from the start and end of STRING.
  *  Return a pointer into STRING.
