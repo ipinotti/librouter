@@ -26,10 +26,13 @@
 int librouter_pbr_rule_add(int mark_no, char * table)
 {
 	char cmd[128];
+
+#ifdef NOT_YET_IMPLEMENTED
 //TODO
 //	if (librouter_mangle_rule_exists_by_num(mark_no)) {
 //
 //	}
+#endif
 
 	sprintf(cmd, "/bin/ip rule add fwmark %d table %s ", mark_no,table);
 
@@ -61,10 +64,12 @@ int librouter_pbr_rule_del(int mark_no, char * table)
 {
 	char cmd[128];
 
+#ifdef NOT_YET_IMPLEMENTED
 //TODO
 //	if (librouter_mangle_rule_exists_by_num(mark_no)) {
 //
 //	}
+#endif
 
 	sprintf(cmd, "/bin/ip rule del fwmark %d table %s ", mark_no, table);
 
@@ -330,6 +335,12 @@ int librouter_pbr_flush_cache(void)
 	return 0;
 }
 
+/**
+ * librouter_pbr_log_entry_route_add	Função adiciona rota configurada pelo cli no log de comandos aplicados
+ *
+ * @param command
+ * @return 0 if ok, -1 if not
+ */
 int librouter_pbr_log_entry_route_add(char * command)
 {
 	if (librouter_str_find_string_in_file_return_stat(PBR_ROUTES_ENTRY_FILE_CONTROL,command))
@@ -342,11 +353,23 @@ int librouter_pbr_log_entry_route_add(char * command)
 
 }
 
+/**
+ * librouter_pbr_log_entry_route_del	Função remove rota apontada pelo cli no log de comandos aplicados
+ *
+ * @param command
+ * @return 0 if ok, -1 if not
+ */
 int librouter_pbr_log_entry_route_del(char * command)
 {
 	return librouter_str_del_line_in_file(PBR_ROUTES_ENTRY_FILE_CONTROL,command);
 }
 
+/**
+ * librouter_pbr_log_entry_rule_add		Função adiciona regra apontada pelo cli no log de comandos aplicados
+ *
+ * @param command
+ * @return 0 if ok, -1 if not
+ */
 int librouter_pbr_log_entry_rule_add(char * command)
 {
 	if (librouter_str_find_string_in_file_return_stat(PBR_RULES_ENTRY_FILE_CONTROL,command))
@@ -358,16 +381,35 @@ int librouter_pbr_log_entry_rule_add(char * command)
 	return librouter_str_add_line_to_file(PBR_RULES_ENTRY_FILE_CONTROL,"\n");
 }
 
+/**
+ * librouter_pbr_log_entry_rule_del		Função remove rota apontada pelo cli no log de comandos aplicados
+ *
+ * @param command
+ * @return 0 if ok, -1 if not
+ */
 int librouter_pbr_log_entry_rule_del(char * command)
 {
 	return librouter_str_del_line_in_file(PBR_RULES_ENTRY_FILE_CONTROL,command);
 }
 
+/**
+ * librouter_pbr_log_entry_flush_table		Função remove todas as rotas armazenadas na tabela em questão
+ *
+ * @param table_name
+ * @return 0 if ok, -1 if not
+ */
 int librouter_pbr_log_entry_flush_table(char * table_name)
 {
 	return librouter_str_del_line_in_file(PBR_ROUTES_ENTRY_FILE_CONTROL,table_name);
 }
 
+/**
+ * pbr_log_verify_entries		Função verifica se existem entradas nos logs de comandos aplicados
+ *
+ * (opt == 0 para rotas || opt == 1 para regras)
+ * @param opt
+ * @return 0 if ok, -1 if not
+ */
 static int pbr_log_verify_entries(int opt)
 {
 	FILE *fd;
@@ -406,6 +448,14 @@ static int pbr_log_verify_entries(int opt)
 	return 0;
 }
 
+/**
+ * pbr_fetch_log_entries		Função recupera entrada no log de comandos aplicados pelo PBR no cli
+ * e retorna em buffer (opt == 0 para rotas || opt == 1 para regras)
+ *
+ * @param opt
+ * @param buffer
+ * @return 0 if ok, -1 if not
+ */
 static int pbr_fetch_log_entries(int opt, char **buffer)
 {
 	FILE * pFile;
@@ -451,6 +501,12 @@ static int pbr_fetch_log_entries(int opt, char **buffer)
 	return 0;
 }
 
+/**
+ * librouter_pbr_dump		Função realiza o dump das configurações aplicadas pelo PBR
+ *
+ * @param out
+ * @return 0 if ok
+ */
 int librouter_pbr_dump(FILE *out)
 {
 	int rules = 0, routes = 0;
