@@ -373,7 +373,7 @@ int librouter_tunnel_change(char *name, tunnel_param_type type, void *param)
 
 			p.link = 0; /* Disable interface association! */
 			break;
-#if 0
+
 		case TUNNEL_SOURCE_INTERFACE:
 			if (param != NULL) {
 				strncpy(p.linkname, (char *)param, IFNAMSIZ);
@@ -386,7 +386,7 @@ int librouter_tunnel_change(char *name, tunnel_param_type type, void *param)
 				}
 			}
 			break;
-#endif
+
 		case TUNNEL_DESTINATION:
 			if (param != NULL) {
 				if (inet_aton((char *) param, &address) != 0)
