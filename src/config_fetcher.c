@@ -1577,10 +1577,6 @@ int librouter_config_write(char *filename, struct router_config *cfg)
 #endif
 	librouter_config_dump_routing(f);
 
-#ifdef OPTION_ROUTER
-	librouter_config_dump_policy_route(f);
-#endif
-
 	/* Multicast */
 #ifdef OPTION_SMCROUTE
 	librouter_smc_route_dump(f);
@@ -1592,6 +1588,12 @@ int librouter_config_write(char *filename, struct router_config *cfg)
 	librouter_config_arp_dump(f);
 #ifdef OPTION_IPSEC
 	librouter_ipsec_dump(f);
+#endif
+
+/* É Necessario esperar as interfaces serem montadas para
+ * realizar o dump do policy route */
+#ifdef OPTION_ROUTER
+	librouter_config_dump_policy_route(f);
 #endif
 
 	fclose(f);
