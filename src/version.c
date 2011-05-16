@@ -73,10 +73,7 @@ char *librouter_get_boot_version(void)
 		return version;
 	}
 
-	for (i = 0; i < 5; i++, p++)
-		version[i] = *p;
-
-	version[i] = 0;
+	strncpy(version, p, sizeof(version));
 
 	return version;
 }
