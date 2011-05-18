@@ -159,27 +159,17 @@ int librouter_pam_web_authenticate(char *user, char *pass)
 	if ((pam_err = pam_start("web", NULL, &null_conv, &pam_handle)) != PAM_SUCCESS)
 		goto web_auth_err;
 
-	dbgS_aaa("Done PAM_START -- user: %s || pass: %s\n\n",web_data.user,web_data.pass);
-
 	if ((pam_err = pam_set_item(pam_handle, PAM_CONV, (const void *) &fpam_conv)) != PAM_SUCCESS)
 		goto web_auth_err;
 
-	dbgS_aaa("Done PAM_SET_ITEM\n\n");
-
-
 	if ((pam_err = pam_authenticate(pam_handle, 0)) != PAM_SUCCESS)
 		goto web_auth_err;
-
-	dbgS_aaa("Done PAM_AUTHENTICATE\n\n");
-
 
 	/* Now check if the authenticated user is allowed to login. */
 	if (pam_acct_mgmt(pam_handle, 0) == PAM_AUTHTOK_EXPIRED) {
 		if (pam_chauthtok(pam_handle, 0) != PAM_SUCCESS)
 			goto web_auth_err;
 	}
-
-	dbgS_aaa("Done PAM_ACCT_MGMT\n\n");
 
 
 	/*
@@ -189,8 +179,66 @@ int librouter_pam_web_authenticate(char *user, char *pass)
 	if (pam_open_session(pam_handle, 0) != PAM_SUCCESS)
 		goto web_auth_err;
 
-	dbgS_aaa("Done PAM_OPEN_SESSION\n\n");
 
+	/*
+	 * Initialize the supplementary group access list.
+	 * This should be done before pam_setcred because the PAM modules might add groups during the pam_setcred call.
+	 */
+	if (pam_setcred(pam_handle, PAM_ESTABLISH_CRED) != PAM_SUCCESS)
+		goto web_auth_err;
+
+	ret = AUTH_OK;
+
+	web_auth_err: if (pam_handle != NULL)
+		pam_end(pam_handle, pam_err);
+	pam_handle = NULL;
+
+	return ret;
+}
+
+/**
+ * librouter_pam_web_authenticate
+ *
+ * Authenticate a user via PAM methods
+ *
+ * @param user String with user's name
+ * @param pass String with the user's password
+ * @return AUTH_OK if success, AUTH_NOK if fail to authenticate
+ */
+int librouter_pam_enable_authenticate(void)
+{
+	int pam_err;
+	int ret = AUTH_NOK;
+	struct pam_conv fpam_conv;
+	static pam_handle_t *pam_handle = NULL;
+	static struct pam_conv null_conv = { _pam_null_conv, NULL };
+
+	dbgS_aaa("Starting librouter_pam_enable_authenticate\n\n");
+
+	fpam_conv.conv = misc_conv;
+	fpam_conv.appdata_ptr = NULL;
+
+	if ((pam_err = pam_start("enable", "$enable$", &null_conv, &pam_handle)) != PAM_SUCCESS)
+		goto web_auth_err;
+
+	if ((pam_err = pam_set_item(pam_handle, PAM_CONV, (const void *) &fpam_conv)) != PAM_SUCCESS)
+		goto web_auth_err;
+
+	if ((pam_err = pam_authenticate(pam_handle, 0)) != PAM_SUCCESS)
+		goto web_auth_err;
+
+	/* Now check if the authenticated user is allowed to login. */
+	if (pam_acct_mgmt(pam_handle, 0) == PAM_AUTHTOK_EXPIRED) {
+		if (pam_chauthtok(pam_handle, 0) != PAM_SUCCESS)
+			goto web_auth_err;
+	}
+
+	/*
+	 *  Call 'pam_open_session' to open the authenticated session;
+	 *  'pam_close_session' gets called by the process that cleans up the utmp entry (i.e., init);
+	 */
+	if (pam_open_session(pam_handle, 0) != PAM_SUCCESS)
+		goto web_auth_err;
 
 	/* 
 	 * Initialize the supplementary group access list. 
@@ -199,16 +247,11 @@ int librouter_pam_web_authenticate(char *user, char *pass)
 	if (pam_setcred(pam_handle, PAM_ESTABLISH_CRED) != PAM_SUCCESS)
 		goto web_auth_err;
 
-	dbgS_aaa("Done PAM_SETCRED\n\n");
-
-
 	ret = AUTH_OK;
 
 	web_auth_err: if (pam_handle != NULL)
 		pam_end(pam_handle, pam_err);
 	pam_handle = NULL;
-
-	dbgS_aaa("Returning -- %d\n\n",ret);
 
 	return ret;
 }

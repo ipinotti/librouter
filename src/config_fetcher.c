@@ -191,6 +191,31 @@ void librouter_config_dump_aaa(FILE *f, struct router_config *cfg)
 		break;
 	}
 
+	/* Dump aaa authentication login mode */
+	switch (librouter_pam_get_current_mode(FILE_PAM_ENABLE)) {
+	case AAA_AUTH_NONE:
+		fprintf(f, "aaa authentication enable default none\n");
+		break;
+	case AAA_AUTH_LOCAL:
+		fprintf(f, "aaa authentication enable default local\n");
+		break;
+	case AAA_AUTH_RADIUS:
+		fprintf(f, "aaa authentication enable default group radius\n");
+		break;
+	case AAA_AUTH_RADIUS_LOCAL:
+		fprintf(f, "aaa authentication enable default group radius local\n");
+		break;
+	case AAA_AUTH_TACACS:
+		fprintf(f, "aaa authentication enable default group tacacs+\n");
+		break;
+	case AAA_AUTH_TACACS_LOCAL:
+		fprintf(f, "aaa authentication enable default group tacacs+ local\n");
+		break;
+	default:
+		fprintf(f, "aaa authentication enable none\n");
+		break;
+	}
+
 	/* Dump aaa authentication web mode */
 	switch (librouter_pam_get_current_mode(FILE_PAM_WEB)) {
 	case AAA_AUTH_NONE:
