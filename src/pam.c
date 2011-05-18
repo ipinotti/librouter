@@ -898,8 +898,6 @@ static int _validate_username(char *username)
 
 int librouter_pam_add_user(char *user, char *pw)
 {
-	char buf[256];
-
 	if (user == NULL || pw == NULL)
 		return -1;
 
@@ -914,8 +912,6 @@ int librouter_pam_add_user(char *user, char *pw)
 
 int librouter_pam_del_user(char *user)
 {
-	char buf[256];
-
 	if (user == NULL)
 		return -1;
 
@@ -923,6 +919,32 @@ int librouter_pam_del_user(char *user)
 		return -1;
 
 	librouter_exec_prog(0, "/bin/deluser", user, NULL);
+
+	return 0;
+}
+
+int librouter_pam_add_user_to_group (char *user, char *group)
+{
+	if (user == NULL || group == NULL)
+		return -1;
+
+	if (_validate_username(user) < 0)
+		return -1;
+
+	librouter_exec_prog(0, "/bin/addgroup", user, group, NULL);
+
+	return 0;
+}
+
+int librouter_pam_del_user_from_group (char *user, char *group)
+{
+	if (user == NULL || group == NULL)
+		return -1;
+
+	if (_validate_username(user) < 0)
+		return -1;
+
+	librouter_exec_prog(0, "/bin/delgroup", user, group, NULL);
 
 	return 0;
 }
