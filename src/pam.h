@@ -93,7 +93,7 @@ int librouter_pam_get_users(char *users);
 int librouter_pam_del_user(char *user);
 int librouter_pam_add_user(char *user, char *pw);
 int librouter_pam_add_user_to_group (char *user, char *group);
-int librouter_pam_del_user_to_group (char *user, char *group);
+int librouter_pam_del_user_from_group (char *user, char *group);
 
 int librouter_pam_add_tacacs_server(struct auth_server *server);
 int librouter_pam_del_tacacs_server(struct auth_server *server);

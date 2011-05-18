@@ -869,7 +869,7 @@ int librouter_pam_add_user_to_group (char *user, char *group)
 	return 0;
 }
 
-int librouter_pam_del_user_to_group (char *user, char *group)
+int librouter_pam_del_user_from_group (char *user, char *group)
 {
 	if (user == NULL || group == NULL)
 		return -1;
