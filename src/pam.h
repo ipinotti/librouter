@@ -83,6 +83,9 @@ struct auth_server {
 /* Prototypes */
 int librouter_pam_enable_authenticate(void);
 int librouter_pam_web_authenticate(char *user, char *pass);
+int librouter_pam_authorize_command(char *cmd);
+int librouter_pam_account_command(char *cmd);
+
 int librouter_pam_get_current_mode(char *file_name);
 int librouter_pam_get_current_author_mode(char *file_name);
 int librouter_pam_get_current_acct_mode(char *file_name);

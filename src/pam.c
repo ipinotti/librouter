@@ -257,6 +257,73 @@ int librouter_pam_enable_authenticate(void)
 	return ret;
 }
 
+#ifdef OPTION_AAA_AUTHORIZATION
+/**
+ *
+ *
+ * @param user
+ * @param cmd
+ * @return
+ */
+int librouter_pam_authorize_command(char *cmd)
+{
+	int pam_err;
+	struct pam_conv fpam_conv;
+	static pam_handle_t *pam_handle = NULL;
+	static struct pam_conv null_conv = { _pam_null_conv, NULL };
+	struct passwd *pw;
+
+	pw = getpwuid(getuid());
+
+	if (pw == NULL)
+		return -1;
+
+	if ((pam_err = pam_start("login", pw->pw_name, &null_conv, &pam_handle)) != PAM_SUCCESS)
+		return -1;
+
+	pam_set_item(pam_handle, PAM_USER_PROMPT, (const void *) cmd);
+
+	if (pam_acct_mgmt(pam_handle, 0) != PAM_SUCCESS) {
+		fprintf(stderr, "User %s not authorized to run this command\n");
+		return -1;
+	}
+
+	return 0;
+}
+#endif /* OPTION_AAA_AUTHORIZATION */
+
+#ifdef OPTION_AAA_ACCOUNTING
+/**
+ *
+ *
+ * @param user
+ * @param cmd
+ * @return
+ */
+int librouter_pam_account_command(char *cmd)
+{
+	int pam_err;
+	struct pam_conv fpam_conv;
+	static pam_handle_t *pam_handle = NULL;
+	static struct pam_conv null_conv = { _pam_null_conv, NULL };
+	struct passwd *pw = getpwuid(getuid());
+
+	if (pw == NULL)
+		return -1;
+
+	if ((pam_err = pam_start("login", pw->pw_name, &null_conv, &pam_handle)) != PAM_SUCCESS)
+		return -1;
+
+	pam_set_item(pam_handle, PAM_XAUTHDATA, (const void *) cmd);
+
+	if (pam_open_session(pam_handle, 0) != PAM_SUCCESS)
+		return -1;
+
+	return 0;
+}
+#endif /* OPTION_AAA_ACCOUNTING */
+
+
 /**
  * Discover mode in file
  *
