@@ -14,6 +14,7 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <grp.h>
 
 #include <security/pam_appl.h>
 #include <security/pam_misc.h>
@@ -881,6 +882,53 @@ int librouter_pam_del_user_from_group (char *user, char *group)
 
 	return 0;
 }
+
+int librouter_pam_get_privilege (void)
+{
+	int ret=0, num_groups=0;
+	uid_t me;
+	struct passwd *my_passwd;
+	struct group *my_group;
+	char **members;
+
+	/* Get information about the user ID.  */
+	me = getuid ();
+	my_passwd = getpwuid (me);
+	if (!my_passwd)
+	{
+	  syslog (LOG_INFO, "Couldn't find out about user %d.\n", (int) me);
+	  return -1;
+	}
+
+	printf ("I am %s.\n", my_passwd->pw_gecos);
+	printf ("My login name is %s.\n", my_passwd->pw_name);
+	printf ("My uid is %d.\n", (int) (my_passwd->pw_uid));
+	/* Get information about the default group ID.  */
+	my_group = getgrgid (my_passwd->pw_gid);
+	if (!my_group)
+	{
+	  syslog (LOG_INFO, "Couldn't find out about group %d.\n", (int) my_passwd->pw_gid);
+	  return -1;
+	}
+
+	/* Print the information.  */
+	printf ("1My default group is %s (%d).\n", my_group->gr_name, (int) (my_passwd->pw_gid));
+
+	my_group = getgrgid (my_passwd->pw_gid);
+	if (!my_group)
+	{
+	  syslog (LOG_INFO, "Couldn't find out about group %d.\n", (int) my_passwd->pw_gid);
+	  return -1;
+	}
+
+	/* Print the information.  */
+	printf ("2My default group is %s (%d).\n", my_group->gr_name, (int) (my_passwd->pw_gid));
+
+	return 0;
+}
+
+
+
 
 /**
  * librouter_pam_get_tacacs_servers
