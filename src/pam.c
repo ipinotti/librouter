@@ -313,7 +313,7 @@ int librouter_pam_account_command(char *cmd)
 	if ((pam_err = pam_start("login", pw->pw_name, &null_conv, &pam_handle)) != PAM_SUCCESS)
 		return -1;
 
-	pam_set_item(pam_handle, PAM_XAUTHDATA, (const void *) cmd);
+	pam_set_item(pam_handle, PAM_USER_PROMPT, (const void *) cmd);
 
 	if (pam_open_session(pam_handle, 0) != PAM_SUCCESS)
 		return -1;
