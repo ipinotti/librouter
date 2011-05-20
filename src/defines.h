@@ -52,6 +52,8 @@
 #define FILE_PAM_SPPP			"/etc/pam.d/spppd"
 #define FILE_PAM_WEB			"/etc/pam.d/web"
 #define FILE_PAM_PPP			"/etc/pam.d/ppp"
+#define FILE_PAM_CLI			"/etc/pam.d/cli"
+#define FILE_PAM_LOGIN			"/etc/pam.d/login"
 
 
 #define FT_TMP_CFG_FILE			"/var/run/ft-tmp-cfg"

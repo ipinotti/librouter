@@ -167,7 +167,7 @@ void librouter_config_dump_aaa(FILE *f, struct router_config *cfg)
 	librouter_pam_free_servers(AUTH_MAX_SERVERS, radius_server);
 
 	/* Dump aaa authentication login mode */
-	switch (librouter_pam_get_current_mode(FILE_PAM_GENERIC)) {
+	switch (librouter_pam_get_current_mode(FILE_PAM_LOGIN)) {
 	case AAA_AUTH_NONE:
 		fprintf(f, "aaa authentication cli default none\n");
 		break;
@@ -243,7 +243,7 @@ void librouter_config_dump_aaa(FILE *f, struct router_config *cfg)
 
 #ifdef OPTION_AAA_AUTHORIZATION
 	/* Dump aaa authorization mode */
-	switch (librouter_pam_get_current_author_mode(FILE_PAM_GENERIC)) {
+	switch (librouter_pam_get_current_author_mode(FILE_PAM_LOGIN)) {
 	case AAA_AUTHOR_NONE:
 		fprintf(f, "aaa authorization exec default none\n");
 		break;
@@ -253,32 +253,57 @@ void librouter_config_dump_aaa(FILE *f, struct router_config *cfg)
 	case AAA_AUTHOR_TACACS_LOCAL:
 		fprintf(f, "aaa authorization exec default group tacacs+ local\n");
 		break;
+	case AAA_AUTHOR_RADIUS:
+		fprintf(f, "aaa authorization exec default group radius\n");
+		break;
+	case AAA_AUTHOR_RADIUS_LOCAL:
+		fprintf(f, "aaa authorization exec default group radius local\n");
+		break;
+	}
+
+	switch (librouter_pam_get_current_author_mode(FILE_PAM_CLI)) {
+	case AAA_AUTHOR_NONE:
+		fprintf(f, "aaa authorization commands default none\n");
+		break;
+	case AAA_AUTHOR_TACACS:
+		fprintf(f, "aaa authorization commands default group tacacs+\n");
+		break;
+	case AAA_AUTHOR_TACACS_LOCAL:
+		fprintf(f, "aaa authorization commands default group tacacs+ local\n");
+		break;
+	case AAA_AUTHOR_RADIUS:
+		fprintf(f, "aaa authorization commands default group radius\n");
+		break;
+	case AAA_AUTHOR_RADIUS_LOCAL:
+		fprintf(f, "aaa authorization commands default group radius local\n");
+		break;
 	}
 #endif
 
 #ifdef OPTION_AAA_ACCOUNTING
-	/* Dump aaa accounting mode */
-	switch (librouter_pam_get_current_acct_mode(FILE_PAM_GENERIC)) {
+	/* Login file does accounting for exec */
+	switch (librouter_pam_get_current_acct_mode(FILE_PAM_LOGIN)) {
 	case AAA_ACCT_NONE:
 		fprintf(f, "aaa accounting exec default none\n");
 		break;
 	case AAA_ACCT_TACACS:
 		fprintf(f, "aaa accounting exec default start-stop group tacacs+\n");
 		break;
+	case AAA_ACCT_RADIUS:
+		fprintf(f, "aaa accounting exec default start-stop group radius\n");
+		break;
 	}
 
-	switch (librouter_pam_get_current_acct_cmd_mode(FILE_PAM_GENERIC)) {
-	case AAA_ACCT_TACACS_CMD_NONE:
+	/* CLI file does accounting for commands */
+	switch (librouter_pam_get_current_acct_mode(FILE_PAM_CLI)) {
+	case AAA_ACCT_NONE:
+		fprintf(f, "aaa accounting commands default none\n");
 		break;
-	case AAA_ACCT_TACACS_CMD_1:
-		fprintf(f, "aaa accounting commands 1 default start-stop group tacacs+\n");
+	case AAA_ACCT_TACACS:
+		fprintf(f, "aaa accounting commands default start-stop group tacacs+\n");
 		break;
-	case AAA_ACCT_TACACS_CMD_15:
-		fprintf(f, "aaa accounting commands 15 default start-stop group tacacs+\n");
-		break;
-	case AAA_ACCT_TACACS_CMD_ALL:
-		fprintf(f, "aaa accounting commands 1 default start-stop group tacacs+\n");
-		fprintf(f, "aaa accounting commands 15 default start-stop group tacacs+\n");
+	case AAA_ACCT_RADIUS:
+		fprintf(f, "aaa accounting commands default start-stop group radius\n");
 		break;
 	}
 #endif
