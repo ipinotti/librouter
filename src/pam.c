@@ -41,6 +41,8 @@ static const aaa_config_t
                 { AAA_AUTHOR, AAA_AUTHOR_NONE },
                 { AAA_AUTHOR, AAA_AUTHOR_TACACS },
                 { AAA_AUTHOR, AAA_AUTHOR_TACACS_LOCAL },
+                { AAA_AUTHOR, AAA_AUTHOR_RADIUS },
+                { AAA_AUTHOR, AAA_AUTHOR_RADIUS_LOCAL },
                 /* Accounting */
                 { AAA_ACCT, AAA_ACCT_NONE },
                 { AAA_ACCT, AAA_ACCT_TACACS },

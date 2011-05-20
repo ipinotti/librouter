@@ -62,7 +62,7 @@ enum aaa_modes {
 };
 
 enum aaa_families {
-	AAA_AUTH = 1, AAA_AUTHOR, AAA_ACCT, AAA_ACCT_CMD
+	AAA_AUTH = 1, AAA_AUTHOR, AAA_ACCT
 };
 
 typedef struct {
