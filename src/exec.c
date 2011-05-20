@@ -138,8 +138,10 @@ int librouter_exec_prog(int no_out, char *path, ...)
 	switch (pid) {
 	case 0: /* child */
 		if (no_out) {
-			close(1); // close stdout
-			close(2); // close stderr
+			//close(1); // close stdout
+			//close(2); // close stderr
+			freopen("/dev/null", "w", stdout);
+			freopen("/dev/null", "w", stderr);
 		}
 		ret = execv(path, argv);
 		librouter_logerr("%s : unable to execute %s ", strerror(errno), path);
