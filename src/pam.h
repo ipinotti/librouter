@@ -53,16 +53,12 @@ enum aaa_modes {
 	AAA_AUTHOR_NONE,
 	AAA_AUTHOR_TACACS,
 	AAA_AUTHOR_TACACS_LOCAL,
+	AAA_AUTHOR_RADIUS,
+	AAA_AUTHOR_RADIUS_LOCAL,
 	/* Accounting */
 	AAA_ACCT_NONE,
 	AAA_ACCT_TACACS,
-	/* Command Accounting */
-	AAA_ACCT_TACACS_CMD_NONE,
-	AAA_ACCT_TACACS_NO_CMD_1,
-	AAA_ACCT_TACACS_CMD_1,
-	AAA_ACCT_TACACS_NO_CMD_15,
-	AAA_ACCT_TACACS_CMD_15,
-	AAA_ACCT_TACACS_CMD_ALL
+	AAA_ACCT_RADIUS,
 };
 
 enum aaa_families {
@@ -95,6 +91,7 @@ int librouter_pam_get_auth_type(char *device);
 int librouter_pam_get_users(char *users);
 int librouter_pam_del_user(char *user);
 int librouter_pam_add_user(char *user, char *pw);
+int librouter_pam_add_user_with_hash(char *user, char *pw);
 int librouter_pam_add_user_to_group (char *user, char *group);
 int librouter_pam_del_user_from_group (char *user, char *group);
 

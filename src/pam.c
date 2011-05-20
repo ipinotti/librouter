@@ -30,22 +30,23 @@
 static const aaa_config_t
                 aaa_config[MAX_AAA_TYPES] = {
                 /* Authentication */
-                { AAA_AUTH, AAA_AUTH_NONE }, { AAA_AUTH, AAA_AUTH_NONE }, { AAA_AUTH,
-                                AAA_AUTH_LOCAL }, { AAA_AUTH, AAA_AUTH_RADIUS }, { AAA_AUTH,
-                                AAA_AUTH_RADIUS_LOCAL }, { AAA_AUTH, AAA_AUTH_TACACS }, { AAA_AUTH,
-                                AAA_AUTH_TACACS_LOCAL },
+                { AAA_AUTH, AAA_AUTH_NONE },
+                { AAA_AUTH, AAA_AUTH_NONE },
+                { AAA_AUTH, AAA_AUTH_LOCAL },
+                { AAA_AUTH, AAA_AUTH_RADIUS },
+                { AAA_AUTH, AAA_AUTH_RADIUS_LOCAL },
+                { AAA_AUTH, AAA_AUTH_TACACS },
+                { AAA_AUTH, AAA_AUTH_TACACS_LOCAL },
                 /* Authorization */
-                { AAA_AUTHOR, AAA_AUTHOR_NONE }, { AAA_AUTHOR, AAA_AUTHOR_TACACS }, { AAA_AUTHOR,
-                                AAA_AUTHOR_TACACS_LOCAL },
+                { AAA_AUTHOR, AAA_AUTHOR_NONE },
+                { AAA_AUTHOR, AAA_AUTHOR_TACACS },
+                { AAA_AUTHOR, AAA_AUTHOR_TACACS_LOCAL },
                 /* Accounting */
-                { AAA_ACCT, AAA_ACCT_NONE }, { AAA_ACCT, AAA_ACCT_TACACS },
-                /* Command Accounting */
-                { AAA_ACCT_CMD, AAA_ACCT_TACACS_CMD_NONE }, { AAA_ACCT_CMD,
-                                AAA_ACCT_TACACS_NO_CMD_1 },
-                                { AAA_ACCT_CMD, AAA_ACCT_TACACS_CMD_1 }, { AAA_ACCT_CMD,
-                                                AAA_ACCT_TACACS_NO_CMD_15 }, { AAA_ACCT_CMD,
-                                                AAA_ACCT_TACACS_CMD_15 }, { AAA_ACCT_CMD,
-                                                AAA_ACCT_TACACS_CMD_ALL } };
+                { AAA_ACCT, AAA_ACCT_NONE },
+                { AAA_ACCT, AAA_ACCT_TACACS },
+                { AAA_ACCT, AAA_ACCT_RADIUS },
+};
+
 
 struct web_auth_data {
 	char *user;
@@ -277,13 +278,18 @@ int librouter_pam_authorize_command(char *cmd)
 	if (pw == NULL)
 		return -1;
 
-	if ((pam_err = pam_start("login", pw->pw_name, &null_conv, &pam_handle)) != PAM_SUCCESS)
+	if ((pam_err = pam_start("cli", pw->pw_name, &null_conv, &pam_handle)) != PAM_SUCCESS)
 		return -1;
 
 	pam_set_item(pam_handle, PAM_USER_PROMPT, (const void *) cmd);
 
 	if (pam_acct_mgmt(pam_handle, 0) != PAM_SUCCESS) {
-		fprintf(stderr, "User %s not authorized to run this command\n");
+
+		/* Root must always succeed */
+		if (pw->pw_uid == 0)
+			return 0;
+
+		fprintf(stderr, "User %s not authorized to run this command\n", pw->pw_name);
 		return -1;
 	}
 
@@ -310,7 +316,7 @@ int librouter_pam_account_command(char *cmd)
 	if (pw == NULL)
 		return -1;
 
-	if ((pam_err = pam_start("login", pw->pw_name, &null_conv, &pam_handle)) != PAM_SUCCESS)
+	if ((pam_err = pam_start("cli", pw->pw_name, &null_conv, &pam_handle)) != PAM_SUCCESS)
 		return -1;
 
 	pam_set_item(pam_handle, PAM_USER_PROMPT, (const void *) cmd);
@@ -414,6 +420,12 @@ int librouter_pam_get_current_author_mode(char *file_name)
 			if (strstr(buf, "AAA_AUTHOR_TACACS_LOCAL"))
 				mode = AAA_AUTHOR_TACACS_LOCAL;
 
+			if (strstr(buf, "AAA_AUTHOR_RADIUS"))
+				mode = AAA_AUTHOR_RADIUS;
+
+			if (strstr(buf, "AAA_AUTHOR_RADIUS_LOCAL"))
+				mode = AAA_AUTHOR_RADIUS_LOCAL;
+
 			if (mode != 0)
 				break;
 		}
@@ -422,6 +434,58 @@ int librouter_pam_get_current_author_mode(char *file_name)
 	fclose(f);
 	return mode;
 }
+
+/**
+ * Discover mode in file
+ * Read file and discover which command authorization mode is currently active
+ *
+ * @param file_name File to be checked
+ * @return authorization mode currently configured
+ */
+int librouter_pam_get_current_cmd_author_mode(char *file_name)
+{
+	/* authorization */
+	FILE *f;
+	char buf[256];
+	int mode = 0;
+
+	buf[255] = 0;
+
+	/* Open pam configuration file */
+	f = fopen(file_name, "r");
+	if (f == NULL) {
+		printf("%%Error : Could not open %s\n", file_name);
+		return 0;
+	}
+
+	/* Discover which authorization method is on */
+	while (fgets(buf, sizeof(buf) - 1, f)) {
+		if (strstr(buf, "author_current_mode=")) {
+
+			if (strstr(buf, "AAA_AUTHOR_NONE"))
+				mode = AAA_AUTHOR_NONE;
+
+			if (strstr(buf, "AAA_AUTHOR_TACACS"))
+				mode = AAA_AUTHOR_TACACS;
+
+			if (strstr(buf, "AAA_AUTHOR_TACACS_LOCAL"))
+				mode = AAA_AUTHOR_TACACS_LOCAL;
+
+			if (strstr(buf, "AAA_AUTHOR_RADIUS"))
+				mode = AAA_AUTHOR_RADIUS;
+
+			if (strstr(buf, "AAA_AUTHOR_RADIUS_LOCAL"))
+				mode = AAA_AUTHOR_RADIUS_LOCAL;
+
+			if (mode != 0)
+				break;
+		}
+	}
+
+	fclose(f);
+	return mode;
+}
+
 
 /**
  * Discover mode in file
@@ -456,49 +520,8 @@ int librouter_pam_get_current_acct_mode(char *file_name)
 			if (strstr(buf, "AAA_ACCT_TACACS"))
 				mode = AAA_ACCT_TACACS;
 
-			if (mode != 0)
-				break;
-		}
-	}
-
-	fclose(f);
-	return mode;
-}
-
-/**
- * Discover mode in file
- * Read file and discover which command accounting mode is currently active
- *
- * @param file_name : File to be checked
- * @return : command accounting mode currently configured
- */
-int librouter_pam_get_current_acct_cmd_mode(char *file_name)
-{
-	/* command accounting */
-	FILE *f;
-	char buf[256];
-	int mode = 0;
-
-	buf[255] = 0;
-
-	if (!(f = fopen(file_name, "r")))
-		return 0;
-
-	while (fgets(buf, sizeof(buf) - 1, f)) {
-
-		if (strstr(buf, "acct_current_command_mode=")) {
-
-			if (strstr(buf, "AAA_ACCT_TACACS_CMD_NONE"))
-				mode = AAA_ACCT_TACACS_CMD_NONE;
-
-			if (strstr(buf, "AAA_ACCT_TACACS_CMD_1"))
-				mode = AAA_ACCT_TACACS_CMD_1;
-
-			if (strstr(buf, "AAA_ACCT_TACACS_CMD_15"))
-				mode = AAA_ACCT_TACACS_CMD_15;
-
-			if (strstr(buf, "AAA_ACCT_TACACS_CMD_ALL"))
-				mode = AAA_ACCT_TACACS_CMD_ALL;
+			if (strstr(buf, "AAA_ACCT_RADIUS"))
+				mode = AAA_ACCT_RADIUS;
 
 			if (mode != 0)
 				break;
@@ -562,7 +585,7 @@ static int _librouter_pam_comment_section(char *src, char *dest, FILE *f)
  * @param mode Current PAM mode
  * @return 1 if line is to be commented, 0 otherwise.
  */
-static int _librouter_pam_uncomment_line(char *buf, int mode)
+static int _should_uncomment_line(char *buf, int mode)
 {
 	if (mode == AAA_AUTH_NONE && strstr(buf, "auth_none"))
 		return 1;
@@ -583,9 +606,15 @@ static int _librouter_pam_uncomment_line(char *buf, int mode)
 		return 1;
 	else if (mode == AAA_AUTHOR_TACACS_LOCAL && strstr(buf, "author_tacacs_local"))
 		return 1;
+	else if (mode == AAA_AUTHOR_RADIUS && strstr(buf, "author_radius_only"))
+		return 1;
+	else if (mode == AAA_AUTHOR_RADIUS_LOCAL && strstr(buf, "author_radius_local"))
+		return 1;
 	else if (mode == AAA_ACCT_NONE && strstr(buf, "acct_none"))
 		return 1;
 	else if (mode == AAA_ACCT_TACACS && strstr(buf, "acct_tacacs"))
+		return 1;
+	else if (mode == AAA_ACCT_RADIUS && strstr(buf, "acct_radius"))
 		return 1;
 
 	return 0;
@@ -671,7 +700,7 @@ static int _librouter_pam_disable_mode(int mode, char *pam_file)
  * @param pam_file PAM configuration file
  * @return
  */
-int pam_set_mode(char *src, char *dest, int mode, char *pam_file)
+static int _set_mode(char *src, char *dest, int mode, char *pam_file)
 {
 	int family = _librouter_pam_get_aaa_family(mode);
 
@@ -698,6 +727,10 @@ int pam_set_mode(char *src, char *dest, int mode, char *pam_file)
 			strcat(dest, "#author_current_mode=AAA_AUTHOR_TACACS\n");
 		else if (mode == AAA_AUTHOR_TACACS_LOCAL)
 			strcat(dest, "#author_current_mode=AAA_AUTHOR_TACACS_LOCAL\n");
+		else if (mode == AAA_AUTHOR_RADIUS)
+			strcat(dest, "#author_current_mode=AAA_AUTHOR_RADIUS\n");
+		else if (mode == AAA_AUTHOR_RADIUS_LOCAL)
+			strcat(dest, "#author_current_mode=AAA_AUTHOR_RADIUS_LOCAL\n");
 		else
 			strcat(dest, "#author_current_mode=AAA_AUTHOR_NONE\n");
 
@@ -707,46 +740,12 @@ int pam_set_mode(char *src, char *dest, int mode, char *pam_file)
 		/* Exec accouting */
 		if (mode == AAA_ACCT_TACACS)
 			strcat(dest, "#acct_current_mode=AAA_ACCT_TACACS\n");
+		else if (mode == AAA_ACCT_RADIUS)
+			strcat(dest, "#acct_current_mode=AAA_ACCT_RADIUS\n");
 		else
 			strcat(dest, "#acct_current_mode=AAA_ACCT_NONE\n");
 		return 1;
 
-	} else if (strstr(src, "acct_current_command_mode") && family == AAA_ACCT_CMD) {
-		/* Command accounting */
-		int current_acct;
-
-		current_acct = librouter_pam_get_current_acct_cmd_mode(pam_file);
-		if (mode == AAA_ACCT_TACACS_CMD_1) {
-			if (current_acct == AAA_ACCT_TACACS_CMD_15)
-				strcat(dest, "#acct_current_command_mode=AAA_ACCT_TACACS_CMD_ALL\n");
-			else
-				strcat(dest, "#acct_current_command_mode=AAA_ACCT_TACACS_CMD_1\n");
-		} else if (mode == AAA_ACCT_TACACS_CMD_15) {
-			if (current_acct == AAA_ACCT_TACACS_CMD_1)
-				strcat(dest, "#acct_current_command_mode=AAA_ACCT_TACACS_CMD_ALL\n");
-			else
-				strcat(dest, "#acct_current_command_mode=AAA_ACCT_TACACS_CMD_15\n");
-		} else if (mode == AAA_ACCT_TACACS_NO_CMD_15) {
-			if (current_acct == AAA_ACCT_TACACS_CMD_ALL)
-				strcat(dest, "#acct_current_command_mode=AAA_ACCT_TACACS_CMD_1\n");
-			else
-				strcat(dest,
-				                "#acct_current_command_mode=AAA_ACCT_TACACS_CMD_NONE\n");
-		} else if (mode == AAA_ACCT_TACACS_NO_CMD_1) {
-			if (current_acct == AAA_ACCT_TACACS_CMD_ALL)
-				strcat(dest, "#acct_current_command_mode=AAA_ACCT_TACACS_CMD_15\n");
-			else
-				strcat(dest,
-				                "#acct_current_command_mode=AAA_ACCT_TACACS_CMD_NONE\n");
-		}
-		/*
-		 * else if (mode == AAA_ACCT_TACACS_CMD_ALL) {
-		 * 	strcat(dest,"#acct_current_command_mode=AAA_ACCT_TACACS_CMD_ALL\n");
-		 * } else {
-		 * 	strcat(dest,"#acct_current_command_mode=AAA_ACCT_TACACS_CMD_NONE\n");
-		 * }
-		 */
-		return 1;
 	} else {
 		/* Nothing was changed */
 		return 0;
@@ -758,7 +757,7 @@ int pam_set_mode(char *src, char *dest, int mode, char *pam_file)
  *
  * @param mode mode to be configured
  * @param pam_file
- * @return 1 when success, 0 otherwise
+ * @return 0 when success, -1 otherwise
  */
 int librouter_pam_config_mode(int mode, char *pam_file)
 {
@@ -768,36 +767,36 @@ int librouter_pam_config_mode(int mode, char *pam_file)
 	char *p, *buffer, buf[512];
 
 	if ((fd = open(pam_file, O_RDONLY)) < 0)
-		return 0;
+		return -1;
 
 	if (fstat(fd, &st) < 0) {
 		close(fd);
-		return 0;
+		return -1;
 	}
 
 	close(fd);
 
-	/* So continua a execucao da funcao se st.st_size for maior que zero. */
 	if (!st.st_size)
-		return 0;
+		return -1;
 
 	if (!(buffer = malloc(2 * st.st_size)))
-		return 0;
+		return -1;
+	memset(buffer, 0, (2 * st.st_size));
 
-	/* Primeira varredura pelo arquivo: ligar ou desligar modo */
+	/* First step : Disable current mode */
 	_librouter_pam_disable_mode(mode, pam_file);
 
-	buffer[0] = '\0';
 	if (!(f = fopen(pam_file, "r"))) {
 		free(buffer);
-		return 0;
+		return -1;
 	}
 
+	/* Second step : Set the mode and uncomment the lines */
 	while (fgets(buf, sizeof(buf) - 1, f)) {
-		if (pam_set_mode(buf, buffer, mode, pam_file)) {
+		if (_set_mode(buf, buffer, mode, pam_file)) {
 			/* When 1 is returned, then line was changed */
 			continue;
-		} else if (_librouter_pam_uncomment_line(buf, mode)) {
+		} else if (_should_uncomment_line(buf, mode)) {
 			p = buf;
 
 			/* remove commentary! */
@@ -822,7 +821,7 @@ int librouter_pam_config_mode(int mode, char *pam_file)
 	}
 
 	free(buffer);
-	return 1;
+	return 0;
 }
 
 int librouter_pam_get_auth_type(char *device)
@@ -896,6 +895,20 @@ static int _validate_username(char *username)
 	return 0;
 }
 
+int librouter_pam_add_user_with_hash(char *user, char *pw)
+{
+	if (user == NULL || pw == NULL)
+		return -1;
+
+	if (_validate_username(user) < 0)
+		return -1;
+
+	librouter_exec_prog(0, "/bin/deluser", user, NULL);
+	librouter_exec_prog(0, "/bin/adduser", user, "-c", pw, NULL);
+
+	return 0;
+}
+
 int librouter_pam_add_user(char *user, char *pw)
 {
 	if (user == NULL || pw == NULL)
@@ -948,6 +961,10 @@ int librouter_pam_del_user_from_group (char *user, char *group)
 
 	return 0;
 }
+
+/***********************************************************/
+/********* Server manipulation functions *******************/
+/***********************************************************/
 
 /**
  * librouter_pam_get_tacacs_servers
@@ -1166,7 +1183,7 @@ int librouter_pam_del_tacacs_server(struct auth_server *server)
 	}
 
 	/* Search if requested server exists*/
-	for (i = 0; i < AUTH_MAX_SERVERS; i++) {
+	for (i = 0; current[i].ipaddr && (i < AUTH_MAX_SERVERS); i++) {
 		if (!strcmp(server->ipaddr, current[i].ipaddr)) {
 			librouter_pam_free_servers(1, &current[i]); /* Delete it! */
 			break;
@@ -1244,7 +1261,7 @@ int librouter_pam_del_radius_server(struct auth_server *server)
 	}
 
 	/* Search if requested server exists*/
-	for (i = 0; i < AUTH_MAX_SERVERS; i++) {
+	for (i = 0; current[i].ipaddr && (i < AUTH_MAX_SERVERS); i++) {
 		if (!strcmp(server->ipaddr, current[i].ipaddr)) {
 			librouter_pam_free_servers(1, &current[i]); /* Delete it! */
 			break;
