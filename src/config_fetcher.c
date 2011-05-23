@@ -314,8 +314,8 @@ void librouter_config_dump_aaa(FILE *f, struct router_config *cfg)
 
 		while ((pw = fgetpwent(passwd))) {
 			if (pw->pw_uid > 500 && !strncmp(pw->pw_gecos, "Local", 5)) {
-				fprintf(f, "aaa username %s password hash %s\n", pw->pw_name,
-				                pw->pw_passwd);
+				fprintf(f, "aaa username %s password hash %s privilege %d\n", pw->pw_name,
+				                pw->pw_passwd, librouter_pam_get_privilege_by_name(pw->pw_name));
 			}
 		}
 
