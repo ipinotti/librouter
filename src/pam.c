@@ -965,111 +965,89 @@ int librouter_pam_del_user_from_group (char *user, char *group)
 	return 0;
 }
 
-static int test()
+
+int librouter_pam_get_privilege_by_name (char * group_priv)
 {
+	int j, ngroups=0, group_num=0;
+	gid_t *groups;
+	struct group *gr;
+	__gid_t gid;
 
-	   int j, ngroups;
-	   gid_t *groups;
-	   struct passwd *my_passwd;
-	   struct group *gr;
-	   int ret=0, num_groups=0;
-	   uid_t me;
+	memset (&gid, 0, sizeof(__gid_t));
 
-	   me = getuid ();
-	   my_passwd = getpwuid (me);
+	/* Retrieve number of groups */
+	getgrouplist(group_priv, gid, groups, &ngroups);
 
-	   if (!my_passwd)
-	   {
-		syslog (LOG_INFO, "Couldn't find out about user %d.\n", (int) me);
-		return -1;
+	/* Reserving memory for the N groups */
+	groups = malloc(ngroups * sizeof (gid_t));
+	if (groups == NULL) {
+	   syslog (LOG_INFO, "Couldn't reserve memory for find out about user %s.\n", group_priv);
+	   return -1;
+	}
+
+	/* Retrieve group list */
+	if (getgrouplist(group_priv, gid, groups, &ngroups) < 0)
+	   return -1;
+
+	/* Retrieve the group number of the user */
+	for (j = 0; j < ngroups; j++) {
+	   group_num = (int)groups[j];
+	   gr = getgrgid(groups[j]);
+	   if (gr != NULL){
+		   if(strstr(gr->gr_name,"priv"))
+			   break;
 	   }
+	}
 
-	   /* Retrieve number of groups */
-	   getgrouplist(my_passwd->pw_name, my_passwd->pw_gid, groups, &ngroups);
+	free(groups);
 
-	   /* Reserving memory for the N groups */
-	   groups = malloc(ngroups * sizeof (gid_t));
-	   if (groups == NULL) {
-		   syslog (LOG_INFO, "Couldn't reserve memory for find out about user %d.\n", (int) me);
-		   return -1;
-	   }
-
-	   /* Retrieve group list */
-	   if (getgrouplist(my_passwd->pw_name, my_passwd->pw_gid, groups, &ngroups) == -1) {
-		   fprintf(stderr, "getgrouplist() returned -1; ngroups = %d\n",
-				   ngroups);
-		   return -1;
-	   }
-
-	   /* Display list of retrieved groups, along with group names */
-
-	   fprintf(stderr, "ngroups = %d\n", ngroups);
-	   for (j = 0; j < ngroups; j++) {
-		   printf("%d", groups[j]);
-		   gr = getgrgid(groups[j]);
-		   if (gr != NULL)
-			   printf(" (%s)", gr->gr_name);
-		   printf("\n");
-	   }
-
-	   free(groups);
-
-	   return 0;
+	return group_num;
 }
 
 int librouter_pam_get_privilege (void)
 {
+	int j, ngroups=0, group_num=0;
+	gid_t *groups;
+	struct passwd *my_passwd;
+	struct group *gr;
+	uid_t me;
 
-	test();
-//	int ret=0, num_groups=0;
-//	uid_t me;
-//	struct passwd *my_passwd;
-//	struct group *my_group;
-//	char **members;
-//
-//	/* Get information about the user ID.  */
-//	me = getuid ();
-//	my_passwd = getpwuid (me);
-//	if (!my_passwd)
-//	{
-//	  syslog (LOG_INFO, "Couldn't find out about user %d.\n", (int) me);
-//	  return -1;
-//	}
-//
-//	printf ("I am %s.\n", my_passwd->pw_gecos);
-//	printf ("My login name is %s.\n", my_passwd->pw_name);
-//	printf ("My uid is %d.\n", (int) (my_passwd->pw_uid));
-//	/* Get information about the default group ID.  */
-//	my_group = getgrgid (my_passwd->pw_gid);
-//	if (!my_group)
-//	{
-//	  syslog (LOG_INFO, "Couldn't find out about group %d.\n", (int) my_passwd->pw_gid);
-//	  return -1;
-//	}
-//
-//	/* Print the information.  */
-//	printf ("1My default group is %s (%d).\n", my_group->gr_name, (int) (my_passwd->pw_gid));
-//
-//	getgrouplist();
-//	getgroups();
-//
-//	my_group = getgrgid (my_passwd->pw_gid);
-//	if (!my_group)
-//	{
-//	  syslog (LOG_INFO, "Couldn't find out about group %d.\n", (int) my_passwd->pw_gid);
-//	  return -1;
-//	}
-//
-//	/* Print the information.  */
-//	printf ("2My default group is %s (%d).\n", my_group->gr_name, (int) (my_passwd->pw_gid));
-//
-//	return 0;
+	me = getuid ();
+	my_passwd = getpwuid (me);
+
+	if (!my_passwd){
+		syslog (LOG_INFO, "Couldn't find out about user %d.\n", (int) me);
+		return -1;
+	}
+
+	/* Retrieve number of groups */
+	getgrouplist(my_passwd->pw_name, my_passwd->pw_gid, groups, &ngroups);
+
+	/* Reserving memory for the N groups */
+	groups = malloc(ngroups * sizeof (gid_t));
+	if (groups == NULL) {
+	   syslog (LOG_INFO, "Couldn't reserve memory for find out about user %d.\n", (int) me);
+	   return -1;
+	}
+
+	/* Retrieve group list */
+	if (getgrouplist(my_passwd->pw_name, my_passwd->pw_gid, groups, &ngroups) < 0)
+	   return -1;
+
+	/* Retrieve the group number of the user */
+	for (j = 0; j < ngroups; j++) {
+	   group_num = (int)groups[j];
+	   gr = getgrgid(groups[j]);
+	   if (gr != NULL){
+		   if(strstr(gr->gr_name,"priv"))
+			   break;
+	   }
+	}
+
+	free(groups);
+
+	return group_num;
 }
-
-
-
-
-
 
 /***********************************************************/
 /********* Server manipulation functions *******************/
