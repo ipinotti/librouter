@@ -966,6 +966,39 @@ int librouter_pam_del_user_from_group (char *user, char *group)
 }
 
 
+int librouter_pam_cmds_del_user_from_group (char * name)
+{
+	char group[12];
+	int group_num=0;
+
+	if ((group_num = librouter_pam_get_privilege_by_name(name)) < 0)
+		return -1;
+
+	snprintf(group, 12, "priv%d", group_num);
+
+	if (librouter_pam_del_user_from_group(name, group) < 0)
+		return -1;
+
+	if (librouter_pam_del_user_from_group(name, "root") < 0)
+		return -1;
+
+	return 0;
+}
+
+int librouter_pam_cmds_add_user_to_group(char * name, char * priv)
+{
+	char group[12];
+	snprintf(group, 12, "priv%s", priv);
+
+	if (librouter_pam_add_user_to_group(name, group) < 0)
+		return -1;
+
+	if (librouter_pam_add_user_to_group(name, "root") < 0)
+		return -1;
+
+	return 0;
+}
+
 int librouter_pam_get_privilege_by_name (char * group_priv)
 {
 	int j, ngroups=0, group_num=0;
