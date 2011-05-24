@@ -1040,13 +1040,17 @@ int librouter_pam_get_privilege (void)
 	   gr = getgrgid(groups[j]);
 	   if (gr != NULL){
 		   if(strstr(gr->gr_name,"priv"))
-			   break;
+			   goto end_priv;
 	   }
 	}
 
 	free(groups);
+	return 0;
 
+end_priv:
+	free(groups);
 	return group_num;
+
 }
 
 /***********************************************************/
