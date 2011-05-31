@@ -123,7 +123,7 @@
 #define PROG_PLUTO			"pluto"
 #define PROC_MPC180			"/proc/mpc180"
 
-#define SNMP_THIN_CONF
+//#define SNMP_THIN_CONF
 #ifdef SNMP_THIN_CONF
 #define FILE_SNMPD_CONF                 "/etc/snmp/snmpd.conf"
 #define FILE_SNMPD_DATA_CONF    	FILE_SNMPD_CONF
