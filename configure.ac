@@ -48,6 +48,7 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 
 # Checks for libraries.
+AC_CHECK_LIB(m, log10,, exit)
 AC_CHECK_LIB(pam, pam_get_data,, exit)
 AC_CHECK_LIB(pam_misc, pam_misc_setenv,, exit)
 AC_CHECK_LIB(crypto, RSA_public_encrypt,, exit)
