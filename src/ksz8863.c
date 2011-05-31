@@ -1166,6 +1166,8 @@ static int _get_vlan_table(unsigned int entry, struct vlan_table_t *t)
 		return -1;
 	}
 
+	memset(t, 0, sizeof(struct vlan_table_t));
+
 	data = KSZ8863REG_READ_OPERATION | KSZ8863REG_VLAN_TABLE_SELECT;
 	if (_ksz8863_reg_write(KSZ8863REG_INDIRECT_ACCESS_CONTROL0, &data, sizeof(data)))
 		return -1;
