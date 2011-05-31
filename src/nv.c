@@ -525,7 +525,7 @@ int _nv_save(char *data, int len, int magic)
  * @param magic
  * @return Number of bytes read
  */
-int _nv_load(char *data, int magic)
+int _nv_load(char **data, int magic)
 {
 	int fd;
 	char *nv_data;
@@ -556,7 +556,8 @@ int _nv_load(char *data, int magic)
 	if (nv_data == NULL)
 		return -1;
 
-	memcpy(data, nv_data, pack->hdr.size);
+	*data = malloc(pack->hdr.size);
+	memcpy(*data, nv_data, pack->hdr.size);
 
 	free(nv_data);
 
@@ -593,7 +594,7 @@ int _nv_file_write(char *filename, char *data, int len)
  * @param data
  * @return Number of bytes read
  */
-int _nv_file_read(char *filename, char *data)
+int _nv_file_read(char *filename, char **data)
 {
 	int fd;
 	struct stat st;
@@ -605,7 +606,8 @@ int _nv_file_read(char *filename, char *data)
 
 	fstat(fd, &st);
 
-	read(fd, data, st.st_size);
+	*data = malloc(st.st_size);
+	read(fd, *data, st.st_size);
 
 	close(fd);
 
@@ -624,8 +626,7 @@ int librouter_nv_load_configuration(char *filename)
 	char *data;
 	int len;
 
-	data = malloc(8192); /* FIXME Test for maximum size */
-	len = _nv_load(data, MAGIC_CONFIG);
+	len = _nv_load(&data, MAGIC_CONFIG);
 
 	_nv_file_write(filename, data, len + 1);
 
@@ -676,8 +677,7 @@ int librouter_nv_load_ssh_secret(char *filename)
 	char *data;
 	int len;
 
-	data = malloc(8192); /* FIXME Test for maximum size */
-	len = _nv_load(data, MAGIC_SSH);
+	len = _nv_load(&data, MAGIC_SSH);
 
 	_nv_file_write(filename, data, len);
 
@@ -692,8 +692,7 @@ int librouter_nv_load_ntp_secret(char *filename)
 	char *data;
 	int len;
 
-	data = malloc(8192); /* FIXME Test for maximum size */
-	len = _nv_load(data, MAGIC_NTP);
+	len = _nv_load(&data, MAGIC_NTP);
 
 	_nv_file_write(filename, data, len);
 
@@ -704,7 +703,9 @@ int librouter_nv_load_ntp_secret(char *filename)
 #endif /* OPTION_NTPD */
 
 /**
- * Salva na  memoria nao volatil (flash) a configuracao armazenada no arquivo 'filename'
+ * librouter_nv_save_configuration
+ *
+ * Save configuration in non-volatile memory
  *
  * @param filename
  * @return
@@ -714,9 +715,7 @@ int librouter_nv_save_configuration(char *filename)
 	char *data;
 	int len;
 
-	data = malloc(8192); /* FIXME Test for maximum size */
-
-	len = _nv_file_read(filename, data);
+	len = _nv_file_read(filename, &data);
 	_nv_save(data, len, MAGIC_CONFIG);
 
 	free(data);
@@ -728,9 +727,7 @@ int librouter_nv_save_ssh_secret(char *filename)
 	char *data;
 	int len;
 
-	data = malloc(8192); /* FIXME Test for maximum size */
-
-	len = _nv_file_read(filename, data);
+	len = _nv_file_read(filename, &data);
 	_nv_save(data, len, MAGIC_SSH);
 
 	free(data);
@@ -742,26 +739,23 @@ int librouter_nv_save_ntp_secret(char *filename)
 	char *data;
 	int len;
 
-	data = malloc(8192); /* FIXME Test for maximum size */
-
-	len = _nv_file_read(filename, data);
+	len = _nv_file_read(filename, &data);
 	_nv_save(data, len, MAGIC_CONFIG);
 
 	free(data);
 	return 0;
 }
 
-
 int librouter_nv_save_ipsec_secret(char *data)
 {
 	int len = strlen(data);
 
-	return _nv_save(data, len, MAGIC_IPSEC); /* FIXME Less generic name for IPSec secret */
+	return _nv_save(data, len, MAGIC_IPSEC);
 }
 
 int librouter_nv_load_ipsec_secret(char *data)
 {
-	return _nv_load(data, MAGIC_IPSEC);
+	return _nv_load(&data, MAGIC_IPSEC);
 }
 
 int librouter_nv_load_snmp_secret(char *filename)
@@ -769,8 +763,7 @@ int librouter_nv_load_snmp_secret(char *filename)
 	char *data;
 	int len;
 
-	data = malloc(8192); /* FIXME Test for maximum size */
-	len = _nv_load(data, MAGIC_SSH);
+	len = _nv_load(&data, MAGIC_SNMP);
 
 	_nv_file_write(filename, data, len);
 
@@ -784,9 +777,7 @@ int librouter_nv_save_snmp_secret(char *filename)
 	char *data;
 	int len;
 
-	data = malloc(8192); /* FIXME Test for maximum size */
-
-	len = _nv_file_read(filename, data);
+	len = _nv_file_read(filename, &data);
 	_nv_save(data, len, MAGIC_SNMP);
 
 	free(data);
@@ -795,7 +786,7 @@ int librouter_nv_save_snmp_secret(char *filename)
 
 int librouter_nv_load_banner_login(char *data)
 {
-	return _nv_load(data, MAGIC_BANNER_LOGIN);
+	return _nv_load(&data, MAGIC_BANNER_LOGIN);
 }
 
 int librouter_nv_save_banner_login(char *data)
@@ -807,7 +798,7 @@ int librouter_nv_save_banner_login(char *data)
 
 int librouter_nv_load_banner_system(char *data)
 {
-	return _nv_load(data, MAGIC_BANNER_SYSTEM);
+	return _nv_load(&data, MAGIC_BANNER_SYSTEM);
 }
 
 int librouter_nv_save_banner_system(char *data)
