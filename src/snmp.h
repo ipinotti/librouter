@@ -8,6 +8,11 @@
 #define SNMP_H_
 
 #include <net-snmp/net-snmp-config.h>
+
+#include <net-snmp/types.h>
+#include <net-snmp/output_api.h>
+#include <net-snmp/config_api.h>
+
 #include <net-snmp/library/snmp_transport.h>
 #include <net-snmp/library/system.h>
 #include <net-snmp/library/mib.h>
