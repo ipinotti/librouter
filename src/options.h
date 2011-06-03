@@ -90,9 +90,9 @@
 #define OPTION_AAA_ACCOUNTING
 #define OPTION_AAA_AUTHORIZATION
 
-#define OPTION_MODEM3G
-#define OPTION_PPP
-#define OPTION_NUM_3G_IFACES	1
+//#define OPTION_MODEM3G
+//#define OPTION_PPP
+//#define OPTION_NUM_3G_IFACES	1
 
 /* ETL8110 Options */
 #if defined(CONFIG_DIGISTAR_ETL8110)
@@ -167,6 +167,8 @@
 
 /*****************************************************************************/
 /*****************************************************************************/
+/* Maximum hostname size */
+#define OPTION_HOSTNAME_MAXSIZE	30
 
 /* Bridging */
 #define OPTION_BRIDGE
