@@ -1379,7 +1379,7 @@ int librouter_pam_del_radius_server(struct auth_server *server)
 		return 0;
 	}
 
-	if (librouter_pam_get_tacacs_servers(current) < 0) {
+	if (librouter_pam_get_radius_servers(current) < 0) {
 		librouter_logerr("Could not fetch server info\n");
 		return -1;
 	}
