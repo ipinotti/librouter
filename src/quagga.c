@@ -1056,3 +1056,32 @@ int librouter_quagga_del_route(char *hash)
 	librouter_quagga_free_routes(route);
 	return 0;
 }
+
+/**
+ * librouter_quagga_add_link_detect
+ *
+ * Enable link-detection on an interface
+ *
+ * Specially used for dynamically created interfaces
+ *
+ * @param interface
+ * @return
+ */
+int librouter_quagga_add_link_detect(char *interface)
+{
+	char buf_daemon[256];
+	char zebra_cmd[256];
+
+	if (librouter_quagga_connect_daemon(ZEBRA_PATH) < 0)
+		return;
+
+	sprintf(zebra_cmd, "interface %s\n", interface);
+
+	librouter_quagga_execute_client("enable", stdout, buf_daemon, 0);
+	librouter_quagga_execute_client("configure terminal", stdout, buf_daemon, 0);
+	librouter_quagga_execute_client(zebra_cmd, stdout, buf_daemon, 0);
+	librouter_quagga_execute_client("link-detect", stdout, buf_daemon, 0);
+	librouter_quagga_execute_client("write file", stdout, buf_daemon, 0);
+
+	librouter_quagga_close_daemon();
+}

@@ -81,4 +81,6 @@ void librouter_quagga_free_routes(struct routes_t *route);
 int librouter_quagga_del_route(char *hash);
 struct routes_t * librouter_quagga_get_routes(void);
 
+int librouter_quagga_add_link_detect(char *interface);
+
 #endif /* QUAGGA_H_ */
