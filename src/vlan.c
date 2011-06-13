@@ -26,6 +26,7 @@
 #include "device.h"
 #include "error.h"
 #include "defines.h"
+#include "quagga.h"
 
 int librouter_vlan_exists(int ethernet_no, int vid)
 {
@@ -37,7 +38,7 @@ int librouter_vlan_exists(int ethernet_no, int vid)
 	return (librouter_dev_exists(ifname));
 }
 
-int librouter_vlan_vid(int ethernet_no, int vid, int add_del, int bridge)
+int librouter_vlan_add_vid(int ethernet_no, int vid)
 {
 	struct vlan_ioctl_args if_request;
 	int sock;
@@ -55,18 +56,47 @@ int librouter_vlan_vid(int ethernet_no, int vid, int add_del, int bridge)
 	}
 
 	if_request.u.VID = vid;
-
-	if (add_del) {
-		sprintf(if_request.device1, "%s%d", fam->linux_string, ethernet_no);
-		if_request.cmd = ADD_VLAN_CMD;
-	} else {
-		sprintf(if_request.device1, "%s%d.%d", fam->linux_string, ethernet_no, vid);
-		if_request.cmd = DEL_VLAN_CMD;
-	}
+	sprintf(if_request.device1, "%s%d", fam->linux_string, ethernet_no);
+	if_request.cmd = ADD_VLAN_CMD;
 
 	if (ioctl(sock, SIOCSIFVLAN, &if_request) < 0) {
-		librouter_pr_error(1, "vlan: unable to %s vlan",
-		                add_del ? "create" : "delete");
+		librouter_pr_error(1, "vlan: unable to create vlan");
+		close(sock);
+		return (-1);
+	}
+
+	close(sock);
+
+	/* Tell quagga to monitor link on this interface */
+	sprintf(if_request.device1, "%s%d.%d", fam->linux_string, ethernet_no, vid);
+	librouter_quagga_add_link_detect(if_request.device1);
+
+	return 0;
+}
+
+int librouter_vlan_del_vid(int ethernet_no, int vid)
+{
+	struct vlan_ioctl_args if_request;
+	int sock;
+	dev_family *fam = librouter_device_get_family_by_type(eth);
+
+	if ((vid < 2) || (vid > 4094)) {
+		librouter_pr_error(0, "vlan: invalid vid: %d", vid);
+		return (-1);
+	}
+
+	/* Create a channel to the NET kernel. */
+	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+		librouter_pr_error(1, "vlan: socket");
+		return (-1);
+	}
+
+	if_request.u.VID = vid;
+	sprintf(if_request.device1, "%s%d.%d", fam->linux_string, ethernet_no, vid);
+	if_request.cmd = DEL_VLAN_CMD;
+
+	if (ioctl(sock, SIOCSIFVLAN, &if_request) < 0) {
+		librouter_pr_error(1, "vlan: unable to delete vlan");
 		close(sock);
 		return (-1);
 	}
