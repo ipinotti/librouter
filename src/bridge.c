@@ -68,6 +68,10 @@ int librouter_br_get_ipaddr(char *brname, struct ipa_t *ip)
 	else
 		_br_get_bkp_ip(ip);
 
+	/* FIXME Zeroed IP address is being shown! */
+	if (!strcmp(ip->addr, "0.0.0.0"))
+		ip->addr[0] = 0;
+
 	return 0;
 }
 
