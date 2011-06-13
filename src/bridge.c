@@ -83,6 +83,8 @@ int librouter_br_update_ipaddr(char *ifname)
 	if (strcmp(ifname, "eth0"))
 		return 0;
 
+	br_dbg("Updating IP for %s\n", ifname);
+
 	for (i=0; i < MAX_BRIDGE; i++) {
 		sprintf(brname, "%s%d", BRIDGE_NAME, i);
 		if (librouter_br_checkif(brname, ifname))
@@ -262,9 +264,9 @@ int librouter_br_delif(char *brname, char *ifname)
 	}
 
 	if ((err = br_del_interface(br, ifindex)) == 0) {
-		librouter_ip_interface_set_no_addr(brname); /* flush */
 		/* Recover ip address from bridge */
 		if (!strcmp(ifname, "eth0")) {
+			librouter_ip_interface_set_no_addr(brname); /* flush */
 			librouter_ip_ethernet_set_addr(ifname, ip.addr, ip.mask);
 			_br_del_bkp_ip(); /* Remove IP address backup file, if it exists */
 		}
