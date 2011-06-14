@@ -519,13 +519,13 @@ int _nv_save(char *data, int len, int magic)
 }
 
 /**
- * _nv_load	Fetch info from flash
+ * _nv_alloc_and_load	Fetch info from flash, allocating memory
  *
  * @param data
  * @param magic
  * @return Number of bytes read
  */
-int _nv_load(char **data, int magic)
+int _nv_alloc_and_load(char **data, int magic)
 {
 	int fd;
 	char *nv_data;
@@ -558,6 +558,51 @@ int _nv_load(char **data, int magic)
 
 	*data = malloc(pack->hdr.size);
 	memcpy(*data, nv_data, pack->hdr.size);
+
+	free(nv_data);
+
+	return pack->hdr.size;
+}
+
+/**
+ * _nv_load	Fetch info from flash
+ *
+ * @param data
+ * @param magic
+ * @return Number of bytes read
+ */
+int _nv_load(char *data, int magic)
+{
+	int fd;
+	char *nv_data;
+	struct _nv nv;
+	cfg_pack *pack;
+
+	if (_nv_fetch(&nv, NULL) < 0)
+		return -1;
+
+	pack = _get_pack_from_magic(&nv, magic);
+	if (pack == NULL) {
+		printf("%s : Did not find data from magic %08x\n", __FUNCTION__, magic);
+		return -1;
+	}
+
+	if (pack->hdr.magic_number != magic) {
+		printf("%s : Magic number mismatch\n", __FUNCTION__);
+		return -1;
+	}
+
+	if ((fd = open(DEV_STARTUP_CONFIG, O_RDONLY)) < 0) {
+		librouter_pr_error(1, "could not open "DEV_STARTUP_CONFIG);
+		return -1;
+	}
+
+	nv_data = _nv_read(fd, pack);
+
+	if (nv_data == NULL)
+		return -1;
+
+	memcpy(data, nv_data, pack->hdr.size);
 
 	free(nv_data);
 
@@ -626,7 +671,7 @@ int librouter_nv_load_configuration(char *filename)
 	char *data;
 	int len;
 
-	len = _nv_load(&data, MAGIC_CONFIG);
+	len = _nv_alloc_and_load(&data, MAGIC_CONFIG);
 
 	_nv_file_write(filename, data, len + 1);
 
@@ -677,7 +722,7 @@ int librouter_nv_load_ssh_secret(char *filename)
 	char *data;
 	int len;
 
-	len = _nv_load(&data, MAGIC_SSH);
+	len = _nv_alloc_and_load(&data, MAGIC_SSH);
 
 	_nv_file_write(filename, data, len);
 
@@ -692,7 +737,7 @@ int librouter_nv_load_ntp_secret(char *filename)
 	char *data;
 	int len;
 
-	len = _nv_load(&data, MAGIC_NTP);
+	len = _nv_alloc_and_load(&data, MAGIC_NTP);
 
 	_nv_file_write(filename, data, len);
 
@@ -755,7 +800,7 @@ int librouter_nv_save_ipsec_secret(char *data)
 
 int librouter_nv_load_ipsec_secret(char *data)
 {
-	return _nv_load(&data, MAGIC_IPSEC);
+	return _nv_load(data, MAGIC_IPSEC);
 }
 
 int librouter_nv_load_snmp_secret(char *filename)
@@ -763,7 +808,7 @@ int librouter_nv_load_snmp_secret(char *filename)
 	char *data;
 	int len;
 
-	len = _nv_load(&data, MAGIC_SNMP);
+	len = _nv_alloc_and_load(&data, MAGIC_SNMP);
 
 	_nv_file_write(filename, data, len);
 
@@ -786,7 +831,7 @@ int librouter_nv_save_snmp_secret(char *filename)
 
 int librouter_nv_load_banner_login(char *data)
 {
-	return _nv_load(&data, MAGIC_BANNER_LOGIN);
+	return _nv_load(data, MAGIC_BANNER_LOGIN);
 }
 
 int librouter_nv_save_banner_login(char *data)
@@ -798,7 +843,7 @@ int librouter_nv_save_banner_login(char *data)
 
 int librouter_nv_load_banner_system(char *data)
 {
-	return _nv_load(&data, MAGIC_BANNER_SYSTEM);
+	return _nv_load(data, MAGIC_BANNER_SYSTEM);
 }
 
 int librouter_nv_save_banner_system(char *data)
