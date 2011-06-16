@@ -12,6 +12,7 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <math.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -104,7 +105,7 @@ int librouter_efm_enable(int enable)
 
 int librouter_efm_get_status(struct orionplus_stat *st)
 {
-	memset(st, 0, sizeof(struct orionplus_stat));
+	memset(st, 0, sizeof(struct orionplus_stat) * 4);
 
 	return _do_ioctl(ORIONPLUS_GETSTATUS, st);
 }
@@ -146,5 +147,102 @@ int librouter_efm_get_num_channels(void)
 
 	return n;
 }
+
+/* MIB related functions */
+
+static struct orionplus_stat *_get_channel_stat(int channel)
+{
+	struct orionplus_stat stat[4];
+	struct orionplus_stat *ch_stat = malloc(sizeof(struct orionplus_stat));
+
+	if (ch_stat == NULL) {
+		printf("%s : Could not allocate memory\n", __FUNCTION__);
+		return NULL;
+	}
+
+	if (librouter_efm_get_num_channels() < (channel + 1)) {
+		printf("No such channel %d\n", channel);
+		return NULL;
+	}
+
+	if (librouter_efm_get_status(&stat[0]) < 0)
+		return NULL;
+
+	memcpy(ch_stat, &stat[channel], sizeof(struct orionplus_stat));
+
+	return ch_stat;
+}
+
+static struct orionplus_stat *_get_channel_cnt(int channel)
+{
+	struct orionplus_stat stat[4];
+	struct orionplus_stat *ch_stat = malloc(sizeof(struct orionplus_stat));
+
+	if (ch_stat == NULL) {
+		printf("%s : Could not allocate memory\n", __FUNCTION__);
+		return NULL;
+	}
+
+	if (librouter_efm_get_num_channels() < (channel + 1)) {
+		printf("No such channel %d\n", channel);
+		return NULL;
+	}
+
+	if (librouter_efm_get_status(&stat[0]) < 0)
+		return NULL;
+
+	memcpy(ch_stat, &stat[channel], sizeof(struct orionplus_stat));
+
+	return ch_stat;
+}
+
+float librouter_efm_get_snr(int channel)
+{
+	struct orionplus_stat *st = _get_channel_stat(channel);
+	float snr = 1.0;
+
+	if (st == NULL)
+		return -1;
+
+	snr = 58.4 - (10 * log10(st->mean_sq_err[0]));
+
+	free(st);
+	return snr;
+}
+
+float librouter_efm_get_loop_attn(int channel)
+{
+	struct orionplus_stat *st = _get_channel_stat(channel);
+	float attn = 1.0;
+
+	if (st == NULL)
+		return -1;
+
+	attn = st->loop_attn[0]/10;
+
+	free(st);
+	return attn;
+}
+
+int librouter_efm_get_los(int channel)
+{
+	struct orionplus_stat *st = _get_channel_stat(channel);
+
+	return 0;
+}
+
+int librouter_efm_get_es(int channel)
+{
+	struct orionplus_counters cnt;
+
+	if (librouter_efm_get_counters(&cnt) < 0) {
+		syslog(LOG_ERR, "%s : Could not get EFM counters\n", __FUNCTION__);
+		return -1;
+	}
+
+	return cnt.xcvr_cnt[channel].errored_sec;
+}
+
+
 
 #endif /* OPTION_EFM */

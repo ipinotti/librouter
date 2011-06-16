@@ -24,6 +24,7 @@ int librouter_efm_get_num_channels(void);
 
 int librouter_efm_get_channel_state_string(enum channel_state st, char *buf, int len);
 
-
+float librouter_efm_get_snr(int channel);
+float librouter_efm_get_loop_attn(int channel);
 
 #endif /* EFM_H_ */
