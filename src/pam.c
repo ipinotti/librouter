@@ -216,14 +216,27 @@ int librouter_pam_enable_authenticate(void)
 	struct pam_conv fpam_conv;
 	static pam_handle_t *pam_handle = NULL;
 	static struct pam_conv null_conv = { _pam_null_conv, NULL };
+	int mode;
 
 	dbgS_aaa("Starting librouter_pam_enable_authenticate\n\n");
 
 	fpam_conv.conv = misc_conv;
 	fpam_conv.appdata_ptr = NULL;
 
-	if ((pam_err = pam_start("enable", "$enable$", &null_conv, &pam_handle)) != PAM_SUCCESS)
-		goto web_auth_err;
+	mode = librouter_pam_get_current_mode(FILE_PAM_ENABLE);
+	if (mode == AAA_AUTH_RADIUS || mode == AAA_AUTH_RADIUS_LOCAL) {
+		if ((pam_err = pam_start("enable", "$enable$", &null_conv, &pam_handle)) != PAM_SUCCESS)
+			goto web_auth_err;
+	} else {
+		struct passwd *pw;
+		pw = getpwuid(getuid());
+
+		if (pw == NULL) /* No such user ? */
+			return -1;
+
+		if ((pam_err = pam_start("enable", pw->pw_name, &null_conv, &pam_handle)) != PAM_SUCCESS)
+			goto web_auth_err;
+	}
 
 	if ((pam_err = pam_set_item(pam_handle, PAM_CONV, (const void *) &fpam_conv)) != PAM_SUCCESS)
 		goto web_auth_err;
