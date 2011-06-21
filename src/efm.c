@@ -81,6 +81,25 @@ int librouter_efm_set_mode(int mode)
 	return _do_ioctl(ORIONPLUS_SETMODE, &conf);
 }
 
+int librouter_efm_get_force_bonding(void)
+{
+	struct orionplus_conf conf;
+
+	if (_do_ioctl(ORIONPLUS_GETCONFIG, &conf))
+		return -1;
+
+	return conf.force_bonding;
+}
+
+int librouter_efm_set_force_bonding(int enable)
+{
+	struct orionplus_conf conf;
+
+	conf.force_bonding = enable;
+
+	return _do_ioctl(ORIONPLUS_FORCEBONDING, &conf);
+}
+
 int librouter_efm_enable(int enable)
 {
 	struct orionplus_conf conf;

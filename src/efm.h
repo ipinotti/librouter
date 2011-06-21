@@ -16,6 +16,9 @@
 int librouter_efm_set_mode(int mode);
 int librouter_efm_get_mode(void);
 
+int librouter_efm_get_force_bonding(void);
+int librouter_efm_set_force_bonding(int enable);
+
 int librouter_efm_enable(int enable);
 
 int librouter_efm_get_status(struct orionplus_stat *st);
