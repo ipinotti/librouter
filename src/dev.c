@@ -643,6 +643,101 @@ int librouter_arp_add(char *host, char *mac)
 	return (0);
 }
 
+
+/**
+ * _dev_save_subiface_flags
+ *
+ * Save sub-interfaces flags for when this interface is re-enabled,
+ * they can restore to the same state.
+ *
+ * @param dev
+ */
+static void _dev_save_subiface_flags(char *dev)
+{
+	struct intf_info info;
+	char *intf_list[MAX_NUM_LINKS];
+	int num_of_ifaces = 0;
+	int i;
+
+	librouter_ip_get_if_list(&info);
+	for (i = 0; i < MAX_NUM_LINKS; i++) {
+		intf_list[i] = info.link[i].ifname;
+	}
+
+	/* Get number of interfaces and sort them by name */
+	for (i = 0; intf_list[i][0] != '\0'; i++)
+		num_of_ifaces++;
+
+	for (i = 0; i < num_of_ifaces; i++) {
+		char filename[64];
+		sprintf(filename, "/var/run/%s.linkup", intf_list[i]);
+
+		if (strstr(intf_list[i],".") == NULL)
+			continue;
+
+		if (strncmp(dev, intf_list[i], strlen(dev)))
+			continue;
+
+		/*
+		 * If sub-interface link is up, create a file
+		 * so we can restore its state afterwards. If down,
+		 * make sure the file is does not exist.
+		 */
+		if (librouter_dev_get_link(intf_list[i])) {
+			FILE *f;
+			f = fopen(filename, "w");
+			fclose(f);
+		} else {
+			unlink(filename);
+		}
+	}
+}
+
+/**
+ * _dev_restore_subiface_flags
+ *
+ * Restore sub-interfaces flags when re-enabling main interface
+ *
+ * @param dev
+ */
+static void _dev_restore_subiface_flags(char *dev)
+{
+	struct intf_info info;
+	char *intf_list[MAX_NUM_LINKS];
+	int num_of_ifaces = 0;
+	int i;
+
+	librouter_ip_get_if_list(&info);
+	for (i = 0; i < MAX_NUM_LINKS; i++) {
+		intf_list[i] = info.link[i].ifname;
+	}
+
+	/* Get number of interfaces and sort them by name */
+	for (i = 0; intf_list[i][0] != '\0'; i++)
+		num_of_ifaces++;
+
+	for (i = 0; i < num_of_ifaces; i++) {
+		FILE *f;
+		char filename[64];
+
+		if (strstr(intf_list[i],".") == NULL)
+			continue;
+
+		if (strncmp(dev, intf_list[i], strlen(dev)))
+			continue;
+
+		sprintf(filename, "/var/run/%s.linkup", intf_list[i]);
+		f = fopen(filename, "r");
+		if (f != NULL) {
+			/* Is interface already up? */
+			if (librouter_dev_get_link(intf_list[i]) != IFF_UP)
+				librouter_dev_set_link_up(intf_list[i]);
+			fclose(f);
+		}
+
+	}
+}
+
 /**
  * librouter_dev_shutdown	Disable an interface
  *
@@ -669,6 +764,10 @@ int librouter_dev_shutdown(char *dev, dev_family *fam)
 #ifdef OPTION_QOS
 	librouter_qos_tc_remove_all(dev);
 #endif
+
+	/* Save sub-interfaces states when physical interface goes down */
+	if (minor < 0)
+		_dev_save_subiface_flags(dev);
 
 	librouter_dev_set_link_down(dev);
 
@@ -728,6 +827,10 @@ int librouter_dev_noshutdown(char *dev, dev_family *fam)
 
 	if (librouter_dev_set_link_up(dev) < 0)
 		return -1;
+
+	/* Restore sub-interfaces states */
+	if (minor < 0)
+		_dev_restore_subiface_flags(dev);
 
 	switch (fam->type) {
 	case eth:
