@@ -96,6 +96,7 @@ int librouter_pam_add_user_to_group (char *user, char *group);
 int librouter_pam_del_user_from_group (char *user, char *group);
 int librouter_pam_get_privilege_by_name (char * group_priv);
 int librouter_pam_get_privilege (void);
+int librouter_pam_get_username(char *username);
 int librouter_pam_cmds_add_user_to_group(char * name, char * priv);
 int librouter_pam_cmds_del_user_from_group (char * name);
 

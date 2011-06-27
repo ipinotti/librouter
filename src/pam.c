@@ -28,38 +28,23 @@
 
 /* New modes must be added to this global variable */
 #define MAX_AAA_TYPES 32
-static const aaa_config_t
-                aaa_config[MAX_AAA_TYPES] = {
-                /* Authentication */
-                { AAA_AUTH, AAA_AUTH_NONE },
-                { AAA_AUTH, AAA_AUTH_NONE },
-                { AAA_AUTH, AAA_AUTH_LOCAL },
-                { AAA_AUTH, AAA_AUTH_RADIUS },
-                { AAA_AUTH, AAA_AUTH_RADIUS_LOCAL },
-                { AAA_AUTH, AAA_AUTH_TACACS },
-                { AAA_AUTH, AAA_AUTH_TACACS_LOCAL },
-                /* Authorization */
-                { AAA_AUTHOR, AAA_AUTHOR_NONE },
-                { AAA_AUTHOR, AAA_AUTHOR_TACACS },
-                { AAA_AUTHOR, AAA_AUTHOR_TACACS_LOCAL },
-                { AAA_AUTHOR, AAA_AUTHOR_RADIUS },
-                { AAA_AUTHOR, AAA_AUTHOR_RADIUS_LOCAL },
+static const aaa_config_t aaa_config[MAX_AAA_TYPES] = {
+/* Authentication */
+{ AAA_AUTH, AAA_AUTH_NONE }, { AAA_AUTH, AAA_AUTH_NONE }, { AAA_AUTH, AAA_AUTH_LOCAL }, { AAA_AUTH,
+                AAA_AUTH_RADIUS }, { AAA_AUTH, AAA_AUTH_RADIUS_LOCAL }, { AAA_AUTH, AAA_AUTH_TACACS }, {
+                AAA_AUTH, AAA_AUTH_TACACS_LOCAL },
+/* Authorization */
+{ AAA_AUTHOR, AAA_AUTHOR_NONE }, { AAA_AUTHOR, AAA_AUTHOR_TACACS }, { AAA_AUTHOR, AAA_AUTHOR_TACACS_LOCAL },
+                { AAA_AUTHOR, AAA_AUTHOR_RADIUS }, { AAA_AUTHOR, AAA_AUTHOR_RADIUS_LOCAL },
                 /* Accounting */
-                { AAA_ACCT, AAA_ACCT_NONE },
-                { AAA_ACCT, AAA_ACCT_TACACS },
-                { AAA_ACCT, AAA_ACCT_RADIUS },
-};
-
+                { AAA_ACCT, AAA_ACCT_NONE }, { AAA_ACCT, AAA_ACCT_TACACS }, { AAA_ACCT, AAA_ACCT_RADIUS }, };
 
 struct web_auth_data {
 	char *user;
 	char *pass;
 };
 
-static int _pam_null_conv(int n,
-                          const struct pam_message **msg,
-                          struct pam_response **resp,
-                          void *data)
+static int _pam_null_conv(int n, const struct pam_message **msg, struct pam_response **resp, void *data)
 {
 	return (PAM_CONV_ERR);
 }
@@ -175,14 +160,12 @@ int librouter_pam_web_authenticate(char *user, char *pass)
 			goto web_auth_err;
 	}
 
-
 	/*
 	 *  Call 'pam_open_session' to open the authenticated session;
 	 *  'pam_close_session' gets called by the process that cleans up the utmp entry (i.e., init);
 	 */
 	if (pam_open_session(pam_handle, 0) != PAM_SUCCESS)
 		goto web_auth_err;
-
 
 	/*
 	 * Initialize the supplementary group access list.
@@ -224,19 +207,9 @@ int librouter_pam_enable_authenticate(void)
 	fpam_conv.appdata_ptr = NULL;
 
 	mode = librouter_pam_get_current_mode(FILE_PAM_ENABLE);
-	if (mode == AAA_AUTH_RADIUS || mode == AAA_AUTH_RADIUS_LOCAL) {
-		if ((pam_err = pam_start("enable", "$enable$", &null_conv, &pam_handle)) != PAM_SUCCESS)
-			goto web_auth_err;
-	} else {
-		struct passwd *pw;
-		pw = getpwuid(getuid());
 
-		if (pw == NULL) /* No such user ? */
-			return -1;
-
-		if ((pam_err = pam_start("enable", pw->pw_name, &null_conv, &pam_handle)) != PAM_SUCCESS)
-			goto web_auth_err;
-	}
+	if ((pam_err = pam_start("enable", "$enable$", &null_conv, &pam_handle)) != PAM_SUCCESS)
+		goto web_auth_err;
 
 	if ((pam_err = pam_set_item(pam_handle, PAM_CONV, (const void *) &fpam_conv)) != PAM_SUCCESS)
 		goto web_auth_err;
@@ -343,7 +316,6 @@ int librouter_pam_account_command(char *cmd)
 	return 0;
 }
 #endif /* OPTION_AAA_ACCOUNTING */
-
 
 /**
  * Discover mode in file
@@ -501,7 +473,6 @@ int librouter_pam_get_current_cmd_author_mode(char *file_name)
 	fclose(f);
 	return mode;
 }
-
 
 /**
  * Discover mode in file
@@ -952,7 +923,7 @@ int librouter_pam_del_user(char *user)
 	return 0;
 }
 
-int librouter_pam_add_user_to_group (char *user, char *group)
+int librouter_pam_add_user_to_group(char *user, char *group)
 {
 	if (user == NULL || group == NULL)
 		return -1;
@@ -965,7 +936,7 @@ int librouter_pam_add_user_to_group (char *user, char *group)
 	return 0;
 }
 
-int librouter_pam_del_user_from_group (char *user, char *group)
+int librouter_pam_del_user_from_group(char *user, char *group)
 {
 	if (user == NULL || group == NULL)
 		return -1;
@@ -978,11 +949,10 @@ int librouter_pam_del_user_from_group (char *user, char *group)
 	return 0;
 }
 
-
-int librouter_pam_cmds_del_user_from_group (char * name)
+int librouter_pam_cmds_del_user_from_group(char * name)
 {
 	char group[12];
-	int group_num=0;
+	int group_num = 0;
 
 	if ((group_num = librouter_pam_get_privilege_by_name(name)) < 0)
 		return -1;
@@ -1012,37 +982,37 @@ int librouter_pam_cmds_add_user_to_group(char * name, char * priv)
 	return 0;
 }
 
-int librouter_pam_get_privilege_by_name (char * group_priv)
+int librouter_pam_get_privilege_by_name(char * group_priv)
 {
-	int j, ngroups=0, group_num=0;
+	int j, ngroups = 0, group_num = 0;
 	gid_t *groups;
 	struct group *gr;
 	__gid_t gid;
 
-	memset (&gid, 0, sizeof(__gid_t));
+	memset(&gid, 0, sizeof(__gid_t ));
 
 	/* Retrieve number of groups */
 	getgrouplist(group_priv, gid, groups, &ngroups);
 
 	/* Reserving memory for the N groups */
-	groups = malloc(ngroups * sizeof (gid_t));
+	groups = malloc(ngroups * sizeof(gid_t));
 	if (groups == NULL) {
-	   syslog (LOG_INFO, "Couldn't reserve memory for find out about user %s.\n", group_priv);
-	   return -1;
+		syslog(LOG_INFO, "Couldn't reserve memory for find out about user %s.\n", group_priv);
+		return -1;
 	}
 
 	/* Retrieve group list */
 	if (getgrouplist(group_priv, gid, groups, &ngroups) < 0)
-	   return -1;
+		return -1;
 
 	/* Retrieve the group number of the user */
 	for (j = 0; j < ngroups; j++) {
-	   group_num = (int)groups[j];
-	   gr = getgrgid(groups[j]);
-	   if (gr != NULL){
-		   if(strstr(gr->gr_name,"priv"))
-			   break;
-	   }
+		group_num = (int) groups[j];
+		gr = getgrgid(groups[j]);
+		if (gr != NULL) {
+			if (strstr(gr->gr_name, "priv"))
+				break;
+		}
 	}
 
 	free(groups);
@@ -1050,19 +1020,19 @@ int librouter_pam_get_privilege_by_name (char * group_priv)
 	return group_num;
 }
 
-int librouter_pam_get_privilege (void)
+int librouter_pam_get_privilege(void)
 {
-	int j, ngroups=0, group_num=0;
+	int j, ngroups = 0, group_num = 0;
 	gid_t *groups;
 	struct passwd *my_passwd;
 	struct group *gr;
 	uid_t me;
 
-	me = getuid ();
-	my_passwd = getpwuid (me);
+	me = getuid();
+	my_passwd = getpwuid(me);
 
-	if (!my_passwd){
-		syslog (LOG_INFO, "Couldn't find out about user %d.\n", (int) me);
+	if (!my_passwd) {
+		syslog(LOG_INFO, "Couldn't find out about user %d.\n", (int) me);
 		return -1;
 	}
 
@@ -1070,33 +1040,46 @@ int librouter_pam_get_privilege (void)
 	getgrouplist(my_passwd->pw_name, my_passwd->pw_gid, groups, &ngroups);
 
 	/* Reserving memory for the N groups */
-	groups = malloc(ngroups * sizeof (gid_t));
+	groups = malloc(ngroups * sizeof(gid_t));
 	if (groups == NULL) {
-	   syslog (LOG_INFO, "Couldn't reserve memory for find out about user %d.\n", (int) me);
-	   return -1;
+		syslog(LOG_INFO, "Couldn't reserve memory for find out about user %d.\n", (int) me);
+		return -1;
 	}
 
 	/* Retrieve group list */
 	if (getgrouplist(my_passwd->pw_name, my_passwd->pw_gid, groups, &ngroups) < 0)
-	   return -1;
+		return -1;
 
 	/* Retrieve the group number of the user */
 	for (j = 0; j < ngroups; j++) {
-	   group_num = (int)groups[j];
-	   gr = getgrgid(groups[j]);
-	   if (gr != NULL){
-		   if(strstr(gr->gr_name,"priv"))
-			   goto end_priv;
-	   }
+		group_num = (int) groups[j];
+		gr = getgrgid(groups[j]);
+		if (gr != NULL) {
+			if (strstr(gr->gr_name, "priv"))
+				goto end_priv;
+		}
 	}
 
 	free(groups);
 	return 0;
 
-end_priv:
-	free(groups);
+	end_priv: free(groups);
 	return group_num;
 
+}
+
+int librouter_pam_get_username(char *username)
+{
+	struct passwd *pw;
+
+	pw = getpwuid(getuid());
+
+	if (pw == NULL)
+		return -1;
+
+	memcpy(username, pw->pw_name, strlen(pw->pw_name));
+
+	return 0;
 }
 
 /***********************************************************/
@@ -1188,7 +1171,7 @@ void librouter_pam_free_servers(int num_servers, struct auth_server *server)
 	if (server == NULL)
 		return;
 
-	for (i=0; i< num_servers; i++) {
+	for (i = 0; i < num_servers; i++) {
 		if (server->ipaddr) {
 			free(server->ipaddr);
 			server->ipaddr = NULL;
@@ -1271,7 +1254,7 @@ int librouter_pam_add_tacacs_server(struct auth_server *server)
 
 	/* Check if server already exists */
 	for (i = 0; i < AUTH_MAX_SERVERS; i++) {
-		if (current_servers[i].ipaddr == NULL) {  /* Empty field, use it */
+		if (current_servers[i].ipaddr == NULL) { /* Empty field, use it */
 			_dup_server(&current_servers[i], server);
 			break;
 		} else if (!strcmp(server->ipaddr, current_servers[i].ipaddr)) { /* Match! */
@@ -1284,7 +1267,6 @@ int librouter_pam_add_tacacs_server(struct auth_server *server)
 		librouter_pam_free_servers(AUTH_MAX_SERVERS, current_servers);
 		return -1;
 	}
-
 
 	_add_servers_to_file(FILE_TACDB_SERVER, current_servers);
 	librouter_pam_free_servers(AUTH_MAX_SERVERS, current_servers);
