@@ -133,10 +133,12 @@ int librouter_exec_prog(int no_out, char *path, ...)
 	}
 	va_end(ap);
 	argv[i] = NULL;
+	exec_dbg("Before fork with UID %d\n", geteuid());
 
 	pid = fork();
 	switch (pid) {
 	case 0: /* child */
+		exec_dbg("Child running %s with UID %d\n", path, geteuid());
 		if (no_out) {
 			//close(1); // close stdout
 			//close(2); // close stderr
@@ -154,6 +156,7 @@ int librouter_exec_prog(int no_out, char *path, ...)
 	default: /* parent */
 	{
 		int status;
+		exec_dbg("Parent running %s with UID %d\n", path, geteuid());
 		if (waitpid(pid, &status, 0) < 0) {
 			librouter_logerr("waitpid");
 			return (-1);
