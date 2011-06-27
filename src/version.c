@@ -45,7 +45,7 @@ char *librouter_get_boot_version(void)
 {
 	int i;
 	FILE *f;
-	char *p;
+	char *p, *l;
 	static char version[64];
 
 	memset(version, 0, 64);
@@ -67,11 +67,14 @@ char *librouter_get_boot_version(void)
 		return version;
 	}
 
-	p += (strlen("U-Boot") + 1);
 	if ((p + 5) > (version + 63)) {
 		version[0] = 0;
 		return version;
 	}
+
+	/* Remove date of compilation */
+	if (l = strstr(p, "("))
+		*l = 0;
 
 	strncpy(version, p, sizeof(version));
 
