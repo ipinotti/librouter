@@ -175,14 +175,12 @@ int librouter_pam_web_authenticate(char *user, char *pass)
 			goto web_auth_err;
 	}
 
-
 	/*
 	 *  Call 'pam_open_session' to open the authenticated session;
 	 *  'pam_close_session' gets called by the process that cleans up the utmp entry (i.e., init);
 	 */
 	if (pam_open_session(pam_handle, 0) != PAM_SUCCESS)
 		goto web_auth_err;
-
 
 	/*
 	 * Initialize the supplementary group access list.
@@ -217,6 +215,8 @@ int librouter_pam_enable_authenticate(void)
 	static pam_handle_t *pam_handle = NULL;
 	static struct pam_conv null_conv = { _pam_null_conv, NULL };
 	int mode;
+	char enabl_priv[8];
+	int priv = 0;
 
 	dbgS_aaa("Starting librouter_pam_enable_authenticate\n\n");
 
@@ -225,7 +225,14 @@ int librouter_pam_enable_authenticate(void)
 
 	mode = librouter_pam_get_current_mode(FILE_PAM_ENABLE);
 	if (mode == AAA_AUTH_RADIUS || mode == AAA_AUTH_RADIUS_LOCAL) {
-		if ((pam_err = pam_start("enable", "$enable$", &null_conv, &pam_handle)) != PAM_SUCCESS)
+
+		if((priv = librouter_pam_get_privilege()) == 0){
+			priv = 15;
+		}
+		memset(&enabl_priv, 0, sizeof(enabl_priv));
+		sprintf(enabl_priv,"$enab%d$",priv);
+
+		if ((pam_err = pam_start("enable", enabl_priv, &null_conv, &pam_handle)) != PAM_SUCCESS)
 			goto web_auth_err;
 	} else {
 		struct passwd *pw;
