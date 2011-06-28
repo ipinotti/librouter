@@ -1065,6 +1065,12 @@ int librouter_pam_get_privilege(void)
 
 }
 
+/**
+ * librouter_pam_get_username	Get username for the user logged in
+ *
+ * @param username
+ * @return 0 if success, -1 otherwise
+ */
 int librouter_pam_get_username(char *username)
 {
 	struct passwd *pw;
@@ -1077,6 +1083,75 @@ int librouter_pam_get_username(char *username)
 	memcpy(username, pw->pw_name, strlen(pw->pw_name));
 
 	return 0;
+}
+
+/**
+ * _create_user		Create a user based on a passwd struct
+ *
+ * @param pw
+ * @return 0 if success, -1 otherwise
+ */
+static int _create_user(struct passwd *pw)
+{
+	FILE *passwd_file;
+	struct passwd *epw;
+
+	if (_validate_username(pw->pw_name) < 0)
+		return -1;
+
+	while ((epw = getpwent())) {
+		if (strcmp(epw->pw_name, pw->pw_name) == 0)
+			return 0; /* Already exists */
+
+		if (epw->pw_uid == pw->pw_uid)
+			pw->pw_uid++;
+	}
+	endpwent();
+
+	pw->pw_gid = pw->pw_uid; /* Make group ID and user ID the same */
+
+	passwd_file = fopen("/etc/passwd", "a");
+	if (passwd_file == NULL)
+		return -1;
+
+	if (putpwent(pw, passwd_file) < 0)
+		return -1;
+	fclose(passwd_file);
+
+	return 0;
+}
+
+/**
+ * librouter_pam_create_temp_user
+ *
+ * Create a temporary user in system for authenticating TACACS+/Radius
+ *
+ * @param username
+ * @return 0 if success, -1 otherwise
+ */
+int librouter_pam_create_temp_user(char *username)
+{
+	struct passwd pw;
+	const char gecos[] = "tempuser";
+	const char shell[] = "/bin/cish";
+	const char dir[] = "/var";
+
+
+	pw.pw_name = username;
+	pw.pw_passwd = "x";
+	pw.pw_uid = 2000;
+	pw.pw_gid = 2000;
+	pw.pw_gecos = (char *) gecos;
+	pw.pw_dir = (char *) dir;
+	pw.pw_shell = (char *) shell;
+
+	_create_user(&pw);
+
+	librouter_pam_add_user_to_group(username, "root");
+	librouter_pam_add_user_to_group(username, "priv15"); /* FIXME */
+
+	return 0;
+
 }
 
 /***********************************************************/
