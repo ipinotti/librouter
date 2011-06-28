@@ -7,6 +7,13 @@
 #ifndef EXEC_H_
 #define EXEC_H_
 
+//#define EXEC_DEBUG
+#ifdef EXEC_DEBUG
+#define exec_dbg(x,...)		printf("%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__);
+#else
+#define exec_dbg(x,...)
+#endif
+
 /* prototipos de funcoes */
 int librouter_exec_telinit(char c, int sleeptime);
 int librouter_exec_init_program(int add_del, char *prog);

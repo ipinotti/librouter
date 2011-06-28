@@ -232,15 +232,52 @@ float librouter_efm_get_snr(int channel)
 float librouter_efm_get_loop_attn(int channel)
 {
 	struct orionplus_stat *st = _get_channel_stat(channel);
-	float attn = 1.0;
+	float attn = 1.0, x;
 
 	if (st == NULL)
 		return -1;
 
-	attn = st->loop_attn[0]/10;
+	x = (float) st->loop_attn[0];
+	attn = x/10;
 
 	free(st);
 	return attn;
+}
+
+float librouter_efm_get_xmit_power(int channel)
+{
+	struct orionplus_stat *st = _get_channel_stat(channel);
+	float pwr = 1.0, x;
+
+	if (st == NULL)
+		return -1;
+
+	x = (float) st->xmit_power[0];
+	pwr = x/10;
+
+	free(st);
+	return pwr;
+}
+
+float librouter_efm_get_receiver_gain(int channel)
+{
+	struct orionplus_stat *st = _get_channel_stat(channel);
+	float gain = 1.0, x;
+
+	if (st == NULL)
+		return -1;
+
+	x = (float) st->rec_gain[0];
+	gain = 20 * log10(x/0x800);
+
+	x = (float) st->rec_gain[1];
+	gain += 20 * log10(x/0x200);
+
+	x = (float) st->rec_gain[2];
+	gain += x/10;
+
+	free(st);
+	return gain;
 }
 
 int librouter_efm_get_los(int channel)

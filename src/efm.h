@@ -29,5 +29,7 @@ int librouter_efm_get_channel_state_string(enum channel_state st, char *buf, int
 
 float librouter_efm_get_snr(int channel);
 float librouter_efm_get_loop_attn(int channel);
+float librouter_efm_get_xmit_power(int channel);
+float librouter_efm_get_receiver_gain(int channel);
 
 #endif /* EFM_H_ */
