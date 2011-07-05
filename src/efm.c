@@ -223,11 +223,38 @@ float librouter_efm_get_snr(int channel)
 	if (st == NULL)
 		return -1;
 
-	snr = 58.4 - (10 * log10(st->mean_sq_err[0]));
+	//snr = 58.4 - (10 * log10(st->mean_sq_err[0]));
+	snr = 58.4 - (10 * log10(st->avg_mean_sq_err));
 
 	free(st);
 	return snr;
 }
+
+float librouter_efm_get_snr_margin(int channel)
+{
+	float snr = librouter_efm_get_snr(channel);
+
+	snr -= 22.7;
+
+	return snr;
+}
+
+float librouter_efm_get_data_mode_margin(int channel)
+{
+	struct orionplus_stat *st = _get_channel_stat(channel);
+	float margin = 1.0;
+
+	if (st == NULL)
+		return -1;
+
+	//margin = 10 * log10 (st->data_mode_margin[0]/st->data_mode_margin[1]);
+	margin = 10 * log10 (st->avg_data_mode_margin);
+
+	free(st);
+
+	return margin;
+}
+
 
 float librouter_efm_get_loop_attn(int channel)
 {
