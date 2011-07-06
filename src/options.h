@@ -80,8 +80,6 @@
 
 #elif defined(CONFIG_DIGISTAR_EFM)
 
-#define CFG_PRODUCT	"EFMRouter"
-
 #define OPTION_EFM
 #define OPTION_ETHERNET
 #define OPTION_ETHERNET_LAN_INDEX 0
@@ -100,6 +98,7 @@
 
 /* ETL8110 Options */
 #if defined(CONFIG_DIGISTAR_ETL8110)
+#define CFG_PRODUCT	"EFMRouter" /* FIXME Change to EFMBridge */
 #define OPTION_NUM_EFM_CHANNELS	4
 #undef OPTION_IP_ROUTING
 #undef OPTION_IPSEC
@@ -112,6 +111,7 @@
 
 /* ETL8210 Options */
 #elif defined(CONFIG_DIGISTAR_ETL8210)
+#define CFG_PRODUCT	"EFMRouter" /* FIXME Change to EFMBridge */
 #define OPTION_NUM_EFM_CHANNELS	4
 #undef OPTION_IP_ROUTING
 #undef OPTION_IPSEC
@@ -124,6 +124,7 @@
 
 /* ETL8221 Options */
 #elif defined(CONFIG_DIGISTAR_ETL8221)
+#define CFG_PRODUCT	"EFMRouter"
 #define OPTION_NUM_EFM_CHANNELS	4
 #define OPTION_IP_ROUTING
 #define OPTION_IPSEC
@@ -137,6 +138,7 @@
 
 /* ETL8421 Options */
 #elif defined(CONFIG_DIGISTAR_ETL8421)
+#define CFG_PRODUCT	"EFMRouter"
 #define OPTION_NUM_EFM_CHANNELS	4
 #define OPTION_IP_ROUTING
 #define OPTION_IPSEC

@@ -28,6 +28,8 @@ int librouter_efm_get_num_channels(void);
 int librouter_efm_get_channel_state_string(enum channel_state st, char *buf, int len);
 
 float librouter_efm_get_snr(int channel);
+float librouter_efm_get_snr_margin(int channel);
+float librouter_efm_get_data_mode_margin(int channel);
 float librouter_efm_get_loop_attn(int channel);
 float librouter_efm_get_xmit_power(int channel);
 float librouter_efm_get_receiver_gain(int channel);
