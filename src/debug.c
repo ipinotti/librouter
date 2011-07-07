@@ -31,7 +31,7 @@ static debuginfo DEBUG[] = { /* !!! Check cish_defines.h */
 	{"dhcp","dhcpd:","DHCP service", 0},
 #endif
 	{"ethernet0","kernel: eth0:","Ethernet daemon", 0},
-	{"efm0","kernel: (EFM:","EFM daemon", 0},
+	{"efm0","kernel: (EFM","EFM daemon", 0},
 #ifdef OPTION_IPSEC
 	{"l2tp","l2tpd","L2TP daemon", 0},
 #endif
