@@ -271,14 +271,15 @@ int librouter_pam_authorize_command(char *cmd, char *cish_enable)
 
 	pam_set_item(pam_handle, PAM_XDISPLAY, (const void *) cish_enable);
 
-	if (pam_acct_mgmt(pam_handle, 0) != PAM_SUCCESS) {
-
+	if ((pam_err = pam_acct_mgmt(pam_handle, 0)) != PAM_SUCCESS) {
 		/* Root must always succeed */
 		if (pw->pw_uid == 0)
 			return 0;
 
-		fprintf(stderr, "User %s not authorized to run this command\n", pw->pw_name);
-		return -1;
+		if (pam_err == PAM_PERM_DENIED){
+			fprintf(stderr, "User %s not authorized to run this command\n", pw->pw_name);
+			return -1;
+		}
 	}
 
 	return 0;
