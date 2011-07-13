@@ -49,23 +49,17 @@ static int _do_ioctl(unsigned long int cmd, void *arg)
 	return ret;
 }
 
-int librouter_efm_get_mode(void)
+int librouter_efm_get_mode(struct orionplus_conf *conf)
 {
-	struct orionplus_conf conf;
-
-	if (_do_ioctl(ORIONPLUS_GETCONFIG, &conf))
+	if (_do_ioctl(ORIONPLUS_GETCONFIG, conf))
 		return -1;
 
-	return conf.mode;
+	return 0;
 }
 
-int librouter_efm_set_mode(int mode)
+int librouter_efm_set_mode(struct orionplus_conf *conf)
 {
-	struct orionplus_conf conf;
 	struct orionplus_stat stat[4];
-
-	if (_do_ioctl(ORIONPLUS_GETCONFIG, &conf))
-		return -1;
 
 	if (_do_ioctl(ORIONPLUS_GETSTATUS, &stat))
 		return -1;
@@ -76,9 +70,33 @@ int librouter_efm_set_mode(int mode)
 		return -1;
 	}
 
-	conf.mode = mode;
+	if (conf->mode == GTI_CO) {
+		int n, i;
 
-	return _do_ioctl(ORIONPLUS_SETMODE, &conf);
+		n = conf->linerate / 64;
+		i = (conf->linerate%64) / 8;
+
+		/* G991.2 Annex F */
+		switch (conf->modulation) {
+		case GTI_16_TCPAM_MODE:
+			if ((n > 60) || (n == 60 && i > 0)) {
+				printf("%% Invalid rate for 16-TCPAM\n");
+				return -1;
+			}
+			break;
+		case GTI_32_TCPAM_MODE:
+			if ((n < 12) || (n == 89 && i > 0)) {
+				printf("%% Invalid rate for 32-TCPAM\n");
+				return -1;
+			}
+			break;
+		default:
+			break;
+		}
+
+	}
+
+	return _do_ioctl(ORIONPLUS_SETMODE, conf);
 }
 
 int librouter_efm_get_force_bonding(void)

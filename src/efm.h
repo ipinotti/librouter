@@ -13,8 +13,8 @@
 #define EFM_INDEX_OFFSET	1 /* efm0 -> eth1 */
 #define EFM_NUM_INTERFACES	1 /* One EFM Interface on design */
 
-int librouter_efm_set_mode(int mode);
-int librouter_efm_get_mode(void);
+int librouter_efm_set_mode(struct orionplus_conf *conf);
+int librouter_efm_get_mode(struct orionplus_conf *conf);
 
 int librouter_efm_get_force_bonding(void);
 int librouter_efm_set_force_bonding(int enable);

@@ -55,6 +55,10 @@
 #endif
 #endif /* OPTION_MANAGED_SWITCH */
 
+#ifdef OPTION_EFM
+#include "efm.h"
+#endif
+
 #define PPPDEV "ppp"
 
 /********************/
@@ -1211,10 +1215,17 @@ static void _dump_efm_config(FILE *out, struct interface_conf *conf)
 
 #ifdef OPTION_EFM
 	if (!conf->is_subiface) {
-		if (librouter_efm_get_mode())
+		struct orionplus_conf conf;
+
+		librouter_efm_get_mode(&conf);
+		if (conf.mode) {
 			fprintf(out, " mode cpe\n");
-		else
-			fprintf(out, " mode co\n");
+		} else {
+			fprintf(out, " mode co %s %d\n",
+					conf.modulation == GTI_16_TCPAM_MODE ? "TCPAM-16" : "TCPAM-32",
+					conf.linerate);
+
+		}
 	}
 #endif
 
