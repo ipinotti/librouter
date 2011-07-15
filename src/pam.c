@@ -294,7 +294,7 @@ int librouter_pam_authorize_command(char *cmd, char *cish_enable)
  * @param cmd
  * @return
  */
-int librouter_pam_account_command(char *cmd)
+int librouter_pam_account_command(char *cmd, char *cish_enable)
 {
 	int pam_err;
 	struct pam_conv fpam_conv;
@@ -309,6 +309,8 @@ int librouter_pam_account_command(char *cmd)
 		return -1;
 
 	pam_set_item(pam_handle, PAM_USER_PROMPT, (const void *) cmd);
+
+	pam_set_item(pam_handle, PAM_XDISPLAY, (const void *) cish_enable);
 
 	if (pam_open_session(pam_handle, 0) != PAM_SUCCESS)
 		return -1;
