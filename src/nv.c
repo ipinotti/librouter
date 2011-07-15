@@ -537,12 +537,12 @@ int _nv_alloc_and_load(char **data, int magic)
 
 	pack = _get_pack_from_magic(&nv, magic);
 	if (pack == NULL) {
-		printf("%s : Did not find data from magic %08x\n", __FUNCTION__, magic);
+		nvdbg("%s : Did not find data from magic %08x\n", __FUNCTION__, magic);
 		return -1;
 	}
 
 	if (pack->hdr.magic_number != magic) {
-		printf("%s : Magic number mismatch\n", __FUNCTION__);
+		nvdbg("%s : Magic number mismatch\n", __FUNCTION__);
 		return -1;
 	}
 
@@ -583,12 +583,12 @@ int _nv_load(char *data, int magic)
 
 	pack = _get_pack_from_magic(&nv, magic);
 	if (pack == NULL) {
-		printf("%s : Did not find data from magic %08x\n", __FUNCTION__, magic);
+		nvdbg("%s : Did not find data from magic %08x\n", __FUNCTION__, magic);
 		return -1;
 	}
 
 	if (pack->hdr.magic_number != magic) {
-		printf("%s : Magic number mismatch\n", __FUNCTION__);
+		nvdbg("%s : Magic number mismatch\n", __FUNCTION__);
 		return -1;
 	}
 
