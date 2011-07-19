@@ -26,6 +26,12 @@
 #define OPTION_ROUTER /* ip forwarding, enable dynamic routing protocols, etc. */
 #define OPTION_SMCROUTE /* static multicast routing */
 
+/* PBR - Policy Based Routing */
+/* DEPENDE DE OPTION_ROUTER*/
+#ifdef OPTION_ROUTER
+#define OPTION_PBR
+#endif
+
 /* AAA */
 #define OPTION_AAA_ACCOUNTING
 #define OPTION_AAA_AUTHORIZATION

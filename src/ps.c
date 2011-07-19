@@ -21,8 +21,8 @@
 #include "ps.h"
 
 static struct {
-	char *linux_name;
-	char *display_name;
+	const char *linux_name;
+	const char *display_name;
 } proc_names[] = {
 		{ "syslogd", "System Logger" },
 		{ "klogd", "Kernel Logger" },

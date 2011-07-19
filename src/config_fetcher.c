@@ -1562,11 +1562,12 @@ void librouter_config_interfaces_dump(FILE *out)
 	}
 }
 
+#ifdef OPTION_PBR
 void librouter_config_dump_policy_route(FILE *f)
 {
 	librouter_pbr_dump(f);
 }
-
+#endif
 
 /********************************/
 /* End of Interface information */
@@ -1653,7 +1654,7 @@ int librouter_config_write(char *filename, struct router_config *cfg)
 
 /* É Necessario esperar as interfaces serem montadas para
  * realizar o dump do policy route */
-#ifdef OPTION_ROUTER
+#ifdef OPTION_PBR
 	librouter_config_dump_policy_route(f);
 #endif
 

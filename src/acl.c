@@ -12,16 +12,6 @@
 #include "ip.h"
 
 #ifdef OPTION_FIREWALL
-int librouter_acl_ppp_backupd_apply_chain_tofile(int dev, char *chain, int direction)
-{
-	char * buf = malloc(256);
-	char pppdev[4];
-
-	snprintf(pppdev,4,"ppp%d",dev);
-
-
-}
-
 /**
  * librouter_acl_delete_rule:	Delete firewall rule
  * @param name
