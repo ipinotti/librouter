@@ -520,7 +520,9 @@ int librouter_dhcp_server_set(int enable)
 		char filename[64];
 		FILE *file;
 		dev_family *fam = librouter_device_get_family_by_type(eth);
+#ifdef OPTION_BRIDGE
 		char iface[64];
+#endif
 
 		sprintf(filename, FILE_DHCPDLEASES, INTF_DHCP_SERVER_DEFAULT);
 		file = fopen(filename, "r");
@@ -535,12 +537,14 @@ int librouter_dhcp_server_set(int enable)
 		if (librouter_dhcp_get_status() == DHCP_RELAY)
 			librouter_dhcp_set_no_relay();
 
+#ifdef OPTION_BRIDGE
 		sprintf(iface, "%s%d", fam->linux_string, INTF_DHCP_SERVER_DEFAULT);
 		if (librouter_br_is_interface_enslaved(iface)) {
 			sprintf(iface, "%s%d", fam->cish_string, INTF_DHCP_SERVER_DEFAULT);
 			printf("%% Bridge is active on interface %s\n", iface);
 			return -1;
 		}
+#endif
 
 		/* poe o dhcpd para rodar */
 		return librouter_dhcpd_set_status(1, INTF_DHCP_SERVER_DEFAULT);
