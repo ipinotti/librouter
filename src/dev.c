@@ -185,6 +185,12 @@ int librouter_dev_set_mtu(char *dev, int mtu)
 	struct ifreq ifr;
 	int s;
 
+	if (librouter_dev_get_link(dev)) {
+		printf("%% Interface must be shutdown first\n");
+		syslog(LOG_ERR, "Must shutdown interface to configure MTU\n");
+		return -1;
+	}
+
 	s = _librouter_dev_get_ctrlfd();
 	if (s < 0)
 		return -1;
