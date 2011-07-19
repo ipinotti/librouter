@@ -15,6 +15,7 @@
 #include "ip.h"
 #include "pbr.h"
 #include "str.h"
+#include "options.h"
 
 #if defined (OPTION_PBR)
 /**
