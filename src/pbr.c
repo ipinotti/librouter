@@ -15,7 +15,9 @@
 #include "ip.h"
 #include "pbr.h"
 #include "str.h"
+#include "options.h"
 
+#if defined (OPTION_PBR)
 /**
  * librouter_pbr_rule_add	Função adiciona regra baseada em FWMARK nas tabelas disponiveis (table0-9)
  *
@@ -534,4 +536,5 @@ int librouter_pbr_dump(FILE *out)
 	return 0;
 }
 
+#endif /*OPTION_PBR*/
 
