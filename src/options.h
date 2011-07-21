@@ -141,6 +141,7 @@
 #define OPTION_ROUTER
 #define OPTION_SMCROUTE
 #define OPTION_TUNNEL
+#define OPTION_BGP
 
 /* ETL8421 Options */
 #elif defined(CONFIG_DIGISTAR_ETL8421)
@@ -155,6 +156,7 @@
 #define OPTION_ROUTER
 #define OPTION_SMCROUTE
 #define OPTION_TUNNEL
+#define OPTION_BGP
 #else
 #error "No EFM board defined!"
 #endif
