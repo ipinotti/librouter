@@ -23,6 +23,7 @@ int librouter_br_delbr(char *brname);
 int librouter_br_addif(char *brname, char *ifname);
 int librouter_br_delif(char *brname, char *ifname);
 int librouter_br_checkif(char *brname, char *ifname);
+int librouter_br_is_interface_enslaved(char *ifname);
 int librouter_br_hasifs(char *brname);
 int librouter_br_setageing(char *brname, int sec);
 int librouter_br_getageing(char *brname);

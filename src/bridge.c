@@ -13,6 +13,7 @@
 #include "device.h"
 #include "defines.h"
 #include "options.h"
+#include "dhcp.h"
 #include "bridge.h"
 #include "libbridge/libbridge.h"
 
@@ -229,8 +230,17 @@ int librouter_br_addif(char *brname, char *ifname)
 		librouter_ip_interface_set_no_addr(ifname); /* flush */
 
 		/* Set bridge IP address with the one from ethernet 0 */
-		if (!strcmp(ifname, "eth0"))
+		if (!strcmp(ifname, "eth0")) {
+			int dhcp = librouter_dhcp_get_status();
 			librouter_ip_ethernet_set_addr(brname, ip.addr, ip.mask);
+			if (dhcp == DHCP_SERVER) {
+				printf("%% Disabling DHCP server on interface\n");
+				librouter_dhcp_server_set(0);
+			} else if (dhcp == DHCP_RELAY) {
+				printf("%% Disabling DHCP relay on interface\n");
+				librouter_dhcp_set_no_relay();
+			}
+		}
 
 		return 0;
 	}
@@ -310,6 +320,22 @@ int librouter_br_checkif(char *brname, char *ifname)
 			return 1;
 		p = p->next;
 	}
+	return 0;
+}
+
+int librouter_br_is_interface_enslaved(char *ifname)
+{
+	int i;
+	char brname[32];
+
+	for (i = 0; i < MAX_BRIDGE; i++) {
+		sprintf(brname, "%s%d", BRIDGE_NAME, i);
+		if (!librouter_br_exists(brname))
+			continue;
+		if (librouter_br_checkif(brname, ifname))
+			return 1;
+	}
+
 	return 0;
 }
 
