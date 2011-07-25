@@ -559,7 +559,8 @@ void librouter_config_dump_rmon(FILE *f)
 				fprintf(f, "\n");
 			}
 		}
-
+		fprintf(f, "rmon snmp-version %s\n", shm_rmon_p->version == SNMP_VERSION_1 ? "1" :
+				shm_rmon_p->version == SNMP_VERSION_2c ? "2c" : "3");
 		librouter_snmp_rmon_free_access_cfg(&shm_rmon_p);
 	}
 

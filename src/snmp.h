@@ -62,6 +62,7 @@ struct rmon_config {
 	struct rmon_event_entry events[NUM_EVENTS];
 	int valid_state;
 	char state[RMON_CONFIG_STATE_LEN + 1];
+	int version;
 };
 
 struct trap_data_obj {
@@ -132,8 +133,10 @@ int librouter_snmp_sendtrap(char *snmp_trap_version,
                             struct trap_data_obj *data);
 
 int librouter_snmp_rmon_get_access_cfg(struct rmon_config **shm_rmon_p);
-
 int librouter_snmp_rmon_free_access_cfg(struct rmon_config **shm_rmon_p);
+
+int librouter_snmp_rmon_set_version(int version);
+int librouter_snmp_rmon_get_version(int *version);
 
 int librouter_snmp_add_user(char *user,
                             int rw,
@@ -147,7 +150,9 @@ int librouter_snmp_remove_user(char *user);
 
 unsigned int librouter_snmp_list_users(char ***store);
 void librouter_snmp_load_prepare_users(void);
+#if 0
 void librouter_snmp_start_default(void);
+#endif
 void librouter_snmp_add_dev_trap(char *itf);
 void librouter_snmp_del_dev_trap(char *itf);
 

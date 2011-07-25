@@ -535,7 +535,7 @@ static int _rmon_create_shm(void)
 		return -1;
 	}
 
-	memset((char *) shm_confid_l, '\0', sizeof(struct rmon_config));
+	memset((char *) shm_confid_l, 0, sizeof(struct rmon_config));
 	return 0;
 }
 
@@ -584,6 +584,34 @@ int librouter_snmp_rmon_free_access_cfg(struct rmon_config **shm_rmon_p)
 	*shm_rmon_p = NULL;
 
 	return ret;
+}
+
+int librouter_snmp_rmon_set_version(int version)
+{
+	struct rmon_config *shm_rmon_p;
+
+	if (!librouter_snmp_rmon_get_access_cfg(&shm_rmon_p))
+		return -1;
+
+	shm_rmon_p->version = version;
+
+	librouter_snmp_rmon_free_access_cfg(&shm_rmon_p);
+
+	return 0;
+}
+
+int librouter_snmp_rmon_get_version(int *version)
+{
+	struct rmon_config *shm_rmon_p;
+
+	if (!librouter_snmp_rmon_get_access_cfg(&shm_rmon_p))
+		return -1;
+
+	*version = shm_rmon_p->version;
+
+	librouter_snmp_rmon_free_access_cfg(&shm_rmon_p);
+
+	return 0;
 }
 
 int librouter_snmp_rmon_add_event(int num,
@@ -1782,12 +1810,14 @@ void librouter_snmp_load_prepare_users(void)
 	}
 }
 
+#if 0
 void librouter_snmp_start_default(void)
 {
 	/* Start with default community */
 	librouter_snmp_set_community("public", 1, 0);
 	return;
 }
+#endif
 
 void librouter_snmp_add_dev_trap(char *itf)
 {
