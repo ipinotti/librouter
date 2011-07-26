@@ -26,6 +26,9 @@
 #define OPTION_ROUTER /* ip forwarding, enable dynamic routing protocols, etc. */
 #define OPTION_SMCROUTE /* static multicast routing */
 
+/* Factory Test System Digistar*/
+#define OPTION_FTS_DIGISTAR
+
 /* PBR - Policy Based Routing */
 /* DEPENDE DE OPTION_ROUTER*/
 #ifdef OPTION_ROUTER
@@ -93,6 +96,9 @@
 #define OPTION_NUM_ETHERNET_IFACES	1
 #undef OPTION_PPPOE
 #undef OPTION_PPTP
+
+/* Factory Test System Digistar*/
+#define OPTION_FTS_DIGISTAR
 
 /* AAA */
 #define OPTION_AAA_ACCOUNTING
