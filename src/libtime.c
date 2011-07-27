@@ -187,6 +187,28 @@ int parse_time(char *time, int *h, int *m, int *s)
 	return 0;
 }
 
+int librouter_time_get_rtc_date(char *buf, int size)
+{
+	struct tm tm_time;
+	int fd;
+	char device[] = "/dev/rtc0";
+
+	/* Set RTC! */
+	if ((fd = open(device, O_RDONLY)) < 0)
+		return -1;
+
+	if (ioctl(fd, RTC_RD_TIME, &tm_time) < 0) {
+		close(fd);
+		return -1;
+	}
+
+	close(fd);
+	strftime(buf, size-1, "%a %b %e %H:%M:%S %Z %Y", &tm_time);
+
+	return 0;
+
+}
+
 int librouter_time_get_date(char *buf, int size)
 {
 	time_t tm;
