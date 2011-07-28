@@ -201,6 +201,37 @@ int librouter_time_get_rtc_date(struct tm *tm_time)
 	return 0;
 }
 
+int librouter_time_set_date_from_tm(struct tm *tm_time)
+{
+	time_t tm;
+	int fd, ret = 0;
+	char device[] = "/dev/rtc0";
+
+	tm = mktime(tm_time);
+	if (tm < 0)
+		return -1;
+	/* UCT time */
+	gmtime_r(&tm, tm_time);
+
+	/* Sets the system's time and date */
+	ret = stime(&tm);
+
+	/* Set RTC! */
+	if ((fd = open(device, O_RDWR)) < 0)
+		return -1;
+
+	if (ret < 0) {
+		librouter_pr_error(1, "cannot set date");
+	}
+	else {
+		if (ioctl(fd, RTC_SET_TIME, tm_time) < 0)
+			ret = -1;
+	}
+
+	close(fd);
+	return ret;
+}
+
 int librouter_time_get_date(char *buf, int size)
 {
 	time_t tm;
