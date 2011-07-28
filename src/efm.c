@@ -118,6 +118,25 @@ int librouter_efm_set_force_bonding(int enable)
 	return _do_ioctl(ORIONPLUS_FORCEBONDING, &conf);
 }
 
+int librouter_efm_get_retrain_criteria_msk(void)
+{
+	struct orionplus_conf conf;
+
+	if (_do_ioctl(ORIONPLUS_GETCONFIG, &conf))
+		return -1;
+
+	return conf.retrain_criteria_mask;
+}
+
+int librouter_efm_set_retrain_criteria_msk(int msk)
+{
+	struct orionplus_conf conf;
+
+	conf.retrain_criteria_mask = msk;
+
+	return _do_ioctl(ORIONPLUS_SETRETRAINMSK, &conf);
+}
+
 int librouter_efm_enable(int enable)
 {
 	struct orionplus_conf conf;
