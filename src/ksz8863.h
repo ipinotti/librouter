@@ -187,6 +187,9 @@ int librouter_ksz8863_add_table(struct vlan_config_t *vconfig);
 int librouter_ksz8863_probe(void);
 int librouter_ksz8863_set_default_config(void);
 
+/* Dump */
+int librouter_ksz8863_dump_config(FILE *out);
+
 
 
 #endif /* KSZ8863_H_ */
