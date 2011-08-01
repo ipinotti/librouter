@@ -668,14 +668,15 @@ int _nv_file_read(char *filename, char **data)
  */
 int librouter_nv_load_configuration(char *filename)
 {
-	char *data;
+	char *data = NULL;
 	int len;
 
 	len = _nv_alloc_and_load(&data, MAGIC_CONFIG);
 
 	_nv_file_write(filename, data, len + 1);
 
-	free(data);
+	if (data != NULL)
+		free(data);
 
 	return len;
 }
@@ -757,13 +758,15 @@ int librouter_nv_load_ntp_secret(char *filename)
  */
 int librouter_nv_save_configuration(char *filename)
 {
-	char *data;
+	char *data = NULL;
 	int len;
 
 	len = _nv_file_read(filename, &data);
 	_nv_save(data, len, MAGIC_CONFIG);
 
-	free(data);
+	if (data != NULL)
+		free(data);
+
 	return 0;
 }
 
