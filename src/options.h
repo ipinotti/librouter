@@ -89,6 +89,11 @@
 
 #elif defined(CONFIG_DIGISTAR_EFM)
 
+/* Código pras nomeclaturas ETL-ABCD onde 'A' é o nro de fios (8),
+ * 'B' é nro de ETHs (1),
+ * 'C' é o tipo de back up (0=nenhum, 1=USB e 2=3G) e
+ * 'D' é o tipo de SW (0=bridge e 1=router)...*/
+
 #define OPTION_EFM
 #define OPTION_ETHERNET
 #define OPTION_ETHERNET_LAN_INDEX 0
