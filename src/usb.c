@@ -247,7 +247,7 @@ int librouter_usb_get_descriptor(librouter_usb_dev * usb)
 			}
 
 			usb->bus = libusb_get_bus_number(dev);
-			usb->product_id = desc.iProduct;
+			usb->product_id = desc.idProduct;
 			usb->vendor_id = desc.idVendor;
 
 			libusb_close(handle);
