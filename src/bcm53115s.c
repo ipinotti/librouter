@@ -530,6 +530,73 @@ static int _set_qos_defaults(void)
 }
 
 /**
+ * librouter_bcm53115s_get_port_state
+ *
+ * Get MII data from port
+ *
+ * @param port: from 0 to 3
+ * @return data if enabled, -1 if error
+ */
+int librouter_bcm53115s_get_MII_port_data(int port)
+{
+	uint8_t page, reg;
+	uint16_t data;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	page = ROBO_PORT0_MII_PAGE;
+	reg = ROBO_CTRL_PAGE;
+	page += port;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return data;
+}
+
+/**
+ * librouter_bcm53115s_set_port_state
+ *
+ * Enable/Disable switch port
+ *
+ * @param enable
+ * @param port:	from 0 to 3
+ * @return 0 on success, -1 otherwise
+ */
+int librouter_bcm53115s_set_MII_port_enable(int enable, int port)
+{
+	uint8_t page, reg;
+	uint16_t data;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	page = ROBO_PORT0_MII_PAGE;
+	reg = ROBO_CTRL_PAGE;
+	page += port;
+
+	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
+		return -1;
+
+	if (enable){
+		data &= ~BCM53115S_MII_PORT_POWER_UP;
+		data |= BCM53115S_MII_PORT_AUTO_NEGOC_RESTART;
+	}
+	else
+		data |= BCM53115S_MII_PORT_POWER_DOWN;
+
+	if (_bcm53115s_reg_write(page, reg, &data, sizeof(data)))
+		return -1;
+
+	return 0;
+}
+
+/**
  * librouter_bcm53115s_set_broadcast_storm_protect
  *
  * Enable or Disable Broadcast Storm protection

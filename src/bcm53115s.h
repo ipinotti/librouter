@@ -64,6 +64,11 @@
 #define BCM53115S_SPI_DEV					"/dev/spidev28672.0"
 #define BCM53115S_ETH_IFACE					"eth0"
 #define BCM53115S_VLAN_ENTRY_FILE_CONTROL 			"/var/run/switch_bcm_vlans/"
+#define BCM53115S_ROBO_GLOBAL_CONFIG        0x00 /* Global Management Config: 8bit*/
+#define BCM53115S_PORT_STATE_P0		0x58
+#define BCM53115S_MII_PORT_POWER_DOWN 0x1940
+#define BCM53115S_MII_PORT_POWER_UP 0x800
+#define BCM53115S_MII_PORT_AUTO_NEGOC_RESTART 0x200
 
 /* Storm protect */
 #define BCM53115S_STORM_PROTECT_PAGE				0x41
@@ -197,6 +202,9 @@ int librouter_bcm53115s_set_replace_null_vid(int enable);
 #endif
 
 /* Port n Control 1*/
+
+int librouter_bcm53115s_set_MII_port_enable(int enable, int port);
+int librouter_bcm53115s_get_MII_port_data(int port);
 
 int librouter_bcm53115s_get_8021p(int port);
 int librouter_bcm53115s_set_8021p(int enable, int port);
