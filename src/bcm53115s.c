@@ -530,6 +530,90 @@ static int _set_qos_defaults(void)
 }
 
 /**
+ * fetch_speed_from_data
+ *
+ * Retrieve speed 10,100,1000
+ */
+static int _fetch_speed_from_data(unsigned int speed)
+{
+	switch (speed) {
+		case 0:
+			return 10;
+			break;
+		case 1:
+			return 100;
+			break;
+		case 2:
+			return 1000;
+			break;
+		default:
+			return -1;
+			break;
+	}
+	return -1;
+}
+
+/**
+ * _get_port_speed
+ *
+ * Retrieve speed from SPI data
+ */
+static int _get_port_speed(struct port_bcm_speed_status * port_data, int port)
+{
+	switch (port) {
+		case 0:
+			return _fetch_speed_from_data(port_data->p0);
+			break;
+		case 1:
+			return _fetch_speed_from_data(port_data->p1);
+			break;
+		case 2:
+			return _fetch_speed_from_data(port_data->p2);
+			break;
+		case 3:
+			return _fetch_speed_from_data(port_data->p3);
+			break;
+		default:
+			return -1;
+			break;
+	}
+	return -1;
+}
+
+/**
+ * librouter_bcm53115s_get_port_speed
+ *
+ * Get speed from port
+ *
+ * @param port: from 0 to 3
+ * @return speed (10,100,1000), -1 if error
+ */
+int librouter_bcm53115s_get_port_speed(int port)
+{
+	uint8_t page, reg;
+	struct port_bcm_speed_status port_data;
+
+	if (port > 3) {
+		printf("%% No such port : %d\n", port);
+		return -1;
+	}
+
+	memset(&port_data, 0, sizeof(port_data));
+	page = BCM53115S_STATUS_REG_PAGE;
+	reg = BCM53115S_PORT_SPEED_REG;
+
+	if (_bcm53115s_reg_read(page, reg, (uint32_t *) &port_data, sizeof(uint32_t)))
+		return -1;
+
+#if 0
+	/*Show das variaveis do port speed*/
+	printf("\n PORT SPEED -> port_data %x --- p0 is %x / p1 is %x / p2 is %x / p3 is %x \n\n ]", *((uint32_t *) &port_data), port_data.p0, port_data.p1, port_data.p2, port_data.p3);
+#endif
+
+	return _get_port_speed(&port_data, port);
+}
+
+/**
  * librouter_bcm53115s_get_port_state
  *
  * Get MII data from port
@@ -1900,8 +1984,6 @@ int librouter_bcm53115s_del_table(struct vlan_bcm_config_t *vconfig)
  */
 int librouter_bcm53115s_get_table(int table_entry, struct vlan_bcm_config_t *vconfig)
 {
-	struct vlan_bcm_table_t raw_t;
-
 	if (vconfig == NULL) {
 		printf("%% Invalid VLAN config\n");
 		return -1;

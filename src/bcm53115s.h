@@ -69,6 +69,8 @@
 #define BCM53115S_MII_PORT_POWER_DOWN 0x1940
 #define BCM53115S_MII_PORT_POWER_UP 0x800
 #define BCM53115S_MII_PORT_AUTO_NEGOC_RESTART 0x200
+#define BCM53115S_STATUS_REG_PAGE	0x01
+#define BCM53115S_PORT_SPEED_REG	0x04
 
 /* Storm protect */
 #define BCM53115S_STORM_PROTECT_PAGE				0x41
@@ -171,6 +173,18 @@ struct vlan_bcm_table_t {
 	unsigned int fwd_map_ports:6;
 };
 
+struct port_bcm_speed_status {
+	unsigned int reserved_B:14;
+	unsigned int pI:2;
+	unsigned int reserved_A:4;
+	unsigned int p5:2;
+	unsigned int p4:2;
+	unsigned int p3:2;
+	unsigned int p2:2;
+	unsigned int p1:2;
+	unsigned int p0:2;
+};
+
 /* CLI and WEB show interfaces numbers translation */
 int librouter_bcm53115s_get_aliasport_by_realport(int switch_port);
 int librouter_bcm53115s_get_realport_by_aliasport(int switch_port);
@@ -202,6 +216,8 @@ int librouter_bcm53115s_set_replace_null_vid(int enable);
 #endif
 
 /* Port n Control 1*/
+
+int librouter_bcm53115s_get_port_speed(int port);
 
 int librouter_bcm53115s_set_MII_port_enable(int enable, int port);
 int librouter_bcm53115s_get_MII_port_data(int port);
