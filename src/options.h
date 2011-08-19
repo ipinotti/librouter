@@ -113,9 +113,9 @@
 //#define OPTION_PPP
 //#define OPTION_NUM_3G_IFACES	1
 
-/* ETL8110 Options */
-#if defined(CONFIG_DIGISTAR_ETL8110)
-#define CFG_PRODUCT	"EFMRouter" /* FIXME Change to EFMBridge */
+/* Bridge Options */
+#if defined(CONFIG_DIGISTAR_BRIDGE)
+#define CFG_PRODUCT	"EFMBridge"
 #define OPTION_NUM_EFM_CHANNELS	4
 #undef OPTION_IP_ROUTING
 #undef OPTION_IPSEC
@@ -126,21 +126,8 @@
 #undef OPTION_SMCROUTE
 #undef OPTION_TUNNEL
 
-/* ETL8210 Options */
-#elif defined(CONFIG_DIGISTAR_ETL8210)
-#define CFG_PRODUCT	"EFMRouter" /* FIXME Change to EFMBridge */
-#define OPTION_NUM_EFM_CHANNELS	4
-#undef OPTION_IP_ROUTING
-#undef OPTION_IPSEC
-#undef OPTION_FIREWALL
-#undef OPTION_NAT
-#undef OPTION_QOS
-#undef OPTION_ROUTER
-#undef OPTION_SMCROUTE
-#undef OPTION_TUNNEL
-
-/* ETL8221 Options */
-#elif defined(CONFIG_DIGISTAR_ETL8221)
+/* Router Options */
+#elif defined(CONFIG_DIGISTAR_ROUTER)
 #define CFG_PRODUCT	"EFMRouter"
 #define OPTION_NUM_EFM_CHANNELS	4
 #define OPTION_IP_ROUTING
@@ -154,20 +141,6 @@
 #define OPTION_TUNNEL
 #define OPTION_BGP
 
-/* ETL8421 Options */
-#elif defined(CONFIG_DIGISTAR_ETL8421)
-#define CFG_PRODUCT	"EFMRouter"
-#define OPTION_NUM_EFM_CHANNELS	4
-#define OPTION_IP_ROUTING
-#define OPTION_IPSEC
-#define N_IPSEC_IF 5
-#define OPTION_FIREWALL
-#define OPTION_NAT
-#define OPTION_QOS
-#define OPTION_ROUTER
-#define OPTION_SMCROUTE
-#define OPTION_TUNNEL
-#define OPTION_BGP
 #else
 #error "No EFM board defined!"
 #endif
