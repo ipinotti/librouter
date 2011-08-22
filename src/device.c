@@ -376,21 +376,29 @@ char *librouter_device_to_linux_cmdline(char *cmdline)
 		if (fam) {
 			strcat(new_cmdline, fam->linux_string);
 			i++;
-			if (fam->type == pptp){
+			if (fam->type == pptp) {
 				ppp_init = malloc(2);
-				sprintf(ppp_init,"%d",PPTP_PPP_START);
+				sprintf(ppp_init, "%d", PPTP_PPP_START);
+				strcat(new_cmdline, ppp_init);
+				strcat(new_cmdline, " "); /* Deve fazer algum sentido */
+				i++;
+				free(ppp_init);
+			}
+			if (fam->type == pppoe) {
+				ppp_init = malloc(2);
+				sprintf(ppp_init, "%d", PPPOE_PPP_START);
 				strcat(new_cmdline, ppp_init);
 				strcat(new_cmdline, " ");
 				i++;
 				free(ppp_init);
 			}
-			if (fam->type == pppoe){
-				ppp_init = malloc(2);
-				sprintf(ppp_init,"%d",PPPOE_PPP_START);
-				strcat(new_cmdline, ppp_init);
-				strcat(new_cmdline, " ");
+			if (fam->type == efm) {
+				int idx = atoi(args->argv[i]);
+				char idx_str[8];
+				idx += EFM_INDEX_OFFSET;
+				sprintf(idx_str, "%d", idx);
+				strcat(new_cmdline, idx_str);
 				i++;
-				free(ppp_init);
 			}
 			if (i >= args->argc)
 				break;
