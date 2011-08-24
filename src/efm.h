@@ -23,6 +23,7 @@ int librouter_efm_get_retrain_criteria_msk(void);
 int librouter_efm_set_retrain_criteria_msk(int msk);
 
 int librouter_efm_enable(int enable);
+int librouter_efm_reset(void);
 
 int librouter_efm_get_status(struct orionplus_stat *st);
 int librouter_efm_get_counters(struct orionplus_counters *cnt);

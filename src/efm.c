@@ -173,6 +173,14 @@ int librouter_efm_enable(int enable)
 	return ret;
 }
 
+int librouter_efm_reset(void)
+{
+	if (_do_ioctl(ORIONPLUS_RESETDSP, NULL))
+		return -1;
+
+	return 0;
+}
+
 int librouter_efm_get_status(struct orionplus_stat *st)
 {
 	memset(st, 0, sizeof(struct orionplus_stat) * 4);
