@@ -388,9 +388,11 @@ int librouter_flash_check_image(char *img)
 		printf("OK\n");
 	}
 
+#ifndef CONFIG_DEVELOPMENT
 	if (strncmp((const char *) CFG_PRODUCT, (const char *) header->ih_name, strlen((const char *) CFG_PRODUCT))) {
 		return WRONG_PROD_VERSION;
 	}
+#endif
 
 	/* Check image type, if not allowed, return WRONG_IMG_TYPE */
 	switch (header->ih_type) {
@@ -615,10 +617,12 @@ void librouter_write_image(int burn)
 		return;
 	}
 
+#ifndef CONFIG_DEVELOPMENT
 	if (strncmp((const char *) CFG_PRODUCT, (const char *) hdr->ih_name, strlen((const char *) CFG_PRODUCT))) {
 		printf("  Incompatible image!\n");
 		goto clean;
 	}
+#endif
 
 	/* Select address range! */
 	switch (hdr->ih_type) {
