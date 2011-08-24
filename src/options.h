@@ -109,10 +109,6 @@
 #define OPTION_AAA_ACCOUNTING
 #define OPTION_AAA_AUTHORIZATION
 
-//#define OPTION_MODEM3G
-//#define OPTION_PPP
-//#define OPTION_NUM_3G_IFACES	1
-
 /* Bridge Options */
 #if defined(CONFIG_DIGISTAR_BRIDGE)
 #define CFG_PRODUCT	"EFMBridge"
@@ -140,6 +136,10 @@
 #define OPTION_SMCROUTE
 #define OPTION_TUNNEL
 #define OPTION_BGP
+
+#define OPTION_MODEM3G
+#define OPTION_PPP
+#define OPTION_NUM_3G_IFACES	1
 
 #else
 #error "No EFM board defined!"
