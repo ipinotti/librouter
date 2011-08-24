@@ -153,11 +153,12 @@ int librouter_efm_enable(int enable)
 	 * test only the first one */
 	if (enable && stat[0].channel_st != CHANNEL_STATE_SHUTDOWN)
 		return 0; /* Already enabled */
+#if 0
 	else if (!enable && stat[0].channel_st == CHANNEL_STATE_SHUTDOWN)
 		return 0; /* Already disabled */
+#endif
 
 	conf.action = enable ? GTI_STARTUP_REQ : GTI_ABORT_REQ;
-
 
 	for (i = 0; i < 4; i++) {
 		conf.channel = i;
@@ -166,7 +167,7 @@ int librouter_efm_enable(int enable)
 			break;
 #if 0 /* Delay between channel connection */
 		if (enable)
-			sleep(2);
+			sleep(6);
 #endif
 	}
 
