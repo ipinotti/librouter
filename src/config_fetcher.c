@@ -1115,8 +1115,10 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	if (conf->mtu)
 		fprintf(out, " mtu %d\n", conf->mtu);
 
+#ifdef CONFIG_DEVELOPMENT
 	if (conf->txqueue)
 		fprintf(out, " txqueuelen %d\n", conf->txqueue);
+#endif
 
 	_dump_vlans(out, conf);
 
@@ -1211,8 +1213,10 @@ static void _dump_efm_config(FILE *out, struct interface_conf *conf)
 	if (conf->mtu)
 		fprintf(out, " mtu %d\n", conf->mtu);
 
+#ifdef CONFIG_DEVELOPMENT
 	if (conf->txqueue)
 		fprintf(out, " txqueuelen %d\n", conf->txqueue);
+#endif
 
 #ifdef OPTION_EFM
 	if (!conf->is_subiface) {
@@ -1276,8 +1280,10 @@ static void _dump_tunnel_config(FILE *out, struct interface_conf *conf)
 	if (conf->mtu)
 	fprintf(out, " mtu %d\n", conf->mtu);
 
+#ifdef CONFIG_DEVELOPMENT
 	if (conf->txqueue)
-	fprintf(out, " txqueuelen %d\n", conf->txqueue);
+		fprintf(out, " txqueuelen %d\n", conf->txqueue);
+#endif
 
 	librouter_tunnel_dump_interface(out, 1, osdev);
 
