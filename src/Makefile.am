@@ -18,6 +18,7 @@ librouter_la_SOURCES = \
 	hash.c \
 	hash_sn.c \
 	ip.c \
+	ipv6.c \
 	ipsec.c \
 	iptc.c \
 	ksz8863.c \
@@ -85,6 +86,7 @@ librouter_la_HEADERS = \
 	hash_sn.h \
 	initreq.h \
 	ip.h \
+	ipv6.h \
 	iptc.h \
 	ipsec.h \
 	ksz8863.h \

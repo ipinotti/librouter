@@ -94,6 +94,7 @@
  * 'C' é o tipo de back up (0=nenhum, 1=USB e 2=3G) e
  * 'D' é o tipo de SW (0=bridge e 1=router)...*/
 
+#define OPTION_IPV6
 #define OPTION_EFM
 #define OPTION_ETHERNET
 #define OPTION_ETHERNET_LAN_INDEX 0
@@ -125,6 +126,7 @@
 #undef OPTION_ROUTER
 #undef OPTION_SMCROUTE
 #undef OPTION_TUNNEL
+#undef OPTION_IPV6
 
 /* ETL8210 Options */
 #elif defined(CONFIG_DIGISTAR_ETL8210)
@@ -138,6 +140,7 @@
 #undef OPTION_ROUTER
 #undef OPTION_SMCROUTE
 #undef OPTION_TUNNEL
+#undef OPTION_IPV6
 
 /* ETL8221 Options */
 #elif defined(CONFIG_DIGISTAR_ETL8221)
