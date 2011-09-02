@@ -99,7 +99,7 @@
 #define OPTION_ETHERNET_LAN_INDEX 0
 #define OPTION_MANAGED_SWITCH
 #define OPTION_NUM_ETHERNET_IFACES	1
-#define OPTION_IPV6
+#undef OPTION_IPV6 /* Only enable this after tests are complete !!! */
 #undef OPTION_PPPOE
 #undef OPTION_PPTP
 
