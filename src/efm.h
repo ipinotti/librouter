@@ -38,4 +38,9 @@ float librouter_efm_get_loop_attn(int channel);
 float librouter_efm_get_xmit_power(int channel);
 float librouter_efm_get_receiver_gain(int channel);
 
+int librouter_efm_get_los(int channel);
+int librouter_efm_get_es(int channel);
+
+int librouter_efm_clear_counters(void);
+
 #endif /* EFM_H_ */

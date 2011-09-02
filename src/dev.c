@@ -367,11 +367,12 @@ int librouter_dev_exists(char *dev)
 	return found;
 }
 
-int librouter_clear_interface_counters(char *dev)
+int librouter_dev_clear_interface_counters(char *dev)
 {
-#if 0
 	struct ifreq ifr;
 	int fd, err;
+
+	dev_dbg("Clearing counters for %s\n", dev);
 
 	if ((fd=socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		librouter_pr_error(1, "socket");
@@ -388,9 +389,6 @@ int librouter_clear_interface_counters(char *dev)
 	close(fd);
 
 	return err;
-#else
-	return 0;
-#endif
 }
 
 char *librouter_dev_get_description(char *dev)

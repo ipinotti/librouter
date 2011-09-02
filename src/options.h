@@ -94,12 +94,12 @@
  * 'C' é o tipo de back up (0=nenhum, 1=USB e 2=3G) e
  * 'D' é o tipo de SW (0=bridge e 1=router)...*/
 
-#define OPTION_IPV6
 #define OPTION_EFM
 #define OPTION_ETHERNET
 #define OPTION_ETHERNET_LAN_INDEX 0
 #define OPTION_MANAGED_SWITCH
 #define OPTION_NUM_ETHERNET_IFACES	1
+#define OPTION_IPV6
 #undef OPTION_PPPOE
 #undef OPTION_PPTP
 
@@ -169,6 +169,8 @@
 /*****************************************************************************/
 /* Maximum hostname size */
 #define OPTION_HOSTNAME_MAXSIZE	30
+
+#define OPTION_CLEAR_INTERFACE_COUNTERS
 
 /* Bridging */
 #define OPTION_BRIDGE

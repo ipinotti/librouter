@@ -16,7 +16,7 @@
 //#define DEV_DEBUG
 #ifdef DEV_DEBUG
 #define dev_dbg(x,...) \
-		syslog(LOG_INFO, "%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__);
+		printf("%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__);
 #else
 #define dev_dbg(x,...)
 #endif
@@ -33,6 +33,7 @@ int librouter_dev_get_link_running(char *dev);
 int librouter_dev_get_hwaddr(char *dev, unsigned char *hwaddr);
 int librouter_dev_change_name(char *ifname, char *new_ifname);
 int librouter_dev_exists(char *dev_name);
+int librouter_dev_clear_interface_counters(char *dev);
 char *librouter_dev_get_description(char *dev);
 int librouter_dev_add_description(char *dev, char *description);
 int librouter_dev_del_description(char *dev);

@@ -386,6 +386,9 @@ int librouter_efm_get_es(int channel)
 	return cnt.xcvr_cnt[channel].errored_sec;
 }
 
-
+int librouter_efm_clear_counters(void)
+{
+	return _do_ioctl(ORIONPLUS_CLRCNTRS, NULL);
+}
 
 #endif /* OPTION_EFM */
