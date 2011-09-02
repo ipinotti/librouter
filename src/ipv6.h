@@ -97,7 +97,7 @@ struct nlmsg_v6_list {
 };
 
 typedef enum {
-	IPv6_DEL_ADDR = 0, IPv6_ADD_ADDR, IPv6_DEL_SADDR, IPv6_ADD_SADDR
+	IPV6_DEL_ADDR = 0, IPV6_ADD_ADDR, IPV6_DEL_SADDR, IPV6_ADD_SADDR
 } ipv6_addr_oper_t;
 
 int librouter_ipv6_modify_addr(int add_del,
@@ -113,10 +113,10 @@ int librouter_ipv6_addr_add_del(ipv6_addr_oper_t add_del,
                     char *remote_ip,
                     char *netmask);
 
-#define ipv6_addr_del(a,b,c,d) librouter_ipv6_addr_add_del(ipv6_DEL_ADDR,a,b,c,d)
-#define ipv6_addr_add(a,b,c,d) librouter_ipv6_addr_add_del(ipv6_ADD_ADDR,a,b,c,d)
-#define ipv6_addr_del_secondary(a,b,c,d) librouter_ipv6_addr_add_del(ipv6_DEL_SADDR,a,b,c,d)
-#define ipv6_addr_add_secondary(a,b,c,d) librouter_ipv6_addr_add_del(ipv6_ADD_SADDR,a,b,c,d)
+#define ipv6_addr_del(a,b,c,d) librouter_ipv6_addr_add_del(IPV6_DEL_ADDR,a,b,c,d)
+#define ipv6_addr_add(a,b,c,d) librouter_ipv6_addr_add_del(IPV6_ADD_ADDR,a,b,c,d)
+#define ipv6_addr_del_secondary(a,b,c,d) librouter_ipv6_addr_add_del(IPV6_DEL_SADDR,a,b,c,d)
+#define ipv6_addr_add_secondary(a,b,c,d) librouter_ipv6_addr_add_del(IPV6_ADD_SADDR,a,b,c,d)
 
 int librouter_ipv6_addr_flush(char *ifname);
 int librouter_ipv6_get_mac(char *ifname, char *mac);

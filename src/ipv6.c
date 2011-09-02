@@ -323,7 +323,7 @@ static int _clear_ppp_ipaddr_value_(int index, struct intfv6_info *info)
 
 int librouter_ipv6_get_if_list(struct intfv6_info *info)
 {
-	int link_index, ip_index, i;
+	int link_index, ipv6_index, i;
 	struct linkv6_table *link = &info->link[0];
 	struct ipaddrv6_table *ipaddr = &info->ipaddr[0];
 	struct rtnl_handle rth;
@@ -354,7 +354,7 @@ int librouter_ipv6_get_if_list(struct intfv6_info *info)
 	}
 
 	link_index = 0;
-	ip_index = 0;
+	ipv6_index = 0;
 
 	/*
 	 * Parse link information stored in netlink "packets".
@@ -371,9 +371,9 @@ int librouter_ipv6_get_if_list(struct intfv6_info *info)
 	for (a = ainfo; a;) {
 		/* Update ipaddr pointer if __get_addrinfo succeeds */
 		if (!_get_addrinfo(&a->h, ipaddr)) {
-			ip_dbg("__getaddrinfov6 succeeded for %s\n", ipaddr->ifname);
-			ip_dbg("ipv6 address is %s\n", inet_pton(AF_INET6, ipaddr->local.s6_addr, &buff));
-			ip_dbg("bitmaskv6 is %d\n", ipaddr->bitlen);
+			ipv6_dbg("__getaddrinfov6 succeeded for %s\n", ipaddr->ifname);
+			ipv6_dbg("ipv6 address is %s\n", inet_pton(AF_INET6, ipaddr->local.s6_addr, &buff));
+			ipv6_dbg("bitmaskv6 is %d\n", ipaddr->bitlen);
 			ipaddr++;
 		}
 		tmp = a;
@@ -672,8 +672,8 @@ void librouter_ipv6_ethernet_set_addr(char *ifname, char *addr, char *mask) /* m
 		}
 	}
 
-	ip_dbg("Adding IP address %s to %s\n", addr, dev);
-	ip_addr_add (dev, addr, NULL, mask); /* new address */
+	ipv6_dbg("Adding IP address %s to %s\n", addr, dev);
+	ipv6_addr_add (dev, addr, NULL, mask); /* new address */
 
 	if (strcmp(dev, "eth0") == 0)
 //		librouter_udhcpd_reload(0); /* udhcpd integration! */
@@ -687,14 +687,14 @@ void librouter_ipv6_ethernet_set_addr_secondary(char *ifname, char *addr, char *
 {
 	char *dev = librouter_ipv6_ethernet_get_dev(ifname); /* bridge x ethernet */
 
-	ip_addr_add_secondary (dev, addr, NULL, mask);
+	ipv6_addr_add_secondary (dev, addr, NULL, mask);
 }
 
 void librouter_ipv6_ethernet_set_no_addr(char *ifname)
 {
 	char *dev = librouter_ipv6_ethernet_get_dev(ifname); /* bridge x ethernet */
 
-	ip_dbg("Removing IP address from %s\n", dev);
+	ipv6_dbg("Removing IP address from %s\n", dev);
 	librouter_ipv6_addr_flush(dev); /* Clear all interface addresses */
 
 #ifdef OPTION_BRIDGE
@@ -706,7 +706,7 @@ void librouter_ipv6_ethernet_set_no_addr_secondary(char *ifname, char *addr, cha
 {
 	char *dev = librouter_ipv6_ethernet_get_dev(ifname); /* bridge x ethernet */
 
-	ip_addr_del_secondary (dev, addr, NULL, mask);
+	ipv6_addr_del_secondary (dev, addr, NULL, mask);
 }
 
 /* Get address info !!! set_dhcp_server */
@@ -786,12 +786,12 @@ void librouter_ipv6_interface_set_addr(char *ifname, char *addr, char *mask)
 		}
 	}
 
-	ip_addr_add (ifname, addr, NULL, mask); /* new address */
+	ipv6_addr_add (ifname, addr, NULL, mask); /* new address */
 }
 
 void librouter_ipv6_interface_set_addr_secondary(char *ifname, char *addr, char *mask)
 {
-	ip_addr_add_secondary (ifname, addr, NULL, mask);
+	ipv6_addr_add_secondary (ifname, addr, NULL, mask);
 }
 
 void librouter_ipv6_interface_set_no_addr(char *ifname)
@@ -801,7 +801,7 @@ void librouter_ipv6_interface_set_no_addr(char *ifname)
 
 void librouter_ipv6_interface_set_no_addr_secondary(char *ifname, char *addr, char *mask)
 {
-	ip_addr_del_secondary (ifname, addr, NULL, mask);
+	ipv6_addr_del_secondary (ifname, addr, NULL, mask);
 }
 
 unsigned int librouter_ipv6_is_valid_port(char *data)
@@ -912,7 +912,7 @@ int librouter_ipv6_iface_get_config(char *interface, struct interfacev6_conf *co
 	int i;
 	char daemon_dhcpcv6[32];
 
-	ip_dbg("Getting config for interface %s\n", interface);
+	ipv6_dbg("Getting config for interface %s\n", interface);
 	memset(conf, 0, sizeof(struct interfacev6_conf));
 
 	if (strstr(interface, ".") != NULL) {/* Is sub-interface? */
