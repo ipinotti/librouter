@@ -141,6 +141,7 @@ int librouter_efm_enable(int enable)
 {
 	struct orionplus_conf conf;
 	struct orionplus_stat stat[4];
+	int i, ret;
 
 	if (_do_ioctl(ORIONPLUS_GETCONFIG, &conf))
 		return -1;
@@ -152,11 +153,33 @@ int librouter_efm_enable(int enable)
 	 * test only the first one */
 	if (enable && stat[0].channel_st != CHANNEL_STATE_SHUTDOWN)
 		return 0; /* Already enabled */
+#if 0
 	else if (!enable && stat[0].channel_st == CHANNEL_STATE_SHUTDOWN)
 		return 0; /* Already disabled */
+#endif
 
 	conf.action = enable ? GTI_STARTUP_REQ : GTI_ABORT_REQ;
-	return _do_ioctl(ORIONPLUS_SET_PARAM, &conf);
+
+	for (i = 0; i < 4; i++) {
+		conf.channel = i;
+		ret = _do_ioctl(ORIONPLUS_SET_PARAM, &conf);
+		if (ret < 0)
+			break;
+#if 0 /* Delay between channel connection */
+		if (enable)
+			sleep(6);
+#endif
+	}
+
+	return ret;
+}
+
+int librouter_efm_reset(void)
+{
+	if (_do_ioctl(ORIONPLUS_RESETDSP, NULL))
+		return -1;
+
+	return 0;
 }
 
 int librouter_efm_get_status(struct orionplus_stat *st)
