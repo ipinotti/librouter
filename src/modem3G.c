@@ -33,7 +33,7 @@ port_family_simcard _simcard_ports[] = {
 	{ alias_sc, {2,1} },
 	{ non_sc,  {0,0} }
 };
-#elif defined(CONFIG_DIGISTAR_EFM)
+#elif defined(CONFIG_DIGISTAR_EFM) || defined(CONFIG_DIGISTAR_EFM4ETH)
 port_family_simcard _simcard_ports[] = {
 	{ real_sc,  {0} },
 	{ alias_sc, {0} },

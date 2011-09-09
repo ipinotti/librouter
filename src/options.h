@@ -86,7 +86,7 @@
 #else
 #error "No 3G board defined!"
 #endif
-
+/* End of CONFIG_DIGISTAR_3G */
 #elif defined(CONFIG_DIGISTAR_EFM)
 
 /* Código pras nomeclaturas ETL-ABCD onde 'A' é o nro de fios (8),
@@ -122,7 +122,8 @@
 #undef OPTION_ROUTER
 #undef OPTION_SMCROUTE
 #undef OPTION_TUNNEL
-#undef OPTION_IPV6
+#define OPTION_IPV6
+#undef OPTION_DUAL_SIM
 
 /* Router Options */
 #elif defined(CONFIG_DIGISTAR_ROUTER)
@@ -146,20 +147,68 @@
 #else
 #error "No EFM board defined!"
 #endif
+/* End of CONFIG_DIGISTAR_EFM */
+#elif defined(CONFIG_DIGISTAR_EFM4ETH)
 
+/* Código pras nomeclaturas ETL-ABCD onde 'A' é o nro de fios (8),
+ * 'B' é nro de ETHs (1),
+ * 'C' é o tipo de back up (0=nenhum, 1=USB e 2=3G) e
+ * 'D' é o tipo de SW (0=bridge e 1=router)...*/
 
-
-
+#define OPTION_EFM
+#define OPTION_ETHERNET
+#define OPTION_ETHERNET_LAN_INDEX 0
+#undef OPTION_MANAGED_SWITCH
+#define OPTION_NUM_ETHERNET_IFACES	1
+#undef OPTION_IPV6 /* Only enable this after tests are complete !!! */
+#undef OPTION_PPPOE
+#undef OPTION_PPTP
 #undef OPTION_DUAL_SIM
 
-/* TODO */
-/* ------ Digistar EFM Product Models Declaration ------ */
-/* EFM MOD1 */
+/* Factory Test System Digistar*/
+#define OPTION_FTS_DIGISTAR
 
-/* EFM MOD2 */
+/* AAA */
+#define OPTION_AAA_ACCOUNTING
+#define OPTION_AAA_AUTHORIZATION
 
-/* EFM MOD3 */
+/* Bridge Options */
+#if defined(CONFIG_DIGISTAR_BRIDGE)
+#define CFG_PRODUCT	"EFMBridge"
+#define OPTION_NUM_EFM_CHANNELS	4
+#undef OPTION_IP_ROUTING
+#undef OPTION_IPSEC
+#undef OPTION_FIREWALL
+#undef OPTION_NAT
+#undef OPTION_QOS
+#undef OPTION_ROUTER
+#undef OPTION_SMCROUTE
+#undef OPTION_TUNNEL
+#define OPTION_IPV6
 
+/* Router Options */
+#elif defined(CONFIG_DIGISTAR_ROUTER)
+#define CFG_PRODUCT	"EFMRouter"
+#define OPTION_NUM_EFM_CHANNELS	4
+#define OPTION_IP_ROUTING
+#define OPTION_IPSEC
+#define N_IPSEC_IF 5
+#define OPTION_FIREWALL
+#define OPTION_NAT
+#define OPTION_QOS
+#define OPTION_ROUTER
+#define OPTION_SMCROUTE
+#define OPTION_TUNNEL
+#define OPTION_BGP
+
+#define OPTION_MODEM3G
+#define OPTION_PPP
+#define OPTION_NUM_3G_IFACES	1
+
+#else
+#error "No EFM board defined!"
+#endif
+/* End of CONFIG_DIGISTAR_EFM4ETH */
 #else
 #error "No such board!"
 #endif

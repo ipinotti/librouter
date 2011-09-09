@@ -29,7 +29,7 @@ port_family_usb _ports[] = {
 	{ alias, {1,2,0} },
 	{ non,  {0,0,0} }
 };
-#elif defined(CONFIG_DIGISTAR_EFM)
+#elif defined(CONFIG_DIGISTAR_EFM) || defined(CONFIG_DIGISTAR_EFM4ETH)
 port_family_usb _ports[] = {
 	{ real,  {1} },
 	{ alias, {0} },

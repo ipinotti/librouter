@@ -55,10 +55,14 @@
 
 #if defined(CONFIG_DIGISTAR_3G)
 #define GPIO_MODULE_RESET_PIN   12
-#define NUMBER_OF_SIMCARD_PORTS 2 /*2 portas SIMCARD reais*/
+#define NUMBER_OF_SIMCARD_PORTS 2 /* 2 portas SIMCARD reais */
 #elif defined(CONFIG_DIGISTAR_EFM)
 #define GPIO_MODULE_RESET_PIN   17
-#define NUMBER_OF_SIMCARD_PORTS 1 /*2 portas SIMCARD reais*/
+#define NUMBER_OF_SIMCARD_PORTS 1 /* 1 portas SIMCARD reais */
+#elif defined(CONFIG_DIGISTAR_EFM4ETH)
+#define GPIO_MODULE_RESET_PIN   31
+#define NUMBER_OF_SIMCARD_PORTS 1 /* 1 portas SIMCARD reais */
+#else
 #endif
 
 #define MODULE_STATUS_ON	1
