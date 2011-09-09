@@ -89,9 +89,7 @@ int librouter_ipv6_modify_addr(int add_del,
 	int cmd;
 	char *p, dev[16];
 
-#if 0 /* !!! */
-	fprintf(stderr, "librouter_ipv6_modify_addr %d %s\n", add_del, data->ifname);
-#endif
+	ipv6_dbg("Modifying IPv6 ...");
 
 	/* Add or Remove */
 	cmd = add_del ? RTM_NEWADDR : RTM_DELADDR;
@@ -141,9 +139,11 @@ int librouter_ipv6_modify_addr(int add_del,
 		goto error;
 
 	rtnl_close(&rth);
+	ipv6_dbg("Success ...");
 	return 0;
 
 	error: rtnl_close(&rth);
+	ipv6_dbg("Error ...");
 	return -1;
 }
 
@@ -165,34 +165,45 @@ static int _get_addrinfo(struct nlmsghdr *n, struct ipaddrv6_table *ipaddr)
 	bzero(ipaddr, sizeof(struct ipaddrv6_table));
 
 	memset(rta_tb, 0, sizeof(rta_tb));
-	parse_rtattr(rta_tb, IFA_MAX, IFA_RTA (ifa), n->nlmsg_len
-	                - NLMSG_LENGTH(sizeof(*ifa)));
+	parse_rtattr(rta_tb, IFA_MAX, IFA_RTA (ifa), IFA_PAYLOAD(n));
 
-	if (!rta_tb[IFA_LOCAL])
+	if (ifa->ifa_family != AF_INET6) {
+		return -1;
+	}
+
+	ipv6_dbg("Netlink message from kernel has %d bytes\n", n->nlmsg_len);
+
+	if (!rta_tb[IFA_LOCAL]) {
 		rta_tb[IFA_LOCAL] = rta_tb[IFA_ADDRESS];
+	}
 
-	if (!rta_tb[IFA_ADDRESS])
+	if (!rta_tb[IFA_ADDRESS]) {
 		rta_tb[IFA_ADDRESS] = rta_tb[IFA_LOCAL];
-
-	if (ifa->ifa_family != AF_INET6)
-		return 0;
+	}
 
 	ipaddr->bitlen = ifa->ifa_prefixlen;
 
 	if (rta_tb[IFA_LOCAL]) {
-		memcpy(&ipaddr->local, RTA_DATA (rta_tb[IFA_LOCAL]), 4);
-
+		char ipv6_buf[128];
+		memcpy(&ipaddr->local, RTA_DATA (rta_tb[IFA_LOCAL]), RTA_PAYLOAD(rta_tb[IFA_LOCAL]));
+		inet_ntop(AF_INET6, &ipaddr->local, ipv6_buf, INET6_ADDRSTRLEN);
+		ipv6_dbg("Copied address %s to main structure\n", ipv6_buf);
 		if (rta_tb[IFA_ADDRESS]) {
-			memcpy(&ipaddr->remote, RTA_DATA (rta_tb[IFA_ADDRESS]),
-			                4);
+			inet_ntop(AF_INET6, RTA_DATA(rta_tb[IFA_ADDRESS]), ipv6_buf, RTA_PAYLOAD(rta_tb[IFA_ADDRESS]));
+			ipv6_dbg("Copying peer address %s to main structure \n", ipv6_buf);
+			memcpy(&ipaddr->remote, RTA_DATA (rta_tb[IFA_ADDRESS]), RTA_PAYLOAD(rta_tb[IFA_ADDRESS]));
 		}
 	}
 
 	if (rta_tb[IFA_MULTICAST]) {
-			memcpy(&ipaddr->multicast, RTA_DATA (rta_tb[IFA_MULTICAST]), 4);
+		memcpy(&ipaddr->multicast, RTA_DATA (rta_tb[IFA_MULTICAST]), RTA_PAYLOAD(rta_tb[IFA_MULTICAST]));
 	}
 
-	strncpy(ipaddr->ifname, (char*) RTA_DATA (rta_tb[IFA_LABEL]), IFNAMSIZ);
+	if (rta_tb[IFA_LABEL]) {
+		strncpy(ipaddr->ifname, (char*) RTA_DATA (rta_tb[IFA_LABEL]), RTA_PAYLOAD(rta_tb[IFA_LABEL]));
+	} else {
+		strncpy(ipaddr->ifname, ll_index_to_name(ifa->ifa_index), IFNAMSIZ);
+	}
 
 	return 0;
 }
@@ -230,6 +241,8 @@ static int _get_linkinfo(struct nlmsghdr *n, struct linkv6_table *link)
 	len -= NLMSG_LENGTH(sizeof(*ifi));
 	if (len < 0)
 		return -1;
+
+	ipv6_dbg("Netlink message from kernel has %d bytes\n", n->nlmsg_len);
 
 	bzero(link, sizeof(struct linkv6_table));
 	link->index = ifi->ifi_index;
@@ -333,6 +346,7 @@ int librouter_ipv6_get_if_list(struct intfv6_info *info)
 	char buff[256];
 	memset(&buff, 0, sizeof(buff));
 
+
 	if (rtnl_open(&rth, 0) < 0)
 		return -1;
 
@@ -340,18 +354,22 @@ int librouter_ipv6_get_if_list(struct intfv6_info *info)
 		perror("Cannot send dump request");
 		goto error;
 	}
+
 	if (rtnl_dump_filter(&rth, librouter_ipv6_store_nlmsg, &linfo, NULL, NULL) < 0) {
 		fprintf(stderr, "Link Dump terminated\n");
 		goto error;
 	}
+
 	if (rtnl_wilddump_request(&rth, AF_INET6, RTM_GETADDR) < 0) {
 		perror("Cannot send dump request");
 		goto error;
 	}
+
 	if (rtnl_dump_filter(&rth, librouter_ipv6_store_nlmsg, &ainfo, NULL, NULL) < 0) {
 		fprintf(stderr, "Address Dump terminated\n");
 		goto error;
 	}
+
 
 	link_index = 0;
 	ipv6_index = 0;
@@ -372,7 +390,7 @@ int librouter_ipv6_get_if_list(struct intfv6_info *info)
 		/* Update ipaddr pointer if __get_addrinfo succeeds */
 		if (!_get_addrinfo(&a->h, ipaddr)) {
 			ipv6_dbg("__getaddrinfov6 succeeded for %s\n", ipaddr->ifname);
-			ipv6_dbg("ipv6 address is %s\n", inet_pton(AF_INET6, ipaddr->local.s6_addr, &buff));
+			ipv6_dbg("ipv6 address is %s\n", inet_ntop(AF_INET6, &ipaddr->local, buff, sizeof(struct in6_addr)));
 			ipv6_dbg("bitmaskv6 is %d\n", ipaddr->bitlen);
 			ipaddr++;
 		}
@@ -468,6 +486,8 @@ int librouter_ipv6_addr_add_del(ipv6_addr_oper_t add_del, char *ifname, char *lo
 	struct ipaddrv6_table data, prim;
 	struct intfv6_info info;
 
+	ipv6_dbg("Modifying IPv6 ...");
+
 	memset(&info, 0, sizeof(struct intfv6_info));
 
 	/* Get information into info structure */
@@ -485,8 +505,8 @@ int librouter_ipv6_addr_add_del(ipv6_addr_oper_t add_del, char *ifname, char *lo
 		data.remote = data.local; /* remote as local! */
 	}
 
-	if (inet_pton(AF_INET6, netmask, &mask) == 0)
-		return -1;
+//	if (inet_pton(AF_INET6, netmask, &mask) == 0)
+//		return -1;
 
 //	for (bitlen = 0, bitmask.s6_addr = 0; bitlen < 32; bitlen++) {
 //		if (mask.s6_addr == bitmask.s6_addr)
@@ -562,27 +582,6 @@ int librouter_ipv6_addr_flush(char *ifname)
 
 	return 0;
 }
-
-const char *masksv6[33] = { "0.0.0.0", "128.0.0.0", "192.0.0.0", "224.0.0.0",
-                "240.0.0.0", "248.0.0.0", "252.0.0.0", "254.0.0.0",
-                "255.0.0.0", "255.128.0.0", "255.192.0.0", "255.224.0.0",
-                "255.240.0.0", "255.248.0.0", "255.252.0.0", "255.254.0.0",
-                "255.255.0.0", "255.255.128.0", "255.255.192.0",
-                "255.255.224.0", "255.255.240.0", "255.255.248.0",
-                "255.255.252.0", "255.255.254.0", "255.255.255.0",
-                "255.255.255.128", "255.255.255.192", "255.255.255.224",
-                "255.255.255.240", "255.255.255.248", "255.255.255.252",
-                "255.255.255.254", "255.255.255.255" };
-
-const char *rmasksv6[33] = { "255.255.255.255", "127.255.255.255",
-                "63.255.255.255", "31.255.255.255", "15.255.255.255",
-                "7.255.255.255", "3.255.255.255", "1.255.255.255",
-                "0.255.255.255", "0.127.255.255", "0.63.255.255",
-                "0.31.255.255", "0.15.255.255", "0.7.255.255", "0.3.255.255",
-                "0.1.255.255", "0.0.255.255", "0.0.127.255", "0.0.63.255",
-                "0.0.31.255", "0.0.15.255", "0.0.7.255", "0.0.3.255",
-                "0.0.1.255", "0.0.0.255", "0.0.0.127", "0.0.0.63", "0.0.0.31",
-                "0.0.0.15", "0.0.0.7", "0.0.0.3", "0.0.0.1", "0.0.0.0" };
 
 const char *librouter_ipv6_ciscomask(const char *mask)
 {

@@ -24,10 +24,10 @@
 
 typedef struct in6_addr IPV6;
 
-//#define ipv6_DEBUG
-#ifdef ipv6_DEBUG
+//#define IPV6_DEBUG
+#ifdef IPV6_DEBUG
 #define ipv6_dbg(x,...) \
-	syslog(LOG_INFO, "%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__)
+	printf("%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__)
 #else
 #define ipv6_dbg(x,...)
 #endif
