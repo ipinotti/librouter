@@ -60,6 +60,7 @@ FILE * librouter_quagga_bgp_get_conf(int main_nip);
 int librouter_quagga_bgp_get_asn(void);
 FILE *librouter_quagga_zebra_get_conf(int main_ninterf, char *intf);
 void librouter_quagga_zebra_dump_static_routes(FILE *out);
+int librouter_quagga_get_default_route(char *route);
 FILE *librouter_quagga_rip_get_conf(int main_ninterf, char *intf);
 FILE *librouter_quagga_ospf_get_conf(int main_ninterf, char *intf);
 
@@ -79,6 +80,7 @@ struct routes_t {
 int librouter_quagga_add_route(struct routes_t *route);
 void librouter_quagga_free_routes(struct routes_t *route);
 int librouter_quagga_del_route(char *hash);
+int librouter_quagga_del_all_default_gateways(void);
 struct routes_t * librouter_quagga_get_routes(void);
 
 int librouter_quagga_add_link_detect(char *interface);

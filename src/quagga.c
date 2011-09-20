@@ -797,6 +797,36 @@ void librouter_quagga_zebra_dump_static_routes(FILE *out)
 	fclose(f);
 }
 
+int librouter_quagga_get_default_route(char *route)
+{
+	FILE *f;
+	char buf[1024];
+
+	if (route == NULL)
+		return -1;
+
+	f = librouter_quagga_zebra_get_conf(1, NULL);
+	if (f == NULL)
+		return -1;
+
+
+	while (fgets(buf, sizeof(buf), f)) {
+		char *p;
+
+		printf("route line : %s\n", buf);
+
+		/* S>* 0.0.0.0 0.0.0.0 [1/0] via 192.168.1.5 */
+		if (strstr(buf,"0.0.0.0") && (p = strstr(buf, "via"))) {
+			p+= 4;
+			strcpy(route, p);
+		}
+	}
+
+	fclose(f);
+
+	return 0;
+}
+
 /*  Abre o arquivo de configuracao do RIP e posiciona o file descriptor de
  *  acordo com o argumento:
  *  main_ninterf = 1 -> posiciona no inicio da configuracao geral ('router rip');
@@ -1054,6 +1084,34 @@ int librouter_quagga_del_route(char *hash)
 	}
 
 	librouter_quagga_free_routes(route);
+	return 0;
+}
+
+/**
+ * librouter_quagga_del_all_default_gateways
+ *
+ * Delete all default gateways from routing table
+ *
+ * @return
+ */
+int librouter_quagga_del_all_default_gateways(void)
+{
+	struct routes_t *route, *next;
+
+	next = route = librouter_quagga_get_routes();
+	if (route == NULL)
+		return 0;
+
+	while (next) {
+		if (!strcmp(next->network, "0.0.0.0")) {
+			__del_route(next);
+			break;
+		}
+		next = next->next;
+	}
+
+	librouter_quagga_free_routes(route);
+
 	return 0;
 }
 
