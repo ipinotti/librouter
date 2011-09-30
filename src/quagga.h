@@ -55,13 +55,14 @@ int librouter_quagga_zebra_hup(void);
 int librouter_quagga_floating_route(void);
 int is_network_up(void);
 
-FILE * librouter_quagga_get_conf(char *filename, char *key);
-FILE * librouter_quagga_bgp_get_conf(int main_nip);
+FILE *librouter_quagga_get_conf(char *filename, char *key);
+FILE *librouter_quagga_bgp_get_conf(int main_nip);
 FILE *librouter_quagga_zebra_get_conf(int main_ninterf, char *intf, int ip_version);
 FILE *librouter_quagga_rip_get_conf(int main_ninterf, char *intf);
 FILE *librouter_quagga_ospf_get_conf(int main_ninterf, char *intf);
-int librouter_quagga_bgp_get_asn(void);
 void librouter_quagga_zebra_dump_static_routes(FILE *out, int ip_version);
+int librouter_quagga_get_default_route(char *route);
+int librouter_quagga_bgp_get_asn(void);
 
 /* Higher level of route abstration */
 struct routes_t {
@@ -84,6 +85,7 @@ int librouter_quagga_add_route(struct routes_t *route);
 void librouter_quagga_free_routes(struct routes_t *route);
 int librouter_quagga_del_route(struct routes_t *route);
 int librouter_quagga_del_route_hash(char *hash);
+int librouter_quagga_del_all_default_gateways(void);
 struct routes_t * librouter_quagga_get_routes(void);
 
 int librouter_quagga_add_link_detect(char *interface);

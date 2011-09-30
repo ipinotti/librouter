@@ -339,6 +339,20 @@ int librouter_br_is_interface_enslaved(char *ifname)
 	return 0;
 }
 
+int librouter_br_get_interface_br(char *ifname)
+{
+	int n;
+
+	for (n = 0; n <= MAX_BRIDGE; n++) {
+		char brname[32];
+		sprintf(brname, "%s%d", BRIDGE_NAME, n);
+		if (librouter_br_checkif(brname, ifname))
+			return n;
+	}
+
+	return 0;
+}
+
 int librouter_br_hasifs(char *brname)
 {
 	struct bridge *br = _find_bridge(brname);

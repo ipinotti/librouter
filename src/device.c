@@ -392,6 +392,7 @@ char *librouter_device_to_linux_cmdline(char *cmdline)
 				i++;
 				free(ppp_init);
 			}
+#ifdef OPTION_EFM
 			if (fam->type == efm) {
 				int idx = atoi(args->argv[i]);
 				char idx_str[8];
@@ -400,6 +401,7 @@ char *librouter_device_to_linux_cmdline(char *cmdline)
 				strcat(new_cmdline, idx_str);
 				i++;
 			}
+#endif
 			if (i >= args->argc)
 				break;
 		}
