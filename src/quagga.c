@@ -754,42 +754,65 @@ int librouter_quagga_bgp_get_asn(void)
 
 /*  Abre o arquivo de configuracao do zebra e posiciona o file descriptor de
  *  acordo com o argumento:
+ *  ip_version = 6 -> referente ao ipv6; 4 -> referente ao ipv4;
  *  main_ninterf = 1 -> posiciona no inicio da configuracao geral (comandos 'ip route');
  *  			nesse caso o argumento intf eh ignorado
  *  main_ninterf = 0 -> posiciona no inicio da configuracao da interface 'intf',
  *			sendo que 'intf' deve estar no formato linux (ex.: 'eth0')
  */
-FILE *librouter_quagga_zebra_get_conf(int main_ninterf, char *intf)
+FILE *librouter_quagga_zebra_get_conf(int main_ninterf, char *intf, int ip_version)
 {
 	char key[64];
 
-	if (main_ninterf)
-		strcpy(key, "ip route");
-	else
-		sprintf(key, "interface %s", intf);
+	switch (ip_version) {
+		case IPV6:
+			if (main_ninterf)
+				strcpy(key, "ipv6 route");
+			else
+				sprintf(key, "interface %s", intf);
+			break;
+		case IPV4:
+			if (main_ninterf)
+				strcpy(key, "ip route");
+			else
+				sprintf(key, "interface %s", intf);
+			break;
+		default:
+			return NULL;
+			break;
+	}
 
 	return librouter_quagga_get_conf(ZEBRA_CONF, key);
 }
 
-void librouter_quagga_zebra_dump_static_routes(FILE *out)
+void librouter_quagga_zebra_dump_static_routes(FILE *out, int ip_version)
 {
 	FILE *f;
 	char buf[1024];
+	char ip_v[8];
+	memset(&ip_v, 0, sizeof(ip_v));
 
-	f = librouter_quagga_zebra_get_conf(1, NULL);
+	f = librouter_quagga_zebra_get_conf(1, NULL, ip_version);
 
 	if (!f)
 		return;
 
+	if (ip_version == 6)
+		strcpy(ip_v,"ipv6 ");
+	else
+		strcpy(ip_v,"ip ");
+
 	while (!feof(f)) {
 		fgets(buf, 1024, f);
+		if (strstr(buf, ip_v)){
 
-		if (buf[0] == '!')
-			break;
+			if (buf[0] == '!')
+				break;
 
-		librouter_str_striplf(buf);
+			librouter_str_striplf(buf);
 
-		fprintf(out, "%s\n", librouter_device_from_linux_cmdline(librouter_zebra_to_linux_cmdline(buf)));
+			fprintf(out, "%s\n", librouter_device_from_linux_cmdline(librouter_zebra_to_linux_cmdline(buf)));
+		}
 	}
 
 	fprintf(out, "!\n");
@@ -859,7 +882,7 @@ struct routes_t * librouter_quagga_get_routes(void)
 	if (f == NULL)
 		return NULL;
 
-	librouter_quagga_zebra_dump_static_routes(f);
+	librouter_quagga_zebra_dump_static_routes(f, 4);
 	fclose(f);
 
 	f = fopen(CGI_TMP_FILE, "r");
@@ -976,12 +999,22 @@ int librouter_quagga_add_route(struct routes_t *route)
 	if (librouter_quagga_connect_daemon(ZEBRA_PATH) < 0)
 		return -1;
 
-	if (route->gateway)
-		sprintf(zebra_cmd, "ip route %s %s %s %d", route->network, route->mask,
-	                route->gateway, route->metric ? route->metric : 1);
-	else
-		sprintf(zebra_cmd, "ip route %s %s %s %d", route->network, route->mask,
-	                route->interface, route->metric ? route->metric : 1);
+	if (route->ip_version == 6){
+		if (route->gateway)
+			sprintf(zebra_cmd, "ipv6 route %s/%s %s %d", route->network, route->mask,
+						route->gateway, route->metric ? route->metric : 1);
+		else
+			sprintf(zebra_cmd, "ipv6 route %s/%s %s %d", route->network, route->mask,
+						route->interface, route->metric ? route->metric : 1);
+	}
+	else {
+		if (route->gateway)
+			sprintf(zebra_cmd, "ip route %s %s %s %d", route->network, route->mask,
+						route->gateway, route->metric ? route->metric : 1);
+		else
+			sprintf(zebra_cmd, "ip route %s %s %s %d", route->network, route->mask,
+						route->interface, route->metric ? route->metric : 1);
+	}
 
 	librouter_quagga_execute_client("enable", stdout, buf_daemon, 0);
 	librouter_quagga_execute_client("configure terminal", stdout, buf_daemon, 0);
@@ -1000,7 +1033,7 @@ int librouter_quagga_add_route(struct routes_t *route)
  *
  * @param route
  */
-static void __del_route(struct routes_t *route)
+int librouter_quagga_del_route(struct routes_t *route)
 {
 	char buf_daemon[256];
 	char zebra_cmd[256];
@@ -1008,15 +1041,29 @@ static void __del_route(struct routes_t *route)
 	if (librouter_quagga_connect_daemon(ZEBRA_PATH) < 0)
 		return;
 
-	if (route->gateway)
-		sprintf(zebra_cmd, "no ip route %s %s %s", route->network, route->mask,
-		                route->gateway);
-	else if (route->interface)
-		sprintf(zebra_cmd, "no ip route %s %s %s", route->network, route->mask,
-		                route->interface);
+	if (route->ip_version == 6){
+		if (route->gateway)
+			sprintf(zebra_cmd, "no ipv6 route %s/%s %s", route->network, route->mask,
+							route->gateway);
+		else if (route->interface)
+			sprintf(zebra_cmd, "no ipv6 route %s/%s %s", route->network, route->mask,
+							route->interface);
+		else {
+			librouter_quagga_close_daemon();
+			return;
+		}
+	}
 	else {
-		librouter_quagga_close_daemon();
-		return;
+		if (route->gateway)
+			sprintf(zebra_cmd, "no ip route %s %s %s", route->network, route->mask,
+							route->gateway);
+		else if (route->interface)
+			sprintf(zebra_cmd, "no ip route %s %s %s", route->network, route->mask,
+							route->interface);
+		else {
+			librouter_quagga_close_daemon();
+			return;
+		}
 	}
 
 	librouter_quagga_execute_client("enable", stdout, buf_daemon, 0);
@@ -1037,7 +1084,7 @@ static void __del_route(struct routes_t *route)
  * @param hash
  * @return
  */
-int librouter_quagga_del_route(char *hash)
+int librouter_quagga_del_route_hash(char *hash)
 {
 	struct routes_t *route, *next;
 
@@ -1047,7 +1094,7 @@ int librouter_quagga_del_route(char *hash)
 
 	while (next) {
 		if (!strcmp(hash, next->hash)) {
-			__del_route(next);
+			librouter_quagga_del_route(next);
 			break;
 		}
 		next = next->next;

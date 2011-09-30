@@ -1049,8 +1049,7 @@ int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf,
 		conf->info = info;
 
 		/* Get ethernet 0 MAC if not an ethernet interface */
-		if (librouter_ip_get_mac(
-		                conf->linktype == ARPHRD_ETHER ? conf->name : "ethernet0",
+		if (librouter_ip_get_mac(conf->linktype == ARPHRD_ETHER ? conf->name : "ethernet0",
 		                mac_bin) == 0)
 			sprintf(conf->mac, "%02x%02x.%02x%02x.%02x%02x",
 			                mac_bin[0], mac_bin[1], mac_bin[2],

@@ -23,6 +23,7 @@
 #include <linux/mii.h>
 #include <syslog.h>
 
+#include "ipv6.h"
 #include "options.h"
 #include "defines.h"
 #include "pam.h"
@@ -772,7 +773,12 @@ void librouter_config_rip_dump_interface(FILE *out, char *intf)
 
 void librouter_config_dump_routing(FILE *f)
 {
-	librouter_quagga_zebra_dump_static_routes(f);
+	librouter_quagga_zebra_dump_static_routes(f, 4); /*adicionado [int ip_version = 4] para IPv4*/
+}
+
+void librouter_config_dump_routing_ipv6(FILE *f)
+{
+	librouter_quagga_zebra_dump_static_routes(f, 6); /*adicionado [int ip_version = 6] para IPv6*/
 }
 
 void librouter_config_clock_dump(FILE *out)
@@ -996,6 +1002,50 @@ static void _dump_intf_iptables_config(FILE *out, struct interface_conf *conf)
 #endif
 }
 
+static void _dump_intf_secondary_ipaddr_v6_config(FILE *out, struct interfacev6_conf *conf)
+{
+	int i;
+	struct ipv6_t *ipv6 = &conf->sec_ip[0];
+
+	/* Go through IP configuration */
+	for (i = 0; i < MAX_NUM_IPS; i++, ipv6++) {
+
+		if (ipv6->ipv6addr[0] == 0)
+			break;
+
+		fprintf(out, " ip address %s/%s secondary\n", ipv6->ipv6addr, ipv6->ipv6mask);
+	}
+}
+
+static void _dump_intf_ipaddr_v6_config(FILE *out, struct interfacev6_conf *conf)
+{
+	int i;
+	struct ipv6_t *ipv6 = &conf->main_ip[0];
+	char *dev = librouter_ip_ethernet_get_dev(conf->name); /* ethernet enslaved by bridge? */
+
+	if (!strcmp(conf->name, dev)) {
+		if (ipv6->ipv6addr[0] == 0){
+			fprintf(out, " no ip address\n");
+		}
+		else
+			for (i = 0; i < MAX_NUM_IPS; i++, ipv6++) {
+				if (ipv6->ipv6addr[0])
+					fprintf(out, " ipv6 address %s %s \n", ipv6->ipv6addr, ipv6->ipv6mask);
+			}
+	}
+#if NOT_YET_IMPLEMENTED
+	else {
+		struct ipa_t ip;
+		librouter_br_get_ipaddr(dev, &ip);
+
+		if (ip.addr[0])
+			fprintf(out, " ip address %s %s\n", ip.addr, ip.mask);
+		else
+			fprintf(out, " no ip address\n");
+	}
+#endif
+}
+
 static void _dump_intf_secondary_ipaddr_config(FILE *out, struct interface_conf *conf)
 {
 	int i;
@@ -1059,8 +1109,7 @@ static void _dump_interface_bridge(FILE *out, char *intf)
 			fprintf(out, " bridge-group %d\n", n);
 	}
 }
-
-static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
+static void _dump_ethernet_config(FILE *out, struct interface_conf *conf, struct interfacev6_conf *conf_v6)
 {
 	/* Interface name (linux name) */
 	char *osdev = conf->name;
@@ -1111,6 +1160,14 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 
 	/* Print secondary IP addresses */
 	_dump_intf_secondary_ipaddr_config(out, conf);
+
+	/* Print main IPv6 address */
+#if 0
+	if (strlen(daemon_dhcpc) && librouter_exec_check_daemon(daemon_dhcpc))
+		fprintf(out, " ip address dhcp\n");
+	else
+#endif
+		_dump_intf_ipaddr_v6_config(out, conf_v6);
 
 	if (conf->mtu)
 		fprintf(out, " mtu %d\n", conf->mtu);
@@ -1158,7 +1215,7 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf)
 	return;
 }
 
-static void _dump_efm_config(FILE *out, struct interface_conf *conf)
+static void _dump_efm_config(FILE *out, struct interface_conf *conf, struct interfacev6_conf *conf_v6)
 {
 	/* Interface name (linux name) */
 	char *osdev = conf->name;
@@ -1210,6 +1267,14 @@ static void _dump_efm_config(FILE *out, struct interface_conf *conf)
 	/* Print secondary IP addresses */
 	_dump_intf_secondary_ipaddr_config(out, conf);
 
+	/* Print main IPv6 address */
+#if 0
+	if (strlen(daemon_dhcpc) && librouter_exec_check_daemon(daemon_dhcpc))
+		fprintf(out, " ip address dhcp\n");
+	else
+#endif
+		_dump_intf_ipaddr_v6_config(out, conf_v6);
+
 	if (conf->mtu)
 		fprintf(out, " mtu %d\n", conf->mtu);
 
@@ -1247,7 +1312,7 @@ static void _dump_efm_config(FILE *out, struct interface_conf *conf)
 	return;
 }
 
-static void _dump_loopback_config(FILE *out, struct interface_conf *conf)
+static void _dump_loopback_config(FILE *out, struct interface_conf *conf, struct interfacev6_conf *conf_v6)
 {
 	char *osdev = conf->name; /* Interface name (linux name) */
 
@@ -1257,6 +1322,8 @@ static void _dump_loopback_config(FILE *out, struct interface_conf *conf)
 
 	/* Search for aliases */
 	_dump_intf_secondary_ipaddr_config(out, conf);
+
+	_dump_intf_ipaddr_v6_config(out, conf_v6);
 
 	fprintf(out, " %sshutdown\n", conf->up ? "no " : "");
 }
@@ -1438,7 +1505,7 @@ static void _dump_pppoe_config(FILE * out, struct interface_conf *conf)
  * @param out File descriptor to be written
  * @param conf Interface information
  */
-void librouter_config_dump_interface(FILE *out, struct interface_conf *conf)
+void librouter_config_dump_interface(FILE *out, struct interface_conf *conf, struct interfacev6_conf *conf_v6)
 {
 	char *description;
 	char *cish_dev;
@@ -1489,13 +1556,13 @@ void librouter_config_dump_interface(FILE *out, struct interface_conf *conf)
 	case ARPHRD_ETHER:
 #ifdef OPTION_EFM
 		if (strstr(cish_dev, "efm"))
-			_dump_efm_config(out, conf);
+			_dump_efm_config(out, conf, conf_v6);
 		else
 #endif
-		_dump_ethernet_config(out, conf);
+		_dump_ethernet_config(out, conf, conf_v6);
 		break;
 	case ARPHRD_LOOPBACK:
-		_dump_loopback_config(out, conf);
+		_dump_loopback_config(out, conf, conf_v6);
 		break;
 #ifdef OPTION_TUNNEL
 		case ARPHRD_TUNNEL:
@@ -1526,6 +1593,7 @@ void librouter_config_interfaces_dump(FILE *out)
 	struct net_device_stats *st;
 
 	struct interface_conf conf;
+	struct interfacev6_conf conf_v6;
 	struct intf_info info;
 
 	char *intf_list[MAX_NUM_LINKS];
@@ -1537,8 +1605,13 @@ void librouter_config_interfaces_dump(FILE *out)
 
 	for (i = 0; intf_list[i][0] != '\0'; i++) {
 
-		if (librouter_ip_iface_get_config(intf_list[i], &conf, &info) < 0)
+		if ( librouter_ip_iface_get_config(intf_list[i], &conf, &info) < 0){
+			syslog(LOG_INFO, "%s not found in ip\n", intf_list[i]);
 			continue;
+		}
+
+		if ( librouter_ipv6_iface_get_config(intf_list[i], &conf_v6, NULL) < 0)
+			syslog(LOG_INFO, "%s not found in ipv6\n", intf_list[i]);
 
 		/* Ignore the following interfaces: bridge*/
 		if (strstr(conf.name, "bridge"))
@@ -1563,7 +1636,7 @@ void librouter_config_interfaces_dump(FILE *out)
 			continue;
 
 		/* Start dumping information */
-		librouter_config_dump_interface(out, &conf);
+		librouter_config_dump_interface(out, &conf, &conf_v6);
 
 		librouter_ip_iface_free_config(&conf);
 	}
@@ -1645,6 +1718,9 @@ int librouter_config_write(char *filename, struct router_config *cfg)
 	librouter_config_bgp_dump_router(f, 1);
 #endif
 	librouter_config_dump_routing(f);
+#ifdef OPTION_IPV6
+	librouter_config_dump_routing_ipv6(f);
+#endif
 
 	/* Multicast */
 #ifdef OPTION_SMCROUTE

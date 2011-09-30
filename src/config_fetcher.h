@@ -26,6 +26,7 @@ void librouter_config_ospf_dump_interface(FILE *out, char *intf);
 void librouter_config_rip_dump_interface(FILE *out, char *intf);
 
 void librouter_config_dump_routing(FILE *f);
+void librouter_config_dump_routing_ipv6(FILE *f);
 
 void librouter_config_dump_policy_route(FILE *f);
 

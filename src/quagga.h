@@ -57,14 +57,15 @@ int is_network_up(void);
 
 FILE * librouter_quagga_get_conf(char *filename, char *key);
 FILE * librouter_quagga_bgp_get_conf(int main_nip);
-int librouter_quagga_bgp_get_asn(void);
-FILE *librouter_quagga_zebra_get_conf(int main_ninterf, char *intf);
-void librouter_quagga_zebra_dump_static_routes(FILE *out);
+FILE *librouter_quagga_zebra_get_conf(int main_ninterf, char *intf, int ip_version);
 FILE *librouter_quagga_rip_get_conf(int main_ninterf, char *intf);
 FILE *librouter_quagga_ospf_get_conf(int main_ninterf, char *intf);
+int librouter_quagga_bgp_get_asn(void);
+void librouter_quagga_zebra_dump_static_routes(FILE *out, int ip_version);
 
 /* Higher level of route abstration */
 struct routes_t {
+	int ip_version;
 	char *network;
 	char *mask;
 	char *interface;
@@ -74,11 +75,15 @@ struct routes_t {
 	struct routes_t *next;
 };
 
+#define IPV6 6
+#define IPV4 4
+
 #define CGI_TMP_FILE 	"/tmp/cgi_tmp"
 
 int librouter_quagga_add_route(struct routes_t *route);
 void librouter_quagga_free_routes(struct routes_t *route);
-int librouter_quagga_del_route(char *hash);
+int librouter_quagga_del_route(struct routes_t *route);
+int librouter_quagga_del_route_hash(char *hash);
 struct routes_t * librouter_quagga_get_routes(void);
 
 int librouter_quagga_add_link_detect(char *interface);
