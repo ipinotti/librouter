@@ -828,7 +828,7 @@ int librouter_quagga_get_default_route(char *route)
 	if (route == NULL)
 		return -1;
 
-	f = librouter_quagga_zebra_get_conf(1, NULL);
+	f = librouter_quagga_zebra_get_conf(1, NULL, 4);
 	if (f == NULL)
 		return -1;
 
@@ -1151,7 +1151,7 @@ int librouter_quagga_del_all_default_gateways(void)
 
 	while (next) {
 		if (!strcmp(next->network, "0.0.0.0")) {
-			__del_route(next);
+			librouter_quagga_del_route(next);
 			break;
 		}
 		next = next->next;

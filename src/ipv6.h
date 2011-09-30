@@ -125,12 +125,12 @@ void librouter_ipv6_interface_get_ipv6_addr(char *ifname, char *addr_str, char *
 int librouter_ipv6_iface_get_stats(char *ifname, void *store);
 int librouter_ipv6_iface_get_config(char *interface, struct interfacev6_conf *conf, struct intfv6_info *info);
 void librouter_ipv6_iface_free_config(struct interfacev6_conf *conf);
-void librouter_ipv6_bitlen2mask(int bitlen, char *mask);
 
 
 
 /* Excluded for a moment (ip functions copied to ipv6 [legacy])*/
 #if 0
+void librouter_ipv6_bitlen2mask(int bitlen, char *mask);
 void librouter_ipv6_ethernet_ipv6_addr(char *ifname, char *addr_str, char *mask_str);
 void librouter_ipv6_interface_set_no_addr_secondary(char *ifname, char *addr, char *mask);
 void librouter_ipv6_interface_set_addr_secondary(char *ifname, char *addr, char *mask);
