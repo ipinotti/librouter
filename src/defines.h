@@ -68,10 +68,10 @@
 
 /* CRYPTO defines */
 #define IPSEC_OPTION	/* enable IPSEC */
-#define CMDS_BEF_LIST	1
+#define CMDS_BEF_LIST	1 /* !!!!!!! */
 
-#define MAX_CONN			5
-#define MAX_CONN_NAME			100
+#define IPSEC_MAX_CONN			50
+#define IPSEC_MAX_CONN_NAME		100
 #define FILE_IPSEC_SECRETS		"/etc/ipsec.secrets"
 #define FILE_CONN_SECRETS		"/etc/ipsec.%s.secrets"
 #define STRING_IPSEC_AUTORELOAD 	"auto_reload="
