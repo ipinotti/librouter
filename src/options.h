@@ -58,34 +58,34 @@
 /* ------ Digistar 3G Product Models Declaration ------ */
 /* RCG1000 */
 #if defined(CONFIG_DIGISTAR_RCG1000)
-#define OPTION_MANAGED_SWITCH
 #define OPTION_ETHERNET_WAN
 #define OPTION_MODEM3G
 #define OPTION_DUAL_SIM
-#define OPTION_PPP
 #define OPTION_NUM_ETHERNET_IFACES	2
 #define OPTION_NUM_3G_IFACES	3
 
 /* RCG800 */
 #elif defined(CONFIG_DIGISTAR_RCG800)
-#define OPTION_MANAGED_SWITCH
 #define OPTION_MODEM3G
 #define OPTION_DUAL_SIM
-#define OPTION_PPP
 #define OPTION_NUM_ETHERNET_IFACES	1
 #define OPTION_NUM_3G_IFACES	3
 
 /* RCG700 */
 #elif defined(CONFIG_DIGISTAR_RCG700)
-#define OPTION_MANAGED_SWITCH
 #define OPTION_ETHERNET_WAN
-#define OPTION_PPP
 #define OPTION_NUM_ETHERNET_IFACES	2
-
 
 #else
 #error "No 3G board defined!"
 #endif
+
+#define OPTION_PPP
+
+#define OPTION_MANAGED_SWITCH
+#define OPTION_SWITCH_BROADCOM
+#define OPTION_SWITCH_PORT_NUM		4
+
 /* End of CONFIG_DIGISTAR_3G */
 #elif defined(CONFIG_DIGISTAR_EFM)
 
@@ -97,9 +97,14 @@
 #define OPTION_EFM
 #define OPTION_ETHERNET
 #define OPTION_ETHERNET_LAN_INDEX 0
-#define OPTION_MANAGED_SWITCH
 #define OPTION_NUM_ETHERNET_IFACES	1
-#define OPTION_IPV6 /* Only enable this after tests are complete !!! */
+
+#define OPTION_MANAGED_SWITCH
+#define OPTION_SWITCH_MICREL
+#define OPTION_SWITCH_MICREL_KSZ8863
+#define OPTION_SWITCH_PORT_NUM		2
+
+#undef OPTION_IPV6 /* Only enable this after tests are complete !!! */
 #undef OPTION_PPPOE
 #undef OPTION_PPTP
 
@@ -158,8 +163,13 @@
 #define OPTION_EFM
 #define OPTION_ETHERNET
 #define OPTION_ETHERNET_LAN_INDEX 0
-#undef OPTION_MANAGED_SWITCH
 #define OPTION_NUM_ETHERNET_IFACES	1
+
+#define OPTION_MANAGED_SWITCH
+#define OPTION_SWITCH_MICREL
+#define OPTION_SWITCH_MICREL_KSZ8895
+#define OPTION_SWITCH_PORT_NUM		4
+
 #undef OPTION_IPV6 /* Only enable this after tests are complete !!! */
 #undef OPTION_PPPOE
 #undef OPTION_PPTP

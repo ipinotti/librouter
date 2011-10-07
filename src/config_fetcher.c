@@ -49,9 +49,11 @@
 #include "pbr.h"
 
 #ifdef OPTION_MANAGED_SWITCH
-#if defined(CONFIG_DIGISTAR_EFM)
+#if defined(OPTION_SWITCH_MICREL_KSZ8863)
 #include "ksz8863.h"
-#elif defined(CONFIG_DIGISTAR_3G)
+#elif defined(OPTION_SWITCH_MICREL_KSZ8895)
+#include "ksz8895.h"
+#elif defined(OPTION_SWITCH_BROADCOM)
 #include "bcm53115s.h"
 #endif
 #endif /* OPTION_MANAGED_SWITCH */
@@ -1204,10 +1206,13 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf, struct
 	fprintf(out, " %sshutdown\n", conf->up ? "no " : "");
 
 #ifdef OPTION_MANAGED_SWITCH
-#if defined(CONFIG_DIGISTAR_EFM)
+#if defined(OPTION_SWITCH_MICREL_KSZ8863)
 	if (!strcmp(osdev, KSZ8863_ETH_IFACE)) /* Check for the right network interface */
 		librouter_ksz8863_dump_config(out);
-#elif defined(CONFIG_DIGISTAR_3G)
+#elif defined(OPTION_SWITCH_MICREL_KSZ8895)
+	if (!strcmp(osdev, KSZ8895_ETH_IFACE)) /* Check for the right network interface */
+		librouter_ksz8895_dump_config(out);
+#elif defined(OPTION_SWITCH_BROADCOM)
 	if (!strcmp(osdev, BCM53115S_ETH_IFACE)) /* Check for the right network interface */
 		librouter_bcm53115s_dump_config(out);
 #endif
