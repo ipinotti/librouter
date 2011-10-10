@@ -1257,8 +1257,6 @@ static int _get_vlan_table(int vid, struct vlan_table_t *t)
 	int mask = 0x1fff;
 	int offset = (vid % 4) * 13;
 
-	ksz8895_dbg("Calculated register offset for VID %d: %d bits\n", vid, offset);
-
 	if (t == NULL) {
 		printf("%% NULL table pointer\n");
 		return -1;
@@ -1272,8 +1270,6 @@ static int _get_vlan_table(int vid, struct vlan_table_t *t)
 	}
 
 	data = (__u32) ((acc_data >> offset) & mask);
-
-	ksz8895_dbg("Read table for VID %d : reg value is %08x\n", vid, data);
 
 	/* Finally, data is in the format expected by struct vlan_table_t */
 	memcpy(t, &data, sizeof(struct vlan_table_t));
@@ -1299,8 +1295,6 @@ static int _set_vlan_table(int vid, struct vlan_table_t *t)
 	int mask = 0x1fff;
 	int offset = (vid % 4) * 13;
 
-	ksz8895_dbg("Calculated register offset for VID %d: %d bits\n", vid, offset);
-
 	if (t == NULL) {
 		printf("%% NULL table pointer\n");
 		return -1;
@@ -1311,8 +1305,6 @@ static int _set_vlan_table(int vid, struct vlan_table_t *t)
 		printf("%% Failed to trigger VLAN table read operation\n");
 		return -1;
 	}
-
-	ksz8895_dbg("Read table for VID %d : data is %16x\n", vid, acc_data);
 
 	/* Now the registers can be changed */
 	acc_data &= ~((__u64) (mask << offset)); /* Clear entry */
@@ -1388,7 +1380,7 @@ int librouter_ksz8895_add_table(struct vlan_config_t *vconfig)
 
 	/* Initiate table data */
 	new.valid = 1;
-	new.membership = vconfig->membership;
+	new.membership = (unsigned int) vconfig->membership;
 	new.fid = ++i;
 
 	/* Save number of active VLANs */
@@ -1594,7 +1586,7 @@ int librouter_ksz8895_dump_config(FILE *out)
 		if (v.valid)
 			fprintf(
 			out,
-			" switch-config vlan %d %s%s%s\n",
+			" switch-config vlan %d %s%s%s%s%s\n",
 			i,
 			(v.membership & KSZ8895REG_VLAN_MEMBERSHIP_PORT1_MSK) ? "port-1 " : "",
 			(v.membership & KSZ8895REG_VLAN_MEMBERSHIP_PORT2_MSK) ? "port-2 " : "",
