@@ -411,7 +411,7 @@ int librouter_ksz8895_set_egress_rate_limit(int port, int prio, int rate)
 
 	/* Calculate reg offset */
 	reg = KSZ8895REG_EGRESS_RATE_LIMIT;
-	reg += 0x4 * port;
+	reg += 0x10 * port;
 	reg += prio;
 
 	if (!rate || rate == 100000) {
@@ -452,7 +452,7 @@ int librouter_ksz8895_get_egress_rate_limit(int port, int prio)
 
 	/* Calculate reg offset */
 	reg = KSZ8895REG_EGRESS_RATE_LIMIT;
-	reg += 0x4 * port;
+	reg += 0x10 * port;
 	reg += prio;
 
 	if (_ksz8895_reg_read(reg, &data) < 0)
@@ -1226,19 +1226,16 @@ static int _trigger_vlan_table_write(unsigned int vid, __u64 data)
 			return -1;
 	}
 
-	ksz8895_dbg("1\n");
 	data8 = KSZ8895REG_WRITE_OPERATION | KSZ8895REG_VLAN_TABLE_SELECT;
 	data8 |= (addr >> 8) & 0x3; /* This two bits are the MSB for the VID */
 	if (_ksz8895_reg_write(KSZ8895REG_INDIRECT_ACCESS_CONTROL0, &data8) < 0)
 		return -1;
 
 
-	ksz8895_dbg("2\n");
 	data8 = (__u8) addr;
 	if (_ksz8895_reg_write(KSZ8895REG_INDIRECT_ACCESS_CONTROL1, &data8) < 0)
 		return -1;
 
-	ksz8895_dbg("3\n");
 	return 0;
 }
 
