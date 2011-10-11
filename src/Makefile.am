@@ -6,6 +6,7 @@ librouter_la_SOURCES = \
 	bridge.c \
 	crc32.c \
 	crc.c \
+	data.c \
 	debug.c \
 	dev.c \
 	device.c \
@@ -22,6 +23,7 @@ librouter_la_SOURCES = \
 	ipsec.c \
 	iptc.c \
 	ksz8863.c \
+	ksz8895.c \
 	lan.c \
 	lock.c \
 	mangle.c \
@@ -72,6 +74,7 @@ librouter_la_HEADERS = \
 	acl.h \
 	args.h \
 	bridge.h \
+	data.h \
 	debug.h \
 	defines.h \
 	dev.h \
@@ -90,6 +93,7 @@ librouter_la_HEADERS = \
 	iptc.h \
 	ipsec.h \
 	ksz8863.h \
+	ksz8895.h \
 	lan.h \
 	lock.h \
 	mangle.h \
@@ -128,3 +132,4 @@ librouter_la_HEADERS = \
 	bcm53115s.h \
 	bcm53115s_etc.h \
 	vlan.h
+

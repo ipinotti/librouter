@@ -687,12 +687,12 @@ int librouter_ipsec_list_all_names(char ***rcv_p)
 		librouter_pr_error(0, "scandir failed");
 		return -1;
 	} else {
-		list_ini = list = malloc(sizeof(char *) * MAX_CONN);
+		list_ini = list = malloc(sizeof(char *) * IPSEC_MAX_CONN);
 
 		if (list == NULL)
 			return -1;
 
-		for (i = 0; i < MAX_CONN; i++, list++)
+		for (i = 0; i < IPSEC_MAX_CONN; i++, list++)
 			*list = NULL;
 
 		list = list_ini;
@@ -700,7 +700,7 @@ int librouter_ipsec_list_all_names(char ***rcv_p)
 			char *p1, *p2;
 			p1 = strchr(namelist[i]->d_name, '.') + 1;
 			p2 = strrchr(namelist[i]->d_name, '.');
-			if ((count < MAX_CONN) && (p1 < p2)) {
+			if ((count < IPSEC_MAX_CONN) && (p1 < p2)) {
 				*list = malloc((p2 - p1) + 1);
 				if (*list != NULL) {
 					*p2 = 0;
@@ -1125,7 +1125,7 @@ void librouter_ipsec_dump(FILE *out)
 	if (librouter_ipsec_list_all_names(&list) > 0) {
 		if (*list != NULL) {
 			list_ini = list;
-			for (idx = 0; idx < MAX_CONN; idx++, list++) {
+			for (idx = 0; idx < IPSEC_MAX_CONN; idx++, list++) {
 				/* process connection name */
 				if (*list) {
 					char *pt;

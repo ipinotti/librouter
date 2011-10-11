@@ -17,8 +17,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <linux/autoconf.h>
-
 #include "options.h"
 
 #ifdef OPTION_MANAGED_SWITCH
@@ -27,7 +25,7 @@
 #include "ksz8863.h"
 
 /* type, port[NUMBER_OF_SWITCH_PORTS]*/
-port_family_switch _switch_ksz_ports[] = {
+static port_family_switch _switch_ksz_ports[] = {
 	{ real_sw,  {0,1} },
 	{ alias_sw, {1,2} },
 	{ non_sw,   {0,0} }
@@ -297,10 +295,11 @@ int librouter_ksz8863_set_multicast_storm_protect(int enable)
 	if (_ksz8863_reg_read(KSZ8863REG_GLOBAL_CONTROL2, &data, sizeof(data)))
 		return -1;
 
+	/* Careful here, the logic is inverse */
 	if (enable)
-		data |= KSZ8863REG_ENABLE_MC_STORM_PROTECT_MSK;
-	else
 		data &= ~KSZ8863REG_ENABLE_MC_STORM_PROTECT_MSK;
+	else
+		data |= KSZ8863REG_ENABLE_MC_STORM_PROTECT_MSK;
 
 	if (_ksz8863_reg_write(KSZ8863REG_GLOBAL_CONTROL2, &data, sizeof(data)))
 		return -1;
@@ -323,7 +322,8 @@ int librouter_ksz8863_get_multicast_storm_protect(void)
 	if (_ksz8863_reg_read(KSZ8863REG_GLOBAL_CONTROL2, &data, sizeof(data)))
 		return -1;
 
-	return ((data & KSZ8863REG_ENABLE_MC_STORM_PROTECT_MSK) ? 1 : 0);
+	/* Careful here, the logic is inverse */
+	return ((data & KSZ8863REG_ENABLE_MC_STORM_PROTECT_MSK) ? 0 : 1);
 }
 
 /**
@@ -338,7 +338,7 @@ int librouter_ksz8863_set_replace_null_vid(int enable)
 {
 	__u8 data;
 
-	if (_ksz8863_reg_read(KSZ8863REG_GLOBAL_CONTROL2, &data, sizeof(data)))
+	if (_ksz8863_reg_read(KSZ8863REG_GLOBAL_CONTROL4, &data, sizeof(data)))
 		return -1;
 
 	if (enable)

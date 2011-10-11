@@ -96,8 +96,6 @@ typedef struct {
 	const int port[NUMBER_OF_SWITCH_PORTS];
 } port_family_switch;
 
-extern port_family_switch _switch_ksz_ports[];
-
 struct vlan_config_t {
 	int vid;
 	int membership;
