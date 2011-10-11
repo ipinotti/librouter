@@ -143,6 +143,7 @@ void librouter_ip_interface_set_no_addr(char *ifname);
 void librouter_ip_interface_set_no_addr_secondary(char *ifname, char *addr, char *mask);
 unsigned int librouter_ip_is_valid_port(char *data);
 unsigned int librouter_ip_is_valid_netmask(char *data);
+int librouter_ip_check_addr_string_for_ipv4(char *addr_str);
 int librouter_ip_iface_get_stats(char *ifname, void *store);
 
 int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf, struct intf_info *info);

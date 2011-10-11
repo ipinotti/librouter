@@ -494,7 +494,7 @@ int librouter_tunnel_mode(char *name, int mode)
 		if (p.iph.protocol != mode) {
 			_do_del_ioctl(p.name, &p); /* remove tunnel */
 			p.iph.protocol = mode; /* new mode */
-			if (mode == IPPROTO_IPIP) { /* Keys are not allowed with ipip and sit. */
+			if (mode == IPPROTO_IPIP || mode == IPPROTO_IPV6) { /* Keys are not allowed with ipip and sit. */
 				p.i_flags &= ~(GRE_KEY | GRE_CSUM | GRE_SEQ);
 				p.o_flags &= ~(GRE_KEY | GRE_CSUM | GRE_SEQ);
 			}

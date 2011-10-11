@@ -600,6 +600,82 @@ int librouter_ipv6_mod_eui64 (char *dev, char *addr_mask_str)
 	return 0;
 }
 
+int librouter_ipv6_check_addr_string_for_ipv6(char *addr_str)
+{
+	    struct sockaddr_in6 sa;
+	    return (inet_pton(AF_INET6, addr_str, &sa.sin6_addr));
+}
+
+int librouter_ipv6_conv_ipv4_addr_in_6to4_ipv6_addr(char *addr_str)
+{
+	FILE *ipv6calc;
+	char line[256];
+	char file_cmd[256];
+	int check=0;
+
+	if (librouter_ip_check_addr_string_for_ipv4(addr_str) < 0)
+		return -1;
+
+	sprintf(file_cmd,"/bin/ipv6calc -q --action conv6to4 --in ipv4 %s --out ipv6\n", addr_str);
+	ipv6_dbg("Applying ipv6 cmd: /bin/ipv6calc -q --action conv6to4 --in ipv4 %s --out ipv6\n", addr_str);
+
+	if (!(ipv6calc = popen(file_cmd, "r"))) {
+		fprintf(stderr, "%% IPv6Calc not found\n");
+		check = -1;
+		goto end;
+	}
+
+	while (fgets(line, sizeof(line), ipv6calc) != NULL)
+		strcpy(addr_str,line);
+
+	if (addr_str == NULL)
+		check = -1;
+
+	librouter_str_striplf(addr_str);
+
+	strcat(addr_str,"1");
+
+	ipv6_dbg("IPv4 Addr converted to 6to4 IPv6 Addr correctly [ %s ]\n", addr_str);
+
+end:
+	pclose(ipv6calc);
+
+	return check;
+}
+
+int librouter_ipv6_conv_6to4_ipv6_addr_in_ipv4_addr(char *addr_str)
+{
+	FILE *ipv6calc;
+	char line[256];
+	char file_cmd[256];
+	int check=0;
+
+	if (librouter_ipv6_check_addr_string_for_ipv6(addr_str) < 0)
+		return -1;
+
+	sprintf(file_cmd,"/bin/ipv6calc -q --action conv6to4 --in ipv6 %s --out ipv4\n", addr_str);
+	ipv6_dbg("Applying ipv6 cmd: /bin/ipv6calc -q --action conv6to4 --in ipv6 %s --out ipv4\n", addr_str);
+
+	if (!(ipv6calc = popen(file_cmd, "r"))) {
+		fprintf(stderr, "%% IPv6Calc not found\n");
+		check = -1;
+		goto end;
+	}
+
+	while (fgets(line, sizeof(line), ipv6calc) != NULL)
+		strcpy(addr_str,line);
+
+	if (addr_str == NULL)
+		check = -1;
+
+	ipv6_dbg("IPv6 6to4 Addr converted to IPv4 Addr correctly\n");
+
+end:
+	pclose(ipv6calc);
+
+	return check;
+}
+
 int librouter_ipv6_get_eui64_addr(char *addr_mask_str, char *mac_addr)
 {
 	FILE *ipv6calc;
@@ -607,8 +683,8 @@ int librouter_ipv6_get_eui64_addr(char *addr_mask_str, char *mac_addr)
 	char file_cmd[256];
 	int check=0;
 
-	sprintf(file_cmd,"/bin/ipv6calc --in prefix+mac --action prefixmac2ipv6 %s %s --out ipv6addr\n", addr_mask_str, mac_addr);
-	ipv6_dbg("Applying ipv6 cmd: /bin/ipv6calc --in prefix+mac --action prefixmac2ipv6 %s %s --out ipv6addr\n", addr_mask_str, mac_addr);
+	sprintf(file_cmd,"/bin/ipv6calc -q --in prefix+mac --action prefixmac2ipv6 %s %s --out ipv6addr\n", addr_mask_str, mac_addr);
+	ipv6_dbg("Applying ipv6 cmd: /bin/ipv6calc -q --in prefix+mac --action prefixmac2ipv6 %s %s --out ipv6addr\n", addr_mask_str, mac_addr);
 
 	if (!(ipv6calc = popen(file_cmd, "r"))) {
 		fprintf(stderr, "%% IPv6Calc not found\n");

@@ -887,6 +887,12 @@ void librouter_ip_interface_set_no_addr_secondary(char *ifname, char *addr, char
 	ip_addr_del_secondary (ifname, addr, NULL, mask);
 }
 
+int librouter_ip_check_addr_string_for_ipv4(char *addr_str)
+{
+	    struct sockaddr_in sa;
+	    return (inet_pton(AF_INET, addr_str, &sa.sin_addr));
+}
+
 unsigned int librouter_ip_is_valid_port(char *data)
 {
 	char *p;

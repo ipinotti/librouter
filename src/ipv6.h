@@ -116,6 +116,9 @@ int librouter_ipv6_interface_set_no_addr_flush (char *ifname);
 int librouter_ipv6_is_addr_link_local (char *addr);
 int librouter_ipv6_mod_eui64 (char *dev, char *addr_mask_str);
 int librouter_ipv6_get_eui64_addr(char *addr_mask_str, char *mac_addr);
+int librouter_ipv6_check_addr_string_for_ipv6(char *addr_str);
+int librouter_ipv6_conv_ipv4_addr_in_6to4_ipv6_addr(char *addr_str);
+int librouter_ipv6_conv_6to4_ipv6_addr_in_ipv4_addr(char *addr_str);
 
 
 int librouter_ipv6_get_mac(char *ifname, char *mac, int dot_mode);

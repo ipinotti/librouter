@@ -90,6 +90,31 @@ static int _get_procip_val(const char *parm)
 	return atoi(buf);
 }
 
+/**
+ * Read network IPv6 information from /proc
+ *
+ * @param parm Proc name
+ * @return proc value if success, -1 if failure
+ */
+static int _get_procipv6_all_val(const char *parm)
+{
+	int fid;
+	char buf[128];
+
+	snprintf(buf, sizeof(buf), "/proc/sys/net/ipv6/conf/all/%s", parm);
+
+	fid = open(buf, O_RDONLY);
+	if (fid < 0) {
+		printf("%% Error opening %s\n%% %s\n", buf, strerror(errno));
+		return -1;
+	}
+
+	read(fid, buf, 16);
+	close(fid);
+
+	return atoi(buf);
+}
+
 /***********************/
 /* Main dump functions */
 /***********************/
@@ -428,6 +453,28 @@ void librouter_config_dump_ip(FILE *f, int conf_format)
 
 	fprintf(f, "!\n");
 }
+
+#ifdef OPTION_IPV6
+void librouter_config_dump_ipv6(FILE *f, int conf_format)
+{
+	int val;
+
+	val = !_get_procipv6_all_val("disable_ipv6");
+	fprintf(f, val ? "ipv6 enable\n" : "no ipv6 enable\n");
+
+	val = _get_procipv6_all_val("forwarding");
+	fprintf(f, val ? "ipv6 routing\n" : "no ipv6 routing\n");
+
+#ifdef NOT_YET_IMPLEMENTED
+	if (_get_procipv6_all_val("accept_ra") && _get_procipv6_all_val("autoconf"))
+		val = 1;
+	fprintf(f, val ? "ipv6 auto-configuration\n" : "no ipv6 auto-configuration\n");
+#endif
+
+	fprintf(f, "!\n");
+}
+#endif
+
 #endif /* OPTION_ROUTER */
 
 void librouter_config_dump_snmp(FILE *f, int conf_format)
@@ -1682,6 +1729,9 @@ int librouter_config_write(char *filename, struct router_config *cfg)
 #endif
 #ifdef OPTION_ROUTER
 	librouter_config_dump_ip(f, 1);
+#ifdef OPTION_IPV6
+	librouter_config_dump_ipv6(f, 1);
+#endif
 #endif
 
 	/* SNMP */
