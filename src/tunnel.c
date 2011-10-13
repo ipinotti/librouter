@@ -261,6 +261,9 @@ static int _do_add_ioctl(int cmd, struct ip_tunnel_parm *p)
 		case IPPROTO_IPIP:
 			strcpy(ifr.ifr_name, "tunl0");
 			break;
+		case IPPROTO_IPV6:
+			strcpy(ifr.ifr_name, "sit0");
+			break;
 		case IPPROTO_GRE:
 		default:
 			strcpy(ifr.ifr_name, "gre0");
@@ -518,6 +521,9 @@ void librouter_tunnel_dump_interface(FILE *out, int conf_format, char *name)
 			switch (p.iph.protocol) {
 			case IPPROTO_IPIP:
 				fprintf(out, " tunnel mode ipip\n");
+				break;
+			case IPPROTO_IPV6:
+				fprintf(out, " tunnel mode ipv6ip 6to4\n");
 				break;
 			case IPPROTO_GRE:
 			default:
