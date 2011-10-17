@@ -1068,6 +1068,7 @@ static void _dump_intf_secondary_ipaddr_v6_config(FILE *out, struct interfacev6_
 
 static void _dump_intf_ipaddr_v6_config(FILE *out, struct interfacev6_conf *conf)
 {
+#ifdef OPTION_IPV6
 	int i;
 	struct ipv6_t *ipv6 = &conf->main_ip[0];
 	char *dev = librouter_ip_ethernet_get_dev(conf->name); /* ethernet enslaved by bridge? */
@@ -1093,6 +1094,9 @@ static void _dump_intf_ipaddr_v6_config(FILE *out, struct interfacev6_conf *conf
 			fprintf(out, " no ip address\n");
 	}
 #endif
+#else /* OPTION_IPV6 */
+	return;
+#endif /* OPTION_IPV6 */
 }
 
 static void _dump_intf_secondary_ipaddr_config(FILE *out, struct interface_conf *conf)
