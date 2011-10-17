@@ -1326,7 +1326,7 @@ static void _dump_efm_config(FILE *out, struct interface_conf *conf, struct inte
 	/* Print main IPv6 address */
 #if 0
 	if (strlen(daemon_dhcpc) && librouter_exec_check_daemon(daemon_dhcpc))
-		fprintf(out, " ip address dhcp\n");
+		fprintf(out, " ipv6 address dhcp\n");
 	else
 #endif
 		_dump_intf_ipaddr_v6_config(out, conf_v6);
@@ -1385,7 +1385,7 @@ static void _dump_loopback_config(FILE *out, struct interface_conf *conf, struct
 }
 
 #ifdef OPTION_TUNNEL
-static void _dump_tunnel_config(FILE *out, struct interface_conf *conf)
+static void _dump_tunnel_config(FILE *out, struct interface_conf *conf, struct interfacev6_conf *conf_v6)
 {
 	char *osdev = conf->name;
 
@@ -1399,6 +1399,8 @@ static void _dump_tunnel_config(FILE *out, struct interface_conf *conf)
 
 	/* as */
 	_dump_intf_secondary_ipaddr_config(out, conf);
+
+	_dump_intf_ipaddr_v6_config(out, conf_v6);
 
 	if (conf->mtu)
 	fprintf(out, " mtu %d\n", conf->mtu);
@@ -1621,9 +1623,10 @@ void librouter_config_dump_interface(FILE *out, struct interface_conf *conf, str
 		_dump_loopback_config(out, conf, conf_v6);
 		break;
 #ifdef OPTION_TUNNEL
+		case ARPHRD_SIT:
 		case ARPHRD_TUNNEL:
 		case ARPHRD_IPGRE:
-		_dump_tunnel_config (out, conf);
+		_dump_tunnel_config (out, conf, conf_v6);
 		break;
 #endif
 	default:

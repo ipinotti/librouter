@@ -589,6 +589,10 @@ void librouter_tunnel_dump_interface(FILE *out, int conf_format, char *name)
 			}
 
 			switch (p.iph.protocol) {
+			case IPPROTO_IPV6:
+				fprintf(out,
+								"  Tunnel protocol/transport IPv6/IPv4\n");
+				break;
 			case IPPROTO_IPIP:
 				fprintf(out,
 				                "  Tunnel protocol/transport IP/IP\n");
