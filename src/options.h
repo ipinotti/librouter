@@ -126,9 +126,9 @@
 #undef OPTION_NAT
 #undef OPTION_QOS
 #undef OPTION_ROUTER
+#undef OPTION_IPV6
 #undef OPTION_SMCROUTE
 #undef OPTION_TUNNEL
-#define OPTION_IPV6
 #undef OPTION_DUAL_SIM
 
 /* Router Options */
@@ -142,6 +142,7 @@
 #define OPTION_NAT
 #define OPTION_QOS
 #define OPTION_ROUTER
+#define OPTION_IPV6
 #define OPTION_SMCROUTE
 #define OPTION_TUNNEL
 #define OPTION_BGP
@@ -171,7 +172,6 @@
 #define OPTION_SWITCH_MICREL_KSZ8895
 #define OPTION_SWITCH_PORT_NUM		4
 
-#undef OPTION_IPV6 /* Only enable this after tests are complete !!! */
 #undef OPTION_PPPOE
 #undef OPTION_PPTP
 #undef OPTION_DUAL_SIM
@@ -193,9 +193,9 @@
 #undef OPTION_NAT
 #undef OPTION_QOS
 #undef OPTION_ROUTER
+#undef OPTION_IPV6
 #undef OPTION_SMCROUTE
 #undef OPTION_TUNNEL
-#define OPTION_IPV6
 
 /* Router Options */
 #elif defined(CONFIG_DIGISTAR_ROUTER)
@@ -208,6 +208,7 @@
 #define OPTION_NAT
 #define OPTION_QOS
 #define OPTION_ROUTER
+#define OPTION_IPV6
 #define OPTION_SMCROUTE
 #define OPTION_TUNNEL
 #define OPTION_BGP
