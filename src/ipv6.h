@@ -25,6 +25,7 @@
 typedef struct in6_addr IPV6;
 
 //#define IPV6_DEBUG
+
 #ifdef IPV6_DEBUG
 #define ipv6_dbg(x,...) \
 	printf("%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__)

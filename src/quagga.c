@@ -798,9 +798,9 @@ void librouter_quagga_zebra_dump_static_routes(FILE *out, int ip_version)
 		return;
 
 	if (ip_version == 6)
-		strcpy(ip_v,"ipv6 ");
+		strcpy(ip_v,"ipv6 route");
 	else
-		strcpy(ip_v,"ip ");
+		strcpy(ip_v,"ip route");
 
 	while (!feof(f)) {
 		fgets(buf, 1024, f);
@@ -1046,6 +1046,7 @@ int librouter_quagga_add_route(struct routes_t *route)
 						route->interface, route->metric ? route->metric : 1);
 	}
 
+	quagga_dbg("Applying cmd: %s\n", zebra_cmd);
 	librouter_quagga_execute_client("enable", stdout, buf_daemon, 0);
 	librouter_quagga_execute_client("configure terminal", stdout, buf_daemon, 0);
 	librouter_quagga_execute_client(zebra_cmd, stdout, buf_daemon, 0);
@@ -1096,6 +1097,7 @@ int librouter_quagga_del_route(struct routes_t *route)
 		}
 	}
 
+	quagga_dbg("Applying cmd: %s\n", zebra_cmd);
 	librouter_quagga_execute_client("enable", stdout, buf_daemon, 0);
 	librouter_quagga_execute_client("configure terminal", stdout, buf_daemon, 0);
 	librouter_quagga_execute_client(zebra_cmd, stdout, buf_daemon, 0);

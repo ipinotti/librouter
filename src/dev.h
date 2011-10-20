@@ -53,12 +53,14 @@ int librouter_dev_interface_get_buffers_use(char *dev,
 #endif
 
 #ifdef CONFIG_DEVELOPMENT
+#ifdef CONFIG_SERIAL
 int librouter_dev_set_rxring(char *dev, int size);
 int librouter_dev_get_rxring(char *dev);
 int librouter_dev_set_txring(char *dev, int size);
 int librouter_dev_get_txring(char *dev);
 int librouter_dev_set_weight(char *dev, int size);
 int librouter_dev_get_weight(char *dev);
+#endif
 #endif
 
 #endif /* LIBROUTER_DEV_H_ */

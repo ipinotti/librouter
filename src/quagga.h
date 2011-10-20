@@ -8,6 +8,15 @@
 #ifndef QUAGGA_H_
 #define QUAGGA_H_
 
+//#define QUAGGA_DEBUG
+
+#ifdef QUAGGA_DEBUG
+#define quagga_dbg(x,...) \
+	printf("%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#else
+#define quagga_dbg(x,...)
+#endif
+
 /* UNIX domain socket path. */
 #define ZEBRA_PID "/var/quagga/zebra.pid"
 #define ZEBRA_PATH "/var/quagga/zebra.vty"
