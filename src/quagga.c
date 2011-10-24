@@ -809,6 +809,10 @@ void librouter_quagga_zebra_dump_static_routes(FILE *out, int ip_version)
 			if (buf[0] == '!')
 				break;
 
+			/* Replace slash to space*/
+			if (ip_version == 6)
+				librouter_str_strip_slash(buf);
+
 			librouter_str_striplf(buf);
 
 			fprintf(out, "%s\n", librouter_device_from_linux_cmdline(librouter_zebra_to_linux_cmdline(buf)));

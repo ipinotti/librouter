@@ -250,6 +250,18 @@ int librouter_str_find_string_in_file_return_stat(char *filename, char *key)
 		close(fd);
 	goto end;
 }
+/**
+ * librouter_str_strip_slash 	Removes slash from string adding a space
+ *
+ * @param string
+ */
+void librouter_str_strip_slash (char *string)
+{
+	char *ptr;
+
+	if( (ptr = strchr(string, '/')) != NULL)
+	    *ptr = ' ';
+}
 
 /**
  * librouter_str_striplf	Removes line feed from string
