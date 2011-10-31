@@ -59,7 +59,7 @@ static int _ksz8863_reg_read(__u8 reg, __u8 *buf, __u8 len)
 static int _ksz8863_reg_write(__u8 reg, __u8 *buf, __u8 len)
 {
 	int dev;
-	int tries = 10;
+	int tries = 3;
 	int retval = 0;
 
 	ksz8863_dbg("addr = %02x data = %02x\n", reg, *buf)
@@ -76,16 +76,9 @@ static int _ksz8863_reg_write(__u8 reg, __u8 *buf, __u8 len)
 		return -1;
 	}
 
-#if 0
-	if (i2c_smbus_write_byte_data(dev, reg, *buf) < 0) {
-		printf("%s : Error writing to device\n", __FUNCTION__); /* FIXME */
-		close(dev);
-		return -1;
-	}
-#else
 	while (((retval = i2c_smbus_write_byte_data(dev, reg, *buf)) < 0) && --tries)
 		usleep(1000);
-#endif
+
 	close(dev);
 
 	if (retval < 0) {
