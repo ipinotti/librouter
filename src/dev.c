@@ -983,6 +983,7 @@ int librouter_dev_interface_get_buffers_use(char *dev,
 #endif /* CONFIG_BUFFERS_USE_STATS */
 
 #ifdef CONFIG_DEVELOPMENT
+#ifdef CONFIG_SERIAL
 int librouter_dev_set_rxring(char *dev, int size)
 {
 	int s;
@@ -1135,5 +1136,6 @@ int librouter_dev_get_weight(char *dev)
 
 	return ifr.ifr_ifru.ifru_ivalue;
 }
+#endif
 #endif /* CONFIG_DEVELOPMENT */
 

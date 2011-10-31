@@ -104,6 +104,8 @@
 #define OPTION_SWITCH_MICREL_KSZ8863
 #define OPTION_SWITCH_PORT_NUM		2
 
+#define OPTION_IPV6 /* Only enable this after tests are complete !!! */
+
 #undef OPTION_PPPOE
 #undef OPTION_PPTP
 
