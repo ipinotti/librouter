@@ -183,7 +183,7 @@
 
 /* Bridge Options */
 #if defined(CONFIG_DIGISTAR_BRIDGE)
-#define CFG_PRODUCT	"EFMBridge"
+#define CFG_PRODUCT	"EFM4ETH"
 #define OPTION_NUM_EFM_CHANNELS	4
 #undef OPTION_IP_ROUTING
 #undef OPTION_IPSEC
@@ -197,7 +197,7 @@
 
 /* Router Options */
 #elif defined(CONFIG_DIGISTAR_ROUTER)
-#define CFG_PRODUCT	"EFMRouter"
+#define CFG_PRODUCT	"EFM4ETH"
 #define OPTION_NUM_EFM_CHANNELS	4
 #define OPTION_IP_ROUTING
 #define OPTION_IPSEC
