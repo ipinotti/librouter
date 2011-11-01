@@ -54,6 +54,8 @@
 #define OPTION_NAT
 #define OPTION_QOS
 
+/* IPv6 */
+#define OPTION_IPV6
 
 /* ------ Digistar 3G Product Models Declaration ------ */
 /* RCG1000 */
@@ -104,10 +106,11 @@
 #define OPTION_SWITCH_MICREL_KSZ8863
 #define OPTION_SWITCH_PORT_NUM		2
 
-#define OPTION_IPV6 /* Only enable this after tests are complete !!! */
-
 #undef OPTION_PPPOE
 #undef OPTION_PPTP
+
+/* IPv6 */
+#define OPTION_IPV6
 
 /* Factory Test System Digistar*/
 #define OPTION_FTS_DIGISTAR
