@@ -660,7 +660,7 @@ void librouter_ppp_set_defaults(int serial_no, ppp_config *cfg)
 			librouter_modem3g_get_password(cfg->sim_main.password, serial_no);
 
 		}
-#elif defined(CONFIG_DIGISTAR_EFM)
+#else /* Only one USB interface in other models (for now)*/
 		cfg->sim_main.sim_num = 0;
 		librouter_modem3g_get_apn(cfg->sim_main.apn, serial_no);
 		librouter_modem3g_get_username(cfg->sim_main.username, serial_no);

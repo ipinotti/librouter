@@ -31,6 +31,8 @@
 #define ADDR_USB "/sys/bus/usb/devices/%d-%d"
 #define ADDR_PORT_USB "/sys/bus/usb/devices/%d-%d/%d-%d:1.0/ttyUSB%d"
 #define ADDR_USB_IDPRODUCT "/sys/bus/usb/devices/%d-%d/idProduct"
+#else
+#error "!!! Must specify path usb devices for this board!\n"
 #endif
 
 typedef enum {

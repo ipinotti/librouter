@@ -35,6 +35,8 @@ port_family_usb _ports[] = {
 	{ alias, {0} },
 	{ non,  {0} }
 };
+#else
+#error "!!! Must specify path usb devices for this board!\n"
 #endif
 
 /**
@@ -99,8 +101,10 @@ int librouter_usb_device_is_connected(int port)
 
 #if defined(CONFIG_DIGISTAR_3G)
 	sprintf(buff_addr, ADDR_USB, HUB_PORT, HUB_PORT, port);
-#elif defined(CONFIG_DIGISTAR_EFM)
+#elif defined(CONFIG_DIGISTAR_EFM) || defined(CONFIG_DIGISTAR_EFM4ETH)
 	sprintf(buff_addr, ADDR_USB, HUB_PORT, HUB_PORT);
+#else
+#error "!!! Must specify path usb devices for this board!\n"
 #endif
 
 	usb_dbg("Device address : %s\n", buff_addr);
@@ -141,8 +145,10 @@ int librouter_usb_device_is_modem(int port)
 	for (i = 0; i < 15; i++) {
 #if defined(CONFIG_DIGISTAR_3G)
 		sprintf(buff_addr, ADDR_PORT_USB, HUB_PORT, HUB_PORT, port, HUB_PORT, HUB_PORT, port, i);
-#elif defined(CONFIG_DIGISTAR_EFM)
+#elif defined(CONFIG_DIGISTAR_EFM) || defined(CONFIG_DIGISTAR_EFM4ETH)
 		sprintf(buff_addr, ADDR_PORT_USB, HUB_PORT, port, HUB_PORT, port, i);
+#else
+#error "!!! Must specify path usb devices for this board!\n"
 #endif
 		usb_dbg("Device address : %s\n", buff_addr);
 
@@ -187,8 +193,10 @@ int librouter_usb_get_descriptor(librouter_usb_dev * usb)
 
 #if defined(CONFIG_DIGISTAR_3G)
 	sprintf(addr_file, ADDR_USB_IDPRODUCT, HUB_PORT, HUB_PORT, usb->port);
-#elif defined(CONFIG_DIGISTAR_EFM)
+#elif defined(CONFIG_DIGISTAR_EFM) || defined(CONFIG_DIGISTAR_EFM4ETH)
 	sprintf(addr_file, ADDR_USB_IDPRODUCT, HUB_PORT, usb->port);
+#else
+#error "!!! Must specify path usb devices for this board!\n"
 #endif
 	file = fopen(addr_file, "rt");
 	if (!file)

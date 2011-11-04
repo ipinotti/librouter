@@ -1487,7 +1487,7 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 				fprintf(out, " sim-order %d\n", librouter_modem3g_sim_get_aliasport_by_realport(librouter_modem3g_sim_order_get_mainsim()));
 	}
 
-#elif defined(CONFIG_DIGISTAR_EFM)
+#else /* not CONFIG_DIGISTAR_3G */
 	if (strcmp(cfg.sim_main.apn, "") != 0)
 		fprintf(out, " apn set %s\n", cfg.sim_main.apn);
 	if (strcmp(cfg.sim_main.username, "") != 0)
@@ -1515,7 +1515,7 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 		fprintf(out, " no default-gateway\n");
 
 	fprintf(out, " %sshutdown\n", cfg.up ? "no " : "");
-#endif
+#endif /* OPTION_MODEM3G */
 }
 #endif /*OPTION_PPP */
 
