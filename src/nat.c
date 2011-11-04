@@ -686,14 +686,13 @@ void librouter_nat_dump(char *xacl, FILE *f, int conf_format)
 				if (masq_ports)
 					trimcolumn(masq_ports);
 
-				if ((strcmp(type, "MASQUERADE") == 0)
-				                || (strcmp(type, "DNAT") == 0) || (strcmp(type,
-				                "SNAT") == 0)) {
+				if ((strcmp(type, "MASQUERADE") == 0) || (strcmp(type, "DNAT") == 0)
+				                || (strcmp(type, "SNAT") == 0)) {
 
 					/* filter CHAINs */
-					if (strcmp(acl, "INPUT") != 0 && strcmp(acl, "PREROUTING")
-					                != 0 && strcmp(acl, "OUTPUT") != 0
-					                && strcmp(acl, "POSTROUTING") != 0) {
+					if (strcmp(acl, "INPUT") != 0 && strcmp(acl, "PREROUTING") != 0
+					                && strcmp(acl, "OUTPUT") != 0 && strcmp(acl,
+					                "POSTROUTING") != 0) {
 
 						if ((!aclp) && (!conf_format)) {
 							fprintf(f, "NAT rule %s\n", acl);
@@ -707,9 +706,8 @@ void librouter_nat_dump(char *xacl, FILE *f, int conf_format)
 								++mcount;
 						}
 
-						_print_nat_rule(type, prot, source, dest, sports,
-						                dports, acl, f, conf_format, atoi(
-						                                mcount), to,
+						_print_nat_rule(type, prot, source, dest, sports, dports,
+						                acl, f, conf_format, atoi(mcount), to,
 						                masq_ports);
 					}
 
@@ -719,16 +717,12 @@ void librouter_nat_dump(char *xacl, FILE *f, int conf_format)
 						/* PRE|POST ROUTING */
 						if (strstr(acl, "ROUTING")) {
 							if (strcmp(input, "*"))
-								fprintf(
-								                f,
-								                "interface %s in nat-rule %s\n",
-								                input, type);
+								fprintf(f, "interface %s in nat-rule %s\n",
+								                librouter_device_linux_to_cli(input, 0), type);
 
 							if (strcmp(output, "*"))
-								fprintf(
-								                f,
-								                "interface %s out nat-rule %s\n",
-								                output, type);
+								fprintf(f, "interface %s out nat-rule %s\n",
+										librouter_device_linux_to_cli(output, 0), type);
 						}
 					}
 				}

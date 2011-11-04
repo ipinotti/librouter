@@ -429,10 +429,10 @@ void librouter_mangle_dump(char *xmangle, FILE *F, int conf_format)
 						/* PRE|POST ROUTING */
 						if (strstr(mangle, "ROUTING")) {
 							if (strcmp(input, "*"))
-								fprintf(F, "interface %s in mark-rule %s\n", input, type);
+								fprintf(F, "interface %s in mark-rule %s\n", librouter_device_linux_to_cli(input, 0), type);
 
 							if (strcmp(output, "*"))
-								fprintf(F, "interface %s out mark-rule %s\n", output, type);
+								fprintf(F, "interface %s out mark-rule %s\n", librouter_device_linux_to_cli(output, 0), type);
 						}
 					}
 				}

@@ -611,13 +611,13 @@ void librouter_acl_dump(char *xacl, FILE *F, int conf_format)
 							if (strcmp(a.input, "*") && !strstr(a.input,"ipsec"))
 								fprintf(F,
 									"interface %s in access-list %s\n",
-									a.input,
+									librouter_device_linux_to_cli(a.input, 0),
 									a.type);
 
 							if (strcmp(a.output, "*") && !strstr(a.output, "ipsec"))
 								fprintf(F,
 									"interface %s out access-list %s\n",
-									a.output,
+									librouter_device_linux_to_cli(a.output, 0),
 									a.type);
 						}
 					}
