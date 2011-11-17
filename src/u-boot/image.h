@@ -101,13 +101,13 @@
 #define IH_TYPE_FILESYSTEM	7	/* Filesystem Image (any type)	*/
 #define IH_TYPE_FLATDT		8	/* Binary Flat Device Tree Blob	*/
 #define IH_TYPE_KWBIMAGE	9	/* Kirkwood Boot Image		*/
-#ifdef CONFIG_PD3
+/* These below are PD3 defined */
 #define IH_TYPE_UBOOT		10	/* U-BOOT image */
 #define IH_TYPE_EXTRA		11	/* Extra image */
 #define IH_TYPE_HC08		12	/* HC08 image */
 #define IH_TYPE_KCRAMFS		13
 #define IH_TYPE_SPECIAL		14	/* Special type for whole Flash write! */
-#endif
+
 
 /*
  * Compression Types
