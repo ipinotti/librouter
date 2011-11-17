@@ -19,8 +19,6 @@
 #include <sys/reboot.h>
 #include <sys/stat.h>
 
-#include <linux/autoconf.h>
-
 #include "options.h"
 
 #include "u-boot/image.h"

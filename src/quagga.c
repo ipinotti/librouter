@@ -20,7 +20,6 @@
 #include <errno.h>
 #include <signal.h>
 #include <syslog.h>
-#include <linux/autoconf.h>
 
 #include "options.h"
 #include "device.h"

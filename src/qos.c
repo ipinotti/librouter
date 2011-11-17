@@ -4,7 +4,6 @@
  *  Created on: Jun 24, 2010
  */
 
-#include <linux/autoconf.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>

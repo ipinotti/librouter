@@ -18,7 +18,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <linux/autoconf.h>
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
 #include <linux/spi/spidev.h>

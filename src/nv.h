@@ -7,7 +7,6 @@
 #ifndef NV_H_
 #define NV_H_
 
-/*#include <linux/autoconf.h>*/
 #include "options.h"
 #include "typedefs.h"
 

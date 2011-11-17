@@ -10,7 +10,6 @@
 #define DESCRIPTION_DIR "/var/run/description/"
 #define DESCRIPTION_FILE DESCRIPTION_DIR"%s"
 
-#include <linux/autoconf.h>
 #include "device.h"
 
 //#define DEV_DEBUG

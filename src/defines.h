@@ -3,7 +3,6 @@
  *
  *  Created on: Jun 23, 2010
  */
-#include <linux/autoconf.h>
 
 #ifndef DEFINES_H_
 #define DEFINES_H_

@@ -15,7 +15,6 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
-#include <linux/autoconf.h>
 #include <linux/if.h>
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
@@ -37,6 +36,7 @@
 #include "libnetlink/ll_map.h"
 
 #include "options.h"
+
 #include "typedefs.h"
 #include "defines.h"
 #include "args.h"

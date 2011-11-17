@@ -12,8 +12,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <linux/autoconf.h>
-
 #include "options.h"
 #include "defines.h"
 #include "nv.h"

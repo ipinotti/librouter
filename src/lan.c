@@ -19,7 +19,6 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 
-#include <linux/autoconf.h>
 #include <netinet/in.h>
 #include <linux/netdevice.h>
 #include <linux/if.h>

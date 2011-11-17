@@ -7,8 +7,6 @@
 #ifndef PPP_H_
 #define PPP_H_
 
-#include <linux/autoconf.h>
-
 #ifdef OPTION_MODEM3G
 #include "modem3G.h"
 #endif
