@@ -44,13 +44,6 @@ int notify_driver_about_shutdown(char *dev);
 int librouter_dev_shutdown(char *dev, dev_family *fam);
 int librouter_dev_noshutdown(char *dev, dev_family *fam);
 
-#ifdef CONFIG_BUFFERS_USE_STATS
-int librouter_dev_interface_get_buffers_use(char *dev,
-                                            char *tx,
-                                            char *rx,
-                                            unsigned int len);
-#endif
-
 #ifdef CONFIG_DEVELOPMENT
 #ifdef CONFIG_SERIAL
 int librouter_dev_set_rxring(char *dev, int size);
