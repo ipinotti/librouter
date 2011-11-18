@@ -1097,8 +1097,8 @@ int librouter_bcm53115s_set_default_vid(int port, int vid)
 	if (_bcm53115s_reg_read(page, reg, &data, sizeof(data)))
 		return -1;
 
-	reg &= ~BCM53115S_VLAN_DEFAULT_VID_MSK; /* Clear old VID */
-	reg |= (vid & BCM53115S_VLAN_DEFAULT_VID_MSK);
+	data &= ~BCM53115S_VLAN_DEFAULT_VID_MSK; /* Clear old VID */
+	data |= (vid & BCM53115S_VLAN_DEFAULT_VID_MSK);
 
 	if (_bcm53115s_reg_write(page, reg, &data, sizeof(data)))
 		return -1;
