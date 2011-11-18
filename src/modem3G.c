@@ -398,8 +398,8 @@ int librouter_modem3g_module_set_status(int status)
 	int ret;
 	struct powerpc_gpio gpio;
 
-	gpio.pin = GPIO_MODULE_RESET_PIN;
-	gpio.port = GPIO_SIM_SELECT_PORT;
+	gpio.pin = GPIO_PIN_3G_RESET;
+	gpio.port = GPIO_PORT_3G_RESET;
 	gpio.value = status;
 
 	ret = librouter_ppcio_write(&gpio);

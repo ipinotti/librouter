@@ -7,13 +7,15 @@
 #ifndef OPTIONS_H_
 #define OPTIONS_H_
 
+#ifndef DO_NOT_INCLUDE_AUTOCONF
 #include <linux/autoconf.h>
+#endif
 
 /*****************************************************************************/
 /* Defines for Digistar Models ***********************************************/
 /*****************************************************************************/
 
-#if defined(CONFIG_DIGISTAR_3G)
+#if defined(CONFIG_DIGISTAR_3G) /* RCG */
 
 #define CFG_PRODUCT	"3GRouter"
 
@@ -88,6 +90,10 @@
 #define OPTION_SWITCH_BROADCOM
 #define OPTION_SWITCH_PORT_NUM		4
 
+#define GPIO_PORT_3G_RESET	0
+#define GPIO_PIN_3G_RESET	12
+
+
 /* End of CONFIG_DIGISTAR_3G */
 #elif defined(CONFIG_DIGISTAR_EFM)
 
@@ -119,6 +125,9 @@
 #define OPTION_AAA_ACCOUNTING
 #define OPTION_AAA_AUTHORIZATION
 
+#define GPIO_PORT_3G_RESET	0
+#define GPIO_PIN_3G_RESET	17
+
 /* Bridge Options */
 #if defined(CONFIG_DIGISTAR_BRIDGE)
 #define CFG_PRODUCT	"EFMBridge"
@@ -132,7 +141,6 @@
 #undef OPTION_IPV6
 #undef OPTION_SMCROUTE
 #undef OPTION_TUNNEL
-#undef OPTION_DUAL_SIM
 
 /* Router Options */
 #elif defined(CONFIG_DIGISTAR_ROUTER)
@@ -177,7 +185,7 @@
 
 #undef OPTION_PPPOE
 #undef OPTION_PPTP
-#undef OPTION_DUAL_SIM
+
 
 /* Factory Test System Digistar*/
 #define OPTION_FTS_DIGISTAR
@@ -185,6 +193,9 @@
 /* AAA */
 #define OPTION_AAA_ACCOUNTING
 #define OPTION_AAA_AUTHORIZATION
+
+#define GPIO_PORT_3G_RESET	0
+#define GPIO_PIN_3G_RESET	31
 
 /* Bridge Options */
 #if defined(CONFIG_DIGISTAR_BRIDGE)
@@ -224,6 +235,66 @@
 #error "No EFM board defined!"
 #endif
 /* End of CONFIG_DIGISTAR_EFM4ETH */
+
+#elif defined(CONFIG_DIGISTAR_MRG)
+
+#define CFG_PRODUCT	"MRGRouter"
+
+#define OPTION_ETHERNET /* Enables ethernet interfaces */
+#define OPTION_ETHERNET_LAN_INDEX 0
+#define OPTION_GIGAETHERNET /* Enable gigabit options */
+#define OPTION_PPPOE
+#define OPTION_PPTP
+#define OPTION_TUNNEL
+#define OPTION_ROUTER /* ip forwarding, enable dynamic routing protocols, etc. */
+#define OPTION_SMCROUTE /* static multicast routing */
+
+/* Factory Test System Digistar*/
+#define OPTION_FTS_DIGISTAR
+
+/* PBR - Policy Based Routing */
+/* DEPENDE DE OPTION_ROUTER*/
+#ifdef OPTION_ROUTER
+#define OPTION_PBR
+#endif
+
+/* AAA */
+#define OPTION_AAA_ACCOUNTING
+#define OPTION_AAA_AUTHORIZATION
+
+/* IPSec */
+#define OPTION_IPSEC
+#define N_IPSEC_IF 5
+
+/* BGP */
+#define OPTION_BGP
+
+/* PIM */
+#define OPTION_PIMD
+
+/* IPtables */
+#define OPTION_FIREWALL
+#define OPTION_NAT
+#define OPTION_QOS
+
+/* IPv6 */
+#define OPTION_IPV6
+
+#define OPTION_ETHERNET_WAN
+#define OPTION_MODEM3G
+#define OPTION_NUM_ETHERNET_IFACES	2
+#define OPTION_NUM_3G_IFACES	1
+
+#define OPTION_PPP
+
+#define OPTION_MANAGED_SWITCH
+#define OPTION_SWITCH_BROADCOM
+#define OPTION_SWITCH_PORT_NUM		4
+
+#define GPIO_PORT_3G_RESET	1
+#define GPIO_PIN_3G_RESET	3
+
+/* End of CONFIG_DIGISTAR_MRG */
 #else
 #error "No such board!"
 #endif
