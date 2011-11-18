@@ -34,11 +34,20 @@
 #include "qos.h"
 #include "ip.h"
 
+/* Newer libc scandir has different interface. FIXME There must be a better way to do this */
+#ifdef CONFIG_DIGISTAR_MRG
+static int _asort(const struct dirent **a, const struct dirent **b)
+{
+	return (-strcmp((*a)->d_name, (*b)->d_name));
+}
+
+#else
 static int _asort(const void *a, const void *b)
 {
 	return (-strcmp((*((struct dirent **) a))->d_name,
 	                (*((struct dirent **) b))->d_name));
 }
+#endif
 
 static struct ds_class
 {
