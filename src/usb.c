@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <libusb/libusb.h>
+#include <libusb-1.0/libusb.h>
 
 #include "options.h"
 #include "defines.h"
