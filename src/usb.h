@@ -19,13 +19,14 @@
 #define IDVENDOR_LINUX_HUB 7531
 #define USB_STR_SIZE 256
 
+/* FIXME This should be in options.h */
 #if defined(CONFIG_DIGISTAR_3G)
 #define NUMBER_OF_USBPORTS 3 /*3 portas USB reais*/
 #define HUB_PORT 1
 #define ADDR_USB "/sys/bus/usb/devices/%d-%d.%d"
 #define ADDR_PORT_USB "/sys/bus/usb/devices/%d-%d.%d/%d-%d.%d:1.0/ttyUSB%d"
 #define ADDR_USB_IDPRODUCT "/sys/bus/usb/devices/%d-%d.%d/idProduct"
-#elif defined(CONFIG_DIGISTAR_EFM) || defined(CONFIG_DIGISTAR_EFM4ETH)
+#elif (defined(CONFIG_DIGISTAR_EFM) || defined(CONFIG_DIGISTAR_EFM4ETH) || defined(CONFIG_DIGISTAR_MRG))
 #define NUMBER_OF_USBPORTS 1
 #define HUB_PORT 1
 #define ADDR_USB "/sys/bus/usb/devices/%d-%d"

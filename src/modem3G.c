@@ -33,7 +33,7 @@ port_family_simcard _simcard_ports[] = {
 	{ alias_sc, {2,1} },
 	{ non_sc,  {0,0} }
 };
-#elif defined(CONFIG_DIGISTAR_EFM) || defined(CONFIG_DIGISTAR_EFM4ETH)
+#elif (defined(CONFIG_DIGISTAR_EFM) || defined(CONFIG_DIGISTAR_EFM4ETH) || defined(CONFIG_DIGISTAR_MRG))
 port_family_simcard _simcard_ports[] = {
 	{ real_sc,  {0} },
 	{ alias_sc, {0} },
@@ -442,6 +442,7 @@ int librouter_modem3g_sim_card_set(int sim)
  */
 int librouter_modem3g_sim_card_get(void)
 {
+#ifdef OPTION_DUAL_SIM
 	struct powerpc_gpio gpio;
 
 	gpio.pin = GPIO_SIM_SELECT_PIN;
@@ -450,6 +451,11 @@ int librouter_modem3g_sim_card_get(void)
 	librouter_ppcio_read(&gpio);
 
 	return gpio.value;
+#else
+	syslog(LOG_ERR ,"%s being called, but no dual SIM support\n", __FUNCTION__);
+
+	return 0;
+#endif
 }
 
 /**
