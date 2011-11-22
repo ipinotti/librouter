@@ -220,13 +220,13 @@ static int _bcm53115s_spi_transfer(uint8_t tx[], uint8_t rx[], int size_of_TxRx)
 	}
 
 	if (_bcm53115s_spi_mode(dev) < 0) {
-		bcm53115s_dbg_syslog("Could not read from device / can't send spi message : %s\n", strerror(errno));
+		bcm_dbg("Could not set SPI mode : %s\n", strerror(errno));
 		close(dev);
 		return -1;
 	}
 
 	if (ioctl(dev, SPI_IOC_MESSAGE(1), &tr) < 0) {
-		bcm53115s_dbg_syslog("Could not read from device / can't send spi message : %s\n", strerror(errno));
+		bcm_dbg("Could not read from device / can't send spi message : %s\n", strerror(errno));
 		close(dev);
 		return -1;
 	}
@@ -258,8 +258,8 @@ static int _bcm53115s_spi_reg_read_raw(uint8_t page, uint8_t offset, uint8_t *bu
 
 	/*
 	 * Normal SPI Mode (Command Byte)
-	 * Bit7		Bit6		Bit5		Bit4		Bit3		Bit2		Bit1		Bit0
-	 * 0		1			1			Mode=0		CHIP_ID2	ID1			ID0(lsb)	Rd/Wr(0/1)
+	 * Bit7	| Bit6 | Bit5 | Bit4    | Bit3 | Bit2 | Bit1 |   Bit0
+	 * 0	  1	 1	Mode=0	  ID2    ID1    ID0(lsb) Rd/Wr(0/1)
 	 *
 	 */
 
@@ -273,9 +273,9 @@ static int _bcm53115s_spi_reg_read_raw(uint8_t page, uint8_t offset, uint8_t *bu
 		_bcm53115s_spi_transfer(tx, rx, sizeof(tx));
 		if ((timeout++) == timeout_spi_limit)
 			return -1;
-		//usleep(100);
 	} while ((rx[2] >> ROBO_SPIF_BIT) & 1); // wait SPI bit to 0
 
+	bcm_dbg("Step 1: %02x %02x %02x\n", rx[0], rx[1], rx[2]);
 	clear_tx_rx(tx, rx, sizeof(tx));
 	timeout = 0;
 
@@ -287,6 +287,7 @@ static int _bcm53115s_spi_reg_read_raw(uint8_t page, uint8_t offset, uint8_t *bu
 	if (_bcm53115s_spi_transfer(tx, rx, sizeof(tx)) < 0)
 		return -1;
 
+	bcm_dbg("Step 2: %02x %02x %02x\n", rx[0], rx[1], rx[2]);
 	clear_tx_rx(tx, rx, sizeof(tx));
 
 	/* 3. Issue a normal read command(0x60) to setup the required RobiSwitch register
@@ -297,19 +298,21 @@ static int _bcm53115s_spi_reg_read_raw(uint8_t page, uint8_t offset, uint8_t *bu
 	if (_bcm53115s_spi_transfer(tx, rx, sizeof(tx)) < 0)
 		return -1;
 
+	bcm_dbg("Step 3: %02x %02x %02x\n", rx[0], rx[1], rx[2]);
 	clear_tx_rx(tx, rx, sizeof(tx));
 
 	/* 4. Issue a normal read command(0x60) to poll the RACK bit in the
 	 SPI status register(0XFE) to determine the completion of read 	 */
+	tx[0] = CMD_SPI_BYTE_RD;
+	tx[1] = ROBO_SPI_STATUS_PAGE;
+	tx[2] = 0x00;
 	do {
-		tx[0] = CMD_SPI_BYTE_RD;
-		tx[1] = ROBO_SPI_STATUS_PAGE;
-		tx[2] = 0x00;
 		_bcm53115s_spi_transfer(tx, rx, sizeof(tx));
 		if ((timeout++) == timeout_spi_limit)
 			return -1;
-		//usleep(100);
-	} while (((rx[2] >> ROBO_RACK_BIT) & 1) == 0); // wait RACK bit to 1
+		usleep(100);
+		bcm_dbg("Step 4: %02x %02x %02x\n", rx[0], rx[1], rx[2]);
+	} while (((rx[2] >> ROBO_RACK_BIT) & 1) == 0);
 
 	clear_tx_rx(tx, rx, sizeof(tx));
 	timeout = 0;
@@ -318,6 +321,7 @@ static int _bcm53115s_spi_reg_read_raw(uint8_t page, uint8_t offset, uint8_t *bu
 	 placed in the SPI data I/O register(0xF0) 	 */
 	tx_5_step[0] = CMD_SPI_BYTE_RD;
 	tx_5_step[1] = ROBO_SPI_DATA_IO_0_PAGE;
+
 	if (_bcm53115s_spi_transfer(tx_5_step, rx_5_step, sizeof(tx_5_step)) < 0)
 		return -1;
 

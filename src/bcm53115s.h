@@ -16,8 +16,10 @@
 #ifdef BCM53115S_DEBUG_PRINTF
 #define bcm53115s_dbg_printf(x,...) \
 		printf("%s : %d => "x, __FUNCTION__, __LINE__, ##__VA_ARGS__);
+#define bcm_dbg bcm53115s_dbg_printf
 #else
 #define bcm53115s_dbg_printf(x,...)
+#define bcm_dbg(x,...)
 #endif
 
 
