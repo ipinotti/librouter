@@ -61,7 +61,13 @@
 
 #define BCM53115S_ID						0x53115
 #define BCM53115S_NUM_VLAN_TABLES				4095
+
+#if defined(CONFIG_DIGISTAR_MRG)
+#define BCM53115S_SPI_DEV					"/dev/spidev32766.0"
+#elif defined(CONFIG_DIGISTAR_3G)
 #define BCM53115S_SPI_DEV					"/dev/spidev28672.0"
+#endif
+
 #define BCM53115S_ETH_IFACE					"eth0"
 #define BCM53115S_VLAN_ENTRY_FILE_CONTROL 			"/var/run/switch_bcm_vlans/"
 #define BCM53115S_ROBO_GLOBAL_CONFIG        0x00 /* Global Management Config: 8bit*/
