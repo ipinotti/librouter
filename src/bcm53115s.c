@@ -2092,7 +2092,7 @@ static void _dump_port_config(FILE *out, int port)
 		fprintf(out, "  multicast-storm-protect\n");
 
 	if (librouter_bcm53115s_get_storm_protect_rate(&rate, port) == 0)
-		fprintf(out, "  storm-protect-rate %d %d\n", port_alias, rate);
+		fprintf(out, "  storm-protect-rate %d\n", rate);
 
 #if NOT_IMPLEMENTED_YET /* Not implemented on CISH yet */
 	i = librouter_bcm53115s_get_default_vid(port);
