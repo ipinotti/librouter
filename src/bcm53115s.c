@@ -25,7 +25,7 @@
 
 #include "options.h"
 
-#ifdef OPTION_MANAGED_SWITCH
+#if (defined(OPTION_MANAGED_SWITCH) && defined(OPTION_SWITCH_BROADCOM))
 
 #include "bcm53115s.h"
 #include "bcm53115s_etc.h"
