@@ -218,11 +218,14 @@ static int _get_addrinfo (struct nlmsghdr *n, struct ipaddrv6_table *ipaddr)
 		memcpy(&ipaddr->local, RTA_DATA (rta_tb[IFA_LOCAL]), RTA_PAYLOAD(rta_tb[IFA_LOCAL]));
 		inet_ntop(AF_INET6, &ipaddr->local, ipv6_buf, INET6_ADDRSTRLEN);
 		ipv6_dbg("Copied address %s to main structure\n", ipv6_buf);
-//		if (rta_tb[IFA_ADDRESS]) {
-//			inet_ntop(AF_INET6, RTA_DATA(rta_tb[IFA_ADDRESS]), ipv6_buf, RTA_PAYLOAD(rta_tb[IFA_ADDRESS]));
-//			ipv6_dbg("Copying peer address %s to main structure \n", ipv6_buf);
-//			memcpy(&ipaddr->remote, RTA_DATA (rta_tb[IFA_ADDRESS]), RTA_PAYLOAD(rta_tb[IFA_ADDRESS]));
-//		}
+
+#ifdef NOT_YET_IMPLEMENTED
+		if (rta_tb[IFA_ADDRESS]) {
+			inet_ntop(AF_INET6, RTA_DATA(rta_tb[IFA_ADDRESS]), ipv6_buf, RTA_PAYLOAD(rta_tb[IFA_ADDRESS]));
+			ipv6_dbg("Copying peer address %s to main structure \n", ipv6_buf);
+			memcpy(&ipaddr->remote, RTA_DATA (rta_tb[IFA_ADDRESS]), RTA_PAYLOAD(rta_tb[IFA_ADDRESS]));
+		}
+#endif
 	}
 
 	if (rta_tb[IFA_MULTICAST]) {

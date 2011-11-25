@@ -1071,11 +1071,19 @@ static void _dump_intf_ipaddr_v6_config(FILE *out, struct interfacev6_conf *conf
 #ifdef OPTION_IPV6
 	int i;
 	struct ipv6_t *ipv6 = &conf->main_ip[0];
-	char *dev = librouter_ip_ethernet_get_dev(conf->name); /* ethernet enslaved by bridge? */
+	char *dev;
+
+	/* If there is no ipv6 addr attached to interface, the intf is not listed*/
+	if (conf->name == NULL){
+		fprintf(out, " no ipv6 address\n");
+		return;
+	}
+
+	dev = librouter_ip_ethernet_get_dev(conf->name); /* ethernet enslaved by bridge? */
 
 	if (!strcmp(conf->name, dev)) {
 		if (ipv6->ipv6addr[0] == 0){
-			fprintf(out, " no ip address\n");
+			fprintf(out, " no ipv6 address\n");
 		}
 		else
 			for (i = 0; i < MAX_NUM_IPS; i++, ipv6++) {
@@ -1089,9 +1097,9 @@ static void _dump_intf_ipaddr_v6_config(FILE *out, struct interfacev6_conf *conf
 		librouter_br_get_ipaddr(dev, &ip);
 
 		if (ip.addr[0])
-			fprintf(out, " ip address %s %s\n", ip.addr, ip.mask);
+			fprintf(out, " ipv6 address %s %s\n", ip.addr, ip.mask);
 		else
-			fprintf(out, " no ip address\n");
+			fprintf(out, " no ipv6 address\n");
 	}
 #endif
 #else /* OPTION_IPV6 */
