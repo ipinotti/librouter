@@ -1,7 +1,7 @@
 include ../../common.mk
 
 CFLAGS += -I$(ROOTDIR)/include -I$(ROOTDIR)/fs/include
-CFLAGS += -DCONFIG_PD3
+CFLAGS += -DCONFIG_PD3 -DCONFIG_DIGISTAR
 LDFLAGS += -L$(ROOTDIR)/lib -L$(ROOTDIR)/fs/lib
 
 all: config
