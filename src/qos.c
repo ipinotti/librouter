@@ -237,7 +237,7 @@ static void _qos_dump_interface(char *dev_name)
 	remain_bw = available_bw - raw_bw;
 
 	/* Run tc */
-	sprintf(buf, "/bin/tc -s class ls dev %s 2> /dev/null", dev_name);
+	sprintf(buf, "/sbin/tc -s class ls dev %s 2> /dev/null", dev_name);
 	f = popen(buf, "r");
 	if (!f) {
 		printf("ERROR: Could not get tc configuration\n");
@@ -559,7 +559,7 @@ int librouter_qos_tc_insert_all(char *dev_name)
 	fclose(f);
 
 	if (run_tc_now)
-		return librouter_exec_prog(1, "/bin/tc", "-batch", filename, NULL);
+		return librouter_exec_prog(1, "/sbin/tc", "-batch", filename, NULL);
 
 	return 0;
 }
@@ -580,7 +580,7 @@ int librouter_qos_tc_remove_all(char *dev_name)
 
 	fclose(f);
 
-	return librouter_exec_prog(1, "/bin/tc", "-batch", FILE_TMP_QOS_DOWN, NULL);
+	return librouter_exec_prog(1, "/sbin/tc", "-batch", FILE_TMP_QOS_DOWN, NULL);
 }
 /**************************************************************************/
 /* Policy-map functions */
@@ -1363,7 +1363,7 @@ int librouter_qos_get_stats_by_devmark(char *dev_name, int mark)
 	librouter_qos_free_policymap(pmap);
 	librouter_qos_release_config(intf_cfg);
 
-	sprintf(buf, "/bin/tc -s class ls dev %s 2> /dev/null", dev_name);
+	sprintf(buf, "/sbin/tc -s class ls dev %s 2> /dev/null", dev_name);
 
 	if (!(f = popen(buf, "r")))
 		return ret;

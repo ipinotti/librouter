@@ -33,7 +33,7 @@ typedef struct in6_addr IPV6;
 #define ipv6_dbg(x,...)
 #endif
 
-#define IP_BIN "/bin/ip"
+#define IP_BIN "/sbin/ip"
 
 /* Addresses and Masks */
 struct ipv6_t {
