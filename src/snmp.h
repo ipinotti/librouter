@@ -71,6 +71,12 @@ struct trap_data_obj {
 	char *value;
 };
 
+struct trap_sink {
+	char *ip_addr;
+	char *community;
+	char *port;
+};
+
 int librouter_snmp_get_contact(char *buffer, int max_len);
 int librouter_snmp_get_location(char *buffer, int max_len);
 int librouter_snmp_set_contact(char *contact);
@@ -126,11 +132,6 @@ int librouter_snmp_add_pdu_data_entry(struct trap_data_obj **data_p,
                                       char *value);
 
 int librouter_snmp_destroy_pdu_data(struct trap_data_obj **data_p);
-
-int librouter_snmp_sendtrap(char *snmp_trap_version,
-                            char *community_rcv,
-                            char *trap_obj_oid,
-                            struct trap_data_obj *data);
 
 int librouter_snmp_rmon_get_access_cfg(struct rmon_config **shm_rmon_p);
 int librouter_snmp_rmon_free_access_cfg(struct rmon_config **shm_rmon_p);

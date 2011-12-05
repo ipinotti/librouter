@@ -1,5 +1,5 @@
 SUBDIRS = libnetlink libbridge
-lib_LTLIBRARIES = librouter.la libroutersnmp.la
+lib_LTLIBRARIES = librouter.la
 librouter_la_SOURCES = \
 	acl.c \
 	args.c \
@@ -60,14 +60,6 @@ librouter_la_SOURCES = \
 
 librouter_la_LIBADD = $(top_builddir)/src/libnetlink/libnetlink.la \
 		$(top_builddir)/src/libbridge/libbridge.la
-
-libroutersnmp_la_SOURCES = \
-	snmp.c
-
-libroutersnmp_ladir = $(includedir)/librouter
-
-libroutersnmp_la_HEADERS = \
-	snmp.h
 
 librouter_ladir = $(includedir)/librouter
 librouter_la_HEADERS = \
