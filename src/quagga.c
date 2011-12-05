@@ -831,7 +831,7 @@ int librouter_quagga_get_default_route(char *route)
 	if (route == NULL)
 		return -1;
 
-	f = librouter_quagga_zebra_get_conf(1, NULL, 4);
+	f = librouter_quagga_zebra_get_conf(1, NULL, IPV4);
 	if (f == NULL)
 		return -1;
 
@@ -839,11 +839,9 @@ int librouter_quagga_get_default_route(char *route)
 	while (fgets(buf, sizeof(buf), f)) {
 		char *p;
 
-		printf("route line : %s\n", buf);
-
 		/* S>* 0.0.0.0 0.0.0.0 [1/0] via 192.168.1.5 */
-		if (strstr(buf,"0.0.0.0") && (p = strstr(buf, "via"))) {
-			p+= 4;
+		if (p = strstr(buf,"0.0.0.0/0")) {
+			p+= 10;
 			strcpy(route, p);
 		}
 	}
