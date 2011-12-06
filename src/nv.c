@@ -719,14 +719,15 @@ int librouter_nv_load_previous_configuration(char *filename)
 
 int librouter_nv_load_ssh_secret(char *filename)
 {
-	char *data;
+	char *data = NULL;
 	int len;
 
 	len = _nv_alloc_and_load(&data, MAGIC_SSH);
 
 	_nv_file_write(filename, data, len);
 
-	free(data);
+	if (data != NULL)
+		free(data);
 
 	return len;
 }
@@ -734,14 +735,15 @@ int librouter_nv_load_ssh_secret(char *filename)
 #ifdef OPTION_NTPD
 int librouter_nv_load_ntp_secret(char *filename)
 {
-	char *data;
+	char *data = NULL;
 	int len;
 
 	len = _nv_alloc_and_load(&data, MAGIC_NTP);
 
 	_nv_file_write(filename, data, len);
 
-	free(data);
+	if (data != NULL)
+		free(data);
 
 	return len;
 }
@@ -771,25 +773,27 @@ int librouter_nv_save_configuration(char *filename)
 
 int librouter_nv_save_ssh_secret(char *filename)
 {
-	char *data;
+	char *data = NULL;
 	int len;
 
 	len = _nv_file_read(filename, &data);
 	_nv_save(data, len, MAGIC_SSH);
 
-	free(data);
+	if (data != NULL)
+		free(data);
 	return 0;
 }
 
 int librouter_nv_save_ntp_secret(char *filename)
 {
-	char *data;
+	char *data = NULL;
 	int len;
 
 	len = _nv_file_read(filename, &data);
 	_nv_save(data, len, MAGIC_CONFIG);
 
-	free(data);
+	if (data != NULL)
+		free(data);
 	return 0;
 }
 
@@ -807,27 +811,29 @@ int librouter_nv_load_ipsec_secret(char *data)
 
 int librouter_nv_load_snmp_secret(char *filename)
 {
-	char *data;
+	char *data = NULL;
 	int len;
 
 	len = _nv_alloc_and_load(&data, MAGIC_SNMP);
 
 	_nv_file_write(filename, data, len);
 
-	free(data);
+	if (data != NULL)
+		free(data);
 
 	return len;
 }
 
 int librouter_nv_save_snmp_secret(char *filename)
 {
-	char *data;
+	char *data = NULL;
 	int len;
 
 	len = _nv_file_read(filename, &data);
 	_nv_save(data, len, MAGIC_SNMP);
 
-	free(data);
+	if (data != NULL)
+		free(data);
 	return 0;
 }
 
