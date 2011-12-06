@@ -7,13 +7,21 @@
 #ifndef SNMP_H_
 #define SNMP_H_
 
+
+#ifndef NETSNMP_INCLUDES
+/*
+ * FIXME
+ * Can't redefine stuff if net-snmp headers were already included
+ */
 typedef u_long oid;
-#define MIBS_DIR	"/lib/mibs"
-#define MAX_OID_LEN	128
 
 #define SNMP_VERSION_1     0
 #define SNMP_VERSION_2c    1
 #define SNMP_VERSION_3     3
+#endif /* NETSNMP_INCLUDES */
+
+#define MIBS_DIR	"/lib/mibs"
+#define MAX_OID_LEN	128
 
 #define TRAPCONF	"/etc/trap.cfg"
 #define NUM_ALARMS	25
