@@ -7,17 +7,13 @@
 #ifndef SNMP_H_
 #define SNMP_H_
 
-#include <net-snmp/net-snmp-config.h>
+typedef u_long oid;
+#define MIBS_DIR	"/lib/mibs"
+#define MAX_OID_LEN	128
 
-#include <net-snmp/types.h>
-#include <net-snmp/output_api.h>
-#include <net-snmp/config_api.h>
-
-#include <net-snmp/library/snmp_transport.h>
-#include <net-snmp/library/system.h>
-#include <net-snmp/library/mib.h>
-#include <net-snmp/library/default_store.h>
-#include <net-snmp/session_api.h>
+#define SNMP_VERSION_1     0
+#define SNMP_VERSION_2c    1
+#define SNMP_VERSION_3     3
 
 #define TRAPCONF	"/etc/trap.cfg"
 #define NUM_ALARMS	25

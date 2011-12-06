@@ -4,6 +4,7 @@
  *  Created on: Jun 24, 2010
  */
 
+#include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
