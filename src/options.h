@@ -238,7 +238,7 @@
 
 #elif defined(CONFIG_DIGISTAR_MRG)
 
-#define CFG_PRODUCT	"MRGRouter"
+#define CFG_PRODUCT	"MRG"
 
 #define OPTION_ETHERNET /* Enables ethernet interfaces */
 #define OPTION_ETHERNET_LAN_INDEX 0
