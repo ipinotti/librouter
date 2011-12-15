@@ -313,6 +313,8 @@ int librouter_tunnel_add(char *name)
 {
 	struct ip_tunnel_parm p;
 
+	tunnel_dbg("Tunnel add ==> interface %s\n", name);
+
 	if (!librouter_dev_exists(name)) {
 
 		memset(&p, 0, sizeof(p));
@@ -493,20 +495,27 @@ int librouter_tunnel_mode(char *name, int mode)
 	int err;
 	struct ip_tunnel_parm p;
 
-	if (librouter_dev_exists(name)) {
-		if ((err = _do_get_ioctl(name, &p)))
-			return -1;
-		if (p.iph.protocol != mode) {
-			_do_del_ioctl(p.name, &p); /* remove tunnel */
-			p.iph.protocol = mode; /* new mode */
-			if (mode == IPPROTO_IPIP || mode == IPPROTO_IPV6) { /* Keys are not allowed with ipip and sit. */
-				p.i_flags &= ~(GRE_KEY | GRE_CSUM | GRE_SEQ);
-				p.o_flags &= ~(GRE_KEY | GRE_CSUM | GRE_SEQ);
-			}
-			return _do_add_ioctl(SIOCADDTUNNEL, &p); /* add new one! */
-		}
+	if (!librouter_dev_exists(name))
+		return -1;
+
+	if ((err = _do_get_ioctl(name, &p)))
+		return -1;
+
+	if (p.iph.protocol == mode)
+		return 0; /* Same mode, no need to change */
+
+	_do_del_ioctl(p.name, &p); /* remove tunnel */
+
+	p.iph.protocol = mode; /* new mode */
+	if (mode == IPPROTO_IPIP || mode == IPPROTO_IPV6) { /* Keys are not allowed with ipip and sit. */
+		p.i_flags &= ~(GRE_KEY | GRE_CSUM | GRE_SEQ);
+		p.o_flags &= ~(GRE_KEY | GRE_CSUM | GRE_SEQ);
 	}
-	return 0;
+
+	if (mode == IPPROTO_IPV6)
+		p.iph.daddr = 0; /* 6to4 does not accept destination IP (point-multipoint) */
+
+	return _do_add_ioctl(SIOCADDTUNNEL, &p); /* add new one! */
 }
 
 void librouter_tunnel_dump_interface(FILE *out, int conf_format, char *name)
