@@ -400,7 +400,7 @@ char *librouter_device_to_linux_cmdline(char *cmdline)
 				int idx = atoi(args->argv[i]);
 				char idx_str[8];
 				idx += EFM_INDEX_OFFSET;
-				sprintf(idx_str, "%d", idx);
+				sprintf(idx_str, "%d ", idx);
 				strcat(new_cmdline, idx_str);
 				i++;
 			}

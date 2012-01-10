@@ -7,11 +7,7 @@
 #ifndef MIB_H_
 #define MIB_H_
 
-#include <net-snmp/net-snmp-config.h>
-#include <net-snmp/types.h>
-
-#define MIBS_DIR	"/lib/mibs"
-#define MAX_OID_LEN	128
+#include "snmp.h"
 
 struct obj_node {
 	char *name;

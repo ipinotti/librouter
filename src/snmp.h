@@ -7,17 +7,21 @@
 #ifndef SNMP_H_
 #define SNMP_H_
 
-#include <net-snmp/net-snmp-config.h>
 
-#include <net-snmp/types.h>
-#include <net-snmp/output_api.h>
-#include <net-snmp/config_api.h>
+#ifndef NETSNMP_INCLUDES
+/*
+ * FIXME
+ * Can't redefine stuff if net-snmp headers were already included
+ */
+typedef u_long oid;
 
-#include <net-snmp/library/snmp_transport.h>
-#include <net-snmp/library/system.h>
-#include <net-snmp/library/mib.h>
-#include <net-snmp/library/default_store.h>
-#include <net-snmp/session_api.h>
+#define SNMP_VERSION_1     0
+#define SNMP_VERSION_2c    1
+#define SNMP_VERSION_3     3
+#endif /* NETSNMP_INCLUDES */
+
+#define MIBS_DIR	"/lib/mibs"
+#define MAX_OID_LEN	128
 
 #define TRAPCONF	"/etc/trap.cfg"
 #define NUM_ALARMS	25
@@ -69,6 +73,12 @@ struct trap_data_obj {
 	char *oid;
 	int type;
 	char *value;
+};
+
+struct trap_sink {
+	char *ip_addr;
+	char *community;
+	char *port;
 };
 
 int librouter_snmp_get_contact(char *buffer, int max_len);
@@ -126,11 +136,6 @@ int librouter_snmp_add_pdu_data_entry(struct trap_data_obj **data_p,
                                       char *value);
 
 int librouter_snmp_destroy_pdu_data(struct trap_data_obj **data_p);
-
-int librouter_snmp_sendtrap(char *snmp_trap_version,
-                            char *community_rcv,
-                            char *trap_obj_oid,
-                            struct trap_data_obj *data);
 
 int librouter_snmp_rmon_get_access_cfg(struct rmon_config **shm_rmon_p);
 int librouter_snmp_rmon_free_access_cfg(struct rmon_config **shm_rmon_p);

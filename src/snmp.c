@@ -12,6 +12,8 @@
 #include <signal.h>
 #include <ctype.h>
 #include <syslog.h>
+#include <time.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ipc.h>
@@ -30,37 +32,24 @@
 #include "lock.h"
 #include "nv.h"
 
-struct trap_sink {
-	char *ip_addr;
-	char *community;
-	char *port;
-};
-
-oid objid_sysuptime[] = { 1, 3, 6, 1, 2, 1, 1, 3, 0 };
-oid objid_snmptrap[] = { 1, 3, 6, 1, 6, 3, 1, 1, 4, 1, 0 };
-
 int librouter_snmp_get_contact(char *buffer, int max_len)
 {
-	return librouter_str_find_string_in_file(FILE_SNMPD_CONF,
-			"syscontact", buffer, max_len);
+	return librouter_str_find_string_in_file(FILE_SNMPD_CONF, "syscontact", buffer, max_len);
 }
 
 int librouter_snmp_get_location(char *buffer, int max_len)
 {
-	return librouter_str_find_string_in_file(FILE_SNMPD_CONF,
-	                "syslocation", buffer, max_len);
+	return librouter_str_find_string_in_file(FILE_SNMPD_CONF, "syslocation", buffer, max_len);
 }
 
 int librouter_snmp_set_contact(char *contact)
 {
-	return librouter_str_replace_string_in_file(FILE_SNMPD_CONF,
-	                "syscontact", contact);
+	return librouter_str_replace_string_in_file(FILE_SNMPD_CONF, "syscontact", contact);
 }
 
 int librouter_snmp_set_location(char *location)
 {
-	return librouter_str_replace_string_in_file(FILE_SNMPD_CONF,
-	                "syslocation", location);
+	return librouter_str_replace_string_in_file(FILE_SNMPD_CONF, "syslocation", location);
 }
 
 int librouter_snmp_reload_config(void)
@@ -111,7 +100,8 @@ int librouter_snmp_stop(void)
 		pid = librouter_process_get_pid(SNMP_DAEMON);
 
 		if ((ret = librouter_kill_daemon(SNMP_DAEMON)) == 0) {
-			for (timeout = time(NULL) + 10; (librouter_process_get_pid(SNMP_DAEMON) == pid) && (time(NULL) < timeout);)
+			for (timeout = time(NULL) + 10; (librouter_process_get_pid(SNMP_DAEMON) == pid)
+			                && (time(NULL) < timeout);)
 				usleep(100000);
 		}
 
@@ -193,8 +183,7 @@ int librouter_snmp_dump_communities(FILE *out)
 
 	conf = fopen(FILE_SNMPD_CONF, "r");
 	if (!conf) {
-		librouter_pr_error(0,
-		                "Could not read SNMP server configuration");
+		librouter_pr_error(0, "Could not read SNMP server configuration");
 		return (-1);
 	}
 
@@ -480,15 +469,6 @@ int librouter_snmp_itf_should_sendtrap(char *itf)
 	return found;
 }
 
-int librouter_snmp_input(int operation,
-               netsnmp_session * session,
-               int reqid,
-               netsnmp_pdu *pdu,
-               void *magic)
-{
-	return 1;
-}
-
 int librouter_snmp_rmon_event_log(int index, char *description)
 {
 	char *buf;
@@ -501,9 +481,11 @@ int librouter_snmp_rmon_event_log(int index, char *description)
 	time(&the_time);
 	tm_ptr = gmtime(&the_time);
 
-	sprintf(buf, "%d %02d:%02d:%02d %s\n", index, tm_ptr->tm_hour, tm_ptr->tm_min, tm_ptr->tm_sec, description);
+	sprintf(buf, "%d %02d:%02d:%02d %s\n", index, tm_ptr->tm_hour, tm_ptr->tm_min, tm_ptr->tm_sec,
+	                description);
 
-	if (librouter_exec_test_write_len(FILE_RMON_LOG_EVENTS, FILE_RMON_LOG_EVENTS_MAX_SIZE, buf, strlen(buf)) < 0) {
+	if (librouter_exec_test_write_len(FILE_RMON_LOG_EVENTS, FILE_RMON_LOG_EVENTS_MAX_SIZE, buf,
+	                strlen(buf)) < 0) {
 		free(buf);
 		return -1;
 	}
@@ -553,7 +535,8 @@ int librouter_snmp_rmon_get_access_cfg(struct rmon_config **shm_rmon_p)
 				return 0;
 			}
 
-			if ((shm_confid = shmget((key_t) RMON_SHM_KEY, sizeof(struct rmon_config), 0666)) == -1) {
+			if ((shm_confid = shmget((key_t) RMON_SHM_KEY, sizeof(struct rmon_config), 0666))
+			                == -1) {
 				librouter_unlock_rmon_config_access();
 				return 0;
 			}
@@ -614,12 +597,7 @@ int librouter_snmp_rmon_get_version(int *version)
 	return 0;
 }
 
-int librouter_snmp_rmon_add_event(int num,
-                                  int log,
-                                  char *community,
-                                  int status,
-                                  char *descr,
-                                  char *owner)
+int librouter_snmp_rmon_add_event(int num, int log, char *community, int status, char *descr, char *owner)
 {
 	struct rmon_config *shm_rmon_p;
 	int i, found = 0, ret_value = -1;
@@ -867,8 +845,7 @@ int librouter_snmp_rmon_remove_alarm(char *index)
 			for (i = 0; i < NUM_ALARMS; i++) {
 
 				if (shm_rmon_p->alarms[i].index == idx) {
-					memset(&shm_rmon_p->alarms[i], 0,
-					                sizeof(struct rmon_alarm_entry));
+					memset(&shm_rmon_p->alarms[i], 0, sizeof(struct rmon_alarm_entry));
 					found++;
 					break;
 				}
@@ -970,7 +947,7 @@ void librouter_snmp_rmon_event_info(struct rmon_config *shm_rmon_p, int i, int i
 				if ((args = librouter_parse_args_din(line, &argl)) > 1) {
 					if (atoi(argl[0]) == idx) {
 						sprintf(tmp, "%d", count);
-						printf("\033[%dC%s   %s   ", 10 - strlen(tmp),tmp, argl[1]);
+						printf("\033[%dC%s   %s   ", 10 - strlen(tmp), tmp, argl[1]);
 
 						for (j = 2; j < args; j++)
 							printf(" %s", argl[j]);
@@ -1005,7 +982,8 @@ int librouter_snmp_rmon_show_event(char *index)
 		for (i = 0; i < NUM_EVENTS; i++) {
 			if (idx) {
 				if (shm_rmon_p->events[i].index == idx) {
-					librouter_snmp_rmon_event_info(shm_rmon_p, i, shm_rmon_p->events[i].index);
+					librouter_snmp_rmon_event_info(shm_rmon_p, i,
+					                shm_rmon_p->events[i].index);
 					ret = 0;
 					break;
 				}
@@ -1037,7 +1015,8 @@ void librouter_snmp_rmon_alarm_info(struct rmon_config *shm_rmon_p, int i, int i
 	printf("\n");
 
 	if (strlen(shm_rmon_p->alarms[i].str_oid) && shm_rmon_p->alarms[i].interval)
-		printf("  Monitors %s every %d second(s)\n",
+		printf(
+		                "  Monitors %s every %d second(s)\n",
 		                librouter_snmp_oid_to_obj_name(shm_rmon_p->alarms[i].str_oid, buf, 50) ? buf : shm_rmon_p->alarms[i].str_oid,
 		                shm_rmon_p->alarms[i].interval);
 
@@ -1052,14 +1031,15 @@ void librouter_snmp_rmon_alarm_info(struct rmon_config *shm_rmon_p, int i, int i
 
 	printf("%d\n", shm_rmon_p->alarms[i].last_value);
 
+#if 0
 	if (shm_rmon_p->alarms[i].rising_threshold) {
 
 		printf("  Rising threshold is %d, ", shm_rmon_p->alarms[i].rising_threshold);
 
 		if (shm_rmon_p->alarms[i].rising_event_index)
-			printf("assigned to event %d\n", shm_rmon_p->alarms[i].rising_event_index);
+		printf("assigned to event %d\n", shm_rmon_p->alarms[i].rising_event_index);
 		else
-			printf("not assigned to any event\n");
+		printf("not assigned to any event\n");
 
 	} else {
 		printf("  Rising threshold not defined\n");
@@ -1070,13 +1050,28 @@ void librouter_snmp_rmon_alarm_info(struct rmon_config *shm_rmon_p, int i, int i
 		printf("  Falling threshold is %d, ", shm_rmon_p->alarms[i].falling_threshold);
 
 		if (shm_rmon_p->alarms[i].falling_event_index)
-			printf("assigned to event %d\n", shm_rmon_p->alarms[i].falling_event_index);
+		printf("assigned to event %d\n", shm_rmon_p->alarms[i].falling_event_index);
 		else
-			printf("not assigned to any event\n");
+		printf("not assigned to any event\n");
 
 	} else {
 		printf("  Falling threshold not defined\n");
 	}
+#else /* Why can't thresholds be zero ? */
+	printf("  Rising threshold is %d, ", shm_rmon_p->alarms[i].rising_threshold);
+
+	if (shm_rmon_p->alarms[i].rising_event_index)
+		printf("assigned to event %d\n", shm_rmon_p->alarms[i].rising_event_index);
+	else
+		printf("not assigned to any event\n");
+	printf("  Falling threshold is %d, ", shm_rmon_p->alarms[i].falling_threshold);
+
+	if (shm_rmon_p->alarms[i].falling_event_index)
+		printf("assigned to event %d\n", shm_rmon_p->alarms[i].falling_event_index);
+	else
+		printf("not assigned to any event\n");
+
+#endif
 }
 
 int librouter_snmp_rmon_show_alarm(char *index)
@@ -1095,16 +1090,13 @@ int librouter_snmp_rmon_show_alarm(char *index)
 			if (idx) {
 				if (shm_rmon_p->alarms[i].index == idx) {
 
-					librouter_snmp_rmon_alarm_info(
-					                shm_rmon_p,
-					                i,
+					librouter_snmp_rmon_alarm_info(shm_rmon_p, i,
 					                shm_rmon_p->alarms[i].index);
 					ret = 0;
 					break;
 				}
 			} else {
-				librouter_snmp_rmon_alarm_info(shm_rmon_p, i,
-				                shm_rmon_p->alarms[i].index);
+				librouter_snmp_rmon_alarm_info(shm_rmon_p, i, shm_rmon_p->alarms[i].index);
 			}
 		}
 
@@ -1147,10 +1139,7 @@ int librouter_snmp_create_pdu_data(struct trap_data_obj **data_p)
 	return -1;
 }
 
-int librouter_snmp_add_pdu_data_entry(struct trap_data_obj **data_p,
-                                      char *oid_str,
-                                      int type,
-                                      char *value)
+int librouter_snmp_add_pdu_data_entry(struct trap_data_obj **data_p, char *oid_str, int type, char *value)
 {
 	int idx;
 	struct trap_data_obj *p, *new_r;
@@ -1213,200 +1202,6 @@ int librouter_snmp_destroy_pdu_data(struct trap_data_obj **data_p)
 	return 0;
 }
 
-int librouter_snmp_sendtrap(char *snmp_trap_version,
-                            char *community_rcv,
-                            char *trap_obj_oid,
-                            struct trap_data_obj *trap_data)
-{
-	FILE *f;
-	netsnmp_pdu *pdu;
-	size_t name_length;
-	char type, buf[300];
-	arg_list argl = NULL;
-	oid name[MAX_OID_LEN];
-	struct trap_sink *sinks;
-	netsnmp_session *ss, session;
-	int k, idx, args, errors, len = 0;
-
-	if ((f = fopen(FILE_SNMPD_CONF, "r")) == NULL)
-		return -1;
-
-	while (fgets(buf, 300, f)) {
-		if (librouter_parse_args_din(buf, &argl) > 1) {
-			if (strcmp(argl[0], "trapsink") == 0)
-				len++;
-		}
-		librouter_destroy_args_din(&argl);
-	}
-
-	if ((sinks = malloc(len * sizeof(struct trap_sink))) == NULL) {
-		fclose(f);
-		return -1;
-	}
-
-	for (k = 0; k < len; k++) {
-		sinks[k].ip_addr = NULL;
-		sinks[k].community = NULL;
-		sinks[k].port = NULL;
-	}
-
-	fseek(f, 0, SEEK_SET);
-
-	for (k = 0; fgets(buf, 300, f);) {
-		if ((args = librouter_parse_args_din(buf, &argl)) > 1) {
-			if (strcmp(argl[0], "trapsink") == 0) {
-				if ((sinks[k].ip_addr = malloc(strlen(argl[1]) + 1))) {
-
-					strcpy(sinks[k].ip_addr, argl[1]);
-
-					if (args >= 3) {
-						if ((sinks[k].community = malloc(strlen(argl[2])+ 1))) {
-
-							strcpy(sinks[k].community, argl[2]);
-
-							if (args > 3) {
-								if ((sinks[k].port = malloc(strlen(argl[3])+ 1)))
-									strcpy(sinks[k].port, argl[3]);
-							}
-						}
-					}
-					k++;
-				}
-			}
-		}
-		librouter_destroy_args_din(&argl);
-	}
-
-	fclose(f);
-
-	for (idx = 0; idx < len; idx++) {
-		/* initialize session to default values */
-		snmp_sess_init(&session);
-
-		/* trap version */
-		if (strcmp(snmp_trap_version, "1") == 0)
-			session.version = SNMP_VERSION_1;
-		else if (strcmp(snmp_trap_version, "2c") == 0)
-			session.version = SNMP_VERSION_2c;
-		else if (strcmp(snmp_trap_version, "2u") == 0)
-			session.version = SNMP_VERSION_2u;
-		else if (strcmp(snmp_trap_version, "3") == 0)
-			session.version = SNMP_VERSION_3;
-
-		/* define remote host */
-		session.peername = sinks[idx].ip_addr;
-
-		/* UDP port number of peer */
-		session.remote_port = strcmp(sinks[idx].port, "162") ? atoi(sinks[idx].port) : SNMP_DEFAULT_REMPORT;
-
-		/* my UDP port number, 0 for default, picked randomly */
-		session.local_port = 0;
-
-		/* function to interpret incoming data */
-		session.callback = librouter_snmp_input;
-
-		/* pointer to data that the callback function may consider important */
-		session.callback_magic = NULL;
-
-		/* community for outgoing requests */
-		session.community = community_rcv ? ((unsigned char *) community_rcv) : ((unsigned char *) sinks[idx].community);
-
-		/* length of community name */
-		session.community_len = community_rcv ? strlen(community_rcv) : strlen( sinks[idx].community);
-
-		SOCK_STARTUP;
-
-		netsnmp_ds_set_int(NETSNMP_DS_LIBRARY_ID, NETSNMP_DS_LIB_DEFAULT_PORT, SNMP_TRAP_PORT);
-
-		/* open an SNMP session */
-		if ((ss = snmp_open(&session))) {
-			switch (session.version) {
-			case SNMP_VERSION_1:
-				/* nao implementado ate o momento */
-				break;
-			case SNMP_VERSION_2c:
-			case SNMP_VERSION_2u:
-			case SNMP_VERSION_3:
-				pdu = snmp_pdu_create(SNMP_MSG_TRAP2);
-				snmp_add_var(pdu, objid_sysuptime, sizeof(objid_sysuptime) / sizeof(oid), 't', "\"\"");
-
-				if (snmp_add_var(pdu, objid_snmptrap, sizeof(objid_snmptrap) / sizeof(oid), 'o', trap_obj_oid)) {
-					snmp_free_pdu(pdu);
-					break;
-				}
-
-				for (k = 0, errors = 0; trap_data[k].oid; k++) {
-					name_length = MAX_OID_LEN;
-					memset(name, '\0', MAX_OID_LEN * sizeof(oid));
-
-					if (librouter_snmp_translate_oid( trap_data[k].oid, name, &name_length)) {
-
-						type = '\0';
-
-						switch (trap_data[k].type) {
-						case ASN_INTEGER:
-							type = 'i';
-							break;
-						case ASN_BIT_STR:
-							type = 'b';
-							break;
-						case ASN_OCTET_STR:
-							type = 's';
-							break;
-						case ASN_OBJECT_ID:
-							type = 'o';
-							break;
-						case ASN_BOOLEAN:
-						case ASN_NULL:
-						case ASN_SEQUENCE:
-						case ASN_SET:
-						case ASN_UNIVERSAL:
-						case ASN_APPLICATION:
-						case ASN_CONTEXT:
-						case ASN_PRIVATE:
-						case ASN_CONSTRUCTOR:
-						case ASN_EXTENSION_ID:
-							break;
-						}
-
-						if (type) {
-							if (snmp_add_var(pdu, name, name_length, type, trap_data[k].value) != 0)
-								errors++;
-						} else {
-							errors++;
-						}
-					} else {
-						errors++;
-					}
-				}
-
-				if (errors)
-					snmp_free_pdu(pdu);
-				else if (snmp_send(ss, pdu) == 0)
-					snmp_free_pdu(pdu);
-
-				break;
-			}
-
-			snmp_close(ss);
-		}
-
-		SOCK_CLEANUP;
-
-		if (sinks[idx].ip_addr)
-			free(sinks[idx].ip_addr);
-
-		if (sinks[idx].community)
-			free(sinks[idx].community);
-
-		if (sinks[idx].port)
-			free(sinks[idx].port);
-	}
-
-	free(sinks);
-	return 0;
-}
-
 static int _snmp_config_add_user(char *user, int rw, char *seclevel)
 {
 	FILE *f;
@@ -1426,8 +1221,8 @@ static int _snmp_config_add_user(char *user, int rw, char *seclevel)
 
 				if (librouter_parse_args_din(buf, &argl) == 3) {
 
-					if (((strcmp(argl[0], "rwuser") == 0) ||
-						(strcmp(argl[0], "rouser") == 0)) && (strcmp(argl[1], user) == 0))
+					if (((strcmp(argl[0], "rwuser") == 0) || (strcmp(argl[0], "rouser")
+					                == 0)) && (strcmp(argl[1], user) == 0))
 						found = 1;
 				}
 
@@ -1438,7 +1233,7 @@ static int _snmp_config_add_user(char *user, int rw, char *seclevel)
 		fclose(f);
 
 		if (found == 1) {
-			if (librouter_exec_replace_string_file( FILE_SNMPD_DATA_CONF, buf, "") < 0)
+			if (librouter_exec_replace_string_file(FILE_SNMPD_DATA_CONF, buf, "") < 0)
 				return -1;
 		}
 	}
@@ -1476,8 +1271,8 @@ static int _snmp_config_remove_user(char *user)
 		if (fgets(buf, 255, f) != NULL) {
 			buf[255] = 0;
 			if (librouter_parse_args_din(buf, &argl) == 3) {
-				if (((strcmp(argl[0], "rwuser") == 0) ||
-					(strcmp(argl[0], "rouser")== 0)) && (strcmp(argl[1], user) == 0))
+				if (((strcmp(argl[0], "rwuser") == 0) || (strcmp(argl[0], "rouser") == 0))
+				                && (strcmp(argl[1], user) == 0))
 					found = 1;
 			}
 
@@ -1515,9 +1310,8 @@ static int _snmp_adjust_fdb(unsigned int add, char *line, int rw)
 					buf[255] = 0;
 
 					if (librouter_parse_args_din(buf, &argl) >= 2) {
-						if ((strcmp(argl[0], "createUser") == 0) &&
-							(strcmp(argl[1], line) == 0) &&
-							(strchr(buf, '\n') != NULL))
+						if ((strcmp(argl[0], "createUser") == 0) && (strcmp(argl[1],
+						                line) == 0) && (strchr(buf, '\n') != NULL))
 							found = 1;
 					}
 
@@ -1622,8 +1416,7 @@ int librouter_snmp_add_user(char *user,
 		goto error;
 	}
 
-	len = 6 + strlen("createUser ") + strlen(user)
-	                + ((authproto != NULL) ? (7 + strlen(authpasswd)) : 0)
+	len = 6 + strlen("createUser ") + strlen(user) + ((authproto != NULL) ? (7 + strlen(authpasswd)) : 0)
 	                + ((privpasswd != NULL) ? (5 + strlen(privpasswd)) : 0);
 
 	if (len > 256) {
@@ -1638,8 +1431,8 @@ int librouter_snmp_add_user(char *user,
 			if (fgets(buf, 255, f) != NULL) {
 				buf[255] = 0;
 				if (librouter_parse_args_din(buf, &argl) >= 2) {
-					if ((strcmp(argl[0], "createUser") == 0) &&
-						(strcmp(argl[1], user) == 0))
+					if ((strcmp(argl[0], "createUser") == 0) && (strcmp(argl[1], user)
+					                == 0))
 						found = 1;
 				}
 
@@ -1705,8 +1498,7 @@ int librouter_snmp_add_user(char *user,
 	strcat(buf, ((rw == 1) ? " #rw\n" : " #ro\n"));
 	ret = _snmp_adjust_fdb(1, buf, rw);
 
-error:
-	if (is_running == 1)
+	error: if (is_running == 1)
 		librouter_snmp_start();
 	else
 		librouter_snmp_rmon_send_signal(SIGUSR1);
@@ -1789,11 +1581,12 @@ void librouter_snmp_load_prepare_users(void)
 				if (fgets(buf, 255, f) != NULL) {
 					buf[255] = 0;
 					if ((n = librouter_parse_args_din(buf, &argl)) >= 2) {
-						if ((strcmp(argl[0], "createUser") == 0) &&
-							(strchr(buf, '\n') != NULL)) {
+						if ((strcmp(argl[0], "createUser") == 0)
+						                && (strchr(buf, '\n') != NULL)) {
 							/* Adiciona entrada de usuario dentro do arquivo "/etc/snmpd.conf" */
-							_snmp_config_add_user(argl[1],
-									((strcmp(argl[n - 1],"#rw") == 0) ? 1 : 0),
+							_snmp_config_add_user(
+							                argl[1],
+							                ((strcmp(argl[n - 1], "#rw") == 0) ? 1 : 0),
 							                ((n == 3) ? "noauth" : ((n == 5) ? "auth" : "priv")));
 						}
 					}

@@ -1397,6 +1397,9 @@ static void _dump_tunnel_config(FILE *out, struct interface_conf *conf, struct i
 {
 	char *osdev = conf->name;
 
+	/* This must go first */
+	librouter_tunnel_dump_interface(out, 1, osdev);
+
 	/* Dump iptables configuration */
 	_dump_intf_iptables_config(out, conf);
 
@@ -1417,8 +1420,6 @@ static void _dump_tunnel_config(FILE *out, struct interface_conf *conf, struct i
 	if (conf->txqueue)
 		fprintf(out, " txqueuelen %d\n", conf->txqueue);
 #endif
-
-	librouter_tunnel_dump_interface(out, 1, osdev);
 
 	fprintf(out, " %sshutdown\n", conf->up ? "no " : "");
 }
