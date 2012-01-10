@@ -249,6 +249,13 @@
 #define OPTION_ROUTER /* ip forwarding, enable dynamic routing protocols, etc. */
 #define OPTION_SMCROUTE /* static multicast routing */
 
+/* Wireless LAN */
+#define OPTION_WIFI
+
+#ifdef OPTION_WIFI
+#define OPTION_HOSTAP
+#endif
+
 /* Factory Test System Digistar*/
 #define OPTION_FTS_DIGISTAR
 

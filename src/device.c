@@ -47,6 +47,9 @@ dev_family _devices[] = {
 #ifdef OPTION_BRIDGE
 	{ bridge, "bridge", "bridge", "Bridge"},
 #endif
+#ifdef OPTION_WIFI
+	{ wlan, "wlan", "wlan", "Wlan" },
+#endif
 	{ none, NULL, NULL, NULL }
 };
 
