@@ -1777,9 +1777,10 @@ static int _erase_vlan_table(void)
 			break;
 	}
 
-	if ((ret == 0) && (i == timeout_spi_limit))
+	if ((ret == 0) && (i == timeout_spi_limit)){
+		syslog(LOG_DEBUG, "%% Problem - Could not erase VLAN tables from BCM53115s\n");
 		return -1;
-
+	}
 	return 0;
 }
 
@@ -1892,6 +1893,24 @@ static int _erase_all_vlan_entry_file_control(void)
 }
 
 /**
+ * _verify_vlan_entry_file_dir
+ *
+ * Verify the existence of the main directory for Vlan file Control
+ *
+ * @return 1 if exist, 0 if not
+ */
+static int _verify_vlan_entry_file_dir(void)
+{
+	struct stat st;
+
+	if ( (stat(BCM53115S_VLAN_ENTRY_FILE_CONTROL, &st) == 0) && (S_ISDIR(st.st_mode)) )
+			return 1;
+
+	syslog(LOG_DEBUG, "%% Problem - Dir. for VLAN File Ctrl is Missing for BCM53115s\n");
+	return 0;
+}
+
+/**
  * _verify_vlan_entry_file_control
  *
  * Verify the existence of a file Vlan Control by table_entry
@@ -1933,6 +1952,9 @@ int librouter_bcm53115s_add_table(struct vlan_bcm_config_t *vconfig)
 		return -1;
 	}
 
+	if (!_verify_vlan_entry_file_dir())
+		return -1;
+
 	if (vconfig->vid > BCM53115S_NUM_VLAN_TABLES)
 		return -1;
 
@@ -1967,6 +1989,9 @@ int librouter_bcm53115s_del_table(struct vlan_bcm_config_t *vconfig)
 		return -1;
 	}
 
+	if (!_verify_vlan_entry_file_dir())
+		return -1;
+
 	if (_del_vlan_table_entry(vconfig->vid) < 0)
 		return -1;
 
@@ -1992,6 +2017,9 @@ int librouter_bcm53115s_get_table(int table_entry, struct vlan_bcm_config_t *vco
 		return -1;
 	}
 
+	if (!_verify_vlan_entry_file_dir())
+		return -1;
+
 	if (!_verify_vlan_entry_file_control(table_entry))
 		return -1;
 
@@ -2013,6 +2041,9 @@ int librouter_bcm53115s_get_table(int table_entry, struct vlan_bcm_config_t *vco
  */
 int librouter_bcm53115s_erase_all_tables(void)
 {
+	if (!_verify_vlan_entry_file_dir())
+		return -1;
+
 	if (_erase_vlan_table() < 0)
 		return -1;
 
