@@ -49,7 +49,7 @@ typedef enum {
 } wifi_encryp_type;
 
 typedef enum {
-	open, shared
+	open_a, shared
 } wifi_wep_auth_mode;
 
 typedef struct {
@@ -75,7 +75,8 @@ typedef struct {
 	librouter_wifi_security_mode_struct security;
 } librouter_wifi_struct;
 
-int librouter_wifi_ssid_set (char * ssid_name);
+int librouter_wifi_interface_status(void);
+int librouter_wifi_ssid_set (char * ssid_name, int ssid_size);
 int librouter_wifi_ssid_get (char * ssid_name, int ssid_size);
 int librouter_wifi_ssid_broadcast_enable_set (int enable);
 int librouter_wifi_ssid_broadcast_enable_get (void);
