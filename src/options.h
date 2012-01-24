@@ -56,6 +56,9 @@
 #define OPTION_NAT
 #define OPTION_QOS
 
+/* VRRP */
+#define OPTION_VRRP
+
 /* IPv6 */
 #define OPTION_IPV6
 
@@ -141,6 +144,7 @@
 #undef OPTION_IPV6
 #undef OPTION_SMCROUTE
 #undef OPTION_TUNNEL
+#undef OPTION_VRRP
 
 /* Router Options */
 #elif defined(CONFIG_DIGISTAR_ROUTER)
@@ -157,6 +161,7 @@
 #define OPTION_SMCROUTE
 #define OPTION_TUNNEL
 #define OPTION_BGP
+#define OPTION_VRRP
 
 #define OPTION_MODEM3G
 #define OPTION_PPP
@@ -210,6 +215,7 @@
 #undef OPTION_IPV6
 #undef OPTION_SMCROUTE
 #undef OPTION_TUNNEL
+#undef OPTION_VRRP
 
 /* Router Options */
 #elif defined(CONFIG_DIGISTAR_ROUTER)
@@ -226,6 +232,7 @@
 #define OPTION_SMCROUTE
 #define OPTION_TUNNEL
 #define OPTION_BGP
+#define OPTION_VRRP
 
 #define OPTION_MODEM3G
 #define OPTION_PPP
@@ -333,7 +340,6 @@
 
 #define OPTION_OPENSSH
 #define OPTION_RMON
-#undef OPTION_VRRP
 #define OPTION_HTTP
 #define OPTION_HTTPS
 

@@ -56,7 +56,8 @@ librouter_la_SOURCES = \
 	pptp.c \
 	pppoe.c \
 	bcm53115s.c \
-	vlan.c
+	vlan.c \
+	vrrp.c
 
 librouter_la_LIBADD = $(top_builddir)/src/libnetlink/libnetlink.la \
 		$(top_builddir)/src/libbridge/libbridge.la
@@ -123,5 +124,6 @@ librouter_la_HEADERS = \
 	pppoe.h \
 	bcm53115s.h \
 	bcm53115s_etc.h \
-	vlan.h
+	vlan.h \
+	vrrp.h
 
