@@ -1071,7 +1071,7 @@ int librouter_quagga_del_route(struct routes_t *route)
 	char zebra_cmd[256];
 
 	if (librouter_quagga_connect_daemon(ZEBRA_PATH) < 0)
-		return;
+		return -1;
 
 	if (route->ip_version == 6){
 		if (route->gateway)
@@ -1082,7 +1082,7 @@ int librouter_quagga_del_route(struct routes_t *route)
 							route->interface);
 		else {
 			librouter_quagga_close_daemon();
-			return;
+			return -1;
 		}
 	}
 	else {
@@ -1094,7 +1094,7 @@ int librouter_quagga_del_route(struct routes_t *route)
 							route->interface);
 		else {
 			librouter_quagga_close_daemon();
-			return;
+			return -1;
 		}
 	}
 
@@ -1105,6 +1105,8 @@ int librouter_quagga_del_route(struct routes_t *route)
 	librouter_quagga_execute_client("write file", stdout, buf_daemon, 0);
 
 	librouter_quagga_close_daemon();
+
+	return 0;
 }
 
 /**
@@ -1181,7 +1183,7 @@ int librouter_quagga_add_link_detect(char *interface)
 	char zebra_cmd[256];
 
 	if (librouter_quagga_connect_daemon(ZEBRA_PATH) < 0)
-		return;
+		return -1;
 
 	sprintf(zebra_cmd, "interface %s\n", interface);
 
