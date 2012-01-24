@@ -20,6 +20,7 @@
 #include "ip.h"
 #include "str.h"
 #include "wifi.h"
+#include "exec.h"
 
 #define SSID_KEY "ssid="
 #define SSID_BROADCAST_KEY "ignore_broadcast_ssid="
