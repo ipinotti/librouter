@@ -63,6 +63,99 @@ char *librouter_str_find_substr(char *buf, char *key)
  * A chamada
  *   replace_string_in_file_nl("snmpd.conf", "syslocation", "PD3");
  * ira alterar a linha para
+ *   syslocationPD3
+ *
+ * @param filename
+ * @param key
+ * @param value
+ * @return
+ */
+int librouter_str_replace_string_in_file_without_space(char *filename, char *key, char *value)
+{
+	int fd = 0, len, i, ret = -1;
+	char *buf = NULL, *p, *p2, space = ' ', coment = '#';
+	struct stat st;
+	char filename_new[64];
+
+	if ((fd = open(filename, O_RDONLY)) < 0) {
+		librouter_pr_error(1, "could not open %s", filename);
+		goto error;
+	}
+
+	if (fstat(fd, &st) < 0) {
+		librouter_pr_error(1, "fstat");
+		goto error;
+	}
+
+	if ((buf = malloc(st.st_size)) == NULL) {
+		librouter_pr_error(1, "could not alloc memory");
+		goto error;
+	}
+
+	read(fd, buf, st.st_size);
+	close(fd);
+
+	p = strstr(buf, key);
+	if (p == NULL)
+		goto end;
+
+	p2 = strchr(p, '\n');
+	if (p2 == NULL)
+		goto end;
+
+	strncpy(filename_new, filename, 63);
+	filename_new[63] = 0;
+	strcat(filename_new, ".new");
+	if ((fd = open(filename_new, O_WRONLY | O_CREAT | O_TRUNC, 0600)) < 0) {
+		librouter_pr_error(1, "could not create %s", filename_new);
+		goto error;
+	}
+
+	i = p - buf;
+	len = strlen(key);
+	if (value != NULL) {
+		if (i && buf[i - 1] == '#') {
+			write(fd, buf, i - 1); /* skip # */
+			write(fd, key, len);
+		} else
+			write(fd, buf, p - buf + len);
+
+//		write(fd, &space, 1); /* [key] [value] */
+		write(fd, value, strlen(value));
+	} else {
+		if (i && buf[i - 1] == '#') {
+			write(fd, buf, p - buf + len);
+		} else {
+			write(fd, buf, i);
+			write(fd, &coment, 1); /* # */
+			write(fd, key, len);
+		}
+	}
+
+	write(fd, p2, st.st_size - (p2 - buf));
+	close(fd);
+
+	unlink(filename);
+	rename(filename_new, filename);
+	ret = 0;
+	end: if (buf)
+		free(buf);
+	return ret;
+	error: if (fd)
+		close(fd);
+	goto end;
+}
+
+/**
+ * Procura no arquivo 'filename' pela string 'key'.
+ * Substitui a string entre o final de 'key' e o final da linha pela
+ * string 'value'.
+ * Exemplo:
+ * Suponha que temos um arquivo 'snmpd.conf' com a seguinte linha:
+ *   syslocation Unknown
+ * A chamada
+ *   replace_string_in_file_nl("snmpd.conf", "syslocation", "PD3");
+ * ira alterar a linha para
  *   syslocation PD3
  *
  * @param filename
@@ -137,6 +230,72 @@ int librouter_str_replace_string_in_file(char *filename, char *key, char *value)
 
 	unlink(filename);
 	rename(filename_new, filename);
+	ret = 0;
+	end: if (buf)
+		free(buf);
+	return ret;
+	error: if (fd)
+		close(fd);
+	goto end;
+}
+
+/**
+ * Procura no arquivo 'filename' pela string 'key'. Se encontra-la,
+ * armazena  a string entre o final de 'key' e o final da linha no
+ * buffer 'buffer' de tamanho 'len'.
+ * Exemplo:
+ * Suponha que temos um arquivo 'snmpd.conf' com a seguinte linha:
+ *   syslocation=Unknown
+ * A chamada
+ *   find_string_in_file_nl("snmpd.conf", "syslocation", buf, 100);
+ * ira armazenar em 'buf' a string 'Unknown'.
+ *
+ * @param filename
+ * @param key
+ * @param buffer
+ * @param len
+ * @return
+ */
+int librouter_str_find_string_in_file_without_space(char *filename, char *key, char *buffer, int len)
+{
+	int fd = 0, size;
+	char *buf = NULL, *p, *p2;
+	int ret = -1; /* error! */
+	struct stat st;
+
+	if ((fd = open(filename, O_RDONLY)) < 0) {
+		librouter_pr_error(1, "could not open %s", filename);
+		goto error;
+	}
+
+	if (fstat(fd, &st) < 0) {
+		librouter_pr_error(1, "fstat");
+		goto error;
+	}
+
+	if ((buf = malloc(st.st_size)) == NULL) {
+		librouter_pr_error(1, "could not alloc memory");
+		goto error;
+	}
+
+	read(fd, buf, st.st_size);
+	close(fd);
+
+	p = strstr(buf, key);
+	if (p == NULL)
+		goto end;
+
+	p2 = strchr(p, '\n');
+	if (p2 == NULL)
+		goto end;
+
+	p += strlen(key);
+	if (p >= p2)
+		goto end;
+
+	size = (p2 - p) > (len - 1) ? (len - 1) : p2 - p;
+	memcpy(buffer, p, size);
+	buffer[size] = 0;
 	ret = 0;
 	end: if (buf)
 		free(buf);
