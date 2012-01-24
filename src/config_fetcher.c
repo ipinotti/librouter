@@ -1258,7 +1258,7 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf, struct
 
 
 #ifdef OPTION_VRRP
-	dump_vrrp_interface(out, osdev);
+	librouter_vrrp_dump_interface(out, osdev);
 #endif
 
 	/* Finally, return if interface is on or off */
@@ -1367,7 +1367,7 @@ static void _dump_efm_config(FILE *out, struct interface_conf *conf, struct inte
 
 
 #ifdef OPTION_VRRP
-	dump_vrrp_interface(out, osdev);
+	librouter_vrrp_dump_interface(out, osdev);
 #endif
 
 	/* Finally, return if interface is on or off */
