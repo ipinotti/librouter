@@ -804,6 +804,15 @@ int librouter_dev_shutdown(char *dev, dev_family *fam)
 
 	}
 #endif
+	case wlan:
+#ifdef OPTION_BRIDGE
+		/* Existing bridges must have IP addresses removed */
+		librouter_br_update_ipaddr(dev);
+#endif
+#ifdef OPTION_HOSTAP
+
+#endif
+		break;
 	default:
 		break;
 	}
