@@ -35,7 +35,7 @@ void kick_vrrp(void)
 	FILE *f;
 	char buf[32];
 
-	f = fopen("/var/run/vrrp.pid", "r");
+	f = fopen(VRRPD_PID_FILE, "r");
 	if (f) {
 		fgets(buf, 32, f);
 		kill((pid_t) atoi(buf), SIGHUP);

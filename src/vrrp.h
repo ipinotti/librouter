@@ -62,5 +62,6 @@ struct vrrp_status_t {
 };
 
 #define VRRP_STATUS_FILE	"/var/run/vrrp.status.%d"
+#define VRRPD_PID_FILE 		"/var/run/keepalived.pid"
 
 #endif /* __LIBROUTER_VRRP_H */
