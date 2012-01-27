@@ -17,42 +17,42 @@
 #include "debug.h"
 
 static debuginfo DEBUG[] = { /* !!! Check cish_defines.h */
-	{"acl","kernel: (acl)","Access list service", 0},
-	{"bgp","bgpd[","BGP routing service", 0},
-	{"bridge","kernel: bridge","Bridge daemon", 0},
-	{"chat","chat[","Chat service", 0},
-	{"config","config[","Configuration service", 0},
+	{"acl: ","kernel: (acl)","Access list service", 0},
+	{"bgp: ","bgpd[","BGP routing service", 0},
+	{"bridge: ","kernel: bridge","Bridge daemon", 0},
+	{"chat: ","chat[","Chat service", 0},
+	{"config: ","config[","Configuration service", 0},
 #ifdef OPTION_IPSEC
-	{"crypto","pluto[","VPN daemon", 0},
+	{"crypto: ","pluto[","VPN daemon", 0},
 #endif
 #ifdef UDHCPD
-	{"dhcp","udhcpd[","DHCP service", 0},
+	{"dhcp: ","udhcpd[","DHCP service", 0},
 #else
 	{"dhcp","dhcpd:","DHCP service", 0},
 #endif
-	{"ethernet0","kernel: eth0:","Ethernet daemon", 0},
-	{"efm0","kernel: (EFM","EFM daemon", 0},
+	{"ethernet0: ","kernel: eth0:","Ethernet daemon", 0},
+	{"efm0: (SHDSL ","kernel: (EFM","EFM daemon", 0},
 #ifdef OPTION_IPSEC
-	{"l2tp","l2tpd","L2TP daemon", 0},
+	{"l2tp: ","l2tpd","L2TP daemon", 0},
 #endif
-	{"login","login[","Login daemon", 0},
+	{"login: ","login[","Login daemon", 0},
 #ifdef OPTION_NTPD
-	{"ntp","ntpd[","NTP daemon", 0},
+	{"ntp: ","ntpd[","NTP daemon", 0},
 #endif
 #ifdef OPTION_ROUTER
-	{"ospf","ospfd[","OSPF routing service", 0},
+	{"ospf: ","ospfd[","OSPF routing service", 0},
 #endif
 #ifdef OPTION_PPP
-	{"ppp","pppd[","PPP daemon", 0},
+	{"ppp: ","pppd[","PPP daemon", 0},
 #endif
 #ifdef OPTION_ROUTER
-	{"rip","ripd[","RIP routing service", 0},
+	{"rip: ","ripd[","RIP routing service", 0},
 #endif
-	{"ssh","sshd","SSH service", 0},
+	{"ssh: ","sshd","SSH service", 0},
 #ifdef OPTION_VRRP
-	{"vrrp","Keepalived_vrrp","VRRP service", 0},
+	{"vrrp: ","Keepalived:","VRRP service", 0},
 #endif
-	{"zebra","zebra[","Routing daemon", 0},
+	{"zebra: ","zebra[","Routing daemon", 0},
 	{NULL, NULL, NULL, 0}
 };
 
@@ -76,20 +76,22 @@ char *librouter_debug_find_token(char *logline, char *name, int enabled)
 	for (dk = DEBUG; dk->name; dk++) {
 		if ((enabled || dk->enabled) &&	(l = strstr(logline, dk->token))) {
 
-			p = strchr(logline + strlen(dk->token), ' ');
+			/* Get rest of string after token */
+			p = strchr(l + strlen(dk->token), ' ');
 
 			if (p == NULL)
 				return NULL;
 
-			strncpy(name, dk->name, 14); /* renamed token! */
-			strcat(name, ": ");
+			/* Copy name for token */
+			strncpy(name, dk->name, 14);
 
-			return (p + 1); /* log info! */
-
+#ifdef DEBUG_SHOW_LOGGING
 			printf("logline = %s\n", logline);
 			printf("l = %s\n", l);
 			printf("p = %s\n", p);
 			printf("name = %s\n", name);
+#endif
+			return (p + 1); /* log info! */
 		}
 	}
 	return NULL;

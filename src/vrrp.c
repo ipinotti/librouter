@@ -35,7 +35,7 @@ void kick_vrrp(void)
 	FILE *f;
 	char buf[32];
 
-	f = fopen("/var/run/vrrp.pid", "r");
+	f = fopen(VRRPD_PID_FILE, "r");
 	if (f) {
 		fgets(buf, 32, f);
 		kill((pid_t) atoi(buf), SIGHUP);
@@ -484,6 +484,7 @@ static void _write_group_status(FILE *f, int vrid)
 	char filename[64];
 	struct vrrp_status_t v;
 	char prio[16];
+	float adv, down;
 
 	sprintf(filename, VRRP_STATUS_FILE, vrid);
 	fd = open(filename, O_RDONLY);
@@ -491,11 +492,9 @@ static void _write_group_status(FILE *f, int vrid)
 		return;
 
 	n = read(fd, (void *) &v, sizeof(v));
-	close(fd);
 
 	if (n != sizeof(v))
 		return;
-
 
 	fprintf(
 	                f,
@@ -512,15 +511,19 @@ static void _write_group_status(FILE *f, int vrid)
 	if (v.state == VRRP_STATE_INIT) {
 		fprintf(f, "unknown\n");
 	} else {
-		fprintf(f, "%.3f sec\n", v.adver_int / 1000000);
+		adv = ((float) v.adver_int) / 1000000;
+		fprintf(f, "%.3f sec\n", adv);
 	}
 
 	fprintf(f, "\t\tMaster Down interval is ");
 	if (v.state == VRRP_STATE_INIT) {
 		fprintf(f, "unknown\n");
 	} else {
-		fprintf(f, "%.3f sec\n\n", v.down_interval / 1000000);
+		down = ((float) v.down_interval) / 1000000;
+		fprintf(f, "%.3f sec\n\n", down);
 	}
+
+	close(fd);
 }
 
 void librouter_vrrp_dump_status(void)

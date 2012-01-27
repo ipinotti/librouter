@@ -51,7 +51,7 @@ void librouter_vrrp_dump_status(void);
 
 /* FIXME Copied from keepalived vrrp.h */
 struct vrrp_status_t {
-	char ifname[16];
+	char ifname[24];
 	int vrid;
 	int base_priority;
 	int state;
@@ -62,5 +62,6 @@ struct vrrp_status_t {
 };
 
 #define VRRP_STATUS_FILE	"/var/run/vrrp.status.%d"
-/* !!!!!!!! */
+#define VRRPD_PID_FILE 		"/var/run/keepalived.pid"
+
 #endif /* __LIBROUTER_VRRP_H */
