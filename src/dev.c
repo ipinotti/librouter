@@ -793,16 +793,16 @@ int librouter_dev_shutdown(char *dev, dev_family *fam)
 		break;
 #ifdef OPTION_MODEM3G
 	case ppp:
-	/* FIXME This test is only for 3G interfaces, any other interface that
-	 * uses PPP will be affected here */
-	{
-		int p = librouter_usb_get_realport_by_aliasport(major);
-		if (librouter_usb_device_is_modem(p) < 0) {
-			printf("\n%% Warning: The interface is not connected or is not a modem\n\n");
-			syslog(LOG_WARNING, "\n%% Warning: The interface is not connected or is not a modem\n\n");
+		/* FIXME This test is only for 3G interfaces, any other interface that
+		 * uses PPP will be affected here */
+		{
+			int p = librouter_usb_get_realport_by_aliasport(major);
+			if (librouter_usb_device_is_modem(p) < 0) {
+				printf("\n%% Warning: The interface is not connected or is not a modem\n\n");
+				syslog(LOG_WARNING, "\n%% Warning: The interface is not connected or is not a modem\n\n");
+			}
 		}
-
-	}
+		break;
 #endif
 	case wlan:
 #ifdef OPTION_BRIDGE
@@ -810,7 +810,8 @@ int librouter_dev_shutdown(char *dev, dev_family *fam)
 		librouter_br_update_ipaddr(dev);
 #endif
 #ifdef OPTION_HOSTAP
-
+		if (librouter_wifi_hostapd_enable_set(0) < 0)
+			syslog(LOG_WARNING, "\n%% Warning: Problems occurred shutting down WLAN - [HOSTAPD].\n\n");
 #endif
 		break;
 	default:
@@ -877,6 +878,16 @@ int librouter_dev_noshutdown(char *dev, dev_family *fam)
 	}
 	break;
 #endif
+	case wlan:
+#ifdef OPTION_HOSTAP
+		if (librouter_wifi_hostapd_enable_set(1) < 0)
+			syslog(LOG_WARNING, "\n%% Warning: Problems occurred turning on WLAN - [HOSTAPD].\n\n");
+#endif
+#ifdef OPTION_BRIDGE
+		/* Existing bridges must have IP addresses removed */
+		librouter_br_update_ipaddr(dev);
+#endif
+		break;
 	default:
 		break;
 	}

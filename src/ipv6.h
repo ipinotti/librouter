@@ -33,7 +33,11 @@ typedef struct in6_addr IPV6;
 #define ipv6_dbg(x,...)
 #endif
 
+#ifdef CONFIG_DIGISTAR_MRG
+#define IP_BIN "/bin/ip"
+#else
 #define IP_BIN "/sbin/ip"
+#endif
 
 /* Addresses and Masks */
 struct ipv6_t {
