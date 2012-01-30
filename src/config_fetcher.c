@@ -1632,14 +1632,14 @@ void librouter_config_dump_interface(FILE *out, struct interface_conf *conf, str
 		_dump_loopback_config(out, conf, conf_v6);
 		break;
 #ifdef OPTION_TUNNEL
-		case ARPHRD_SIT:
-		case ARPHRD_TUNNEL:
-		case ARPHRD_IPGRE:
+	case ARPHRD_SIT:
+	case ARPHRD_TUNNEL:
+	case ARPHRD_IPGRE:
 		_dump_tunnel_config (out, conf, conf_v6);
 		break;
 #endif
 	default:
-		printf("%% unknown link type: %d\n", conf->linktype);
+		printf("%% unknown link type for %s: %d\n", cish_dev, conf->linktype);
 		break;
 	}
 
