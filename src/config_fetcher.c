@@ -1170,6 +1170,7 @@ static void _dump_interface_bridge(FILE *out, char *intf)
 			fprintf(out, " bridge-group %d\n", n);
 	}
 }
+
 static void _dump_ethernet_config(FILE *out, struct interface_conf *conf, struct interfacev6_conf *conf_v6)
 {
 	/* Interface name (linux name) */
@@ -1213,13 +1214,13 @@ static void _dump_ethernet_config(FILE *out, struct interface_conf *conf, struct
 	librouter_config_rip_dump_interface(out, osdev);
 	librouter_config_ospf_dump_interface(out, osdev);
 
-	/* Print main IP address */
+	/* Print main IPv4 address */
 	if (strlen(daemon_dhcpc) && librouter_exec_check_daemon(daemon_dhcpc))
 		fprintf(out, " ip address dhcp\n");
 	else
 		_dump_intf_ipaddr_config(out, conf);
 
-	/* Print secondary IP addresses */
+	/* Print secondary IPv4 addresses */
 	_dump_intf_secondary_ipaddr_config(out, conf);
 
 	/* Print main IPv6 address */
@@ -1392,7 +1393,7 @@ static void _dump_loopback_config(FILE *out, struct interface_conf *conf, struct
 	fprintf(out, " %sshutdown\n", conf->up ? "no " : "");
 }
 
-#ifdef OPTION_TUNNEL
+#if defined (OPTION_TUNNEL)
 static void _dump_tunnel_config(FILE *out, struct interface_conf *conf, struct interfacev6_conf *conf_v6)
 {
 	char *osdev = conf->name;
@@ -1449,7 +1450,7 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 	librouter_config_rip_dump_interface(out, osdev);
 	librouter_config_ospf_dump_interface(out, osdev);
 
-#if defined(OPTION_MODEM3G)
+#if defined (OPTION_MODEM3G)
 #if defined (CONFIG_DIGISTAR_3G)
 	if (serial_no != BTIN_M3G_ALIAS) {
 		if (strcmp(cfg.sim_main.apn, "") != 0)
@@ -1528,7 +1529,7 @@ static void _dump_ppp_config(FILE *out, struct interface_conf *conf)
 }
 #endif /*OPTION_PPP */
 
-#ifdef OPTION_PPTP
+#if defined (OPTION_PPTP)
 static void _dump_pptp_config(FILE * out, struct interface_conf *conf)
 {
 	char *osdev = conf->name;
@@ -1547,7 +1548,7 @@ static void _dump_pptp_config(FILE * out, struct interface_conf *conf)
 }
 #endif
 
-#ifdef OPTION_PPPOE
+#if defined (OPTION_PPPOE)
 static void _dump_pppoe_config(FILE * out, struct interface_conf *conf)
 {
 	char *osdev = conf->name;
@@ -1563,6 +1564,87 @@ static void _dump_pppoe_config(FILE * out, struct interface_conf *conf)
 	librouter_config_ospf_dump_interface(out, osdev);
 
 	librouter_pppoe_dump(out);
+}
+#endif
+
+#if defined (OPTION_WIFI)
+static void _dump_wlan_config(FILE * out, struct interface_conf *conf, struct interfacev6_conf *conf_v6)
+{
+	/* Interface name (linux name) */
+	char *osdev = conf->name;
+	/* Ethernet index */
+	int ether_no;
+	/* Sub-interface index */
+	int minor;
+	int i;
+	char *p;
+
+	ether_no = atoi(osdev + strlen(ETHERNETDEV));
+
+	/* skip '.' */
+	if ((p = strchr(osdev, '.')) != NULL)
+		minor = atoi(p + 1);
+
+	_dump_intf_iptables_config(out, conf);
+	_dump_policy_interface(out, osdev);
+
+	/* Dump iptables configuration */
+	_dump_intf_iptables_config(out, conf);
+
+	/* Dump QoS */
+	_dump_policy_interface(out, osdev);
+
+#ifdef OPTION_BRIDGE
+	/* Dump Bridge */
+	_dump_interface_bridge(out, osdev);
+#endif
+
+#ifdef NOT_YET_IMPLEMENTED
+	/* Dump Quagga */
+	librouter_config_rip_dump_interface(out, osdev);
+	librouter_config_ospf_dump_interface(out, osdev);
+#endif
+
+	/* Print main IPv4 address */
+	_dump_intf_ipaddr_config(out, conf);
+
+	/* Print secondary IPv4 addresses */
+	_dump_intf_secondary_ipaddr_config(out, conf);
+
+	/* Print main IPv6 address */
+	_dump_intf_ipaddr_v6_config(out, conf_v6);
+
+	/* Print MTU*/
+	if (conf->mtu)
+		fprintf(out, " mtu %d\n", conf->mtu);
+
+#ifdef NOT_YET_IMPLEMENTED
+	_dump_vlans(out, conf);
+
+	/* Show line status if main interface. Avoid VLANs ... */
+	if (!conf->is_subiface && librouter_phy_probe(conf->name)) {
+		struct lan_status st;
+		int phy_status;
+
+		phy_status = librouter_lan_get_status(conf->name, &st);
+
+		if (phy_status < 0)
+			return;
+
+		if (st.autoneg)
+			fprintf(out, " speed auto\n");
+		else
+			fprintf(out, " speed %d %s\n", st.speed, st.duplex ? "full" : "half");
+	}
+#endif
+
+	/* Print AP MANAGER settings from wifi */
+	librouter_wifi_dump(out);
+
+	/* Finally, return if interface is on or off */
+	fprintf(out, " %sshutdown\n", (conf->up && librouter_wifi_interface_status()) ? "no " : "");
+
+	return;
 }
 #endif
 
@@ -1626,7 +1708,12 @@ void librouter_config_dump_interface(FILE *out, struct interface_conf *conf, str
 			_dump_efm_config(out, conf, conf_v6);
 		else
 #endif
-		_dump_ethernet_config(out, conf, conf_v6);
+#ifdef OPTION_WIFI
+		if (strstr(cish_dev, "wlan"))
+			_dump_wlan_config(out, conf, conf_v6);
+		else
+#endif
+			_dump_ethernet_config(out, conf, conf_v6);
 		break;
 	case ARPHRD_LOOPBACK:
 		_dump_loopback_config(out, conf, conf_v6);
