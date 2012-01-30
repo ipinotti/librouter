@@ -34,6 +34,15 @@
 #define	TTS_AUX0	"/dev/tts/aux0"
 #define	TTS_AUX1	"/dev/tts/aux1"
 
+/************/
+/* Binaries */
+/************/
+#define BIN_IP		"/sbin/ip"
+#define BIN_TC		"/sbin/tc"
+
+/***********************/
+/* Configuration files */
+/***********************/
 #define TMP_CFG_FILE			"/var/run/tmp-cfg"
 #define STARTUP_CFG_FILE		"/var/run/startup-cfg"
 #define DEFAULT_CFG_FILE		"/etc/default-config"
