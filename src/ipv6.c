@@ -404,13 +404,13 @@ int librouter_ipv6_addr_add (char *ifname, char *ipv6_addr, char *netmask_v6)
 	ipv6_dbg("librouter_ipv6_addr_add\n\n");
 	if (netmask_v6 == NULL){
 		ipv6_dbg("Applying ipv6 cmd: /bin/ip -6 addr add %s dev %s\n", ipv6_addr, ifname);
-		ret = librouter_exec_prog(1, IP_BIN, "-6", "addr", "add", ipv6_addr, "dev", ifname, NULL);
+		ret = librouter_exec_prog(1, BIN_IP, "-6", "addr", "add", ipv6_addr, "dev", ifname, NULL);
 	}
 	else{
 		ipv6_addr_mask = malloc(256);
 		snprintf(ipv6_addr_mask, 256, "%s/%s",ipv6_addr,netmask_v6);
 		ipv6_dbg("Applying ipv6 cmd: /bin/ip -6 addr add %s/%s dev %s\n", ipv6_addr, netmask_v6, ifname);
-		ret = librouter_exec_prog(1, IP_BIN, "-6", "addr", "add", ipv6_addr_mask, "dev", ifname, NULL);
+		ret = librouter_exec_prog(1, BIN_IP, "-6", "addr", "add", ipv6_addr_mask, "dev", ifname, NULL);
 		free(ipv6_addr_mask);
 	}
 
@@ -424,13 +424,13 @@ int librouter_ipv6_addr_del (char *ifname, char *ipv6_addr, char *netmask_v6)
 
 	if (netmask_v6 == NULL){
 		ipv6_dbg("Applying ipv6 cmd: ip -6 addr del %s dev %s\n", ipv6_addr, ifname);
-		ret = librouter_exec_prog(1, IP_BIN, "-6", "addr", "del", ipv6_addr, "dev", ifname, NULL);
+		ret = librouter_exec_prog(1, BIN_IP, "-6", "addr", "del", ipv6_addr, "dev", ifname, NULL);
 	}
 	else{
 		ipv6_addr_mask = malloc(256);
 		snprintf(ipv6_addr_mask, 256, "%s/%s",ipv6_addr,netmask_v6);
 		ipv6_dbg("Applying ipv6 cmd: ip -6 addr del %s/%s dev %s\n", ipv6_addr, netmask_v6, ifname);
-		ret = librouter_exec_prog(1, IP_BIN, "-6", "addr", "del", ipv6_addr_mask, "dev", ifname, NULL);
+		ret = librouter_exec_prog(1, BIN_IP, "-6", "addr", "del", ipv6_addr_mask, "dev", ifname, NULL);
 		free(ipv6_addr_mask);
 	}
 
@@ -440,7 +440,7 @@ int librouter_ipv6_addr_del (char *ifname, char *ipv6_addr, char *netmask_v6)
 int librouter_ipv6_addr_flush (char *ifname)
 {
 	ipv6_dbg("Applying ipv6 cmd: ip -6 addr flush dev %s\n", ifname);
-	return  librouter_exec_prog(1, IP_BIN, "-6", "addr", "flush", "dev", ifname, NULL);
+	return  librouter_exec_prog(1, BIN_IP, "-6", "addr", "flush", "dev", ifname, NULL);
 }
 
 int librouter_ipv6_get_mac (char *ifname, char *mac, int dot_mode)

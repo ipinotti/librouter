@@ -31,8 +31,6 @@
 #define PBR_ROUTES_ENTRY_FILE_CONTROL 			"/var/run/pbr_rules_routes/pbr_routes_entries"
 #define PBR_RULES_ENTRY_FILE_CONTROL 			"/var/run/pbr_rules_routes/pbr_rules_entries"
 
-#define IP_BIN "/sbin/ip"
-
 typedef struct {
 	char network_opt[PBR_STR_SIZE];
 	char network_opt_ipmask[PBR_STR_SIZE];
