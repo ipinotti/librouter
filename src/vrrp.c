@@ -390,8 +390,12 @@ void librouter_vrrp_option_track_interface(char *dev, int group, char *track_ifa
 		return;
 
 	find_group = vrrp_find_group(groups, dev, group);
-	if (find_group)
-		strncpy(track_iface, find_group->track_interface, sizeof(find_group->track_interface));
+	if (find_group) {
+		if (track_iface)
+			strncpy(find_group->track_interface, track_iface, sizeof(find_group->track_interface));
+		else
+			memset(find_group->track_interface, 0, sizeof(find_group->track_interface));
+	}
 
 	vrrp_write_bin(groups);
 
@@ -423,11 +427,14 @@ void librouter_vrrp_dump_interface(FILE *out, char *dev)
 				                g->group,
 				                g->authentication_type == VRRP_AUTHENTICATION_AH ? "ah" : "text",
 				                g->authentication_password);
+
 			if (g->description[0])
 				fprintf(out, " vrrp %d description %s\n", g->group, g->description);
+
 			for (i = 0; g->ip[i].s_addr != 0 && i < MAX_VRRP_IP; i++)
 				fprintf(out, " vrrp %d ip %s%s\n", g->group, inet_ntoa(g->ip[i]),
 				                i ? " secondary" : "");
+
 			if (g->preempt) {
 				fprintf(out, " vrrp %d preempt", g->group);
 				if (g->preempt_delay)
@@ -435,10 +442,17 @@ void librouter_vrrp_dump_interface(FILE *out, char *dev)
 				else
 					fprintf(out, "\n");
 			}
+
 			if (g->priority)
 				fprintf(out, " vrrp %d priority %d\n", g->group, g->priority);
+
 			if (g->advertise_delay)
 				fprintf(out, " vrrp %d timers advertise %d\n", g->group, g->advertise_delay);
+
+			if (g->track_interface[0]) {
+				fprintf(out, " vrrp %d track-interface %s\n", g->group,
+						librouter_device_linux_to_cli(g->track_interface, 0));
+			}
 		}
 		g++;
 	}
