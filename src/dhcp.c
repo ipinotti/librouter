@@ -335,6 +335,47 @@ int librouter_dhcp_server_get_maxleasetime(int *time)
 	return 0;
 }
 
+int librouter_dhcp_server_set_iface(char *iface)
+{
+	char buf[64];
+	char filename[32];
+
+	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
+
+	if (iface != NULL) {
+		snprintf(buf, sizeof(buf), "%s", iface);
+		if (librouter_str_replace_string_in_file(filename, "interface", buf)
+		                == 0)
+			return 0; /* Done */
+
+		snprintf(buf, sizeof(buf), "interface %s\n", iface);
+		librouter_str_add_line_to_file(filename, buf);
+	} else {
+		librouter_str_del_line_in_file(filename, "interface");
+	}
+
+	return 0;
+}
+
+int librouter_dhcp_server_get_iface(char **iface)
+{
+	char buf[64];
+	char filename[32];
+
+	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
+
+	memset(buf, 0, sizeof(buf));
+
+	librouter_str_find_string_in_file(filename, "interface", buf, sizeof(buf));
+
+	if (buf[0])
+		*iface = strdup(buf);
+	else
+		*iface = NULL;
+
+	return 0;
+}
+
 int librouter_dhcp_server_set_domain(char *domain)
 {
 	char buf[64];

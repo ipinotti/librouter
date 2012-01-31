@@ -71,11 +71,13 @@ enum {
 #define FILE_DHCPDCONF_LOCAL "/etc/udhcpd.lo0.conf"
 #define FILE_DHCPDLEASES_LOCAL "/etc/udhcpd.lo0.leases"
 #define FILE_DHCPDPID_LOCAL "/var/run/udhcpd.lo0.pid"
-#define DHCPD_DAEMON "/sbin/udhcpd -f -S /etc/udhcpd.eth%d.conf"
-#define FILE_DHCPDCONF "/etc/udhcpd.eth%d.conf"
-#define FILE_DHCPDLEASES "/etc/udhcpd.eth%d.leases"
-#define FILE_DHCPD_PID_ETH "/var/run/udhcpd.eth%d.pid"
-#define FILE_DHCPD_PID_STR "/var/run/udhcpc.%s.pid"
+
+#define DHCPD_DAEMON "/sbin/udhcpd -f -S /etc/udhcpd.conf"
+#define FILE_DHCPDCONF "/etc/udhcpd.conf"
+#define FILE_DHCPDLEASES "/etc/udhcpd.leases"
+#define FILE_DHCPD_PID_ETH "/var/run/udhcpd.pid"
+#define FILE_DHCPD_PID_STR "/var/run/udhcpc.pid"
+
 #else
 #define DHCPD_DAEMON "dhcpd"
 #define FILE_DHCPDCONF "/etc/dhcpd.conf"
@@ -103,7 +105,10 @@ int librouter_dhcp_get_server(char *buf);
 int librouter_dhcp_server_set_dnsserver(char *dns);
 int librouter_dhcp_server_set_leasetime(int time);
 int librouter_dhcp_server_set_maxleasetime(int time);
+int librouter_dhcp_server_set_iface(char *iface);
+int librouter_dhcp_server_get_iface(char **iface);
 int librouter_dhcp_server_set_domain(char *domain);
+int librouter_dhcp_server_get_domain(char **domain);
 int librouter_dhcp_server_set_nbns(char *ns);
 int librouter_dhcp_server_set_nbdd(char *dd);
 int librouter_dhcp_server_set_nbnt(int nt);
