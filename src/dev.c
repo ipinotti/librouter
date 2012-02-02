@@ -743,16 +743,34 @@ static void _dev_restore_subiface_flags(char *dev)
 }
 
 /**
- * librouter_dev_shutdown	Disable an interface
+ * _dhcp_server_reload	Reload DHCP server if interface matches
  *
- * @param dev
+ * @param dev	Device to be tested
+ */
+static void _dhcp_server_reload(char *dev)
+{
+	char *dhcp_dev = NULL;
+
+	/* Reload DHCP server if active */
+	librouter_dhcp_server_get_iface(&dhcp_dev);
+	if (dhcp_dev) {
+		if (!strcmp(dhcp_dev, dev))
+			librouter_dhcp_reload_udhcpd();
+		free(dhcp_dev);
+	}
+}
+
+/**
+ * librouter_dev_shutdown	Disable a network interface
+ *
+ * @param dev	Device name (on system)
+ * @param fam
  * @return 0 if success, -1 if error
  */
 int librouter_dev_shutdown(char *dev, dev_family *fam)
 {
 	int major = librouter_device_get_major(dev, str_linux);
 	int minor = librouter_device_get_minor(dev, str_linux);
-	//dev_family *fam = librouter_device_get_family_by_name(dev, str_linux);
 
 	dev_dbg("Interface %s, major %d minor %d\n", dev, major, minor);
 
@@ -786,47 +804,44 @@ int librouter_dev_shutdown(char *dev, dev_family *fam)
 		break;
 #endif
 	case eth:
-#ifdef OPTION_BRIDGE
-		/* Existing bridges must have IP addresses removed */
-		librouter_br_update_ipaddr(dev);
-#endif
 		break;
+
 #ifdef OPTION_MODEM3G
 	case ppp:
-		/* FIXME This test is only for 3G interfaces, any other interface that
-		 * uses PPP will be affected here */
-		{
-			int p = librouter_usb_get_realport_by_aliasport(major);
-			if (librouter_usb_device_is_modem(p) < 0) {
-				printf("\n%% Warning: The interface is not connected or is not a modem\n\n");
-				syslog(LOG_WARNING, "\n%% Warning: The interface is not connected or is not a modem\n\n");
-			}
-		}
 		break;
 #endif
 	case wlan:
-#ifdef OPTION_BRIDGE
-		/* Existing bridges must have IP addresses removed */
-		librouter_br_update_ipaddr(dev);
-#endif
 #ifdef OPTION_HOSTAP
 		if (librouter_wifi_hostapd_enable_set(0) < 0)
 			syslog(LOG_WARNING, "\n%% Warning: Problems occurred shutting down WLAN - [HOSTAPD].\n\n");
 #endif
+		sleep(3); /* Time for wlan interface to settle */
+		librouter_dev_set_link_down(dev); /* FIXME hostapd brought it up again ???*/
 		break;
 	default:
 		break;
 	}
 
-	return 0;
+#ifdef OPTION_BRIDGE
+		/* Existing bridges must have IP addresses removed */
+		librouter_br_update_ipaddr(dev);
+#endif
 
+	return 0;
 }
 
+/**
+ * librouter_dev_noshutdown	Enable a network interface
+ *
+ * @param dev
+ * @param fam
+ * @return
+ */
 int librouter_dev_noshutdown(char *dev, dev_family *fam)
 {
 	int major = librouter_device_get_major(dev, str_linux);
 	int minor = librouter_device_get_minor(dev, str_linux);
-	//dev_family *fam = librouter_device_get_family_by_name(dev, str_linux);
+	char *dhcp_dev;
 
 	dev_dbg("Interface %s, major %d minor %d\n", dev, major, minor);
 
@@ -848,14 +863,6 @@ int librouter_dev_noshutdown(char *dev, dev_family *fam)
 
 	switch (fam->type) {
 	case eth:
-		librouter_udhcpd_reload(major); /* dhcp integration! force reload ethernet address */
-#ifdef OPTION_QOS
-		librouter_qos_tc_insert_all(dev);
-#endif
-#ifdef OPTION_BRIDGE
-		/* Existing bridges must have IP addresses restored */
-		librouter_br_update_ipaddr(dev);
-#endif
 		break;
 #ifdef OPTION_EFM
 	case efm:
@@ -883,14 +890,25 @@ int librouter_dev_noshutdown(char *dev, dev_family *fam)
 		if (librouter_wifi_hostapd_enable_set(1) < 0)
 			syslog(LOG_WARNING, "\n%% Warning: Problems occurred turning on WLAN - [HOSTAPD].\n\n");
 #endif
-#ifdef OPTION_BRIDGE
-		/* Existing bridges must have IP addresses removed */
-		librouter_br_update_ipaddr(dev);
-#endif
+		sleep(3); /* Wait for wireless interface to settle */
 		break;
 	default:
 		break;
 	}
+
+
+	/* Reload DHCP Server if active on interface */
+	_dhcp_server_reload(dev);
+
+#ifdef OPTION_QOS
+	/* Reactivate QOS rules */
+	librouter_qos_tc_insert_all(dev);
+#endif
+
+#ifdef OPTION_BRIDGE
+	/* Existing bridges must have IP addresses removed */
+	librouter_br_update_ipaddr(dev);
+#endif
 
 #ifdef OPTION_SMCROUTE
 	librouter_smc_route_hup();

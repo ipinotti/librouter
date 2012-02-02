@@ -38,77 +38,79 @@
 #include "typedefs.h"
 #include "dhcp.h"
 
-#ifdef UDHCPD
-pid_t librouter_udhcpd_pid_by_eth(int eth)
+/*****************************************************/
+/************** PROCESS MANIPULATION *****************/
+/*****************************************************/
+
+/**
+ * librouter_dhcp_get_udhcpd_pid
+ *
+ * Get DHCP daemon PID
+ *
+ * @return Process PID, -1 if not found
+ */
+static pid_t librouter_dhcp_get_udhcpd_pid(void)
 {
 	FILE *F;
 	pid_t pid;
 	char buf[32];
-	char filename[64];
 
-	sprintf(filename, FILE_DHCPD_PID_ETH, eth);
-	F = fopen(filename, "r");
+	F = fopen(FILE_DHCPD_PID_ETH, "r");
 	if (F) {
 		fgets(buf, 32, F);
 		pid = (pid_t) atoi(buf);
 		fclose(F);
 		return pid;
 	}
+
 	return (pid_t) -1;
 }
 
-int librouter_udhcpd_reload(int eth)
+/**
+ * librouter_dhcp_reload_udhcpd
+ *
+ * Send signal to DHCP daemon to force its reload
+ *
+ *
+ * @return 0 if success, -1 if error
+ */
+int librouter_dhcp_reload_udhcpd(void)
 {
 	pid_t pid;
 
-	if ((pid = librouter_udhcpd_pid_by_eth(eth)) != -1) {
+	if ((pid = librouter_dhcp_get_udhcpd_pid()) != -1) {
 		kill(pid, SIGHUP);
 		return 0;
 	}
 	return -1;
 }
 
-int librouter_udhcpd_kick_by_eth(int eth)
+/**
+ * librouter_dhcp_reload_leases_file
+ *
+ * Send signal to DHCP daemon forcing it to reload
+ * the leases file
+ *
+ * @return 0 if success, -1 if error
+ */
+int librouter_dhcp_reload_leases_file(void)
 {
 	pid_t pid;
 
-	if ((pid = librouter_udhcpd_pid_by_eth(eth)) != -1) {
-		kill(pid, SIGUSR1); /* atualiza leases file */
+	if ((pid = librouter_dhcp_get_udhcpd_pid()) != -1) {
+		kill(pid, SIGUSR1);
 		return 0;
 	}
 	return -1;
 }
 
-pid_t librouter_udhcpd_pid_by_name(char *ifname)
-{
-	FILE *F;
-	pid_t pid;
-	char buf[32];
-	char filename[64];
-
-	snprintf(filename, 64, FILE_DHCPD_PID_STR, ifname);
-	F = fopen(filename, "r");
-	if (F) {
-		fgets(buf, 32, F);
-		pid = (pid_t) atoi(buf);
-		fclose(F);
-		return pid;
-	}
-	return (pid_t) -1;
-}
-
-int librouter_udhcpd_kick_by_name(char *ifname)
-{
-	pid_t pid;
-
-	if ((pid = librouter_udhcpd_pid_by_name(ifname)) != -1) {
-		kill(pid, SIGUSR1); /* perform renew */
-		return 0;
-	}
-	return -1;
-}
-#endif
-
+/**
+ * librouter_dhcp_get_status
+ *
+ * Get status about which DHCP service is running
+ *
+ * @return Type of service : DHCP_NONE, DHCP_SERVER or DHCP_RELAY
+ */
 int librouter_dhcp_get_status(void)
 {
 	int ret = DHCP_NONE;
@@ -125,128 +127,127 @@ int librouter_dhcp_get_status(void)
 	return DHCP_NONE;
 }
 
-int librouter_dhcpd_set_status(int on_off, int eth)
+/**
+ * librouter_dhcp_server_set_status
+ *
+ * Enable/Disable DHCP server
+ *
+ * @param enable
+ * @return 0 if success, -1 if error
+ */
+int librouter_dhcp_server_set_status(int enable)
 {
 	int ret;
 	char daemon[64];
 
-	if (on_off) {
-		if ((ret = librouter_udhcpd_reload(eth)) != -1)
+	if (enable) {
+		if ((ret = librouter_dhcp_reload_udhcpd()) != -1)
 			return ret;
-		sprintf(daemon, DHCPD_DAEMON, eth);
-		return librouter_exec_init_program(1, daemon);
 	}
-	sprintf(daemon, DHCPD_DAEMON, eth);
-	ret = librouter_exec_init_program(0, daemon);
+
+	ret = librouter_exec_init_program(enable, DHCPD_DAEMON);
 
 	return ret;
 }
 
-int librouter_dhcp_set_none(void)
-{
-	int ret, pid;
-
-	ret = librouter_dhcp_get_status();
-	if (ret == DHCP_SERVER) {
-		if (librouter_dhcpd_set_status(0, 0) < 0)
-			return (-1);
-#if 0 /* ifndef UDHCPD */
-		pid=librouter_udhcpd_pid_by_eth(?);
-		if ((pid > 0) && (librouter_process_wait_for(pid, 6) == 0)) return (-1);
-#endif
-	}
-	if (ret == DHCP_RELAY) {
-		if (librouter_exec_init_program(0, DHCRELAY_DAEMON) < 0)
-			return (-1);
-		pid = librouter_process_get_pid(DHCRELAY_DAEMON);
-		if ((pid) && (librouter_process_wait_for(pid, 6) == 0))
-			return (-1);
-	}
-	return 0;
-}
-
+/**
+ * librouter_dhcp_set_no_server
+ *
+ * Disable DHCP server
+ *
+ * @return 0 if success, -1 if error
+ */
 int librouter_dhcp_set_no_server(void)
 {
-#if 0
-	int pid;
-#endif
-
-	if (librouter_dhcpd_set_status(0, INTF_DHCP_SERVER_DEFAULT) < 0)
-		return (-1);
-#if 0 /* ifndef UDHCPD */
-	pid=librouter_process_get_pid(DHCPD_DAEMON);
-	if ((pid)&&(librouter_process_wait_for(pid, 6) == 0)) return (-1);
-#endif
-	return 0;
+	return librouter_dhcp_server_set_status(0);
 }
 
+/**
+ * librouter_dhcp_set_no_relay
+ *
+ * Disable DHCP relay
+ *
+ * @return 0 if success, -1 if error
+ */
 int librouter_dhcp_set_no_relay(void)
 {
 	int pid;
 
 	if (librouter_exec_init_program(0, DHCRELAY_DAEMON) < 0)
-		return (-1);
+		return -1;
+
 	pid = librouter_process_get_pid(DHCRELAY_DAEMON);
 	if ((pid) && (librouter_process_wait_for(pid, 6) == 0))
-		return (-1);
-
-	return 0;
-}
-
-#define NEED_ETHERNET_SUBNET /* verifica se a rede/mascara eh a da ethernet */
-/* ip dhcp server NETWORK MASK POOL-START POOL-END [dns-server DNS1 dns-server DNS2 router ROUTER domain-name DOMAIN default-lease-time D H M S max-lease-time D H M S] */
-
-static int _check_subnet(int intf_idx, char *network, char *mask)
-{
-	IP eth_addr, eth_mask, eth_network;
-	IP dhcp_network, dhcp_mask;
-	char interface[32];
-
-	sprintf(interface, "eth%d",  intf_idx);
-
-	librouter_ip_interface_get_info(librouter_ip_ethernet_get_dev(interface),
-	                                &eth_addr, &eth_mask, 0, 0);
-	eth_network.s_addr = eth_addr.s_addr & eth_mask.s_addr;
-	inet_aton(network, &dhcp_network);
-	inet_aton(mask, &dhcp_mask);
-
-	if ((dhcp_network.s_addr != eth_network.s_addr) || (dhcp_mask.s_addr != eth_mask.s_addr)) {
-		librouter_pr_error(0, "network segment not in ethernet segment address");
 		return -1;
-	}
 
 	return 0;
 }
 
+/**
+ * librouter_dhcp_set_none
+ *
+ * Disable both DHCP Server and Relay
+ *
+ * @return 0 if success, -1 if error
+ */
+int librouter_dhcp_set_none(void)
+{
+	int ret, pid;
+
+	ret = librouter_dhcp_get_status();
+
+	if (ret == DHCP_SERVER)
+		return librouter_dhcp_set_no_server();
+
+	if (ret == DHCP_RELAY)
+		return librouter_dhcp_set_no_relay();
+
+	return 0;
+}
+
+/*****************************************************/
+/************ BEGIN DHCP CONFIGURATION ***************/
+/*****************************************************/
+
+/**
+ * librouter_dhcp_server_set_dnsserver
+ *
+ * Configures DNS Server in DHCP server config file
+ *
+ * @param dns
+ * @return 0 if success, -1 if failure
+ */
 int librouter_dhcp_server_set_dnsserver(char *dns)
 {
 	char buf[32];
-	char filename[32];
-
-	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	if (dns != NULL) {
 		snprintf(buf, sizeof(buf), "%s", dns);
-		if (librouter_str_replace_string_in_file(filename, "opt dns", buf) == 0)
+		if (librouter_str_replace_string_in_file(FILE_DHCPDCONF, "opt dns", buf) == 0)
 			return 0; /* Done */
 
 		snprintf(buf, sizeof(buf), "opt dns %s\n", dns);
-		librouter_str_add_line_to_file(filename, buf);
+		librouter_str_add_line_to_file(FILE_DHCPDCONF, buf);
 	} else
-		librouter_str_del_line_in_file(filename, "opt dns");
+		librouter_str_del_line_in_file(FILE_DHCPDCONF, "opt dns");
 	return 0;
 }
 
+/**
+ * librouter_dhcp_server_get_dnsserver
+ *
+ * Get DNS Server configured on DHCP Server config file
+ *
+ * @param dns
+ * @return
+ */
 int librouter_dhcp_server_get_dnsserver(char **dns)
 {
 	char buf[64];
-	char filename[32];
-
-	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	memset(buf, 0, sizeof(buf));
 
-	librouter_str_find_string_in_file(filename, "opt dns", buf, sizeof(buf));
+	librouter_str_find_string_in_file(FILE_DHCPDCONF, "opt dns", buf, sizeof(buf));
 
 	if (buf[0])
 		*dns = strdup(buf);
@@ -256,36 +257,45 @@ int librouter_dhcp_server_get_dnsserver(char **dns)
 	return 0;
 }
 
+/**
+ * librouter_dhcp_server_set_leasetime
+ *
+ * Configures the time of lease in DHCP server config file
+ *
+ * @param time
+ * @return 0 if success, -1 if failure
+ */
 int librouter_dhcp_server_set_leasetime(int time)
 {
 	char buf[32];
-	char filename[32];
-
-	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	memset(buf, 0, sizeof(buf));
+
 	if (time > 0) {
 		snprintf(buf, sizeof(buf), "%d", time);
-		if (librouter_str_replace_string_in_file(filename, "opt lease ", buf) == 0)
+		if (librouter_str_replace_string_in_file(FILE_DHCPDCONF, "opt lease ", buf) == 0)
 			return 0; /* Done */
 
 		snprintf(buf, sizeof(buf), "opt lease %d\n", time);
-		librouter_str_add_line_to_file(filename, buf);
+		librouter_str_add_line_to_file(FILE_DHCPDCONF, buf);
 	} else
-		librouter_str_del_line_in_file(filename, "opt lease");
+		librouter_str_del_line_in_file(FILE_DHCPDCONF, "opt lease");
 	return 0;
 }
 
+/**
+ * librouter_dhcp_server_get_leasetime
+ *
+ * @param time
+ * @return 0 if success, -1 if failure
+ */
 int librouter_dhcp_server_get_leasetime(int *time)
 {
 	char buf[64];
-	char filename[32];
-
-	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	memset(buf, 0, sizeof(buf));
 
-	librouter_str_find_string_in_file(filename, "opt lease", buf, sizeof(buf));
+	librouter_str_find_string_in_file(FILE_DHCPDCONF, "opt lease", buf, sizeof(buf));
 
 	if (buf[0])
 		*time = atoi(buf);
@@ -295,37 +305,42 @@ int librouter_dhcp_server_get_leasetime(int *time)
 	return 0;
 }
 
+/**
+ * librouter_dhcp_server_set_maxleasetime
+ *
+ * @param time
+ * @return
+ */
 int librouter_dhcp_server_set_maxleasetime(int time)
 {
 	char buf[32];
-	char filename[32];
-
-	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	if (time > 0) {
 		snprintf(buf, sizeof(buf), "%d", time);
-		if (librouter_str_replace_string_in_file(filename, "decline_time ", buf)
-		                == 0)
+		if (librouter_str_replace_string_in_file(FILE_DHCPDCONF, "decline_time ", buf) == 0)
 			return 0; /* Done */
 
 		snprintf(buf, sizeof(buf), "decline_time %d\n", time);
-		librouter_str_add_line_to_file(filename, buf);
+		librouter_str_add_line_to_file(FILE_DHCPDCONF, buf);
 	} else
-		librouter_str_del_line_in_file(filename, "decline_time");
+		librouter_str_del_line_in_file(FILE_DHCPDCONF, "decline_time");
 
 	return 0;
 }
 
+/**
+ * librouter_dhcp_server_get_maxleasetime
+ *
+ * @param time
+ * @return
+ */
 int librouter_dhcp_server_get_maxleasetime(int *time)
 {
 	char buf[64];
-	char filename[32];
-
-	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	memset(buf, 0, sizeof(buf));
 
-	librouter_str_find_string_in_file(filename, "decline_time", buf, sizeof(buf));
+	librouter_str_find_string_in_file(FILE_DHCPDCONF, "decline_time", buf, sizeof(buf));
 
 	if (buf[0])
 		*time = atoi(buf);
@@ -335,38 +350,47 @@ int librouter_dhcp_server_get_maxleasetime(int *time)
 	return 0;
 }
 
+/**
+ * librouter_dhcp_server_set_iface
+ *
+ * Set interface that will serve DHCP requests
+ *
+ * @param iface
+ * @return
+ */
 int librouter_dhcp_server_set_iface(char *iface)
 {
 	char buf[64];
-	char filename[32];
-
-	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	if (iface != NULL) {
 		snprintf(buf, sizeof(buf), "%s", iface);
-		if (librouter_str_replace_string_in_file(filename, "interface", buf)
-		                == 0)
+		if (librouter_str_replace_string_in_file(FILE_DHCPDCONF, "interface", buf) == 0)
 			return 0; /* Done */
 
 		snprintf(buf, sizeof(buf), "interface %s\n", iface);
-		librouter_str_add_line_to_file(filename, buf);
+		librouter_str_add_line_to_file(FILE_DHCPDCONF, buf);
 	} else {
-		librouter_str_del_line_in_file(filename, "interface");
+		librouter_str_del_line_in_file(FILE_DHCPDCONF, "interface");
 	}
 
 	return 0;
 }
 
+/**
+ * librouter_dhcp_server_get_iface
+ *
+ * Get interface configured to serve DHCP
+ *
+ * @param iface
+ * @return
+ */
 int librouter_dhcp_server_get_iface(char **iface)
 {
 	char buf[64];
-	char filename[32];
-
-	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	memset(buf, 0, sizeof(buf));
 
-	librouter_str_find_string_in_file(filename, "interface", buf, sizeof(buf));
+	librouter_str_find_string_in_file(FILE_DHCPDCONF, "interface", buf, sizeof(buf));
 
 	if (buf[0])
 		*iface = strdup(buf);
@@ -376,36 +400,43 @@ int librouter_dhcp_server_get_iface(char **iface)
 	return 0;
 }
 
+/**
+ * librouter_dhcp_server_set_domain
+ *
+ *
+ *
+ * @param domain
+ * @return
+ */
 int librouter_dhcp_server_set_domain(char *domain)
 {
 	char buf[64];
-	char filename[32];
-
-	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	if (domain != NULL) {
 		snprintf(buf, sizeof(buf), "%s", domain);
-		if (librouter_str_replace_string_in_file(filename, "opt domain", buf)
-		                == 0)
+		if (librouter_str_replace_string_in_file(FILE_DHCPDCONF, "opt domain", buf) == 0)
 			return 0; /* Done */
 
 		snprintf(buf, sizeof(buf), "opt domain %s\n", domain);
-		librouter_str_add_line_to_file(filename, buf);
+		librouter_str_add_line_to_file(FILE_DHCPDCONF, buf);
 	} else
-		librouter_str_del_line_in_file(filename, "opt domain");
+		librouter_str_del_line_in_file(FILE_DHCPDCONF, "opt domain");
 	return 0;
 }
 
+/**
+ * librouter_dhcp_server_get_domain
+ *
+ * @param domain
+ * @return
+ */
 int librouter_dhcp_server_get_domain(char **domain)
 {
 	char buf[64];
-	char filename[32];
-
-	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	memset(buf, 0, sizeof(buf));
 
-	librouter_str_find_string_in_file(filename, "opt domain", buf, sizeof(buf));
+	librouter_str_find_string_in_file(FILE_DHCPDCONF, "opt domain", buf, sizeof(buf));
 
 	if (buf[0])
 		*domain = strdup(buf);
@@ -462,20 +493,16 @@ int librouter_dhcp_server_set_nbnt(int nt)
 int librouter_dhcp_server_set_router(char *router)
 {
 	char buf[64];
-	char filename[32];
-
-	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	if (router != NULL) {
 		snprintf(buf, sizeof(buf), "%s", router);
-		if (librouter_str_replace_string_in_file(filename, "opt router", buf)
-		                == 0)
+		if (librouter_str_replace_string_in_file(FILE_DHCPDCONF, "opt router", buf) == 0)
 			return 0; /* Done */
 
 		snprintf(buf, sizeof(buf), "opt router %s\n", router);
-		librouter_str_add_line_to_file(filename, buf);
+		librouter_str_add_line_to_file(FILE_DHCPDCONF, buf);
 	} else
-		librouter_str_del_line_in_file(filename, "opt router");
+		librouter_str_del_line_in_file(FILE_DHCPDCONF, "opt router");
 
 	return 0;
 }
@@ -483,13 +510,10 @@ int librouter_dhcp_server_set_router(char *router)
 int librouter_dhcp_server_get_router(char **router)
 {
 	char buf[64];
-	char filename[32];
-
-	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	memset(buf, 0, sizeof(buf));
 
-	librouter_str_find_string_in_file(filename, "opt router", buf, sizeof(buf));
+	librouter_str_find_string_in_file(FILE_DHCPDCONF, "opt router", buf, sizeof(buf));
 
 	if (buf[0])
 		*router = strdup(buf);
@@ -511,20 +535,19 @@ int librouter_dhcp_server_get_network(char **network, char **mask)
 
 int librouter_dhcp_server_set_pool(char *start, char *end)
 {
-	char filename[32];
 	char buf[32];
 
-	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 	if (start != NULL) {
-		if (librouter_str_replace_string_in_file(filename, "start", start) < 0) {
+		if (librouter_str_replace_string_in_file(FILE_DHCPDCONF, "start", start) < 0) {
 			snprintf(buf, sizeof(buf), "start %s\n", start);
-			librouter_str_add_line_to_file(filename, buf);
+			librouter_str_add_line_to_file(FILE_DHCPDCONF, buf);
 		}
 	}
+
 	if (end != NULL) {
-		if (librouter_str_replace_string_in_file(filename, "end", end) < 0) {
+		if (librouter_str_replace_string_in_file(FILE_DHCPDCONF, "end", end) < 0) {
 			snprintf(buf, sizeof(buf), "end %s\n", end);
-			librouter_str_add_line_to_file(filename, buf);
+			librouter_str_add_line_to_file(FILE_DHCPDCONF, buf);
 		}
 	}
 
@@ -534,19 +557,16 @@ int librouter_dhcp_server_set_pool(char *start, char *end)
 int librouter_dhcp_server_get_pool(char **start, char **end)
 {
 	char buf[64];
-	char filename[32];
-
-	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
 
 	memset(buf, 0, sizeof(buf));
-	librouter_str_find_string_in_file(filename, "start", buf, sizeof(buf));
+	librouter_str_find_string_in_file(FILE_DHCPDCONF, "start", buf, sizeof(buf));
 	if (buf[0])
 		*start = strdup(buf);
 	else
 		*start = NULL;
 
 	memset(buf, 0, sizeof(buf));
-	librouter_str_find_string_in_file(filename, "end", buf, sizeof(buf));
+	librouter_str_find_string_in_file(FILE_DHCPDCONF, "end", buf, sizeof(buf));
 	if (buf[0])
 		*end = strdup(buf);
 	else
@@ -562,10 +582,10 @@ int librouter_dhcp_server_set(int enable)
 		FILE *file;
 		dev_family *fam = librouter_device_get_family_by_type(eth);
 #ifdef OPTION_BRIDGE
-		char iface[64];
+		char *dev = NULL;
 #endif
 
-		sprintf(filename, FILE_DHCPDLEASES, INTF_DHCP_SERVER_DEFAULT);
+		sprintf(filename, FILE_DHCPDLEASES);
 		file = fopen(filename, "r");
 
 		if (!file) {
@@ -579,18 +599,21 @@ int librouter_dhcp_server_set(int enable)
 			librouter_dhcp_set_no_relay();
 
 #ifdef OPTION_BRIDGE
-		sprintf(iface, "%s%d", fam->linux_string, INTF_DHCP_SERVER_DEFAULT);
-		if (librouter_br_is_interface_enslaved(iface)) {
-			sprintf(iface, "%s%d", fam->cish_string, INTF_DHCP_SERVER_DEFAULT);
-			printf("%% Bridge is active on interface %s\n", iface);
-			return -1;
+		librouter_dhcp_server_get_iface(&dev);
+		if (dev) {
+			if (librouter_br_is_interface_enslaved(dev)) {
+				printf("%% Bridge is active on interface %s\n", dev);
+				free(dev);
+				return -1;
+			}
+			free(dev);
 		}
 #endif
 
 		/* poe o dhcpd para rodar */
-		return librouter_dhcpd_set_status(1, INTF_DHCP_SERVER_DEFAULT);
+		return librouter_dhcp_server_set_status(1);
 	} else
-		return librouter_dhcpd_set_status(0, INTF_DHCP_SERVER_DEFAULT);
+		return librouter_dhcp_server_set_status(0);
 }
 
 /**
@@ -607,6 +630,7 @@ int librouter_dhcp_server_set_config(struct dhcp_server_conf_t *dhcp)
 	librouter_dhcp_server_set_leasetime(dhcp->default_lease_time);
 	librouter_dhcp_server_set_maxleasetime(dhcp->max_lease_time);
 	librouter_dhcp_server_set_router(dhcp->default_router);
+	librouter_dhcp_server_set_iface(dhcp->dev);
 	librouter_dhcp_server_set(dhcp->enable);
 
 	return 0;
@@ -626,6 +650,7 @@ int librouter_dhcp_server_get_config(struct dhcp_server_conf_t *dhcp)
 	librouter_dhcp_server_get_leasetime(&dhcp->default_lease_time);
 	librouter_dhcp_server_get_maxleasetime(&dhcp->max_lease_time);
 	librouter_dhcp_server_get_router(&dhcp->default_router);
+	librouter_dhcp_server_get_iface(&dhcp->dev);
 
 	if (librouter_dhcp_get_status() == DHCP_SERVER)
 		dhcp->enable = 1;
@@ -635,6 +660,14 @@ int librouter_dhcp_server_get_config(struct dhcp_server_conf_t *dhcp)
 	return 0;
 }
 
+/**
+ * librouter_dhcp_server_free_config
+ *
+ * Free allocated memory by librouter_dhcp_server_get_config()
+ *
+ * @param dhcp
+ * @return no value
+ */
 int librouter_dhcp_server_free_config(struct dhcp_server_conf_t *dhcp)
 {
 	if (dhcp->pool_start)
@@ -647,9 +680,19 @@ int librouter_dhcp_server_free_config(struct dhcp_server_conf_t *dhcp)
 		free(dhcp->domain);
 	if (dhcp->dnsserver)
 		free(dhcp->dnsserver);
+	if (dhcp->dev)
+		free(dhcp->dev);
 }
 
-int _getleases(struct dhcp_lease_t *leases, int intf_index)
+/**
+ * _getleases
+ *
+ * Parse leases file and fill in structure data
+ *
+ * @param leases
+ * @return 0 if success, -1 if error
+ */
+static int _getleases(struct dhcp_lease_t *leases)
 {
 	int fd;
 	int i;
@@ -661,7 +704,7 @@ int _getleases(struct dhcp_lease_t *leases, int intf_index)
 	char file[32];
 	unsigned expires;
 
-	sprintf(file, FILE_DHCPDLEASES, intf_index);
+	sprintf(file, FILE_DHCPDLEASES);
 	fd = open(file, O_RDONLY);
 
 	if (read(fd, &written_at, sizeof(written_at)) != sizeof(written_at))
@@ -673,9 +716,9 @@ int _getleases(struct dhcp_lease_t *leases, int intf_index)
 		written_at = curr; /* lease file from future! :) */
 
 	while (read(fd, &lease, sizeof(lease)) == sizeof(lease)) {
-		sprintf(line, "%02x:%02x:%02x:%02x:%02x:%02x",
-				lease.lease_mac[0], lease.lease_mac[1], lease.lease_mac[2],
-				lease.lease_mac[3], lease.lease_mac[4], lease.lease_mac[5]);
+		sprintf(line, "%02x:%02x:%02x:%02x:%02x:%02x", lease.lease_mac[0], lease.lease_mac[1],
+		                lease.lease_mac[2], lease.lease_mac[3], lease.lease_mac[4],
+		                lease.lease_mac[5]);
 		leases->mac = strdup(line);
 		dhcp_dbg("MAC : %s\n", leases->mac);
 
@@ -693,14 +736,17 @@ int _getleases(struct dhcp_lease_t *leases, int intf_index)
 			continue;
 		}
 		expires = expires_abs - curr;
-		d = expires / (24*60*60); expires %= (24*60*60);
-		h = expires / (60*60); expires %= (60*60);
-		m = expires / 60; expires %= 60;
+		d = expires / (24 * 60 * 60);
+		expires %= (24 * 60 * 60);
+		h = expires / (60 * 60);
+		expires %= (60 * 60);
+		m = expires / 60;
+		expires %= 60;
 
 		if (d) {
-			sprintf(line, "%u days %02u:%02u:%02u\n", d, h, m, (unsigned)expires);
+			sprintf(line, "%u days %02u:%02u:%02u\n", d, h, m, (unsigned) expires);
 		} else {
-			sprintf(line, "%02u:%02u:%02u\n", h, m, (unsigned)expires);
+			sprintf(line, "%02u:%02u:%02u\n", h, m, (unsigned) expires);
 		}
 		leases->lease_time = strdup(line);
 		leases++;
@@ -711,19 +757,13 @@ int _getleases(struct dhcp_lease_t *leases, int intf_index)
 
 int librouter_dhcp_server_get_leases(struct dhcp_lease_t *leases)
 {
-	int i;
-	char filename[64];
 	FILE *f;
 
-	for (i = 0; i < MAX_LAN_INTF; i++) {
-		if (librouter_udhcpd_kick_by_eth(i) == 0) { /* Upgrade leases file */
-			sprintf(filename, FILE_DHCPDLEASES, i);
-			f = fopen(filename, "r");
-			if (!f)
-				continue;
+	if (librouter_dhcp_reload_leases_file() == 0) {
+		f = fopen(FILE_DHCPDLEASES, "r");
+		if (f) {
 			fclose(f);
-
-			_getleases(leases, i);
+			_getleases(leases);
 		}
 	}
 
@@ -737,7 +777,7 @@ int librouter_dhcp_server_free_leases(struct dhcp_lease_t *leases)
 	if (leases == NULL)
 		return 0;
 
-	for (i=0; i < DHCP_MAX_NUM_LEASES; i++) {
+	for (i = 0; i < DHCP_MAX_NUM_LEASES; i++) {
 		if (leases->mac != NULL)
 			free(leases->mac);
 		if (leases->ipaddr != NULL)
@@ -745,82 +785,6 @@ int librouter_dhcp_server_free_leases(struct dhcp_lease_t *leases)
 		if (leases->lease_time != NULL)
 			free(leases->lease_time);
 		leases++;
-	}
-
-	return 0;
-}
-
-int librouter_dhcp_get_server(char *buf)
-{
-	int len;
-	FILE *file;
-	char filename[64];
-
-	if (!buf)
-		return -1;
-	buf[0] = 0;
-	sprintf(filename, FILE_DHCPDCONF, INTF_DHCP_SERVER_DEFAULT);
-	if ((file = fopen(filename, "r")) != NULL) {
-		if (librouter_udhcpd_pid_by_eth(INTF_DHCP_SERVER_DEFAULT) != -1) {
-			/* pula o '#' */
-			fseek(file, 1, SEEK_SET);
-			fgets(buf, 1023, file);
-		}
-		fclose(file);
-	}
-
-	len = strlen(buf);
-	if (len > 0)
-		buf[len - 1] = 0; /* overwrite '\n' */
-
-	return 0;
-}
-
-int librouter_dhcp_check_server(char *ifname)
-{
-	int eth;
-	FILE *file;
-	arglist *args;
-	IP eth_addr, eth_mask, eth_network;
-	IP dhcp_network, dhcp_mask;
-	char filename[64];
-	char buf[256];
-
-	eth = atoi(ifname + 8); /* ethernetX */
-	sprintf(filename, FILE_DHCPDCONF, eth);
-
-	if ((file = fopen(filename, "r")) != NULL) {
-
-		/* pula o '#' */
-		fseek(file, 1, SEEK_SET);
-
-		/* ip dhcp server 192.168.1.0 255.255.255.0 192.168.1.2 192.168.1.10 */
-		fgets(buf, 255, file);
-		fclose(file);
-
-		args = librouter_make_args(buf);
-		if (args->argc < 7) {
-			librouter_destroy_args(args);
-			return (-1);
-		}
-
-		inet_aton(args->argv[3], &dhcp_network);
-		inet_aton(args->argv[4], &dhcp_mask);
-		librouter_destroy_args(args);
-
-		librouter_ip_interface_get_info(librouter_ip_ethernet_get_dev(ifname), &eth_addr,
-		                &eth_mask, 0, 0);
-		eth_network.s_addr = eth_addr.s_addr & eth_mask.s_addr;
-
-		if ((dhcp_network.s_addr != eth_network.s_addr) || (dhcp_mask.s_addr
-		                != eth_mask.s_addr)) {
-
-			fprintf(stderr, "%% disabling dhcp server on %s\n", ifname);
-			unlink(filename);
-			sprintf(filename, DHCPD_DAEMON, eth);
-
-			return librouter_exec_init_program(0, filename);
-		}
 	}
 
 	return 0;
@@ -862,6 +826,12 @@ int librouter_dhcp_get_relay(char *buf)
 }
 
 #ifdef OPTION_IPSEC
+/**
+ *	The functions below are used by L2TP and use loopback0 interface
+ *	to run a DHCP server. L2TP code is old, and must be updated,
+ *	so this is actually a FIXME !!!! - Thomas Del Grande 01/02/2012
+ */
+
 pid_t librouter_udhcpd_pid_local(void)
 {
 	FILE *F;
@@ -936,9 +906,8 @@ int librouter_dhcp_l2tp_get_interface(void)
 int librouter_dhcp_set_server_local(int save_dns, char *cmdline)
 {
 	int i = 3;
-	char *mask = NULL, *pool_start = NULL, *pool_end = NULL, *dns1 = NULL, *dns2 = NULL,
-	                *router = NULL, *domain_name = NULL, *netbios_name_server = NULL,
-	                *netbios_dd_server = NULL;
+	char *mask = NULL, *pool_start = NULL, *pool_end = NULL, *dns1 = NULL, *dns2 = NULL, *router = NULL,
+	                *domain_name = NULL, *netbios_name_server = NULL, *netbios_dd_server = NULL;
 	char *p;
 	int netbios_node_type = 0;
 	unsigned long default_lease_time = 0L, max_lease_time = 0L;
@@ -1109,5 +1078,5 @@ int librouter_dhcp_get_server_local(char *buf)
 		buf[len - 1] = 0;
 	return 0;
 }
-#endif
+#endif /* OPTION_IPSEC */
 
