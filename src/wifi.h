@@ -65,7 +65,7 @@
 #define WIFI_WPA_PSK_KEY "wpa_psk="
 #define WIFI_WPA_PHR_KEY "wpa_passphrase="
 
-#define WIFI_WPA_MGMT_KEY "wpa_key_mgmt=WPA-PSK WPA-EAP\n"
+#define WIFI_WPA_MGMT_KEY "wpa_key_mgmt=WPA-PSK\n"
 #define WIFI_WPA_PW_KEY "wpa_pairwise=TKIP CCMP\n"
 #define WIFI_WPA_RSN_KEY "rsn_pairwise=CCMP\n"
 
@@ -87,12 +87,17 @@ typedef enum {
 } wifi_encryp_type;
 
 typedef enum {
-	open_a, shared
+	open_a = 1, shared = 2
 } wifi_wep_auth_mode;
+
+typedef enum {
+	key_ascii, key_hex
+} wifi_wep_key_type;
 
 typedef struct {
 	wifi_encryp_type security_mode;
 	wifi_wep_auth_mode wep_auth;
+	wifi_wep_key_type wep_key_type;
 	char wep_key[27];
 	char wpa_psk[65];
 	char wpa_phrase[64];
