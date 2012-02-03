@@ -899,6 +899,7 @@ int librouter_dhcp_l2tp_get_interface(void)
 	return DHCP_INTF_ETHERNET_0;
 }
 
+/* FIXME This function receives a cmdline from CISH!!! NOOOOOOOOOOOOO!!!!! */
 /*
  * l2tp pool <local|eth 0> POOL-START POOL-END [dns-server DNS1 dns-server DNS2 router ROUTER
  * domain-name DOMAIN default-lease-time D H M S max-lease-time D H M S mask MASK]
@@ -915,7 +916,7 @@ int librouter_dhcp_set_server_local(int save_dns, char *cmdline)
 	FILE *file;
 
 	args = librouter_make_args(cmdline);
-	if (strcmp(args->argv[2], "eth") == 0) {
+	if (strcmp(args->argv[2], "ethernet") == 0) {
 		int eth_number = atoi(args->argv[3]);
 		FILE *fd;
 
