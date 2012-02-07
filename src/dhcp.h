@@ -44,6 +44,7 @@ struct dhcp_server_conf_t {
 	char *default_router;
 	char *domain;
 	char *dnsserver;
+	char *dev;
 	int default_lease_time;
 	int max_lease_time;
 	int enable;
@@ -92,10 +93,9 @@ enum {
 /* Value related to interface for DHCP_SERVER_DEFAULT */
 #define INTF_DHCP_SERVER_DEFAULT OPTION_ETHERNET_LAN_INDEX
 
-int librouter_udhcpd_reload(int eth);
-int librouter_udhcpd_kick_by_eth(int eth);
-int librouter_udhcpd_kick_by_name(char *iface);
-int librouter_dhcpd_set_status(int on_off, int eth);
+int librouter_dhcp_reload_udhcpd(void);
+int librouter_dhcp_reload_leases_file(void);
+int librouter_dhcp_server_set_status(int enable);
 int librouter_dhcp_get_status(void);
 int librouter_dhcp_set_none(void);
 int librouter_dhcp_set_no_server(void);

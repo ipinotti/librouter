@@ -533,13 +533,6 @@ int librouter_ipv6_ethernet_set_addr (char *ifname, char *addr, char *mask, char
 		return -1;
 
 end:
-//	if (strcmp(dev, "eth0") == 0)
-//		librouter_udhcpd_reload(0); /* udhcpd integration! */
-//
-//#ifdef OPTION_BRIDGE
-//	librouter_br_update_ipaddr(ifname);
-//#endif
-
 	return 0;
 }
 

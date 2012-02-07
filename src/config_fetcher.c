@@ -885,11 +885,11 @@ static void _dump_dhcp_server(FILE *out)
 		fprintf(out, " max-lease-time %d %d %d %d\n", days, hours, minutes, seconds);
 	}
 
-	if (dhcp.dev)
-		fprintf(out, " interface %s\n", dhcp.dev);
-
 	if (dhcp.default_router)
 		fprintf(out, " router %s\n", dhcp.default_router);
+
+	if (dhcp.dev)
+		fprintf(out, " interface %s\n", librouter_device_from_linux_cmdline(dhcp.dev));
 
 	if (dhcp.enable)
 		fprintf(out, " enable\n");

@@ -757,9 +757,6 @@ void librouter_ip_ethernet_set_addr(char *ifname, char *addr, char *mask) /* mai
 	ip_dbg("Adding IP address %s to %s\n", addr, dev);
 	ip_addr_add (dev, addr, NULL, mask); /* new address */
 
-	if (strcmp(dev, "eth0") == 0)
-		librouter_udhcpd_reload(0); /* udhcpd integration! */
-
 #ifdef OPTION_BRIDGE
 	librouter_br_update_ipaddr(ifname);
 #endif
@@ -791,7 +788,6 @@ void librouter_ip_ethernet_set_no_addr_secondary(char *ifname, char *addr, char 
 	ip_addr_del_secondary (dev, addr, NULL, mask);
 }
 
-/* Get address info !!! set_dhcp_server */
 int librouter_ip_interface_get_info(char *ifname, IP *addr, IP *mask, IP *bc, IP *peer)
 {
 	int i, ret;
