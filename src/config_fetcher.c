@@ -885,7 +885,6 @@ static void _dump_dhcp_server(FILE *out)
 		fprintf(out, " max-lease-time %d %d %d %d\n", days, hours, minutes, seconds);
 	}
 
-
 	if (dhcp.default_router)
 		fprintf(out, " router %s\n", dhcp.default_router);
 

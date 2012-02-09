@@ -114,17 +114,13 @@ int librouter_dhcp_reload_leases_file(void)
 int librouter_dhcp_get_status(void)
 {
 	int ret = DHCP_NONE;
-	char dhcp_server[64];
 
-	sprintf(dhcp_server, DHCPD_DAEMON, INTF_DHCP_SERVER_DEFAULT);
+	if (librouter_exec_check_daemon(DHCPD_DAEMON))
+		ret = DHCP_SERVER;
+	else if (librouter_exec_check_daemon(DHCRELAY_DAEMON))
+		ret = DHCP_RELAY;
 
-	if (librouter_exec_check_daemon(dhcp_server))
-		return DHCP_SERVER;
-
-	if (librouter_exec_check_daemon(DHCRELAY_DAEMON))
-		return DHCP_RELAY;
-
-	return DHCP_NONE;
+	return ret;
 }
 
 /**
