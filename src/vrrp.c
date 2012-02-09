@@ -29,6 +29,28 @@
 #include "vrrp.h"
 
 #ifdef OPTION_VRRP
+/* FIXME This function seems pretty useful for being exported */
+static int is_ipv6_addr_empty(struct in6_addr *a)
+{
+	char *buf = (char *) a;
+	int size = sizeof(struct in6_addr);
+
+	return (buf[0] == 0) && (!memcmp(buf, buf + 1, size - 1));
+}
+
+static int _check_for_valid_config(struct vrrp_group *g)
+{
+	int ret = 0;
+
+	if (g->ifname[0] != 0 && g->ip[0].s_addr != 0)
+		ret = 1;
+#if 0 /* VRRP deamon is not yet very stable only with IPv6 Virtual Addresses */
+	else if (g->ifname[0] != 0 && !is_ipv6_addr_empty(&g->ip6[0]))
+		ret = 1;
+#endif
+
+	return ret;
+}
 
 void kick_vrrp(void)
 {
@@ -82,6 +104,8 @@ static void vrrp_write_bin(struct vrrp_group *groups)
 	}
 }
 
+
+
 static void vrrp_write_conf(struct vrrp_group *groups)
 {
 	int i;
@@ -92,7 +116,7 @@ static void vrrp_write_conf(struct vrrp_group *groups)
 		return;
 	}
 
-	while (groups->ifname[0] != 0 && groups->ip[0].s_addr != 0) {
+	while (_check_for_valid_config(groups)) {
 		fprintf(f, "vrrp_instance %s_%d {\n", groups->ifname, groups->group);
 		fprintf(f, "\tinterface %s\n", groups->ifname);
 		fprintf(f, "\tvirtual_router_id %d\n", groups->group);
@@ -122,10 +146,15 @@ static void vrrp_write_conf(struct vrrp_group *groups)
 			fprintf(f, "\t}\n");
 		}
 
-		if (groups->ip[0].s_addr != 0) {
+		if (groups->ip[0].s_addr != 0 || !is_ipv6_addr_empty(&groups->ip6[0])) {
 			fprintf(f, "\tvirtual_ipaddress {\n");
 			for (i = 0; groups->ip[i].s_addr != 0 && i < MAX_VRRP_IP; i++) {
 				fprintf(f, "\t\t%s\n", inet_ntoa(groups->ip[i]));
+			}
+			for (i = 0; is_ipv6_addr_empty(&groups->ip6[i]) == 0 && i < MAX_VRRP_IP; i++) {
+				char ip6[64];
+				inet_ntop(AF_INET6, &groups->ip6[i], ip6, sizeof(ip6));
+				fprintf(f, "\t\t%s\n", ip6);
 			}
 			fprintf(f, "\t}\n");
 		}
@@ -184,15 +213,18 @@ static struct vrrp_group *vrrp_add_group(struct vrrp_group *groups, struct vrrp_
 }
 #endif
 
-void vrrp_check_daemon(struct vrrp_group *groups)
+static void vrrp_check_daemon(struct vrrp_group *groups)
 {
 	int found = 0;
 
 	while (groups->ifname[0] != 0) {
-		if (groups->ip[0].s_addr != 0)
+		if (_check_for_valid_config(groups)) {
 			found = 1;
+			break;
+		}
 		groups++;
 	}
+
 	if (found == 0 && librouter_exec_check_daemon(VRRP_DAEMON)) {
 		librouter_kill_daemon(VRRP_DAEMON);
 		return;
@@ -260,6 +292,73 @@ void librouter_vrrp_option_description(char *dev, int group, char *description)
 	}
 	free(groups);
 }
+#define OPTION_VRRP_IPV6
+#ifdef OPTION_VRRP_IPV6
+static void _vrrp_secondary_ipv6_addr(struct vrrp_group *g, int add, char *ip_string)
+{
+	struct in6_addr ip;
+	int i, match = -1;
+
+	inet_pton(AF_INET6, ip_string, &ip);
+
+	/* Check if wanted IP already exists in configuration */
+	for (i = 0; i < MAX_VRRP_IP6; i++) {
+		if (memcmp(&g->ip6[i], &ip, sizeof(struct in6_addr)) == 0)
+			match = i;
+	}
+
+	/* Check for empty slots */
+	for (i = 0; i < MAX_VRRP_IP6; i++) {
+		if (is_ipv6_addr_empty(&g->ip6[i]))
+			break;
+	}
+
+	if (add) {
+		if (i == MAX_VRRP_IP6 || match != -1)
+			return;
+		g->ip6[i] = ip;
+	} else {
+		if (match == -1)
+			return;
+		if (match < MAX_VRRP_IP6 - 1)
+			memmove(&g->ip6[match], &g->ip6[match + 1],
+			                ((MAX_VRRP_IP6 - 1) - match) * sizeof(struct in6_addr));
+		memset(&g->ip6[MAX_VRRP_IP6 - 1], 0, sizeof(struct in6_addr)); /* clear top! */
+	}
+}
+
+int librouter_vrrp_option_ipv6(char *dev, int group, int add, char *ip_string, int secondary)
+{
+	struct vrrp_group *groups, *find_group;
+
+	groups = vrrp_read_bin();
+	if (groups == NULL)
+		return 0;
+
+	find_group = vrrp_find_group(groups, dev, group);
+	if (find_group == NULL) {
+		free(groups);
+		return 0;
+	}
+
+	if (secondary)
+		_vrrp_secondary_ipv6_addr(find_group, add, ip_string);
+	else {
+		if (ip_string != NULL)
+			inet_pton(AF_INET6, ip_string, &find_group->ip6[0]); /* primary */
+		else
+			memset(&find_group->ip6[0], 0, sizeof(struct in6_addr) * MAX_VRRP_IP6); /* clear all! */
+	}
+
+	vrrp_write_bin(groups);
+	vrrp_write_conf(groups);
+	vrrp_check_daemon(groups);
+
+	free(groups);
+
+	return 0;
+}
+#endif /* OPTION_VRRP_IPV6 */
 
 int librouter_vrrp_option_ip(char *dev, int group, int add, char *ip_string, int secondary)
 {
@@ -435,6 +534,12 @@ void librouter_vrrp_dump_interface(FILE *out, char *dev)
 				fprintf(out, " vrrp %d ip %s%s\n", g->group, inet_ntoa(g->ip[i]),
 				                i ? " secondary" : "");
 
+			for (i = 0; is_ipv6_addr_empty(&g->ip6[i]) == 0 && i < MAX_VRRP_IP; i++) {
+				char buf[64];
+				inet_ntop(AF_INET6, &g->ip6[i], buf, sizeof(buf));
+				fprintf(out, " vrrp %d ipv6 %s%s\n", g->group, buf, i ? " secondary" : "");
+			}
+
 			if (g->preempt) {
 				fprintf(out, " vrrp %d preempt", g->group);
 				if (g->preempt_delay)
@@ -451,7 +556,7 @@ void librouter_vrrp_dump_interface(FILE *out, char *dev)
 
 			if (g->track_interface[0]) {
 				fprintf(out, " vrrp %d track-interface %s\n", g->group,
-						librouter_device_linux_to_cli(g->track_interface, 0));
+				                librouter_device_linux_to_cli(g->track_interface, 0));
 			}
 		}
 		g++;
@@ -463,15 +568,29 @@ void librouter_vrrp_dump_interface(FILE *out, char *dev)
 static void _write_group_config(FILE *f, struct vrrp_group *g)
 {
 	int i;
+	char buf[64];
 
 	fprintf(f, "\t%s - Group %u\n", librouter_device_linux_to_cli(g->ifname, 1), g->group);
-	fprintf(f, "\t\tVirtual IP address is %s\n", inet_ntoa(g->ip[0]));
 
-	/* Se existir IP secundario*/
+	/* Virtual IPv4 Addresses */
+	if (g->ip[0].s_addr != 0)
+		fprintf(f, "\t\tVirtual IP address is %s\n", inet_ntoa(g->ip[0]));
+
 	for (i = 1; g->ip[i].s_addr != 0 && i < MAX_VRRP_IP; i++)
 		fprintf(f, "\t\t\tSecundary Virtual IP address is %s\n", inet_ntoa(g->ip[i]));
 
-	/*MAC virtual sempre eh 0000.5e00.01xx, no qual xx = ID do grupo*/
+	/* Virtual IPv6 Addresses */
+	if (!is_ipv6_addr_empty(&g->ip6[0])) {
+		inet_ntop(AF_INET6, &g->ip6[0], buf, sizeof(buf));
+		fprintf(f, "\t\tVirtual IPv6 address is %s\n", buf);
+	}
+
+	for (i = 1; (is_ipv6_addr_empty(&g->ip6[i]) == 0) && (i < MAX_VRRP_IP6); i++) {
+		inet_ntop(AF_INET6, &g->ip6[i], buf, sizeof(buf));
+		fprintf(f, "\t\t\tSecundary Virtual IP address is %s\n", buf);
+	}
+
+	/* Virtual MAC : 0000.5e00.01xx, where xx equals the VRID */
 	fprintf(f, "\t\tVirtual MAC address is 0000.5e00.01%02x\n", g->group);
 	fprintf(f, "\t\tAdvertisement interval is %u.000 sec\n", g->advertise_delay);
 

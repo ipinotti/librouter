@@ -9,6 +9,7 @@
 #define MAX_VRRP_AUTHENTICATION 32
 #define MAX_VRRP_DESCRIPTION 81
 #define MAX_VRRP_IP 8
+#define MAX_VRRP_IP6 8
 
 struct vrrp_group
 {
@@ -18,6 +19,7 @@ struct vrrp_group
 	unsigned char authentication_password[MAX_VRRP_AUTHENTICATION];
 	unsigned char description[MAX_VRRP_DESCRIPTION];
 	struct in_addr ip[MAX_VRRP_IP];
+	struct in6_addr ip6[MAX_VRRP_IP6];
 	unsigned char preempt;
 	unsigned int  preempt_delay;
 	unsigned char priority;
@@ -40,6 +42,7 @@ enum {
 void librouter_vrrp_no_group(char *dev, int group);
 void librouter_vrrp_option_authenticate(char *dev, int group, int type, char *password);
 void librouter_vrrp_option_description(char *dev, int group, char *description);
+int librouter_vrrp_option_ipv6(char *dev, int group, int add, char *ip_string, int secondary);
 int librouter_vrrp_option_ip(char *dev, int group, int add, char *ip_string, int secondary);
 void librouter_vrrp_option_preempt(char *dev, int group, int preempt, int delay);
 void librouter_vrrp_option_priority(char *dev, int group, int priority);
