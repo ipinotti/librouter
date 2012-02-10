@@ -592,7 +592,8 @@ static void _write_group_config(FILE *f, struct vrrp_group *g)
 
 	/* Virtual MAC : 0000.5e00.01xx, where xx equals the VRID */
 	fprintf(f, "\t\tVirtual MAC address is 0000.5e00.01%02x\n", g->group);
-	fprintf(f, "\t\tAdvertisement interval is %u.000 sec\n", g->advertise_delay);
+	fprintf(f, "\t\tAdvertisement interval is %u.000 sec\n",
+			(g->advertise_delay) ? g->advertise_delay : 1);
 
 	fprintf(f, "\t\tPreemption %s", g->preempt ? "enabled" : "disabled");
 
