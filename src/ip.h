@@ -128,7 +128,6 @@ int librouter_ip_netmask2cidr_pbr(const char *netmask);
 extern const char *masks[33];
 extern const char *rmasks[33];
 
-char *librouter_ip_ethernet_get_dev(char *dev);
 void librouter_ip_ethernet_set_addr(char *ifname, char *addr, char *mask);
 void librouter_ip_ethernet_set_addr_secondary(char *ifname, char *addr, char *mask);
 void librouter_ip_ethernet_set_no_addr(char *ifname);

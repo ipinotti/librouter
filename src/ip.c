@@ -144,9 +144,7 @@ static unsigned int _link_name_to_flags(char *ifname)
 #endif
 
 /* add/del ip address with netlink */
-int librouter_ip_modify_addr(int add_del,
-                  struct ipaddr_table *data,
-                  struct intf_info *info)
+int librouter_ip_modify_addr(int add_del, struct ipaddr_table *data, struct intf_info *info)
 {
 	struct rtnl_handle rth;
 	struct {
@@ -199,8 +197,7 @@ int librouter_ip_modify_addr(int add_del,
 		*p = 0;
 	}
 
-	if ((req.ifa.ifa_index = _link_name_to_index(dev, &(info->link[0])))
-	                == 0) {
+	if ((req.ifa.ifa_index = _link_name_to_index(dev, &(info->link[0]))) == 0) {
 		fprintf(stderr, "Cannot find device \"%s\"\n", dev);
 		goto error;
 	}
@@ -233,8 +230,7 @@ static int _get_addrinfo(struct nlmsghdr *n, struct ipaddr_table *ipaddr)
 	bzero(ipaddr, sizeof(struct ipaddr_table));
 
 	memset(rta_tb, 0, sizeof(rta_tb));
-	parse_rtattr(rta_tb, IFA_MAX, IFA_RTA (ifa), n->nlmsg_len
-	                - NLMSG_LENGTH(sizeof(*ifa)));
+	parse_rtattr(rta_tb, IFA_MAX, IFA_RTA (ifa), n->nlmsg_len - NLMSG_LENGTH(sizeof(*ifa)));
 
 	if (!rta_tb[IFA_LOCAL])
 		rta_tb[IFA_LOCAL] = rta_tb[IFA_ADDRESS];
@@ -251,8 +247,7 @@ static int _get_addrinfo(struct nlmsghdr *n, struct ipaddr_table *ipaddr)
 		memcpy(&ipaddr->local, RTA_DATA (rta_tb[IFA_LOCAL]), 4);
 
 		if (rta_tb[IFA_ADDRESS]) {
-			memcpy(&ipaddr->remote, RTA_DATA (rta_tb[IFA_ADDRESS]),
-			                4);
+			memcpy(&ipaddr->remote, RTA_DATA (rta_tb[IFA_ADDRESS]), 4);
 		}
 	}
 
@@ -316,8 +311,7 @@ static int _get_linkinfo(struct nlmsghdr *n, struct link_table *link)
 		link->mtu = *(int*) RTA_DATA (tb[IFLA_MTU]);
 
 	if (tb[IFLA_STATS]) {
-		memcpy(&link->stats, RTA_DATA (tb[IFLA_STATS]),
-		                sizeof(struct net_device_stats));
+		memcpy(&link->stats, RTA_DATA (tb[IFLA_STATS]), sizeof(struct net_device_stats));
 	}
 
 	if (tb[IFLA_ADDRESS]) {
@@ -342,7 +336,7 @@ static int _has_ppp_intf(int index, struct intf_info *info)
 
 	sprintf(intf, "ppp%d", index);
 
-	for (i=0; info->link[i].ifname[0] != 0; i++) {
+	for (i = 0; info->link[i].ifname[0] != 0; i++) {
 		if (!strcmp(info->link[i].ifname, intf))
 			return 1; /* Found */
 	}
@@ -350,16 +344,16 @@ static int _has_ppp_intf(int index, struct intf_info *info)
 	return 0; /* Not found */
 }
 
-static int _clear_ppp_link_value_ (int index, struct intf_info *info)
+static int _clear_ppp_link_value_(int index, struct intf_info *info)
 {
 	char intf[8];
 	int i;
 
 	sprintf(intf, "ppp%d", index);
 
-	for (i=0; info->link[i].ifname[0] != 0; i++) {
-		if (!strcmp(info->link[i].ifname, intf)){
-			if (librouter_dev_get_link_running(intf) != IFF_RUNNING){
+	for (i = 0; info->link[i].ifname[0] != 0; i++) {
+		if (!strcmp(info->link[i].ifname, intf)) {
+			if (librouter_dev_get_link_running(intf) != IFF_RUNNING) {
 				info->link[i].flags = 0;
 				return 1;
 			}
@@ -369,16 +363,16 @@ static int _clear_ppp_link_value_ (int index, struct intf_info *info)
 	return 0; /* Not found */
 }
 
-static int _clear_ppp_ipaddr_value_ (int index, struct intf_info *info)
+static int _clear_ppp_ipaddr_value_(int index, struct intf_info *info)
 {
 	char intf[8];
 	int i;
 
 	sprintf(intf, "ppp%d", index);
 
-	for (i=0; info->ipaddr[i].ifname[0] != 0; i++) {
-		if (!strcmp(info->ipaddr[i].ifname, intf)){
-			if (librouter_dev_get_link_running(intf) != IFF_RUNNING){
+	for (i = 0; info->ipaddr[i].ifname[0] != 0; i++) {
+		if (!strcmp(info->ipaddr[i].ifname, intf)) {
+			if (librouter_dev_get_link_running(intf) != IFF_RUNNING) {
 				memset(&info->ipaddr[i], 0, sizeof(struct ipaddr_table));
 				return 1;
 			}
@@ -387,7 +381,6 @@ static int _clear_ppp_ipaddr_value_ (int index, struct intf_info *info)
 
 	return 0; /* Not found */
 }
-
 
 int librouter_ip_get_if_list(struct intf_info *info)
 {
@@ -437,16 +430,13 @@ int librouter_ip_get_if_list(struct intf_info *info)
 	for (a = ainfo; a;) {
 		/* Update ipaddr pointer if __get_addrinfo succeeds */
 		if (!_get_addrinfo(&a->h, ipaddr)) {
-			ip_dbg("__getaddrinfo succeeded for %s\n", ipaddr->ifname);
-			ip_dbg("ip address is %s\n", inet_ntoa(ipaddr->local));
-			ip_dbg("bitmask is %d\n", ipaddr->bitlen);
+			ip_dbg("__getaddrinfo succeeded for %s\n", ipaddr->ifname);ip_dbg("ip address is %s\n", inet_ntoa(ipaddr->local));ip_dbg("bitmask is %d\n", ipaddr->bitlen);
 			ipaddr++;
 		}
 		tmp = a;
 		a = a->next;
 		free(tmp);
 	}
-
 
 #ifdef OPTION_PPTP
 	/*
@@ -459,13 +449,11 @@ int librouter_ip_get_if_list(struct intf_info *info)
 		sprintf(link->ifname, "ppp%d", PPTP_PPP_START);
 		link->type = ARPHRD_PPP;
 		link++;
-	}
-	else {
-		_clear_ppp_link_value_(PPTP_PPP_START,info);
-		_clear_ppp_ipaddr_value_(PPTP_PPP_START,info);
+	} else {
+		_clear_ppp_link_value_(PPTP_PPP_START, info);
+		_clear_ppp_ipaddr_value_(PPTP_PPP_START, info);
 	}
 #endif	/* OPTION PPTP */
-
 
 #ifdef OPTION_PPPOE
 	/*
@@ -478,13 +466,11 @@ int librouter_ip_get_if_list(struct intf_info *info)
 		sprintf(link->ifname, "ppp%d", PPPOE_PPP_START);
 		link->type = ARPHRD_PPP;
 		link++;
-	}
-	else {
-		_clear_ppp_link_value_(PPPOE_PPP_START,info);
-		_clear_ppp_ipaddr_value_(PPPOE_PPP_START,info);
+	} else {
+		_clear_ppp_link_value_(PPPOE_PPP_START, info);
+		_clear_ppp_ipaddr_value_(PPPOE_PPP_START, info);
 	}
 #endif	/* OPTION PPPOE */
-
 
 #ifdef OPTION_MODEM3G
 	/*
@@ -492,15 +478,14 @@ int librouter_ip_get_if_list(struct intf_info *info)
 	 * since PPP interfaces are created dinamically.
 	 * So we need to create some here.
 	 */
-	for (i=0; i < OPTION_NUM_3G_IFACES; i++) {
+	for (i = 0; i < OPTION_NUM_3G_IFACES; i++) {
 		if (!_has_ppp_intf(i, info)) {
 			sprintf(link->ifname, "ppp%d", i);
 			link->type = ARPHRD_PPP;
 			link++;
-		}
-		else{
-			_clear_ppp_link_value_(i,info);
-			_clear_ppp_ipaddr_value_(i,info);
+		} else {
+			_clear_ppp_link_value_(i, info);
+			_clear_ppp_ipaddr_value_(i, info);
 		}
 	}
 #endif
@@ -521,17 +506,16 @@ void librouter_ip_bitlen2mask(int bitlen, char *mask)
 		bitmask >>= 1;
 		bitmask |= (1 << 31);
 	}
-	sprintf(mask, "%d.%d.%d.%d", (int) ((bitmask >> 24) & 0xff),
-	                (int) ((bitmask >> 16) & 0xff), (int) ((bitmask >> 8)
-	                                & 0xff), (int) (bitmask & 0xff));
+	sprintf(mask, "%d.%d.%d.%d", (int) ((bitmask >> 24) & 0xff), (int) ((bitmask >> 16) & 0xff),
+	                (int) ((bitmask >> 8) & 0xff), (int) (bitmask & 0xff));
 }
 
 /* DEL_ADDR, ADD_ADDR, DEL_SADDR, ADD_SADDR */
 int librouter_ip_addr_add_del(ip_addr_oper_t add_del,
-                    char *ifname,
-                    char *local_ip,
-                    char *remote_ip,
-                    char *netmask)
+                              char *ifname,
+                              char *local_ip,
+                              char *remote_ip,
+                              char *netmask)
 {
 	int i, bitlen, ret = 0;
 	IP mask, bitmask;
@@ -581,8 +565,9 @@ int librouter_ip_addr_add_del(ip_addr_oper_t add_del,
 		}
 		if (primary) {
 			for (i = 0; i < MAX_NUM_IPS; i++)
-				if (memcmp(&info.ipaddr[i], &data,sizeof(struct ipaddr_table)) == 0 ||
-					memcmp(&info.ipaddr[i], &prim, sizeof(struct ipaddr_table)) == 0)
+				if (memcmp(&info.ipaddr[i], &data, sizeof(struct ipaddr_table)) == 0
+				                || memcmp(&info.ipaddr[i], &prim,
+				                                sizeof(struct ipaddr_table)) == 0)
 					break; /* found same address entry */
 		} else {
 			data = prim; /* secondary as primary */
@@ -623,8 +608,8 @@ int librouter_ip_addr_flush(char *ifname)
 		return ret;
 
 	for (i = 0; i < MAX_NUM_IPS; i++) {
-		if (strcmp(ifname, info.ipaddr[i].ifname) == 0 || strcmp(alias,
-		                info.ipaddr[i].ifname) == 0) { /* with alias */
+		if (strcmp(ifname, info.ipaddr[i].ifname) == 0
+		                || strcmp(alias, info.ipaddr[i].ifname) == 0) { /* with alias */
 			/* delete primary also delete secondaries */
 			ret = librouter_ip_modify_addr(0, &info.ipaddr[i], &info);
 		}
@@ -633,26 +618,21 @@ int librouter_ip_addr_flush(char *ifname)
 	return 0;
 }
 
-const char *masks[33] = { "0.0.0.0", "128.0.0.0", "192.0.0.0", "224.0.0.0",
-                "240.0.0.0", "248.0.0.0", "252.0.0.0", "254.0.0.0",
-                "255.0.0.0", "255.128.0.0", "255.192.0.0", "255.224.0.0",
-                "255.240.0.0", "255.248.0.0", "255.252.0.0", "255.254.0.0",
-                "255.255.0.0", "255.255.128.0", "255.255.192.0",
-                "255.255.224.0", "255.255.240.0", "255.255.248.0",
-                "255.255.252.0", "255.255.254.0", "255.255.255.0",
-                "255.255.255.128", "255.255.255.192", "255.255.255.224",
-                "255.255.255.240", "255.255.255.248", "255.255.255.252",
-                "255.255.255.254", "255.255.255.255" };
+const char *masks[33] = { "0.0.0.0", "128.0.0.0", "192.0.0.0", "224.0.0.0", "240.0.0.0",
+                "248.0.0.0", "252.0.0.0", "254.0.0.0", "255.0.0.0", "255.128.0.0", "255.192.0.0",
+                "255.224.0.0", "255.240.0.0", "255.248.0.0", "255.252.0.0", "255.254.0.0",
+                "255.255.0.0", "255.255.128.0", "255.255.192.0", "255.255.224.0", "255.255.240.0",
+                "255.255.248.0", "255.255.252.0", "255.255.254.0", "255.255.255.0",
+                "255.255.255.128", "255.255.255.192", "255.255.255.224", "255.255.255.240",
+                "255.255.255.248", "255.255.255.252", "255.255.255.254", "255.255.255.255" };
 
-const char *rmasks[33] = { "255.255.255.255", "127.255.255.255",
-                "63.255.255.255", "31.255.255.255", "15.255.255.255",
-                "7.255.255.255", "3.255.255.255", "1.255.255.255",
-                "0.255.255.255", "0.127.255.255", "0.63.255.255",
-                "0.31.255.255", "0.15.255.255", "0.7.255.255", "0.3.255.255",
-                "0.1.255.255", "0.0.255.255", "0.0.127.255", "0.0.63.255",
-                "0.0.31.255", "0.0.15.255", "0.0.7.255", "0.0.3.255",
-                "0.0.1.255", "0.0.0.255", "0.0.0.127", "0.0.0.63", "0.0.0.31",
-                "0.0.0.15", "0.0.0.7", "0.0.0.3", "0.0.0.1", "0.0.0.0" };
+const char *rmasks[33] = { "255.255.255.255", "127.255.255.255", "63.255.255.255", "31.255.255.255",
+                "15.255.255.255", "7.255.255.255", "3.255.255.255", "1.255.255.255",
+                "0.255.255.255", "0.127.255.255", "0.63.255.255", "0.31.255.255", "0.15.255.255",
+                "0.7.255.255", "0.3.255.255", "0.1.255.255", "0.0.255.255", "0.0.127.255",
+                "0.0.63.255", "0.0.31.255", "0.0.15.255", "0.0.7.255", "0.0.3.255", "0.0.1.255",
+                "0.0.0.255", "0.0.0.127", "0.0.0.63", "0.0.0.31", "0.0.0.15", "0.0.0.7", "0.0.0.3",
+                "0.0.0.1", "0.0.0.0" };
 
 const char *librouter_ip_ciscomask(const char *mask)
 {
@@ -715,29 +695,9 @@ int librouter_ip_get_mac(char *ifname, char *mac)
 	return librouter_dev_get_hwaddr(ifname, (unsigned char *) mac);
 }
 
-char *librouter_ip_ethernet_get_dev(char *dev)
-{
-	int i;
-	static char brname[32];
-
-	/* Only valid for eth0 */
-	if (strcmp(dev, "eth0"))
-		return dev;
-
-	for (i = 0; i < MAX_BRIDGE; i++) {
-		snprintf(brname, 32, "%s%d", BRIDGE_NAME, i);
-		/* Is ethernet interface enslaved by a bridge interface?  */
-		if (librouter_br_checkif(brname, dev))
-			return brname;
-	}
-
-	/* Not in a bridge, return interface itself */
-	return dev;
-}
-
+/* FIXME Delete this, and use generic interface function */
 void librouter_ip_ethernet_set_addr(char *ifname, char *addr, char *mask) /* main ethernet interface */
 {
-	char *dev = librouter_ip_ethernet_get_dev(ifname); /* bridge x ethernet */
 	struct intf_info info;
 	int i;
 
@@ -748,44 +708,34 @@ void librouter_ip_ethernet_set_addr(char *ifname, char *addr, char *mask) /* mai
 
 	/* remove current address */
 	for (i = 0; i < MAX_NUM_IPS; i++) {
-		if (strcmp(dev, info.ipaddr[i].ifname) == 0) {
+		if (strcmp(ifname, info.ipaddr[i].ifname) == 0) {
 			librouter_ip_modify_addr(0, &info.ipaddr[i], &info);
 			break;
 		}
 	}
 
-	ip_dbg("Adding IP address %s to %s\n", addr, dev);
-	ip_addr_add (dev, addr, NULL, mask); /* new address */
-
-#ifdef OPTION_BRIDGE
-	librouter_br_update_ipaddr(ifname);
-#endif
+	ip_dbg("Adding IP address %s to %s\n", addr, ifname);
+	ip_addr_add(ifname, addr, NULL, mask);
+	/* new address */
 }
 
+/* FIXME Delete this, and use generic interface function */
 void librouter_ip_ethernet_set_addr_secondary(char *ifname, char *addr, char *mask)
 {
-	char *dev = librouter_ip_ethernet_get_dev(ifname); /* bridge x ethernet */
-
-	ip_addr_add_secondary (dev, addr, NULL, mask);
+	ip_addr_add_secondary(ifname, addr, NULL, mask);
 }
 
+/* FIXME Delete this, and use generic interface function */
 void librouter_ip_ethernet_set_no_addr(char *ifname)
 {
-	char *dev = librouter_ip_ethernet_get_dev(ifname); /* bridge x ethernet */
-
-	ip_dbg("Removing IP address from %s\n", dev);
-	librouter_ip_addr_flush(dev); /* Clear all interface addresses */
-
-#ifdef OPTION_BRIDGE
-	librouter_br_update_ipaddr(ifname);
-#endif
+	ip_dbg("Removing IP address from %s\n", ifname);
+	librouter_ip_addr_flush(ifname); /* Clear all interface addresses */
 }
 
+/* FIXME Delete this, and use generic interface function */
 void librouter_ip_ethernet_set_no_addr_secondary(char *ifname, char *addr, char *mask)
 {
-	char *dev = librouter_ip_ethernet_get_dev(ifname); /* bridge x ethernet */
-
-	ip_addr_del_secondary (dev, addr, NULL, mask);
+	ip_addr_del_secondary(ifname, addr, NULL, mask);
 }
 
 int librouter_ip_interface_get_info(char *ifname, IP *addr, IP *mask, IP *bc, IP *peer)
@@ -814,8 +764,7 @@ int librouter_ip_interface_get_info(char *ifname, IP *addr, IP *mask, IP *bc, IP
 			*bc = info.ipaddr[i].broadcast;
 		if (mask) {
 			if (info.ipaddr[i].bitlen)
-				mask->s_addr = htonl(~((1 << (32
-				                - info.ipaddr[i].bitlen)) - 1));
+				mask->s_addr = htonl(~((1 << (32 - info.ipaddr[i].bitlen)) - 1));
 			else
 				mask->s_addr = 0;
 		}
@@ -836,13 +785,9 @@ void librouter_ip_interface_get_ip_addr(char *ifname, char *addr_str, char *mask
 	strcpy(mask_str, inet_ntoa(mask));
 }
 
-/* ppp unnumbered helper !!! ppp unnumbered x bridge hdlc */
 void librouter_ip_ethernet_ip_addr(char *ifname, char *addr_str, char *mask_str)
 {
-	char *dev;
-
-	dev = librouter_ip_ethernet_get_dev(ifname); /* bridge x ethernet */
-	librouter_ip_interface_get_ip_addr(dev, addr_str, mask_str);
+	librouter_ip_interface_get_ip_addr(ifname, addr_str, mask_str);
 }
 
 /* Interface generic */
@@ -865,12 +810,13 @@ void librouter_ip_interface_set_addr(char *ifname, char *addr, char *mask)
 		}
 	}
 
-	ip_addr_add (ifname, addr, NULL, mask); /* new address */
+	ip_addr_add(ifname, addr, NULL, mask);
+	/* new address */
 }
 
 void librouter_ip_interface_set_addr_secondary(char *ifname, char *addr, char *mask)
 {
-	ip_addr_add_secondary (ifname, addr, NULL, mask);
+	ip_addr_add_secondary(ifname, addr, NULL, mask);
 }
 
 void librouter_ip_interface_set_no_addr(char *ifname)
@@ -880,13 +826,13 @@ void librouter_ip_interface_set_no_addr(char *ifname)
 
 void librouter_ip_interface_set_no_addr_secondary(char *ifname, char *addr, char *mask)
 {
-	ip_addr_del_secondary (ifname, addr, NULL, mask);
+	ip_addr_del_secondary(ifname, addr, NULL, mask);
 }
 
 int librouter_ip_check_addr_string_for_ipv4(char *addr_str)
 {
-	    struct sockaddr_in sa;
-	    return (inet_pton(AF_INET, addr_str, &sa.sin_addr));
+	struct sockaddr_in sa;
+	return (inet_pton(AF_INET, addr_str, &sa.sin_addr));
 }
 
 unsigned int librouter_ip_is_valid_port(char *data)
@@ -980,15 +926,15 @@ int librouter_ip_iface_get_stats(char *ifname, void *store)
 	 * to memory pointed by store */
 	for (i = 0; i < MAX_NUM_LINKS; i++) {
 		if (strcmp(info.link[i].ifname, ifname) == 0) {
-			memcpy(store, &info.link[i].stats,
-			                sizeof(struct net_device_stats));
+			memcpy(store, &info.link[i].stats, sizeof(struct net_device_stats));
 			return 0;
 		}
 	}
 	return -1;
 }
 
-int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf,
+int librouter_ip_iface_get_config(char *interface,
+                                  struct interface_conf *conf,
                                   struct intf_info *info)
 {
 	char mac_bin[6];
@@ -1053,9 +999,8 @@ int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf,
 		/* Get ethernet 0 MAC if not an ethernet interface */
 		if (librouter_ip_get_mac(conf->linktype == ARPHRD_ETHER ? conf->name : "ethernet0",
 		                mac_bin) == 0)
-			sprintf(conf->mac, "%02x%02x.%02x%02x.%02x%02x",
-			                mac_bin[0], mac_bin[1], mac_bin[2],
-			                mac_bin[3], mac_bin[4], mac_bin[5]);
+			sprintf(conf->mac, "%02x%02x.%02x%02x.%02x%02x", mac_bin[0], mac_bin[1],
+			                mac_bin[2], mac_bin[3], mac_bin[4], mac_bin[5]);
 
 		/* Search for main IP address */
 		ipaddr = &info->ipaddr[0];
@@ -1098,9 +1043,7 @@ int librouter_ip_iface_get_config(char *interface, struct interface_conf *conf,
 	}
 
 	/* Check if IP was configured by DHCP on ethernet interfaces */
-	if (conf->linktype == ARPHRD_ETHER &&
-			strstr(interface, "eth") &&
-			!conf->is_subiface) {
+	if (conf->linktype == ARPHRD_ETHER && strstr(interface, "eth") && !conf->is_subiface) {
 		sprintf(daemon_dhcpc, DHCPC_DAEMON, interface);
 		if (librouter_exec_check_daemon(daemon_dhcpc))
 			conf->dhcpc = 1;

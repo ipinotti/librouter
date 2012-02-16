@@ -822,11 +822,6 @@ int librouter_dev_shutdown(char *dev, dev_family *fam)
 		break;
 	}
 
-#ifdef OPTION_BRIDGE
-		/* Existing bridges must have IP addresses removed */
-		librouter_br_update_ipaddr(dev);
-#endif
-
 	return 0;
 }
 
@@ -903,11 +898,6 @@ int librouter_dev_noshutdown(char *dev, dev_family *fam)
 #ifdef OPTION_QOS
 	/* Reactivate QOS rules */
 	librouter_qos_tc_insert_all(dev);
-#endif
-
-#ifdef OPTION_BRIDGE
-	/* Existing bridges must have IP addresses removed */
-	librouter_br_update_ipaddr(dev);
 #endif
 
 #ifdef OPTION_SMCROUTE

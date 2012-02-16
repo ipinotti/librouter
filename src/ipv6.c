@@ -458,47 +458,9 @@ int librouter_ipv6_get_mac (char *ifname, char *mac, int dot_mode)
 	return 0;
 }
 
-char *librouter_ipv6_ethernet_get_dev (char *dev)
-{
-	int i;
-	static char brname[32];
-
-	/* Only valid for eth0 */
-	if (strcmp(dev, "eth0"))
-		return dev;
-
-	for (i = 0; i < MAX_BRIDGE; i++) {
-		snprintf(brname, 32, "%s%d", BRIDGE_NAME, i);
-		/* Is ethernet interface enslaved by a bridge interface?  */
-		if (librouter_br_checkif(brname, dev))
-			return brname;
-	}
-
-	/* Not in a bridge, return interface itself */
-	return dev;
-}
-
 int librouter_ipv6_ethernet_set_addr (char *ifname, char *addr, char *mask, char *feature) /* main ethernet interface */
 {
-	char *dev = librouter_ipv6_ethernet_get_dev(ifname); /* bridge x ethernet */
 	char *addr_mask_str = NULL;
-
-#if 0
-	int i;
-	struct intfv6_info info;
-	memset(&info, 0, sizeof(struct intfv6_info));
-
-	if (librouter_ipv6_get_if_list(&info) < 0)
-		return;
-
-	/* remove current address */
-	for (i = 0; i < MAX_NUM_IPS; i++) {
-		if (strcmp(dev, info.ipaddr[i].ifname) == 0) {
-			librouter_ipv6_modify_addr(0, &info.ipaddr[i], &info);
-			break;
-		}
-	}
-#endif
 
 	if (feature != NULL){
 		if (!strcmp(feature, "link-local")){
@@ -514,11 +476,11 @@ int librouter_ipv6_ethernet_set_addr (char *ifname, char *addr, char *mask, char
 			snprintf(addr_mask_str, 256,"%s/%s", addr, mask);
 			ipv6_dbg("IPv6: Entering mod eui-64 for ipv6 addr [ %s ]\n", addr_mask_str);
 
-			if (librouter_ipv6_mod_eui64(dev, addr_mask_str) < 0)
+			if (librouter_ipv6_mod_eui64(ifname, addr_mask_str) < 0)
 				return -1;
 
 			ipv6_dbg("IPv6: Adding eth IPv6 address %s to %s\n", addr_mask_str, dev);
-			if (librouter_ipv6_addr_add (dev, addr_mask_str, NULL) < 0)
+			if (librouter_ipv6_addr_add (ifname, addr_mask_str, NULL) < 0)
 				return -1;
 
 			free(addr_mask_str);
@@ -528,8 +490,8 @@ int librouter_ipv6_ethernet_set_addr (char *ifname, char *addr, char *mask, char
 		}
 	}
 
-	ipv6_dbg("IPv6: Adding eth IPv6 address %s to %s\n", addr, dev);
-	if (librouter_ipv6_addr_add (dev, addr, mask) < 0)
+	ipv6_dbg("IPv6: Adding eth IPv6 address %s to %s\n", addr, ifname);
+	if (librouter_ipv6_addr_add (ifname, addr, mask) < 0)
 		return -1;
 
 end:
@@ -538,22 +500,16 @@ end:
 
 int librouter_ipv6_ethernet_set_no_addr (char *ifname, char *addr, char *mask)
 {
-	char *dev = librouter_ipv6_ethernet_get_dev(ifname); /* bridge x ethernet */
-
-	return librouter_ipv6_addr_del (dev, addr, mask);
+	return librouter_ipv6_addr_del (ifname, addr, mask);
 }
 
 int librouter_ipv6_ethernet_set_no_addr_flush (char *ifname)
 {
 	int ret = 0;
-	char *dev = librouter_ipv6_ethernet_get_dev(ifname); /* bridge x ethernet */
 
-	ipv6_dbg("Removing IPv6 addresses from %s\n", dev);
-	ret = librouter_ipv6_addr_flush(dev); /* Clear all interface addresses */
+	ipv6_dbg("Removing IPv6 addresses from %s\n", ifname);
+	ret = librouter_ipv6_addr_flush(ifname); /* Clear all interface addresses */
 
-//#ifdef OPTION_BRIDGE
-//	librouter_br_update_ipaddr(ifname);
-//#endif
 	return ret;
 }
 
@@ -749,13 +705,9 @@ void librouter_ipv6_interface_get_ipv6_addr(char *ifname, char *addr_str, char *
 	inet_pton(AF_INET6, mask.s6_addr, mask_str);
 }
 
-/* ppp unnumbered helper !!! ppp unnumbered x bridge hdlc */
 void librouter_ipv6_ethernet_ipv6_addr(char *ifname, char *addr_str, char *mask_str)
 {
-	char *dev;
-
-	dev = librouter_ipv6_ethernet_get_dev(ifname); /* bridge x ethernet */
-	librouter_ipv6_interface_get_ipv6_addr(dev, addr_str, mask_str);
+	librouter_ipv6_interface_get_ipv6_addr(ifname, addr_str, mask_str);
 }
 
 /* Interface generic */
@@ -817,22 +769,16 @@ end:
 
 int librouter_ipv6_interface_set_no_addr(char *ifname, char *addr, char *mask)
 {
-	char *dev = librouter_ipv6_ethernet_get_dev(ifname); /* bridge x ethernet */
-
-	return librouter_ipv6_addr_del (dev, addr, mask);
+	return librouter_ipv6_addr_del (ifname, addr, mask);
 }
 
 int librouter_ipv6_interface_set_no_addr_flush(char *ifname)
 {
 	int ret = 0;
-	char *dev = librouter_ipv6_ethernet_get_dev(ifname); /* bridge x ethernet */
 
-	ipv6_dbg("Removing IPv6 addresses from %s\n", dev);
-	ret = librouter_ipv6_addr_flush(dev); /* Clear all interface addresses */
+	ipv6_dbg("Removing IPv6 addresses from %s\n", ifname);
+	ret = librouter_ipv6_addr_flush(ifname); /* Clear all interface addresses */
 
-//#ifdef OPTION_BRIDGE
-//	librouter_br_update_ipaddr(ifname);
-//#endif
 	return ret;
 }
 
@@ -1022,7 +968,7 @@ void librouter_ipv6_bitlen2mask(int bitlen, char *mask)
 
 
 
-/* ################# Excluded for a moment ######################### */
+/* ################# TODO ######################### */
 
 #if 0
 /* DEL_ADDR, ADD_ADDR, DEL_SADDR, ADD_SADDR */
@@ -1167,37 +1113,6 @@ const char *librouter_ipv6_extract_mask(char *cidrblock)
 }
 #endif
 
-#if 0
-//TODO Analisar função, pode resultar em BUG devido ao rmasks
-int librouter_ipv6_netmask2cidr(const char *netmask)
-{
-	int i;
-
-	for (i = 0; i < 33; i++) {
-		if (strcmp(masks[i], netmask) == 0)
-			return i;
-		if (strcmp(rmasks[i], netmask) == 0)
-			return i;
-	}
-	return -1;
-}
-#endif
-
-#if 0
-void librouter_ipv6_interface_set_no_addr_secondary(char *ifname, char *addr, char *mask)
-{
-	ipv6_addr_del_secondary (ifname, addr, NULL, mask);
-}
-#endif
-
-#if 0
-void librouter_ipv6_ethernet_set_addr_secondary(char *ifname, char *addr, char *mask)
-{
-	char *dev = librouter_ipv6_ethernet_get_dev(ifname); /* bridge x ethernet */
-
-	ipv6_addr_add_secondary (dev, addr, NULL, mask);
-}
-#endif
 
 #if 0
 unsigned int librouter_ipv6_is_valid_port(char *data)

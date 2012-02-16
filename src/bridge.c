@@ -18,6 +18,7 @@
 #include "libbridge/libbridge.h"
 
 #ifdef OPTION_BRIDGE
+#ifdef OPTION_BRIDGE_GETS_ETHERNET0_IPADDR
 static int _br_get_bkp_ip(struct ipa_t *ip)
 {
 	FILE *f;
@@ -127,6 +128,7 @@ int librouter_br_update_ipaddr(char *ifname)
 
 	return 0;
 }
+#endif
 
 int librouter_br_initbr(void)
 {
