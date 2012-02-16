@@ -277,17 +277,17 @@ void librouter_vrrp_no_group(char *dev, int group)
 
 void librouter_vrrp_option_authenticate(char *dev, int group, int type, char *password)
 {
-	struct vrrp_group *groups, *find_group;
+	struct vrrp_group *groups, *g;
 
 	if ((groups = vrrp_read_bin()) != NULL) {
-		find_group = vrrp_find_group(groups, dev, group);
-		find_group->authentication_type = type;
+		g = vrrp_find_group(groups, dev, group);
+		g->authentication_type = type;
 		if (password != NULL)
-			strncpy(find_group->authentication_password, password, MAX_VRRP_AUTHENTICATION);
+			strncpy(g->authentication_password, password, MAX_VRRP_AUTHENTICATION);
 		else
-			find_group->authentication_password[0] = 0;
+			g->authentication_password[0] = 0;
 		vrrp_write_bin(groups);
-		if (find_group->ip[0].s_addr != 0) {
+		if (g->ip[0].s_addr != 0) {
 			vrrp_write_conf(groups);
 			vrrp_check_daemon(groups);
 		}
@@ -297,14 +297,14 @@ void librouter_vrrp_option_authenticate(char *dev, int group, int type, char *pa
 
 void librouter_vrrp_option_description(char *dev, int group, char *description)
 {
-	struct vrrp_group *groups, *find_group;
+	struct vrrp_group *groups, *g;
 
 	if ((groups = vrrp_read_bin()) != NULL) {
-		find_group = vrrp_find_group(groups, dev, group);
+		g = vrrp_find_group(groups, dev, group);
 		if (description != NULL)
-			strncpy(find_group->description, description, MAX_VRRP_DESCRIPTION);
+			strncpy(g->description, description, MAX_VRRP_DESCRIPTION);
 		else
-			find_group->description[0] = 0;
+			g->description[0] = 0;
 		vrrp_write_bin(groups);
 	}
 	free(groups);
@@ -346,25 +346,25 @@ static void _vrrp_secondary_ipv6_addr(struct vrrp_group *g, int add, char *ip_st
 
 int librouter_vrrp_option_ipv6(char *dev, int group, int add, char *ip_string, int secondary)
 {
-	struct vrrp_group *groups, *find_group;
+	struct vrrp_group *groups, *g;
 
 	groups = vrrp_read_bin();
 	if (groups == NULL)
 		return 0;
 
-	find_group = vrrp_find_group(groups, dev, group);
-	if (find_group == NULL) {
+	g = vrrp_find_group(groups, dev, group);
+	if (g == NULL) {
 		free(groups);
 		return 0;
 	}
 
 	if (secondary)
-		_vrrp_secondary_ipv6_addr(find_group, add, ip_string);
+		_vrrp_secondary_ipv6_addr(g, add, ip_string);
 	else {
 		if (ip_string != NULL)
-			inet_pton(AF_INET6, ip_string, &find_group->ip6[0]); /* primary */
+			inet_pton(AF_INET6, ip_string, &g->ip6[0]); /* primary */
 		else
-			memset(&find_group->ip6[0], 0, sizeof(struct in6_addr) * MAX_VRRP_IP6); /* clear all! */
+			memset(&g->ip6[0], 0, sizeof(struct in6_addr) * MAX_VRRP_IP6); /* clear all! */
 	}
 
 	vrrp_write_bin(groups);
@@ -379,7 +379,7 @@ int librouter_vrrp_option_ipv6(char *dev, int group, int add, char *ip_string, i
 
 int librouter_vrrp_option_ip(char *dev, int group, int add, char *ip_string, int secondary)
 {
-	struct vrrp_group *groups, *find_group;
+	struct vrrp_group *groups, *g;
 	struct in_addr ip;
 	int i, match = -1;
 
@@ -387,8 +387,8 @@ int librouter_vrrp_option_ip(char *dev, int group, int add, char *ip_string, int
 	if (groups == NULL)
 		return 0;
 
-	find_group = vrrp_find_group(groups, dev, group);
-	if (find_group == NULL) {
+	g = vrrp_find_group(groups, dev, group);
+	if (g == NULL) {
 		free(groups);
 		return 0;
 	}
@@ -396,9 +396,9 @@ int librouter_vrrp_option_ip(char *dev, int group, int add, char *ip_string, int
 	if (secondary) {
 		inet_aton(ip_string, &ip);
 		for (i = 0; i < MAX_VRRP_IP; i++) {
-			if (find_group->ip[i].s_addr == ip.s_addr)
+			if (g->ip[i].s_addr == ip.s_addr)
 				match = i;
-			if (find_group->ip[i].s_addr == 0)
+			if (g->ip[i].s_addr == 0)
 				break;
 		}
 		if ((add && (i == MAX_VRRP_IP || match != -1)) || (!add && (match == -1))) {
@@ -406,18 +406,18 @@ int librouter_vrrp_option_ip(char *dev, int group, int add, char *ip_string, int
 			return -1;
 		}
 		if (add) {
-			find_group->ip[i] = ip;
+			g->ip[i] = ip;
 		} else {
 			if (match < MAX_VRRP_IP - 1)
-				memmove(&find_group->ip[match], &find_group->ip[match + 1],
+				memmove(&g->ip[match], &g->ip[match + 1],
 				                ((MAX_VRRP_IP - 1) - match) * sizeof(struct in_addr));
-			find_group->ip[MAX_VRRP_IP - 1].s_addr = 0; /* clear top! */
+			g->ip[MAX_VRRP_IP - 1].s_addr = 0; /* clear top! */
 		}
 	} else {
 		if (ip_string != NULL)
-			inet_aton(ip_string, &find_group->ip[0]); /* primary */
+			inet_aton(ip_string, &g->ip[0]); /* primary */
 		else
-			memset(&find_group->ip[0], 0, sizeof(struct in_addr) * MAX_VRRP_IP); /* clear all! */
+			memset(&g->ip[0], 0, sizeof(struct in_addr) * MAX_VRRP_IP); /* clear all! */
 	}
 
 	vrrp_write_bin(groups);
@@ -431,21 +431,21 @@ int librouter_vrrp_option_ip(char *dev, int group, int add, char *ip_string, int
 
 void librouter_vrrp_option_preempt(char *dev, int group, int preempt, int delay)
 {
-	struct vrrp_group *groups, *find_group;
+	struct vrrp_group *groups, *g;
 
 	groups = vrrp_read_bin();
 	if (groups == NULL)
 		return;
 
-	find_group = vrrp_find_group(groups, dev, group);
-	if (find_group) {
-		find_group->preempt = preempt;
-		find_group->preempt_delay = delay;
+	g = vrrp_find_group(groups, dev, group);
+	if (g) {
+		g->preempt = preempt;
+		g->preempt_delay = delay;
 	}
 
 	vrrp_write_bin(groups);
 
-	if (find_group->ip[0].s_addr != 0) {
+	if (g->ip[0].s_addr != 0) {
 		vrrp_write_conf(groups);
 		vrrp_check_daemon(groups);
 	}
@@ -455,19 +455,19 @@ void librouter_vrrp_option_preempt(char *dev, int group, int preempt, int delay)
 
 void librouter_vrrp_option_priority(char *dev, int group, int priority)
 {
-	struct vrrp_group *groups, *find_group;
+	struct vrrp_group *groups, *g;
 
 	groups = vrrp_read_bin();
 	if (groups == NULL)
 		return;
 
-	find_group = vrrp_find_group(groups, dev, group);
-	if (find_group)
-		find_group->priority = priority;
+	g = vrrp_find_group(groups, dev, group);
+	if (g)
+		g->priority = priority;
 
 	vrrp_write_bin(groups);
 
-	if (find_group->ip[0].s_addr != 0) {
+	if (g->ip[0].s_addr != 0) {
 		vrrp_write_conf(groups);
 		vrrp_check_daemon(groups);
 	}
@@ -477,19 +477,19 @@ void librouter_vrrp_option_priority(char *dev, int group, int priority)
 
 void librouter_vrrp_option_advertise_delay(char *dev, int group, int advertise_delay)
 {
-	struct vrrp_group *groups, *find_group;
+	struct vrrp_group *groups, *g;
 
 	groups = vrrp_read_bin();
 	if (groups == NULL)
 		return;
 
-	find_group = vrrp_find_group(groups, dev, group);
-	if (find_group)
-		find_group->advertise_delay = advertise_delay;
+	g = vrrp_find_group(groups, dev, group);
+	if (g)
+		g->advertise_delay = advertise_delay;
 
 	vrrp_write_bin(groups);
 
-	if (find_group->ip[0].s_addr != 0) {
+	if (g->ip[0].s_addr != 0) {
 		vrrp_write_conf(groups);
 		vrrp_check_daemon(groups);
 	}
@@ -499,23 +499,23 @@ void librouter_vrrp_option_advertise_delay(char *dev, int group, int advertise_d
 
 void librouter_vrrp_option_track_interface(char *dev, int group, char *track_iface)
 {
-	struct vrrp_group *groups, *find_group;
+	struct vrrp_group *groups, *g;
 
 	groups = vrrp_read_bin();
 	if (groups == NULL)
 		return;
 
-	find_group = vrrp_find_group(groups, dev, group);
-	if (find_group) {
+	g = vrrp_find_group(groups, dev, group);
+	if (g) {
 		if (track_iface)
-			strncpy(find_group->track_interface, track_iface, sizeof(find_group->track_interface));
+			strncpy(g->track_interface, track_iface, sizeof(g->track_interface));
 		else
-			memset(find_group->track_interface, 0, sizeof(find_group->track_interface));
+			memset(g->track_interface, 0, sizeof(g->track_interface));
 	}
 
 	vrrp_write_bin(groups);
 
-	if (find_group->ip[0].s_addr != 0) {
+	if (g->ip[0].s_addr != 0) {
 		vrrp_write_conf(groups);
 		vrrp_check_daemon(groups);
 	}
