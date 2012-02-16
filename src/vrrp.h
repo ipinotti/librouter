@@ -39,6 +39,9 @@ enum {
 #define VRRP_SHOW_FILE "/var/run/vrrp.show"
 #define VRRP_STAT_FILE "/var/run/vrrp.stat"
 
+#define VRRP_PRIO_OWNER		255		/* priority of the ip owner -- rfc5798.5.2.4 */
+#define VRRP_PRIO_DFL		100		/* default priority -- rfc5798.5.2.4 */
+
 void librouter_vrrp_no_group(char *dev, int group);
 void librouter_vrrp_option_authenticate(char *dev, int group, int type, char *password);
 void librouter_vrrp_option_description(char *dev, int group, char *description);

@@ -52,6 +52,21 @@ static int _check_for_valid_config(struct vrrp_group *g)
 	return ret;
 }
 
+static int _is_ip_owner(struct vrrp_group *g)
+{
+	char *dev = g->ifname;
+	char ipstr[16], msk[16];
+	struct in_addr ip;
+
+	librouter_ip_interface_get_ip_addr(dev, ipstr, msk);
+	inet_pton(AF_INET, ipstr, &ip);
+
+	if (ip.s_addr == g->ip[0].s_addr)
+		return 1;
+
+	return 0;
+}
+
 void kick_vrrp(void)
 {
 	FILE *f;
@@ -129,8 +144,10 @@ static void vrrp_write_conf(struct vrrp_group *groups)
 			fprintf(f, "\t}\n");
 		}
 
-		if (groups->priority)
-			fprintf(f, "\tpriority %d\n", groups->priority);
+		fprintf(f, "\tpriority %d%s\n",
+		        		_is_ip_owner(groups) ? VRRP_PRIO_OWNER :
+		        		(groups->priority != 0) ? groups->priority :
+		        		VRRP_PRIO_DFL);
 
 		if (groups->advertise_delay)
 			fprintf(f, "\tadvert_int %d\n", groups->advertise_delay);
@@ -603,7 +620,13 @@ static void _write_group_config(FILE *f, struct vrrp_group *g)
 
 	fprintf(f, "\n");
 
-	fprintf(f, "\t\tPriority is %u\n", g->priority);
+	if (_is_ip_owner(g))
+		fprintf(f, "\t\tPriority is %d (IP Address Owner)\n", VRRP_PRIO_OWNER);
+	else if (g->priority == 0)
+		fprintf(f, "\t\tPriority is %d (Default backup priority)\n", VRRP_PRIO_DFL);
+	else
+		fprintf(f, "\t\tPriority is %d \n", g->priority);
+
 
 	/* Verifica se ha autenticacao */
 	if (g->authentication_type != VRRP_AUTHENTICATION_NONE)
