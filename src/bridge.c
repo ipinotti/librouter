@@ -584,7 +584,7 @@ static void librouter_br_show_timer(struct timeval *tv, FILE *out)
 	fprintf(out, "%4i", (int) tv->tv_sec);
 }
 
-static void librouter_br_dump_port_info(struct port *p, FILE *out)
+static void librouter_br_dump_port_info(FILE *out, int stp_enabled, struct port *p)
 {
 	char ifname[IFNAMSIZ];
 	struct port_info *pi;
@@ -596,29 +596,31 @@ static void librouter_br_dump_port_info(struct port *p, FILE *out)
 	if (dev == NULL)
 		return;
 
-	fprintf(out, "%s (%i)\n", dev, p->index);
-	fprintf(out, " port id\t\t%.4x\t\t\t", pi->port_id);
-	fprintf(out, "state\t\t\t%s\n", br_get_state_name(pi->state));
-	fprintf(out, " designated root\t");
-	librouter_br_dump_bridge_id((unsigned char *) &pi->designated_root, out);
-	fprintf(out, "\tpath cost\t\t%4i\n", pi->path_cost);
+	fprintf(out, "  %s (%i)\n", dev, p->index);
+	fprintf(out, "    port id\t%.4x\n", pi->port_id);
+	fprintf(out, "    state\t%s\n", br_get_state_name(pi->state));
+	if (stp_enabled) {
+		fprintf(out, "    designated root\t");
+		librouter_br_dump_bridge_id((unsigned char *) &pi->designated_root, out);
+		fprintf(out, "\tpath cost\t\t%4i\n", pi->path_cost);
 
-	fprintf(out, " designated bridge\t");
-	librouter_br_dump_bridge_id((unsigned char *) &pi->designated_bridge, out);
-	fprintf(out, "\tmessage age timer\t");
-	librouter_br_show_timer(&pi->message_age_timer_value, out);
-	fprintf(out, "\n designated port\t%.4x", pi->designated_port);
-	fprintf(out, "\t\t\tforward delay timer\t");
-	librouter_br_show_timer(&pi->forward_delay_timer_value, out);
-	fprintf(out, "\n designated cost\t%4i", pi->designated_cost);
-	fprintf(out, "\t\t\thold timer\t\t");
-	librouter_br_show_timer(&pi->hold_timer_value, out);
-	fprintf(out, "\n flags\t\t\t");
-	if (pi->config_pending)
-		fprintf(out, "CONFIG_PENDING ");
-	if (pi->top_change_ack)
-		fprintf(out, "TOPOLOGY_CHANGE_ACK ");
-	fprintf(out, "\n");
+		fprintf(out, "    designated bridge\t");
+		librouter_br_dump_bridge_id((unsigned char *) &pi->designated_bridge, out);
+		fprintf(out, "\tmessage age timer\t");
+		librouter_br_show_timer(&pi->message_age_timer_value, out);
+		fprintf(out, "\n    designated port\t%.4x", pi->designated_port);
+		fprintf(out, "\t\tforward delay timer\t");
+		librouter_br_show_timer(&pi->forward_delay_timer_value, out);
+		fprintf(out, "\n    designated cost\t%4i", pi->designated_cost);
+		fprintf(out, "\t\t\thold timer\t\t");
+		librouter_br_show_timer(&pi->hold_timer_value, out);
+		fprintf(out, "\n    flags\t\t");
+		if (pi->config_pending)
+			fprintf(out, "CONFIG_PENDING ");
+		if (pi->top_change_ack)
+			fprintf(out, "TOPOLOGY_CHANGE_ACK ");
+	}
+
 	fprintf(out, "\n");
 }
 
@@ -627,61 +629,70 @@ int librouter_br_dump_info(char *brname, FILE *out)
 	struct bridge *br = _find_bridge(brname);
 	struct bridge_info *bri;
 	struct port *p;
+	struct ipa_t ip;
 
 	if (br == NULL)
 		return (-1);
 	bri = &br->info;
 
-	fprintf(out, "%s\n", br->ifname);
-	if (!bri->stp_enabled) {
-		fprintf(out, " STP is disabled for this interface\n");
-		return 0;
-	}
+	fprintf(out, "\n Bridge %d - General Information\n", atoi(br->ifname+strlen("bridge")));
 
-	fprintf(out, " bridge id\t\t");
-	librouter_br_dump_bridge_id((unsigned char *) &bri->bridge_id, out);
-	fprintf(out, "\n designated root\t");
-	librouter_br_dump_bridge_id((unsigned char *) &bri->designated_root, out);
-	fprintf(out, "\n root port\t\t%4i\t\t\t", bri->root_port);
-	fprintf(out, "path cost\t\t%4i\n", bri->root_path_cost);
-	fprintf(out, " max age\t\t");
-	librouter_br_show_timer(&bri->max_age, out);
-	fprintf(out, "\t\t\tbridge max age\t\t");
-	librouter_br_show_timer(&bri->bridge_max_age, out);
-	fprintf(out, "\n hello time\t\t");
-	librouter_br_show_timer(&bri->hello_time, out);
-	fprintf(out, "\t\t\tbridge hello time\t");
-	librouter_br_show_timer(&bri->bridge_hello_time, out);
-	fprintf(out, "\n forward delay\t\t");
-	librouter_br_show_timer(&bri->forward_delay, out);
-	fprintf(out, "\t\t\tbridge forward delay\t");
-	librouter_br_show_timer(&bri->bridge_forward_delay, out);
-	fprintf(out, "\n ageing time\t\t");
-	librouter_br_show_timer(&bri->ageing_time, out);
-	fprintf(out, "\t\t\tgc interval\t\t");
-	librouter_br_show_timer(&bri->gc_interval, out);
-	fprintf(out, "\n hello timer\t\t");
-	librouter_br_show_timer(&bri->hello_timer_value, out);
-	fprintf(out, "\t\t\ttcn timer\t\t");
-	librouter_br_show_timer(&bri->tcn_timer_value, out);
-	fprintf(out, "\n topology change timer\t");
-	librouter_br_show_timer(&bri->topology_change_timer_value, out);
-	fprintf(out, "\t\t\tgc timer\t\t");
-	librouter_br_show_timer(&bri->gc_timer_value, out);
-	fprintf(out, "\n flags\t\t\t");
-	if (bri->topology_change)
-		fprintf(out, "TOPOLOGY_CHANGE ");
-	if (bri->topology_change_detected)
-		fprintf(out, "TOPOLOGY_CHANGE_DETECTED ");
-	fprintf(out, "\n");
-	fprintf(out, "\n");
-	fprintf(out, "\n");
+
+	librouter_ip_interface_get_ip_addr(brname, ip.addr, ip.mask);
+	if (ip.addr[0])
+		fprintf(out, " Internet Address is %s %s\n", ip.addr, ip.mask);
+
+	fprintf(out, " Spanning Tree Protocol state is %s\n", (bri->stp_enabled) ? "Enabled" : "Disabled");
+
+	if (bri->stp_enabled) {
+		fprintf(out, " bridge id\t\t");
+		librouter_br_dump_bridge_id((unsigned char *) &bri->bridge_id, out);
+		fprintf(out, "\n designated root\t");
+		librouter_br_dump_bridge_id((unsigned char *) &bri->designated_root, out);
+		fprintf(out, "\n root port\t\t%4i\t\t\t", bri->root_port);
+		fprintf(out, "path cost\t\t%4i\n", bri->root_path_cost);
+		fprintf(out, " max age\t\t");
+		librouter_br_show_timer(&bri->max_age, out);
+		fprintf(out, "\t\t\tbridge max age\t\t");
+		librouter_br_show_timer(&bri->bridge_max_age, out);
+		fprintf(out, "\n hello time\t\t");
+		librouter_br_show_timer(&bri->hello_time, out);
+		fprintf(out, "\t\t\tbridge hello time\t");
+		librouter_br_show_timer(&bri->bridge_hello_time, out);
+		fprintf(out, "\n forward delay\t\t");
+		librouter_br_show_timer(&bri->forward_delay, out);
+		fprintf(out, "\t\t\tbridge forward delay\t");
+		librouter_br_show_timer(&bri->bridge_forward_delay, out);
+		fprintf(out, "\n ageing time\t\t");
+		librouter_br_show_timer(&bri->ageing_time, out);
+		fprintf(out, "\t\t\tgc interval\t\t");
+		librouter_br_show_timer(&bri->gc_interval, out);
+		fprintf(out, "\n hello timer\t\t");
+		librouter_br_show_timer(&bri->hello_timer_value, out);
+		fprintf(out, "\t\t\ttcn timer\t\t");
+		librouter_br_show_timer(&bri->tcn_timer_value, out);
+		fprintf(out, "\n topology change timer\t");
+		librouter_br_show_timer(&bri->topology_change_timer_value, out);
+		fprintf(out, "\t\t\tgc timer\t\t");
+		librouter_br_show_timer(&bri->gc_timer_value, out);
+		fprintf(out, "\n flags\t\t\t");
+		if (bri->topology_change)
+			fprintf(out, "TOPOLOGY_CHANGE ");
+		if (bri->topology_change_detected)
+			fprintf(out, "TOPOLOGY_CHANGE_DETECTED ");
+		fprintf(out, "\n");
+	}
 
 	p = br->firstport;
+	printf("\n Enslaved interfaces\n");
+	printf(" _________________________________________________\n\n");
 	while (p != NULL) {
-		librouter_br_dump_port_info(p, out);
+		librouter_br_dump_port_info(out, bri->stp_enabled, p);
 		p = p->next;
 	}
+
+
+
 	return 0;
 }
 
