@@ -780,9 +780,14 @@ void librouter_ip_interface_get_ip_addr(char *ifname, char *addr_str, char *mask
 	addr.s_addr = 0;
 	mask.s_addr = 0;
 
+	addr_str[0] = 0;
+	mask_str[0] = 0;
+
 	librouter_ip_interface_get_info(ifname, &addr, &mask, 0, 0);
-	strcpy(addr_str, inet_ntoa(addr));
-	strcpy(mask_str, inet_ntoa(mask));
+	if (addr.s_addr) {
+		strcpy(addr_str, inet_ntoa(addr));
+		strcpy(mask_str, inet_ntoa(mask));
+	}
 }
 
 void librouter_ip_ethernet_ip_addr(char *ifname, char *addr_str, char *mask_str)

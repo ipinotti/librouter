@@ -219,9 +219,6 @@ int librouter_br_addif(char *brname, char *ifname)
 	if (br == NULL)
 		return (-1);
 
-	/* Save ethernet IP address/mask */
-	librouter_ip_interface_get_ip_addr(ifname, ip.addr, ip.mask);
-
 	ifindex = if_nametoindex(ifname);
 	if (!ifindex) {
 		librouter_pr_error(0, "interface %s does not exist!", ifname);
@@ -229,21 +226,38 @@ int librouter_br_addif(char *brname, char *ifname)
 	}
 
 	if ((err = br_add_interface(br, ifindex)) == 0) {
-		librouter_ip_interface_set_no_addr(ifname); /* flush */
+		char *dhcpdev;
+		int dhcp = librouter_dhcp_get_status();
 
-		/* Set bridge IP address with the one from ethernet 0 */
+#if 1
+		/*
+		 * Set bridge IP address with the one from ethernet 0
+		 * DEPRECATED! Please remove this when possible!!!
+		 */
 		if (!strcmp(ifname, "eth0")) {
-			int dhcp = librouter_dhcp_get_status();
+			/* Save ethernet IP address/mask */
+			librouter_ip_interface_get_ip_addr(ifname, ip.addr, ip.mask);
+			librouter_ip_interface_set_no_addr(ifname); /* flush */
 			librouter_ip_ethernet_set_addr(brname, ip.addr, ip.mask);
+		} else
+#endif
+			librouter_ip_interface_set_no_addr(ifname); /* flush */
+
+		librouter_dhcp_server_get_iface(&dhcpdev);
+		if (dhcpdev && !strcmp(dhcpdev, ifname)) {
 			if (dhcp == DHCP_SERVER) {
 				printf("%% Disabling DHCP server on interface\n");
 				librouter_dhcp_server_set(0);
-			} else if (dhcp == DHCP_RELAY) {
+			}
+		}
+#if 0
+			else if (dhcp == DHCP_RELAY) {
 				printf("%% Disabling DHCP relay on interface\n");
 				librouter_dhcp_set_no_relay();
 			}
-		}
-
+#endif
+		if (dhcpdev)
+			free(dhcpdev);
 		return 0;
 	}
 
@@ -265,13 +279,10 @@ int librouter_br_delif(char *brname, char *ifname)
 {
 	int err;
 	int ifindex;
-	struct ipa_t ip;
 	struct bridge *br = _find_bridge(brname);
 
 	if (br == NULL)
 		return (-1);
-
-	librouter_br_get_ipaddr(brname, &ip);
 
 	ifindex = if_nametoindex(ifname);
 	if (!ifindex) {
@@ -279,16 +290,8 @@ int librouter_br_delif(char *brname, char *ifname)
 		return (-1);
 	}
 
-	if ((err = br_del_interface(br, ifindex)) == 0) {
-		/* Recover ip address from bridge */
-		if (!strcmp(ifname, "eth0")) {
-			librouter_ip_interface_set_no_addr(brname); /* flush */
-			librouter_ip_ethernet_set_addr(ifname, ip.addr, ip.mask);
-			_br_del_bkp_ip(); /* Remove IP address backup file, if it exists */
-		}
-
+	if ((err = br_del_interface(br, ifindex)) == 0)
 		return 0;
-	}
 
 	switch (err) {
 	case EINVAL:
@@ -688,6 +691,8 @@ void librouter_br_dump_bridge(FILE *out)
 	char brname[32];
 
 	for (i = 1; i <= MAX_BRIDGE; i++) {
+		struct ipa_t ip;
+
 		sprintf(brname, "%s%d", BRIDGE_NAME, i);
 		if (!librouter_br_exists(brname))
 			continue;
@@ -698,6 +703,11 @@ void librouter_br_dump_bridge(FILE *out)
 		fprintf(out, "bridge %d hello-time %d\n", i, librouter_br_gethello(brname));
 		fprintf(out, "bridge %d max-age %d\n", i, librouter_br_getmaxage(brname));
 		fprintf(out, "bridge %d priority %d\n", i, librouter_br_getbridgeprio(brname));
+
+		librouter_ip_interface_get_ip_addr(brname, ip.addr, ip.mask);
+		if (ip.addr[0])
+			fprintf(out, "bridge %d ip-address %s %s\n", i, ip.addr, ip.mask);
+
 		if (!librouter_br_get_stp(brname))
 			fprintf(out, "bridge %d spanning-disabled\n", i);
 	}
