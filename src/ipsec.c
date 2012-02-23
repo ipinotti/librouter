@@ -1180,19 +1180,8 @@ void librouter_ipsec_dump(FILE *out)
 						fprintf(out, "  local address default-route\n");
 						break;
 					case ADDR_INTERFACE:
-						if (strlen(buf) > 0) {
-							char *t, *p;
-							t = strdup(librouter_device_linux_to_cli(buf + 1, 0));
-
-							/* Really Ugly : Change '.' for a ' '(space) */
-							p = strstr(t,".");
-							if (p)
-								*p = ' ';
-
-							fprintf(out, "  local address interface %s\n", t);
-							free(t);
-						}
-						/* skip % */
+						if (strlen(buf) > 0)
+							fprintf(out, "  local address interface %s\n", librouter_device_linux_to_cli(buf + 1, 0));
 						break;
 					case ADDR_IP:
 						if (strlen(buf) > 0)
