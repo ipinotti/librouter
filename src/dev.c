@@ -822,6 +822,10 @@ int librouter_dev_shutdown(char *dev, dev_family *fam)
 		break;
 	}
 
+#ifdef OPTION_VRRP
+	librouter_vrrp_reload();
+#endif
+
 	return 0;
 }
 
@@ -903,6 +907,11 @@ int librouter_dev_noshutdown(char *dev, dev_family *fam)
 #ifdef OPTION_SMCROUTE
 	librouter_smc_route_hup();
 #endif
+
+#ifdef OPTION_VRRP
+	librouter_vrrp_reload();
+#endif
+
 	return 0;
 }
 
