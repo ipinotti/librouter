@@ -67,19 +67,6 @@ static int _is_ip_owner(struct vrrp_group *g)
 	return 0;
 }
 
-void kick_vrrp(void)
-{
-	FILE *f;
-	char buf[32];
-
-	f = fopen(VRRPD_PID_FILE, "r");
-	if (f) {
-		fgets(buf, 32, f);
-		kill((pid_t) atoi(buf), SIGHUP);
-		fclose(f);
-	}
-}
-
 static struct vrrp_group *vrrp_read_bin(void)
 {
 	int size;
@@ -248,7 +235,7 @@ static void vrrp_check_daemon(struct vrrp_group *groups)
 	}
 	if (found == 1) {
 		if (librouter_exec_check_daemon(VRRP_DAEMON))
-			kick_vrrp();
+			librouter_vrrp_reload();
 		else
 			librouter_exec_daemon(VRRP_DAEMON);
 	}
@@ -521,6 +508,19 @@ void librouter_vrrp_option_track_interface(char *dev, int group, char *track_ifa
 	}
 
 	free(groups);
+}
+
+void librouter_vrrp_reload(void)
+{
+	FILE *f;
+	char buf[32];
+
+	f = fopen(VRRPD_PID_FILE, "r");
+	if (f) {
+		fgets(buf, 32, f);
+		kill((pid_t) atoi(buf), SIGHUP);
+		fclose(f);
+	}
 }
 
 void librouter_vrrp_dump_interface(FILE *out, char *dev)

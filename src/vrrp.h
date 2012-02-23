@@ -53,6 +53,7 @@ void librouter_vrrp_option_advertise_delay(char *dev, int group, int advertise_d
 void librouter_vrrp_option_track_interface(char *dev, int group, char *track_iface);
 void librouter_vrrp_dump_interface(FILE *out, char *dev);
 void librouter_vrrp_dump_status(void);
+void librouter_vrrp_reload(void);
 
 
 /* FIXME Copied from keepalived vrrp.h */
