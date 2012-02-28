@@ -131,7 +131,7 @@ static void vrrp_write_conf(struct vrrp_group *groups)
 			fprintf(f, "\t}\n");
 		}
 
-		fprintf(f, "\tpriority %d%s\n",
+		fprintf(f, "\tpriority %d\n",
 		        		_is_ip_owner(groups) ? VRRP_PRIO_OWNER :
 		        		(groups->priority != 0) ? groups->priority :
 		        		VRRP_PRIO_DFL);
@@ -518,9 +518,33 @@ void librouter_vrrp_reload(void)
 	f = fopen(VRRPD_PID_FILE, "r");
 	if (f) {
 		fgets(buf, 32, f);
-		kill((pid_t) atoi(buf), SIGHUP);
+		kill((pid_t) atoi(buf), SIGTERM);
 		fclose(f);
 	}
+}
+
+int librouter_vrrp_is_iface_tracked(char *ifname)
+{
+	int i, found = 0;
+	struct vrrp_group *groups, *g;
+
+	groups = vrrp_read_bin();
+
+	if (groups == NULL)
+		return 0;
+
+	g = groups;
+	while (g->track_interface[0] != 0) {
+		if (strcmp(g->track_interface, ifname) == 0) {
+			found = 1;
+			break;
+		}
+		g++;
+	}
+
+	free(groups);
+
+	return found;
 }
 
 void librouter_vrrp_dump_interface(FILE *out, char *dev)
