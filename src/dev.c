@@ -823,7 +823,8 @@ int librouter_dev_shutdown(char *dev, dev_family *fam)
 	}
 
 #ifdef OPTION_VRRP
-	librouter_vrrp_reload();
+	if (librouter_vrrp_is_iface_tracked(dev))
+		librouter_vrrp_reload();
 #endif
 
 	return 0;
@@ -909,7 +910,8 @@ int librouter_dev_noshutdown(char *dev, dev_family *fam)
 #endif
 
 #ifdef OPTION_VRRP
-	librouter_vrrp_reload();
+	if (librouter_vrrp_is_iface_tracked(dev))
+		librouter_vrrp_reload();
 #endif
 
 	return 0;

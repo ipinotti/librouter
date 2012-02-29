@@ -54,6 +54,7 @@ void librouter_vrrp_option_track_interface(char *dev, int group, char *track_ifa
 void librouter_vrrp_dump_interface(FILE *out, char *dev);
 void librouter_vrrp_dump_status(void);
 void librouter_vrrp_reload(void);
+int librouter_vrrp_is_iface_tracked(char *ifname);
 
 
 /* FIXME Copied from keepalived vrrp.h */
