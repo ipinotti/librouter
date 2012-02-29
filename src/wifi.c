@@ -494,6 +494,7 @@ int librouter_wifi_security_mode_get(librouter_wifi_security_mode_struct * secur
 		                security->wep_key, member_size(librouter_wifi_security_mode_struct, wep_key))
 		                < 0)
 			return -1;
+		librouter_str_strip_quot_marks(security->wep_key);
 		security->security_mode = wep;
 		security->wep_auth = shared;
 		return 0;
@@ -733,6 +734,7 @@ int librouter_wifi_dump(FILE * out)
 			break;
 		}
 		if (wifi_cfg.security.wep_auth == shared) {
+			librouter_str_striplf(wifi_cfg.security.wep_key);
 			if (strlen(wifi_cfg.security.wep_key) == 10) {
 				fprintf(out, "  security-mode wep shared hex 64Bit %s\n",
 				                wifi_cfg.security.wep_key);

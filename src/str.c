@@ -418,8 +418,34 @@ void librouter_str_strip_slash (char *string)
 {
 	char *ptr;
 
-	if( (ptr = strchr(string, '/')) != NULL)
+	while((ptr = strchr(string, '/')) != NULL)
 	    *ptr = ' ';
+}
+
+/**
+ * librouter_str_strip_slash 	Removes quotation marks from string
+ *
+ * @param string
+ */
+void librouter_str_strip_quot_marks (char *string)
+{
+	char *dst = string;
+	char *src = string;
+	char c;
+
+	while ((c = *src++) != '\0')
+	{
+	    if (c == '\\')
+	    {
+	        *dst++ = c;
+	        if ((c = *src++) == '\0')
+	            break;
+	        *dst++ = c;
+	    }
+	    else if (c != '"')
+	        *dst++ = c;
+	}
+	*dst = '\0';
 }
 
 /**
