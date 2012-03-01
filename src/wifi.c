@@ -494,7 +494,12 @@ int librouter_wifi_security_mode_get(librouter_wifi_security_mode_struct * secur
 		                security->wep_key, member_size(librouter_wifi_security_mode_struct, wep_key))
 		                < 0)
 			return -1;
-		librouter_str_strip_quot_marks(security->wep_key);
+
+		if (librouter_str_strip_quot_marks(security->wep_key) == 2)
+			security->wep_key_type = key_ascii;
+		else
+			security->wep_key_type = key_hex;
+
 		security->security_mode = wep;
 		security->wep_auth = shared;
 		return 0;
