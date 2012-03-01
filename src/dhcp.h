@@ -121,6 +121,7 @@ int librouter_dhcp_server_set_config(struct dhcp_server_conf_t *dhcp);
 int librouter_dhcp_server_free_config(struct dhcp_server_conf_t *dhcp);
 int librouter_dhcp_server_get_leases(struct dhcp_lease_t *leases);
 int librouter_dhcp_server_free_leases(struct dhcp_lease_t *leases);
+int librouter_dhcp_server_verify_ip_intf(void);
 
 int librouter_dhcp_check_server(char *ifname);
 int librouter_dhcp_set_relay(char *servers);

@@ -771,6 +771,7 @@ int librouter_dev_shutdown(char *dev, dev_family *fam)
 {
 	int major = librouter_device_get_major(dev, str_linux);
 	int minor = librouter_device_get_minor(dev, str_linux);
+	char * dhcpd_intf = NULL;
 
 	dev_dbg("Interface %s, major %d minor %d\n", dev, major, minor);
 
@@ -786,6 +787,14 @@ int librouter_dev_shutdown(char *dev, dev_family *fam)
 #ifdef OPTION_QOS
 	librouter_qos_tc_remove_all(dev);
 #endif
+
+	/*Verify DHCP Server on intf and shut it down*/
+	librouter_dhcp_server_get_iface(&dhcpd_intf);
+	if (dhcpd_intf){
+		if (!strcmp(dev, dhcpd_intf))
+			librouter_dhcp_server_set_status(0);
+		free (dhcpd_intf);
+	}
 
 	/* Save sub-interfaces states when physical interface goes down */
 	if (minor < 0)
