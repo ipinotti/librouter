@@ -119,6 +119,12 @@ static void vrrp_write_conf(struct vrrp_group *groups)
 	}
 
 	while (_check_for_valid_config(groups)) {
+		char addr[16], msk[16];
+		int cidr_msk;
+
+		librouter_ip_interface_get_ip_addr(groups->ifname, addr, msk);
+		cidr_msk = librouter_ip_netmask2cidr(msk);
+
 		fprintf(f, "vrrp_instance %s_%d {\n", groups->ifname, groups->group);
 		fprintf(f, "\tinterface %s\n", groups->ifname);
 		fprintf(f, "\tvirtual_router_id %d\n", groups->group);
@@ -153,7 +159,7 @@ static void vrrp_write_conf(struct vrrp_group *groups)
 		if (groups->ip[0].s_addr != 0 || !is_ipv6_addr_empty(&groups->ip6[0])) {
 			fprintf(f, "\tvirtual_ipaddress {\n");
 			for (i = 0; groups->ip[i].s_addr != 0 && i < MAX_VRRP_IP; i++) {
-				fprintf(f, "\t\t%s\n", inet_ntoa(groups->ip[i]));
+				fprintf(f, "\t\t%s/%d\n", inet_ntoa(groups->ip[i]), (cidr_msk != -1) ? cidr_msk : 32);
 			}
 			for (i = 0; is_ipv6_addr_empty(&groups->ip6[i]) == 0 && i < MAX_VRRP_IP; i++) {
 				char ip6[64];
