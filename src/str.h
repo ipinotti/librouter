@@ -18,6 +18,7 @@ int librouter_str_find_string_in_file(char *filename,
 int librouter_str_find_string_in_file_without_space(char *filename, char *key, char *buffer, int len);
 int librouter_str_replace_string_in_file_without_space(char *filename, char *key, char *value);
 void librouter_str_strip_slash (char *string);
+int librouter_str_strip_quot_marks (char *string);
 void librouter_str_striplf(char *string);
 int librouter_str_is_empty(char *string);
 int librouter_str_replace_exact_string(char *filename, char *key, char *value);

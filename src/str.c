@@ -418,8 +418,43 @@ void librouter_str_strip_slash (char *string)
 {
 	char *ptr;
 
-	if( (ptr = strchr(string, '/')) != NULL)
+	while((ptr = strchr(string, '/')) != NULL)
 	    *ptr = ' ';
+}
+
+/**
+ * librouter_str_strip_slash 	Removes quotation marks from string, and return how many quot exists
+ *
+ * @param string
+ * @return 0 if not found any, number if found quot in string
+ */
+int librouter_str_strip_quot_marks (char *string)
+{
+	char *dst = string;
+	char *src = string;
+	char c;
+	int count = 0;
+
+	while ((c = *src++) != '\0')
+	{
+	    if (c == '\\')
+	    {
+	        *dst++ = c;
+	        if ((c = *src++) == '\0')
+	            break;
+	        *dst++ = c;
+	    }
+	    else
+	    	if (c != '"')
+	    		*dst++ = c;
+	    	else
+	    		count++;
+
+
+	}
+	*dst = '\0';
+
+	return count;
 }
 
 /**
