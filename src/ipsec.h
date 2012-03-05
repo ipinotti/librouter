@@ -7,13 +7,18 @@
 #ifndef IPSEC_H_
 #define IPSEC_H_
 
-//#define IPSEC_DEBUG
+#include "options.h"
+#include "defines.h"
+
+#define IPSEC_DEBUG
 #ifdef IPSEC_DEBUG
 #define ipsec_dbg(x,...) \
-		syslog(LOG_INFO, "%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__);
+		printf("%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__);
 #else
 #define ipsec_dbg(x,...)
 #endif
+
+#define IPSEC_CONN_MAP_FILE "/var/run/ipsec.%s.bin"
 
 
 enum {
@@ -25,27 +30,71 @@ enum {
 };
 
 enum {
-	RSA = 1, SECRET = 2
+	RSA = 1, SECRET = 2, X509 = 3
 };
 
 enum {
 	AH = 1, ESP = 2
 };
 
+enum {
+	CYPHER_ANY = 0, CYPHER_AES = 1, CYPHER_3DES = 2, CYPHER_DES = 3, CYPHER_NULL = 4
+};
+
+enum {
+	 HASH_ANY = 0, HASH_MD5 = 1, HASH_SHA1 = 2
+};
+
+enum {
+	AUTO_IGNORE = 0, AUTO_START = 1, AUTO_ADD = 2
+};
+
+#define IPSEC_CONNECTION_NAME_LEN	32
+
+struct ipsec_desc {
+	char addr[32]; /* IP or interface */
+	char id[MAX_ID_LEN];
+	char network[16];
+	char gateway[16];
+	char protoport[16];
+	char rsa_public_key[1024];
+};
+
+struct ipsec_connection {
+	char name[IPSEC_CONNECTION_NAME_LEN];
+	int enabled;
+
+	int authby; /* RSA, SECRET, X509 */
+	int authtype; /* ESP or AH */
+
+	int cypher; /* AES, 3DES, DES, etc. */
+	int hash; /* MD5, SHA1, etc. */
+
+	struct ipsec_desc left;
+	struct ipsec_desc right;
+
+	int pfs;
+};
+
 int librouter_ipsec_is_running(void);
 int librouter_ipsec_exec(int opt);
 int librouter_l2tp_is_running(void);
 int librouter_l2tp_exec(int opt);
+
+int librouter_ipsec_create_conn(char *name);
+int librouter_ipsec_delete_conn(char *name);
+
 int librouter_ipsec_create_conf(void);
+
 int librouter_ipsec_set_connection(int add_del, char *key, int fd);
 int librouter_ipsec_create_rsakey(int keysize);
-int librouter_ipsec_get_auth(char *ipsec_conn, char *buf);
-int librouter_ipsec_set_rsakey(char *ipsec_conn, char *token, char *rsakey);
+int librouter_ipsec_get_auth(char *ipsec_conn);
+int librouter_ipsec_set_remote_rsakey(char *ipsec_conn, char *rsakey);
 int librouter_ipsec_create_secrets_file(char *name, int type, char *shared);
-int librouter_ipsec_set_auth(char *ipsec_conn, int opt);
+int librouter_ipsec_set_auth(char *ipsec_conn, int auth);
 int librouter_ipsec_get_link(char *ipsec_conn);
 int librouter_ipsec_set_ike_authproto(char *ipsec_conn, int opt);
-int librouter_ipsec_set_esp(char *ipsec_conn, char *cypher, char *hash);
+int librouter_ipsec_set_esp(char *ipsec_conn, int cypher, int hash);
 int librouter_ipsec_set_local_id(char *ipsec_conn, char *id);
 int librouter_ipsec_set_remote_id(char *ipsec_conn, char *id);
 int librouter_ipsec_set_local_addr(char *ipsec_conn, char *addr);
