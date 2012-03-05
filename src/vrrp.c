@@ -152,7 +152,10 @@ static void vrrp_write_conf(struct vrrp_group *groups)
 
 		if (groups->track_interface[0] != 0) {
 			fprintf(f, "\ttrack_interface {\n");
-			fprintf(f, "\t\t%s\n", groups->track_interface);
+			if (groups->track_interface_prio > 0)
+				fprintf(f, "\t\t%s weight -%d\n", groups->track_interface, groups->track_interface_prio);
+			else
+				fprintf(f, "\t\t%s\n", groups->track_interface);
 			fprintf(f, "\t}\n");
 		}
 
@@ -490,7 +493,7 @@ void librouter_vrrp_option_advertise_delay(char *dev, int group, int advertise_d
 	free(groups);
 }
 
-void librouter_vrrp_option_track_interface(char *dev, int group, char *track_iface)
+void librouter_vrrp_option_track_interface(char *dev, int group, char *track_iface, int prio)
 {
 	struct vrrp_group *groups, *g;
 
@@ -500,10 +503,13 @@ void librouter_vrrp_option_track_interface(char *dev, int group, char *track_ifa
 
 	g = vrrp_find_group(groups, dev, group);
 	if (g) {
-		if (track_iface)
+		if (track_iface) {
 			strncpy(g->track_interface, track_iface, sizeof(g->track_interface));
-		else
+			g->track_interface_prio = prio;
+		} else {
 			memset(g->track_interface, 0, sizeof(g->track_interface));
+			g->track_interface_prio = 0;
+		}
 	}
 
 	vrrp_write_bin(groups);
@@ -602,8 +608,12 @@ void librouter_vrrp_dump_interface(FILE *out, char *dev)
 				fprintf(out, " vrrp %d timers advertise %d\n", g->group, g->advertise_delay);
 
 			if (g->track_interface[0]) {
-				fprintf(out, " vrrp %d track-interface %s\n", g->group,
-				                librouter_device_linux_to_cli(g->track_interface, 0));
+				if (g->track_interface_prio > 0)
+					fprintf(out, " vrrp %d track-interface %s %d\n", g->group,
+				                librouter_device_linux_to_cli(g->track_interface, 0), g->track_interface_prio);
+				else
+					fprintf(out, " vrrp %d track-interface %s\n", g->group,
+									                librouter_device_linux_to_cli(g->track_interface, 0));
 			}
 		}
 		g++;

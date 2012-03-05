@@ -25,6 +25,7 @@ struct vrrp_group
 	unsigned char priority;
 	unsigned char advertise_delay;
 	unsigned char track_interface[MAX_VRRP_IFNAME];
+	int track_interface_prio;
 };
 
 enum {
@@ -50,7 +51,7 @@ int librouter_vrrp_option_ip(char *dev, int group, int add, char *ip_string, int
 void librouter_vrrp_option_preempt(char *dev, int group, int preempt, int delay);
 void librouter_vrrp_option_priority(char *dev, int group, int priority);
 void librouter_vrrp_option_advertise_delay(char *dev, int group, int advertise_delay);
-void librouter_vrrp_option_track_interface(char *dev, int group, char *track_iface);
+void librouter_vrrp_option_track_interface(char *dev, int group, char *track_iface, int prio);
 void librouter_vrrp_dump_interface(FILE *out, char *dev);
 void librouter_vrrp_dump_status(void);
 void librouter_vrrp_reload(void);
