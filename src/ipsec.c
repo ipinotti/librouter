@@ -32,6 +32,16 @@
 #ifdef OPTION_IPSEC
 
 /*****************************************************/
+/*****************  Misc Functions *******************/
+/*****************************************************/
+static int _check_ip(char *str)
+{
+	struct in_addr ip;
+
+	return inet_aton(str, &(ip));
+}
+
+/*****************************************************/
 /**********  Process Management Functions ************/
 /*****************************************************/
 
@@ -64,10 +74,10 @@ int librouter_ipsec_exec(int opt)
 
 	switch (opt) {
 	case START:
-		ret = librouter_exec_prog(0, PROG_IPSEC, "start", NULL);
+		ret = librouter_exec_prog(1, PROG_IPSEC, "start", NULL);
 		break;
 	case STOP:
-		ret = librouter_exec_prog(0, PROG_IPSEC, "stop", NULL);
+		ret = librouter_exec_prog(1, PROG_IPSEC, "stop", NULL);
 		for (i = 0; i < 5; i++) {
 			if (!librouter_ipsec_is_running())
 				break;
@@ -76,7 +86,7 @@ int librouter_ipsec_exec(int opt)
 		break;
 	case RESTART:
 	case RELOAD:
-		ret = librouter_exec_prog(0, PROG_IPSEC, "reload", NULL);
+		ret = librouter_exec_prog(1, PROG_IPSEC, "reload", NULL);
 		break;
 	default:
 		break;
@@ -209,39 +219,26 @@ static int _ipsec_delete_conn(char *name)
 }
 
 
-/*  Create ipsec.[connectioname].conf
- *  Type:
- *     - 0,  manual
- *     - 1,  ike
- */
 static int _ipsec_write_conn_cfg(char *name)
 {
-#if 0
-	int fd;
-#else
 	FILE *f;
-#endif
 	char buf[MAX_CMD_LINE];
 	struct ipsec_connection *c = NULL;
 
 	sprintf(buf, FILE_IKE_CONN_CONF, name);
-#if 0
-	if ((fd = open(buf, O_WRONLY | O_CREAT | O_TRUNC, 0600)) < 0) {
-#else
+
 	f = fopen(buf, "w+");
 	if (f == NULL) {
-#endif
 		printf("%% could not create connection file\n");
 		return -1;
 	}
-
 
 	if (_ipsec_map_conn(name, &c) < 0) {
 		fclose(f);
 		return -1;
 	}
 
-	fprintf(f, "#active= no\nconn %s\n");
+	fprintf(f, "conn %s\n", name);
 
 	/* AUTHBY */
 	switch (c->authby) {
@@ -328,20 +325,18 @@ static int _ipsec_write_conn_cfg(char *name)
 	if (c->right.protoport[0])
 		fprintf(f, "\trightprotoport= %s\n", c->right.protoport);
 
-	if (c->enabled)
+	if (c->pfs)
+		fprintf(f, "\tpfs= yes\n");
+	else
+		fprintf(f, "\tpfs= no\n");
+
+	/* Always restart if dead peer is detected */
+	fprintf(f, "\tdpdaction= restart\n");
+
+	if (c->status)
 		fprintf(f, "\tauto= start\n");
 	else
 		fprintf(f, "\tauto= ignore\n");
-
-#if 0
-		"\taggrmode=\n"
-		"\tpfs=\n"
-		"\tauto= ignore\n"
-		"\tdpddelay= 30\n"
-		"\tdpdtimeout= 120\n"
-		"\tdpdaction= restart\n", name);
-#endif
-
 
 	fclose(f);
 
@@ -398,7 +393,7 @@ int librouter_ipsec_create_conn(char *name)
 {
 	struct ipsec_connection *c;
 
-	ipsec_dbg("Creating connection ...\n");
+	ipsec_dbg("Creating connection %s\n", name);
 
 	if (_ipsec_update_secrets(name, 1) < 0)
 		return -1;
@@ -417,6 +412,8 @@ int librouter_ipsec_delete_conn(char *name)
 	char buf[128];
 	struct stat st;
 
+	ipsec_dbg("Deleting connection %s\n", name);
+
 	snprintf(buf, 128, FILE_IKE_CONN_CONF, name);
 	if (stat(buf, &st) == 0)
 		remove(buf);
@@ -431,25 +428,6 @@ int librouter_ipsec_delete_conn(char *name)
 
 	return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 int librouter_ipsec_create_conf(void)
 {
@@ -564,29 +542,6 @@ int librouter_ipsec_create_rsakey(int keysize)
 	return ret;
 }
 
-#if 0
-int librouter_ipsec_get_auth(char *ipsec_conn, char *buf)
-{
-	int ret;
-	char *p, filename[60];
-
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	ret = librouter_str_find_string_in_file(filename, STRING_IPSEC_AUTHBY, buf, MAX_CMD_LINE);
-
-	if (ret < 0)
-		return ret;
-
-	if ((p = strstr(buf, "rsasig"))) {
-		return RSA;
-	} else {
-		if ((p = strstr(buf, "secret")))
-			return SECRET;
-	}
-
-	return 0;
-}
-#else
 int librouter_ipsec_get_auth(char *ipsec_conn)
 {
 	int auth;
@@ -601,81 +556,7 @@ int librouter_ipsec_get_auth(char *ipsec_conn)
 
 	return auth;
 }
-#endif
 
-#if 0
-char *librouter_ipsec_get_rsakeys_config(const char *file_name)
-{
-	FILE *file;
-	int len = 0, tp;
-	char *p, *buf = NULL, line[1024], last_line_flag[] = "Coefficient: ";
-
-	line[1023] = '\0';
-	file = fopen(file_name, "r");
-	if (file) {
-		while (!feof(file)) {
-			fgets(line, 1023, file);
-			if (strncmp(line, "rsa_keys", 8) == 0) {
-				len = 0;
-				while (!feof(file)) {
-					if (strstr(line, last_line_flag)) {
-						while (!feof(file)) {
-							if ((tp = strlen(line)) < 1023) {
-								len += tp;
-								goto next_step;
-							}
-							len += tp;
-							fgets(line, 1023, file);
-						}
-						goto next_step;
-					} else
-						len += 1023;
-
-					fgets(line, 1023, file);
-				}
-			}
-		}
-next_step:
-		if (len > 0) {
-			fseek(file, 0, SEEK_SET);
-			if ((buf = malloc(len + 1)) != NULL) {
-				memset(buf, '\0', len + 1);
-				while (!feof(file)) {
-					fgets(line, 1023, file);
-					if (strncmp(line, "rsa_keys", 8) == 0) {
-						p = strstr(line, "rsa_keys") + 9;
-						strcat(buf, p);
-						while (!feof(file)) {
-							fgets(line, 1023, file);
-							strcat(buf, line);
-							if (strchr(line, '\0'))
-								goto go_out;
-						}
-					}
-				}
-			}
-		}
-go_out:
-		fclose(file);
-		if (buf && strlen(buf) > 0)
-			return buf;
-	} else
-		printf("%% Could not find file: %s\n", file_name);
-
-	return NULL;
-}
-#endif
-
-#if 0
-int librouter_ipsec_set_rsakey(char *ipsec_conn, char *token, char *rsakey)
-{
-	char filename[60];
-
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	return librouter_str_replace_string_in_file(filename, token, rsakey);
-}
-#else
 int librouter_ipsec_set_remote_rsakey(char *ipsec_conn, char *rsakey)
 {
 	struct ipsec_connection *c;
@@ -683,31 +564,40 @@ int librouter_ipsec_set_remote_rsakey(char *ipsec_conn, char *rsakey)
 	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
 		return -1;
 
-	memset(c->right.rsa_public_key, 0, sizeof(c->right.rsa_public_key));
-	memcpy(c->right.rsa_public_key, rsakey, strlen(rsakey));
+	strncpy(c->right.rsa_public_key, rsakey, sizeof(c->right.rsa_public_key));
 
 	return _ipsec_unmap_conn(c);
 }
-#endif
 
-/*
- *  Type:
- *     - 0,  secret
- *     - 1,  rsa
- */
-int librouter_ipsec_create_secrets_file(char *name, int type, char *shared)
+int librouter_ipsec_set_local_rsakey(char *ipsec_conn, char *rsakey)
+{
+	struct ipsec_connection *c;
+
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
+		return -1;
+
+	strncpy(c->left.rsa_public_key, rsakey, sizeof(c->left.rsa_public_key));
+
+	return _ipsec_unmap_conn(c);
+}
+
+static int _ipsec_update_secrets_file(char *name)
 {
 	int fd;
 	char *rsa, filename[60], buf[MAX_KEY_SIZE];
+	struct ipsec_connection *c;
+
+	if (_ipsec_map_conn(name, &c) < 0)
+		return -1;
 
 	sprintf(filename, FILE_CONN_SECRETS, name);
 
-	if (!(fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0600))) {
+	if (!(fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0660))) {
 		fprintf(stderr, "Could not create secret file\n");
 		return -1;
 	}
 
-	if (type) {
+	if (c->authby == RSA) {
 		char token1[] = ": RSA	{\n";
 		char token2[] = "	}\n";
 
@@ -718,6 +608,13 @@ int librouter_ipsec_create_secrets_file(char *name, int type, char *shared)
 			                "%% ERROR: You must create RSA keys first (key generate rsa 1024).\n");
 			close(fd);
 			return -1;
+		}
+
+		ipsec_dbg("Loaded RSA from NV : %s\n", rsa);
+
+		if (c->left.id[0]) {
+			write(fd, c->left.id, strlen(c->left.id));
+			write(fd, " ", 1);
 		}
 
 		write(fd, token1, strlen(token1));
@@ -732,38 +629,32 @@ int librouter_ipsec_create_secrets_file(char *name, int type, char *shared)
 		if (librouter_str_find_string_in_file(filename, "#pubkey", buf, MAX_KEY_SIZE) < 0)
 			return -1;
 
-		if (librouter_ipsec_set_remote_rsakey(name, buf) < 0)
+		if (librouter_ipsec_set_local_rsakey(name, buf) < 0)
 			return -1;
 	} else {
 		char token1[] = ": PSK \"";
 		char token2[] = "\"\n";
 
+		if (c->left.id[0] && c->right.id) {
+			sprintf(buf, "%s %s ", c->left.id, c->right.id);
+			write(fd, buf, strlen(buf));
+		} else if (c->left.addr[0] && _check_ip(c->left.addr) && c->right.addr[0]) {
+			sprintf(buf, "%s %s ", c->left.addr, c->right.addr);
+			write(fd, buf, strlen(buf));
+		}
+
 		write(fd, token1, strlen(token1));
-		write(fd, shared, strlen(shared));
+		write(fd, c->sharedkey, strlen(c->sharedkey));
 		write(fd, token2, strlen(token2));
 		write(fd, '\0', 1);
 		close(fd);
 	}
 
+	_ipsec_unmap_conn(c);
+
 	return 0;
 }
 
-#if 0
-int librouter_ipsec_set_auth(char *ipsec_conn, int opt)
-{
-	char buf[MAX_LINE], filename[60];
-
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	if (opt == RSA)
-		sprintf(buf, "rsasig");
-	else
-		sprintf(buf, "secret");
-
-	return librouter_str_replace_string_in_file(filename,
-	                STRING_IPSEC_AUTHBY, buf);
-}
-#else
 int librouter_ipsec_set_auth(char *ipsec_conn, int auth)
 {
 	struct ipsec_connection *c;
@@ -775,31 +666,19 @@ int librouter_ipsec_set_auth(char *ipsec_conn, int auth)
 
 	return _ipsec_unmap_conn(c);
 }
-#endif
 
-#if 0
-int librouter_ipsec_get_link(char *ipsec_conn)
+int librouter_ipsec_set_secret(char *ipsec_conn, char *secret)
 {
-	int ret;
-	struct stat st;
-	char opt[5], filename[60];
+	struct ipsec_connection *c;
 
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	if (stat(filename, &st) != 0) {
-		librouter_pr_error(0, "Could not get ipsec link");
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
 		return -1;
-	}
 
-	if ((ret = librouter_str_find_string_in_file(filename, STRING_IPSEC_LINK, opt, 5)) < 0)
-		return ret;
+	strncpy(c->sharedkey, secret, sizeof(c->sharedkey));
 
-	if (strstr(opt, "yes"))
-		return 1;
-	else
-		return 0;
+	return _ipsec_unmap_conn(c);
 }
-#else
+
 int librouter_ipsec_get_link(char *ipsec_conn)
 {
 	struct ipsec_connection *c;
@@ -808,29 +687,13 @@ int librouter_ipsec_get_link(char *ipsec_conn)
 	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
 		return -1;
 
-	link = c->enabled;
+	link = c->status;
 
 	_ipsec_unmap_conn(c);
 
 	return link;
 }
-#endif
 
-#if 0
-int librouter_ipsec_set_ike_authproto(char *ipsec_conn, int opt)
-{
-	char buf[MAX_LINE], filename[60];
-
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	if (opt == AH)
-		sprintf(buf, "ah");
-	else
-		sprintf(buf, "esp");
-
-	return librouter_str_replace_string_in_file(filename, STRING_IPSEC_AUTHPROTO, buf);
-}
-#else
 int librouter_ipsec_set_ike_authproto(char *ipsec_conn, int opt)
 {
 	struct ipsec_connection *c;
@@ -842,26 +705,7 @@ int librouter_ipsec_set_ike_authproto(char *ipsec_conn, int opt)
 
 	return _ipsec_unmap_conn(c);
 }
-#endif
 
-#if 0
-int librouter_ipsec_set_esp(char *ipsec_conn, char *cypher, char *hash)
-{
-	char buf[MAX_LINE], filename[60];
-
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-	*buf = 0;
-
-	if (cypher) {
-		if (hash)
-			sprintf(buf, "%s-%s", cypher, hash);
-		else
-			sprintf(buf, "%s", cypher);
-	}
-
-	return librouter_str_replace_string_in_file(filename, STRING_IPSEC_ESP, buf);
-}
-#else
 int librouter_ipsec_set_esp(char *ipsec_conn, int cypher, int hash)
 {
 	struct ipsec_connection *c;
@@ -869,23 +713,14 @@ int librouter_ipsec_set_esp(char *ipsec_conn, int cypher, int hash)
 	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
 		return -1;
 
+	ipsec_dbg("cypher %d hash %d\n", cypher, hash);
+
 	c->cypher = cypher;
 	c->hash = hash;
 
 	return _ipsec_unmap_conn(c);
 }
-#endif
 
-#if 0
-int librouter_ipsec_set_local_id(char *ipsec_conn, char *id)
-{
-	char filename[60];
-
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	return librouter_str_replace_string_in_file(filename, STRING_IPSEC_L_ID, id);
-}
-#else
 int librouter_ipsec_set_local_id(char *ipsec_conn, char *id)
 {
 	struct ipsec_connection *c;
@@ -893,23 +728,13 @@ int librouter_ipsec_set_local_id(char *ipsec_conn, char *id)
 	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
 		return -1;
 
-	memset(c->left.id, 0, sizeof(c->left.id));
-	memcpy(c->left.id, id, strlen(id));
+	ipsec_dbg("Saving local id as %s\n", id);
+
+	strcpy(c->left.id, id);
 
 	return _ipsec_unmap_conn(c);
 }
-#endif
 
-#if 0
-int librouter_ipsec_set_remote_id(char *ipsec_conn, char *id)
-{
-	char filename[60];
-
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	return librouter_str_replace_string_in_file(filename, STRING_IPSEC_R_ID, id);
-}
-#else
 int librouter_ipsec_set_remote_id(char *ipsec_conn, char *id)
 {
 	struct ipsec_connection *c;
@@ -917,32 +742,13 @@ int librouter_ipsec_set_remote_id(char *ipsec_conn, char *id)
 	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
 		return -1;
 
-	memset(c->right.id, 0, sizeof(c->right.id));
-	memcpy(c->right.id, id, strlen(id));
+	ipsec_dbg("Saving remote id as %s\n", id);
+
+	strcpy(c->right.id, id);
 
 	return _ipsec_unmap_conn(c);
 }
-#endif
 
-#if 0
-int librouter_ipsec_set_local_addr(char *ipsec_conn, char *addr)
-{
-	char filename[60];
-
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	return librouter_str_replace_string_in_file(filename, STRING_IPSEC_L_ADDR, addr);
-}
-
-int librouter_ipsec_set_remote_addr(char *ipsec_conn, char *addr)
-{
-	char filename[60];
-
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	return librouter_str_replace_string_in_file(filename, STRING_IPSEC_R_ADDR, addr);
-}
-#else
 int librouter_ipsec_set_local_addr(char *ipsec_conn, char *addr)
 {
 	struct ipsec_connection *c;
@@ -950,8 +756,7 @@ int librouter_ipsec_set_local_addr(char *ipsec_conn, char *addr)
 	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
 		return -1;
 
-	memset(c->left.addr, 0, sizeof(c->left.addr));
-	memcpy(c->left.addr, addr, strlen(addr));
+	strncpy(c->left.addr, addr, sizeof(c->left.addr));
 
 	return _ipsec_unmap_conn(c);
 }
@@ -963,32 +768,11 @@ int librouter_ipsec_set_remote_addr(char *ipsec_conn, char *addr)
 	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
 		return -1;
 
-	memset(c->right.addr, 0, sizeof(c->right.addr));
-	memcpy(c->right.addr, addr, strlen(addr));
+	strncpy(c->right.addr, addr, sizeof(c->right.addr));
 
 	return _ipsec_unmap_conn(c);
 }
-#endif
 
-#if 0
-int librouter_ipsec_set_nexthop_inf(int position,
-                                    char *ipsec_conn,
-                                    char *nexthop)
-{
-	char filename[60];
-
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	switch (position) {
-	case LOCAL:
-		return librouter_str_replace_string_in_file(filename, STRING_IPSEC_L_NEXTHOP, nexthop);
-	case REMOTE:
-		return librouter_str_replace_string_in_file(filename, STRING_IPSEC_R_NEXTHOP, nexthop);
-	}
-
-	return -1;
-}
-#else
 int librouter_ipsec_set_nexthop_inf(int position,
                                     char *ipsec_conn,
                                     char *nexthop)
@@ -1000,12 +784,14 @@ int librouter_ipsec_set_nexthop_inf(int position,
 
 	switch (position) {
 	case LOCAL:
-		memset(c->left.gateway, 0, sizeof(c->left.gateway));
-		memcpy(c->left.gateway, nexthop, strlen(nexthop));
+		//memset(c->left.gateway, 0, sizeof(c->left.gateway));
+		//memcpy(c->left.gateway, nexthop, strlen(nexthop));
+		strncpy(c->left.gateway, nexthop, sizeof(c->left.gateway));
 		break;
 	case REMOTE:
-		memset(c->right.gateway, 0, sizeof(c->right.gateway));
-		memcpy(c->right.gateway, nexthop, strlen(nexthop));
+		//memset(c->right.gateway, 0, sizeof(c->right.gateway));
+		//memcpy(c->right.gateway, nexthop, strlen(nexthop));
+		strncpy(c->right.gateway, nexthop, sizeof(c->right.gateway));
 		break;
 	default:
 		break;
@@ -1013,34 +799,7 @@ int librouter_ipsec_set_nexthop_inf(int position,
 
 	return _ipsec_unmap_conn(c);
 }
-#endif
 
-#if 0
-int librouter_ipsec_set_subnet_inf(int position,
-                                   char *ipsec_conn,
-                                   char *addr,
-                                   char *mask)
-{
-	int ret;
-	char subnet[MAX_LINE] = "", filename[60];
-
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	if (strlen(addr) && strlen(mask)) {
-		if ((ret = librouter_quagga_classic_to_cidr(addr, mask, subnet)) < 0)
-			return ret;
-	}
-
-	switch (position) {
-	case LOCAL:
-		return librouter_str_replace_string_in_file(filename, STRING_IPSEC_L_SUBNET, subnet);
-	case REMOTE:
-		return librouter_str_replace_string_in_file(filename, STRING_IPSEC_R_SUBNET, subnet);
-	}
-
-	return -1;
-}
-#else
 int librouter_ipsec_set_subnet_inf(int position,
                                    char *ipsec_conn,
                                    char *addr,
@@ -1060,12 +819,14 @@ int librouter_ipsec_set_subnet_inf(int position,
 
 	switch (position) {
 	case LOCAL:
-		memset(c->left.network, 0, sizeof(c->left.network));
-		memcpy(c->left.network, subnet, strlen(subnet));
+		//memset(c->left.network, 0, sizeof(c->left.network));
+		//memcpy(c->left.network, subnet, strlen(subnet));
+		strncpy(c->left.network, subnet, sizeof(c->left.network));
 		break;
 	case REMOTE:
-		memset(c->left.network, 0, sizeof(c->left.network));
-		memcpy(c->left.network, subnet, strlen(subnet));
+		//memset(c->right.network, 0, sizeof(c->right.network));
+		//memcpy(c->right.network, subnet, strlen(subnet));
+		strncpy(c->right.network, subnet, sizeof(c->right.network));
 		break;
 	default:
 		break;
@@ -1073,30 +834,7 @@ int librouter_ipsec_set_subnet_inf(int position,
 
 	return _ipsec_unmap_conn(c);
 }
-#endif
 
-#if 0
-int librouter_ipsec_set_protoport(char *ipsec_conn, char *protoport)
-{
-	char filename[60], protoport_sp1[] = "17/0", protoport_sp2[] =
-	                "17/1701";
-
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	if (protoport == NULL) {
-		librouter_str_replace_string_in_file(filename, STRING_IPSEC_L_PROTOPORT, "");
-		librouter_str_replace_string_in_file(filename, STRING_IPSEC_R_PROTOPORT, "");
-	} else if (!strcmp(protoport, "SP1")) {
-		librouter_str_replace_string_in_file(filename, STRING_IPSEC_L_PROTOPORT, protoport_sp1);
-		librouter_str_replace_string_in_file(filename, STRING_IPSEC_R_PROTOPORT, protoport_sp2);
-	} else if (!strcmp(protoport, "SP2")) {
-		librouter_str_replace_string_in_file(filename, STRING_IPSEC_L_PROTOPORT, protoport_sp2);
-		librouter_str_replace_string_in_file(filename, STRING_IPSEC_R_PROTOPORT, protoport_sp2);
-	}
-
-	return 0;
-}
-#else
 int librouter_ipsec_set_protoport(char *ipsec_conn, char *protoport)
 {
 	char protoport_sp1[] = "17/0", protoport_sp2[] = "17/1701";
@@ -1110,31 +848,16 @@ int librouter_ipsec_set_protoport(char *ipsec_conn, char *protoport)
 
 
 	if (!strcmp(protoport, "SP1")) {
-		memcpy(c->left.protoport, protoport_sp1, strlen(protoport_sp1));
-		memcpy(c->right.protoport, protoport_sp1, strlen(protoport_sp1));
+		memcpy(c->left.protoport, protoport_sp1, strlen(protoport_sp1+1));
+		memcpy(c->right.protoport, protoport_sp1, strlen(protoport_sp1+1));
 	} else if (!strcmp(protoport, "SP2")) {
-		memcpy(c->left.protoport, protoport_sp2, strlen(protoport_sp2));
-		memcpy(c->right.protoport, protoport_sp2, strlen(protoport_sp2));
+		memcpy(c->left.protoport, protoport_sp2, strlen(protoport_sp2+1));
+		memcpy(c->right.protoport, protoport_sp2, strlen(protoport_sp2+1));
 	}
 
 	return _ipsec_unmap_conn(c);;
 }
-#endif
 
-#if 0
-int librouter_ipsec_set_pfs(char *ipsec_conn, int on)
-{
-	char buf[MAX_LINE], filename[60];
-
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-	if (on)
-		sprintf(buf, "yes");
-	else
-		sprintf(buf, "no");
-
-	return librouter_str_replace_string_in_file(filename, STRING_IPSEC_PFS, buf);
-}
-#else
 int librouter_ipsec_set_pfs(char *ipsec_conn, int on)
 {
 	struct ipsec_connection *c;
@@ -1146,8 +869,10 @@ int librouter_ipsec_set_pfs(char *ipsec_conn, int on)
 
 	return _ipsec_unmap_conn(c);
 }
-#endif
 
+/****************************************************/
+/************ General IPSec Configuration ***********/
+/****************************************************/
 
 int librouter_ipsec_get_autoreload(void)
 {
@@ -1256,77 +981,70 @@ int librouter_ipsec_list_all_names(char ***rcv_p)
 int librouter_ipsec_get_id(int position, char *ipsec_conn, char *buf)
 {
 	int ret;
-	struct stat st;
-	char filename[60];
+	struct ipsec_connection *c;
+	struct ipsec_ep *p;
 
 	*buf = '\0';
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	if (stat(filename, &st) != 0)
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
 		return -1;
 
-	if (position == LOCAL) {
-		if ((ret = librouter_str_find_string_in_file(filename, STRING_IPSEC_L_ID, buf, MAX_LINE)) < 0)
-			return ret;
-	} else {
-		if ((ret = librouter_str_find_string_in_file(filename, STRING_IPSEC_R_ID, buf, MAX_LINE)) < 0)
-			return ret;
-	}
+	if (position == LOCAL)
+		p = &c->left;
+	else
+		p = &c->right;
+
+	strncpy(buf, p->id, sizeof(p->id));
+
+	_ipsec_unmap_conn(c);
 
 	if (strlen(buf) > 0)
 		return 1;
-	else
-		return 0;
+
+	return 0;
 }
 
 int librouter_ipsec_get_subnet(int position, char *ipsec_conn, char *buf)
 {
 	int ret;
-	struct stat st;
-	char subnet[MAX_LINE] = "", filename[60];
+	struct ipsec_connection *c;
+	struct ipsec_ep *p;
+	char subnet[64];
 
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	if (stat(filename, &st) != 0)
+	*buf = '\0';
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
 		return -1;
 
-	if (position == LOCAL) {
-		if ((ret = librouter_str_find_string_in_file(filename, STRING_IPSEC_L_SUBNET, subnet, MAX_LINE)) < 0)
-			return ret;
-	} else {
-		if ((ret = librouter_str_find_string_in_file(filename, STRING_IPSEC_R_SUBNET, subnet, MAX_LINE)) < 0)
-			return ret;
-	}
+	if (position == LOCAL)
+		p = &c->left;
+	else
+		p = &c->right;
+
+	strncpy(subnet, p->network, sizeof(p->network));
+
+	_ipsec_unmap_conn(c);
 
 	if (strlen(subnet) > 0) {
 		if ((ret = librouter_quagga_cidr_to_classic(subnet, buf)) >= 0)
 			return 1;
 		else
-			return ret;
+			return 0;
 	}
 
 	*buf = 0;
 	return 0;
 }
 
-static int _check_ip(char *str)
-{
-	struct in_addr ip;
-
-	return inet_aton(str, &(ip));
-}
-
 int librouter_ipsec_get_local_addr(char *ipsec_conn, char *buf)
 {
-	int ret;
-	char filename[60];
+	struct ipsec_connection *c;
+	int pfs;
 
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
+		return -1;
 
-	if ((ret = librouter_str_find_string_in_file(filename, STRING_IPSEC_L_ADDR, buf, MAX_LINE)) < 0) {
-		*buf = 0;
-		return ret;
-	}
+	strncpy(buf, c->left.addr, sizeof(c->left.addr));
+
+	_ipsec_unmap_conn(c);
 
 	if (_check_ip(buf)) {
 		return ADDR_IP;
@@ -1339,33 +1057,33 @@ int librouter_ipsec_get_local_addr(char *ipsec_conn, char *buf)
 
 	*buf = 0;
 	return 0;
+
 }
 
 int librouter_ipsec_get_remote_addr(char *ipsec_conn, char *buf)
 {
-	int ret;
-	char filename[60];
+	struct ipsec_connection *c;
+	int pfs;
 
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
+		return -1;
 
-	if ((ret = librouter_str_find_string_in_file(filename, STRING_IPSEC_R_ADDR, buf, MAX_LINE)) < 0) {
-		*buf = 0;
-		return ret;
-	}
+	strncpy(buf, c->right.addr, sizeof(c->right.addr));
+
+	_ipsec_unmap_conn(c);
 
 	if (_check_ip(buf)) {
 		return ADDR_IP;
-	} else {
-		if (strcmp(buf, STRING_ANY) == 0) {
-			*buf = 0;
-			return ADDR_ANY;
-		} else if (strlen(buf)) {
-			return ADDR_FQDN;
-		}
+	} else if (strcmp(buf, STRING_DEFAULTROUTE) == 0) {
+		*buf = 0;
+		return ADDR_DEFAULT;
+	} else if (strlen(buf)) {
+		return ADDR_FQDN;
 	}
 
 	*buf = 0;
 	return 0;
+
 }
 
 int librouter_ipsec_get_nexthop(int position, char *ipsec_conn, char *buf)
@@ -1400,109 +1118,68 @@ int librouter_ipsec_get_nexthop(int position, char *ipsec_conn, char *buf)
 
 int librouter_ipsec_get_ike_authproto(char *ipsec_conn)
 {
-	int ret;
-	char *p, filename[60], buf[MAX_LINE];
-
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	ret = librouter_str_find_string_in_file(filename, STRING_IPSEC_AUTHPROTO, buf, MAX_LINE);
-
-	if (ret < 0)
-		return ret;
-
-	if ((p = strstr(buf, "ah")))
-		return AH;
-	else if ((p = strstr(buf, "esp")))
-		return ESP;
-
-	return 0;
+	/* Dummy function, always return ESP */
+	return ESP;
 }
 
 int librouter_ipsec_get_esp(char *ipsec_conn, char *buf)
 {
-	int ret;
-	char *p, filename[60];
+	struct ipsec_connection *c;
 
-	*buf = '\0';
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
+		return -1;
 
-	ret = librouter_str_find_string_in_file(filename, STRING_IPSEC_ESP, buf, MAX_LINE);
+	ipsec_dbg("cypher = %d hash = %d\n", c->cypher, c->hash);
 
-	if (ret < 0)
-		return ret;
-
-	if (strlen(buf) > 0) {
-		/* remove '-' */
-		if ((p = strchr(buf, '-')))
-			*p = ' ';
-		return 1;
+	switch(c->cypher) {
+	case CYPHER_AES:
+		strcpy(buf, "aes ");
+		break;
+	case CYPHER_3DES:
+		strcpy(buf, "3des ");
+		break;
+	case CYPHER_NULL:
+		strcpy(buf, "null ");
+		break;
+	case CYPHER_DES:
+		strcpy(buf, "des ");
+		break;
+	case CYPHER_ANY:
+		_ipsec_unmap_conn(c);
+		return 0;
 	}
 
-	return 0;
+	switch(c->hash) {
+	case HASH_MD5:
+		strcat(buf, "md5");
+		break;
+	case HASH_SHA1:
+		strcat(buf, "sha1");
+		break;
+	default:
+		break;
+	}
+
+	_ipsec_unmap_conn(c);
+
+	return 1;
 }
 
 int librouter_ipsec_get_pfs(char *ipsec_conn)
 {
-	int ret;
-	char *p, filename[60], buf[MAX_LINE] = "";
+	struct ipsec_connection *c;
+	int pfs;
 
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	if ((ret = librouter_str_find_string_in_file(filename, STRING_IPSEC_PFS, buf, MAX_LINE)) < 0)
-		return ret;
-
-	if (strlen(buf) > 0) {
-		if ((p = strstr(buf, "yes")))
-			return 1;
-		if ((p = strstr(buf, "no")))
-			return 0;
-	}
-
-	return 0;
-}
-
-#if 0
-int librouter_ipsec_set_link(char *ipsec_conn, int on_off)
-{
-	struct stat st;
-	char opt[20], filename[60], buf[200];
-
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	if (stat(filename, &st) != 0)
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
 		return -1;
 
-	if (on_off) {
-		/* caso o endereco remoto seja "any", entao o paramentro "auto" dentro de ipsec.[conn name].conf deve ser "add" */
-		if (librouter_ipsec_get_remote_addr(ipsec_conn, buf) == ADDR_ANY)
-			sprintf(opt, "add");
-		else
-			sprintf(opt, "start");
-	} else {
-		sprintf(opt, "ignore");
-	}
+	pfs = c->pfs;
 
-	librouter_str_replace_string_in_file(filename, STRING_IPSEC_AUTO, opt); /* auto= start/ignore/add */
+	_ipsec_unmap_conn(c);
 
-#if 0
-	/* PSK with %any uses aggresive mode */
-	if (!strcmp(opt, "add") && (get_ipsec_auth(ipsec_conn, buf) == SECRET))
-		sprintf(opt, "yes");
-	else
-#endif
-	sprintf(opt, "no");
-
-	/* aggrmode= yes/no */
-	librouter_str_replace_string_in_file(filename, STRING_IPSEC_AGGRMODE, opt);
-
-	if (on_off)
-		sprintf(opt, "yes");
-	else
-		sprintf(opt, "no");
-
-	return librouter_str_replace_string_in_file(filename, STRING_IPSEC_LINK, opt);
+	return pfs;
 }
-#else
+
 int librouter_ipsec_set_link(char *ipsec_conn, int on_off)
 {
 	struct ipsec_connection *c;
@@ -1514,108 +1191,89 @@ int librouter_ipsec_set_link(char *ipsec_conn, int on_off)
 	if (on_off) {
 		/* For accepting road warrior connections, use add instead of start */
 		if (librouter_ipsec_get_remote_addr(ipsec_conn, buf) == ADDR_ANY)
-			c->enabled = AUTO_ADD;
+			c->status = AUTO_ADD;
 		else
-			c->enabled = AUTO_START;
+			c->status = AUTO_START;
 	} else {
-		c->enabled = AUTO_IGNORE;
+		c->status = AUTO_IGNORE;
 	}
 
 	_ipsec_unmap_conn(c);
 
 	/* Update configuration file in this point */
 	_ipsec_write_conn_cfg(ipsec_conn);
+
+	/* Update secrets file in this point */
+	_ipsec_update_secrets_file(ipsec_conn);
 }
-#endif
 
 int librouter_ipsec_get_sharedkey(char *ipsec_conn, char **buf)
 {
-	int fd;
-	int i;
-	char *p, tmp[60];
-	struct stat st;
+	struct ipsec_connection *c;
 
-	sprintf(tmp, FILE_CONN_SECRETS, ipsec_conn);
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
+		return -1;
 
-	if ((fd = open(tmp, O_RDONLY)) < 0) {
-		fprintf(stderr, "could not get sharedkey");
+	if (strlen(c->sharedkey) == 0)
+		return -1;
+
+	*buf = malloc(strlen(c->sharedkey)+1);
+	if (*buf == NULL) {
+		_ipsec_unmap_conn(c);
 		return -1;
 	}
 
-	if (fstat(fd, &st) < 0) {
-		fprintf(stderr, "could not read file propertys");
-		return -1;
-	}
+	strncpy(*buf, c->sharedkey, strlen(c->sharedkey)+1);
 
-	if (!(*buf = malloc(st.st_size + 1))) {
-		close(fd);
-		fprintf(stderr, "could not alloc memory");
-		return -1;
-	}
+	_ipsec_unmap_conn(c);
 
-	read(fd, *buf, st.st_size);
-	close(fd);
-	*(*buf + st.st_size) = '\0';
-
-	if ((p = strchr(*buf, '"'))) {
-		for (p++, i = 0; *p != '"'; p++, i++)
-			*(*buf + i) = *p;
-		*(*buf + i) = '\0';
-		return 1;
-	} else {
-		free(*buf);
-		return -1;
-	}
+	return 0;
 }
 
-int librouter_ipsec_get_rsakey(char *ipsec_conn, char *token, char **buf)
+int librouter_ipsec_get_rsakey(char *ipsec_conn, int type, char **buf)
 {
 	int ret;
-	struct stat st;
-	char filename[60];
+	struct ipsec_connection *c;
+	struct ipsec_ep *p;
 
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	if (stat(filename, &st) != 0) {
-		fprintf(stderr, "could not get ipsec rsakey");
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
 		return -1;
-	}
 
 	if (!(*buf = malloc(MAX_KEY_SIZE + 1))) {
 		fprintf(stderr, "could not alloc memory");
+		_ipsec_unmap_conn(c);
 		return -1;
 	}
 
-	if ((ret = librouter_str_find_string_in_file(filename, token, *buf, MAX_KEY_SIZE)) < 0) {
-		free(*buf);
-		*buf = NULL;
+	if (type == LOCAL)
+		p = &c->left;
+	else
+		p = &c->right;
 
-		if (ret < 0)
-			return ret;
-		else
-			return 0;
-	}
+	strncpy(*buf, p->rsa_public_key, sizeof(p->rsa_public_key));
 
-	return 1;
+	_ipsec_unmap_conn(c);
+
+	if (strlen(*buf) > 0)
+		return 1;
+
+	free(*buf);
+	return 0;
 }
 
 char *librouter_ipsec_get_protoport(char *ipsec_conn)
 {
-	struct stat st;
-	char filename[60], tmp[60];
+	char tmp[60];
 	char protoport_sp1[] = "17/0", protoport_sp2[] = "17/1701";
 	static char sp1[] = "SP1", sp2[] = "SP2";
+	struct ipsec_connection *c;
 
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	if (stat(filename, &st) != 0) {
-		fprintf(stderr, "could not get ipsec protoport");
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
 		return NULL;
-	}
 
-	if (librouter_str_find_string_in_file(filename, STRING_IPSEC_L_PROTOPORT, tmp, 60) < 0) {
-		return NULL;
-	}
+	strncpy(tmp, c->left.protoport, sizeof(c->left.protoport));
+
+	_ipsec_unmap_conn(c);
 
 	if (!strcmp(tmp, protoport_sp1))
 		return sp1;
@@ -1624,28 +1282,6 @@ char *librouter_ipsec_get_protoport(char *ipsec_conn)
 		return sp2;
 
 	return NULL;
-}
-
-int librouter_ipsec_get_auto(char *ipsec_conn)
-{
-	int ret;
-	char filename[60], buf[MAX_LINE] = "";
-
-	sprintf(filename, FILE_IKE_CONN_CONF, ipsec_conn);
-
-	if ((ret = librouter_str_find_string_in_file(filename, STRING_IPSEC_AUTO, buf, MAX_LINE)) < 0)
-		return ret;
-
-	if (strlen(buf) > 0) {
-		if (strncmp(buf, "ignore", 6) == 0)
-			return AUTO_IGNORE;
-		if (strncmp(buf, "start", 6) == 0)
-			return AUTO_START;
-		if (strncmp(buf, "add", 3) == 0)
-			return AUTO_ADD;
-	}
-
-	return 0;
 }
 
 void librouter_ipsec_dump(FILE *out)
@@ -1690,7 +1326,7 @@ void librouter_ipsec_dump(FILE *out)
 						break;
 					case SECRET: {
 						pt = NULL;
-						if (librouter_ipsec_get_sharedkey(*list, &pt) > 0) {
+						if (!librouter_ipsec_get_sharedkey(*list, &pt)) {
 							if (pt) {
 								fprintf(out, "  authby secret %s\n", pt);
 								free(pt);
@@ -1797,7 +1433,7 @@ void librouter_ipsec_dump(FILE *out)
 
 					/* rightrsasigkey */
 					pt = NULL;
-					if (librouter_ipsec_get_rsakey(*list, STRING_IPSEC_R_RSAKEY, &pt) > 0) {
+					if (librouter_ipsec_get_rsakey(*list, REMOTE, &pt) > 0) {
 						if (pt) {
 							fprintf(out, "  remote rsakey %s\n", pt);
 							free(pt);
@@ -1870,7 +1506,7 @@ void librouter_ipsec_dump(FILE *out)
 					}
 
 					/* auto */
-					switch (librouter_ipsec_get_auto(*list)) {
+					switch (librouter_ipsec_get_link(*list)) {
 					case AUTO_IGNORE:
 						fprintf(out, "  shutdown\n");
 						break;

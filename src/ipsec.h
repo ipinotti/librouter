@@ -10,7 +10,7 @@
 #include "options.h"
 #include "defines.h"
 
-#define IPSEC_DEBUG
+//#define IPSEC_DEBUG
 #ifdef IPSEC_DEBUG
 #define ipsec_dbg(x,...) \
 		printf("%s : %d => "x , __FUNCTION__, __LINE__, ##__VA_ARGS__);
@@ -51,7 +51,7 @@ enum {
 
 #define IPSEC_CONNECTION_NAME_LEN	32
 
-struct ipsec_desc {
+struct ipsec_ep {
 	char addr[32]; /* IP or interface */
 	char id[MAX_ID_LEN];
 	char network[16];
@@ -62,22 +62,24 @@ struct ipsec_desc {
 
 struct ipsec_connection {
 	char name[IPSEC_CONNECTION_NAME_LEN];
-	int enabled;
+	int status;
 
 	int authby; /* RSA, SECRET, X509 */
 	int authtype; /* ESP or AH */
+	char sharedkey[512];
 
 	int cypher; /* AES, 3DES, DES, etc. */
 	int hash; /* MD5, SHA1, etc. */
 
-	struct ipsec_desc left;
-	struct ipsec_desc right;
+	struct ipsec_ep left;
+	struct ipsec_ep right;
 
 	int pfs;
 };
 
 int librouter_ipsec_is_running(void);
 int librouter_ipsec_exec(int opt);
+
 int librouter_l2tp_is_running(void);
 int librouter_l2tp_exec(int opt);
 
@@ -89,9 +91,16 @@ int librouter_ipsec_create_conf(void);
 int librouter_ipsec_set_connection(int add_del, char *key, int fd);
 int librouter_ipsec_create_rsakey(int keysize);
 int librouter_ipsec_get_auth(char *ipsec_conn);
+
 int librouter_ipsec_set_remote_rsakey(char *ipsec_conn, char *rsakey);
+int librouter_ipsec_set_local_rsakey(char *ipsec_conn, char *rsakey);
+
+
 int librouter_ipsec_create_secrets_file(char *name, int type, char *shared);
+
 int librouter_ipsec_set_auth(char *ipsec_conn, int auth);
+int librouter_ipsec_set_secret(char *ipsec_conn, char *secret);
+
 int librouter_ipsec_get_link(char *ipsec_conn);
 int librouter_ipsec_set_ike_authproto(char *ipsec_conn, int opt);
 int librouter_ipsec_set_esp(char *ipsec_conn, int cypher, int hash);
@@ -121,11 +130,18 @@ int librouter_ipsec_get_esp(char *ipsec_conn, char *buf);
 int librouter_ipsec_get_pfs(char *ipsec_conn);
 int librouter_ipsec_set_link(char *ipsec_conn, int on_off);
 int librouter_ipsec_get_sharedkey(char *ipsec_conn, char **buf);
-int librouter_ipsec_get_rsakey(char *ipsec_conn, char *token, char **buf);
+
+
+int librouter_ipsec_get_rsakey(char *ipsec_conn, int type, char **buf);
+
 char *librouter_ipsec_get_protoport(char *ipsec_conn);
+
+#if 0
 int librouter_ipsec_get_auto(char *ipsec_conn);
+#endif
+
 int librouter_ipsec_get_remote_addr(char *ipsec_conn, char *buf);
-int librouter_ipsec_is_mpc180(void);
+
 
 void librouter_ipsec_dump(FILE *out);
 
