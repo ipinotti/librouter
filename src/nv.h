@@ -25,6 +25,7 @@ enum {
 	MAGIC_SNMP,
 	MAGIC_BANNER_LOGIN,
 	MAGIC_BANNER_SYSTEM,
+	MAGIC_PKI,
 	MAGIC_UNUSED = 0xFFFFFFFF,
 };
 
@@ -61,6 +62,7 @@ struct _nv {
 	cfg_pack snmp;
 	cfg_pack banner_login;
 	cfg_pack banner_system;
+	cfg_pack pki;
 };
 
 /* features buffer */
