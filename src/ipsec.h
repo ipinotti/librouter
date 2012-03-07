@@ -77,6 +77,13 @@ struct ipsec_connection {
 	int pfs;
 };
 
+/* This is big stuff - 32 KBytes */
+struct pki_data {
+	char cert[4096];
+	char csr[4096];
+	char cacert[6][4096]; /* 6 Certificate Authorities Maximum */
+};
+
 int librouter_ipsec_is_running(void);
 int librouter_ipsec_exec(int opt);
 

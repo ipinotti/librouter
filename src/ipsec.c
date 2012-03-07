@@ -1284,14 +1284,221 @@ char *librouter_ipsec_get_protoport(char *ipsec_conn)
 	return NULL;
 }
 
-void librouter_ipsec_dump(FILE *out)
+static void _ipsec_dump_conn(FILE *out, char *name)
 {
-	int idx, mtu, auto_reload;
-	char **list = NULL, **list_ini = NULL;
+	char *pt;
+	char netmask[16];
 	ppp_config cfg;
 	char buf[256];
 
 	memset(&cfg, 0, sizeof(ppp_config));
+
+	/* name */
+	fprintf(out, " ipsec connection add %s\n", name);
+	fprintf(out, " ipsec connection %s\n", name);
+
+	/* authby */
+	switch (librouter_ipsec_get_auth(name)) {
+	case RSA:
+		fprintf(out, "  authby rsa\n");
+		break;
+	case SECRET: {
+		pt = NULL;
+		if (!librouter_ipsec_get_sharedkey(name, &pt)) {
+			if (pt) {
+				fprintf(out, "  authby secret %s\n", pt);
+				free(pt);
+			}
+		}
+		break;
+	}
+	default:
+		break;
+	}
+
+	/* authproto and crypto */
+	switch (librouter_ipsec_get_ike_authproto(name)) {
+	case AH:
+		fprintf(out, "  authproto transport\n");
+		break;
+	case ESP:
+		fprintf(out, "  authproto tunnel\n");
+		if (librouter_ipsec_get_esp(name, buf) > 0) {
+			fprintf(out, "  esp %s\n", buf);
+		}
+		break;
+	}
+
+	/* leftid */
+	buf[0] = '\0';
+	if (librouter_ipsec_get_id(LOCAL, name, buf) > 0) {
+		if (strlen(buf) > 0)
+			fprintf(out, "  local id %s\n", buf);
+	}
+
+	/* left address */
+	buf[0] = '\0';
+	switch (librouter_ipsec_get_local_addr(name, buf)) {
+	case ADDR_DEFAULT:
+		fprintf(out, "  local address default-route\n");
+		break;
+	case ADDR_INTERFACE:
+		if (strlen(buf) > 0)
+			fprintf(out, "  local address interface %s\n", librouter_device_linux_to_cli(buf + 1, 0));
+		break;
+	case ADDR_IP:
+		if (strlen(buf) > 0)
+			fprintf(out, "  local address ip %s\n", buf);
+		break;
+#if 0
+	case ADDR_FQDN:
+		if (strlen(buf) > 0)
+			fprintf(out, "  local address fqdn %s\n", buf);
+		break;
+#endif
+	}
+
+	/* leftsubnet */
+	buf[0] = '\0';
+	if (librouter_ipsec_get_subnet(LOCAL, name, buf) > 0) {
+		if (strlen(buf) > 0)
+			fprintf(out, "  local subnet %s\n", buf);
+	}
+
+	/* leftnexthop */
+	buf[0] = '\0';
+	if (librouter_ipsec_get_nexthop(LOCAL, name, buf) > 0) {
+		if (strlen(buf) > 0)
+			fprintf(out, "  local nexthop %s\n", buf);
+	}
+
+	/* rightid */
+	buf[0] = '\0';
+	if (librouter_ipsec_get_id(REMOTE, name, buf) > 0) {
+		if (strlen(buf) > 0)
+			fprintf(out, "  remote id %s\n", buf);
+	}
+
+	/* right address */
+	buf[0] = '\0';
+	switch (librouter_ipsec_get_remote_addr(name, buf)) {
+	case ADDR_ANY:
+		fprintf(out, "  remote address any\n");
+		break;
+	case ADDR_IP:
+		if (strlen(buf) > 0)
+			fprintf(out, "  remote address ip %s\n", buf);
+		break;
+	case ADDR_FQDN:
+		if (strlen(buf) > 0)
+			fprintf(out, "  remote address fqdn %s\n", buf);
+		break;
+	}
+
+	/* rightsubnet */
+	buf[0] = '\0';
+	if (librouter_ipsec_get_subnet(REMOTE, name, buf) > 0) {
+		if (strlen(buf) > 0)
+			fprintf(out, "  remote subnet %s\n", buf);
+	}
+
+	/* rightnexthop */
+	buf[0] = '\0';
+	if (librouter_ipsec_get_nexthop(REMOTE, name, buf) > 0) {
+		if (strlen(buf) > 0)
+			fprintf(out, "  remote nexthop %s\n", buf);
+	}
+
+	/* rightrsasigkey */
+	pt = NULL;
+	if (librouter_ipsec_get_rsakey(name, REMOTE, &pt) > 0) {
+		if (pt) {
+			fprintf(out, "  remote rsakey %s\n", pt);
+			free(pt);
+		}
+	}
+
+	/* pfs */
+	switch (librouter_ipsec_get_pfs(name)) {
+	case 0:
+		fprintf(out, "  no pfs\n");
+		break;
+	case 1:
+		fprintf(out, "  pfs\n");
+		break;
+	}
+
+	librouter_ppp_l2tp_get_config(name, &cfg);
+
+	if (cfg.peer[0]) {
+		if (librouter_quagga_cidr_to_netmask(cfg.peer_mask, netmask) != -1)
+			fprintf(out, "  l2tp peer %s %s\n", cfg.peer, netmask);
+	}
+
+	if (cfg.auth_user[0])
+		fprintf(out, "  l2tp ppp authentication user %s\n", cfg.auth_user);
+
+	if (cfg.auth_pass[0])
+		fprintf(out, "  l2tp ppp authentication pass %s\n", cfg.auth_pass);
+
+	/* exibir ip unnumbered no show running config */
+	if (cfg.ip_unnumbered != -1) {
+		fprintf(out, "  l2tp ppp ip unnumbered ethernet %d\n", cfg.ip_unnumbered);
+	} else {
+		if (cfg.ip_addr[0])
+			fprintf(out, "  l2tp ppp ip address %s\n", cfg.ip_addr);
+		else
+			fprintf(out, "  no l2tp ppp ip address\n");
+	}
+
+	if (cfg.ip_peer_addr[0])
+		fprintf(out, "  l2tp ppp ip peer-address %s\n", cfg.ip_peer_addr);
+	else
+		fprintf(out, "  l2tp ppp ip peer-address pool\n");
+
+	if (cfg.default_route)
+		fprintf(out, "  l2tp ppp ip default-route\n");
+
+	if (cfg.novj)
+		fprintf(out, "  no l2tp ppp ip vj\n");
+	else
+		fprintf(out, "  l2tp ppp ip vj\n");
+
+	if (cfg.echo_interval)
+		fprintf(out, "  l2tp ppp keepalive interval %d\n", cfg.echo_interval);
+
+	if (cfg.echo_failure)
+		fprintf(out, "  l2tp ppp keepalive timeout %d\n", cfg.echo_failure);
+
+	if (cfg.mtu)
+		fprintf(out, "  l2tp ppp mtu %d\n", cfg.mtu);
+
+
+	/* l2tp protoport SP1|SP2 */
+	if ((pt = librouter_ipsec_get_protoport(name)) != NULL) {
+		fprintf(out, "  l2tp protoport %s\n", pt);
+	}
+
+	/* auto */
+	switch (librouter_ipsec_get_link(name)) {
+	case AUTO_IGNORE:
+		fprintf(out, "  shutdown\n");
+		break;
+	case AUTO_START:
+	case AUTO_ADD:
+		fprintf(out, "  no shutdown\n");
+		break;
+	}
+
+	free(name);
+}
+
+
+void librouter_ipsec_dump(FILE *out)
+{
+	int idx, mtu, auto_reload;
+	char **list = NULL, **list_ini = NULL;
+	char buf[256];
 
 	fprintf(out, "crypto\n");
 
@@ -1312,211 +1519,9 @@ void librouter_ipsec_dump(FILE *out)
 			list_ini = list;
 			for (idx = 0; idx < IPSEC_MAX_CONN; idx++, list++) {
 				/* process connection name */
-				if (*list) {
-					char *pt;
+				if (*list)
+					_ipsec_dump_conn(out, *list);
 
-					/* name */
-					fprintf(out, " ipsec connection add %s\n", *list);
-					fprintf(out, " ipsec connection %s\n", *list);
-
-					/* authby */
-					switch (librouter_ipsec_get_auth(*list)) {
-					case RSA:
-						fprintf(out, "  authby rsa\n");
-						break;
-					case SECRET: {
-						pt = NULL;
-						if (!librouter_ipsec_get_sharedkey(*list, &pt)) {
-							if (pt) {
-								fprintf(out, "  authby secret %s\n", pt);
-								free(pt);
-							}
-						}
-						break;
-					}
-					default:
-						break;
-					}
-
-					/* authproto and crypto */
-					switch (librouter_ipsec_get_ike_authproto(*list)) {
-					case AH:
-						fprintf(out, "  authproto transport\n");
-						break;
-					case ESP:
-						fprintf(out, "  authproto tunnel\n");
-						if (librouter_ipsec_get_esp(*list, buf) > 0) {
-							fprintf(out, "  esp %s\n", buf);
-						}
-						break;
-					}
-
-					/* leftid */
-					buf[0] = '\0';
-					if (librouter_ipsec_get_id(LOCAL, *list, buf) > 0) {
-						if (strlen(buf) > 0)
-							fprintf(out, "  local id %s\n", buf);
-					}
-
-					/* left address */
-					buf[0] = '\0';
-					switch (librouter_ipsec_get_local_addr(*list, buf)) {
-					case ADDR_DEFAULT:
-						fprintf(out, "  local address default-route\n");
-						break;
-					case ADDR_INTERFACE:
-						if (strlen(buf) > 0)
-							fprintf(out, "  local address interface %s\n", librouter_device_linux_to_cli(buf + 1, 0));
-						break;
-					case ADDR_IP:
-						if (strlen(buf) > 0)
-							fprintf(out, "  local address ip %s\n", buf);
-						break;
-#if 0
-					case ADDR_FQDN:
-						if (strlen(buf) > 0)
-							fprintf(out, "  local address fqdn %s\n", buf);
-						break;
-#endif
-					}
-
-					/* leftsubnet */
-					buf[0] = '\0';
-					if (librouter_ipsec_get_subnet(LOCAL, *list, buf) > 0) {
-						if (strlen(buf) > 0)
-							fprintf(out, "  local subnet %s\n", buf);
-					}
-
-					/* leftnexthop */
-					buf[0] = '\0';
-					if (librouter_ipsec_get_nexthop(LOCAL, *list, buf) > 0) {
-						if (strlen(buf) > 0)
-							fprintf(out, "  local nexthop %s\n", buf);
-					}
-
-					/* rightid */
-					buf[0] = '\0';
-					if (librouter_ipsec_get_id(REMOTE, *list, buf) > 0) {
-						if (strlen(buf) > 0)
-							fprintf(out, "  remote id %s\n", buf);
-					}
-
-					/* right address */
-					buf[0] = '\0';
-					switch (librouter_ipsec_get_remote_addr(*list, buf)) {
-					case ADDR_ANY:
-						fprintf(out, "  remote address any\n");
-						break;
-					case ADDR_IP:
-						if (strlen(buf) > 0)
-							fprintf(out, "  remote address ip %s\n", buf);
-						break;
-					case ADDR_FQDN:
-						if (strlen(buf) > 0)
-							fprintf(out, "  remote address fqdn %s\n", buf);
-						break;
-					}
-
-					/* rightsubnet */
-					buf[0] = '\0';
-					if (librouter_ipsec_get_subnet(REMOTE, *list, buf) > 0) {
-						if (strlen(buf) > 0)
-							fprintf(out, "  remote subnet %s\n", buf);
-					}
-
-					/* rightnexthop */
-					buf[0] = '\0';
-					if (librouter_ipsec_get_nexthop(REMOTE, *list, buf) > 0) {
-						if (strlen(buf) > 0)
-							fprintf(out, "  remote nexthop %s\n", buf);
-					}
-
-					/* rightrsasigkey */
-					pt = NULL;
-					if (librouter_ipsec_get_rsakey(*list, REMOTE, &pt) > 0) {
-						if (pt) {
-							fprintf(out, "  remote rsakey %s\n", pt);
-							free(pt);
-						}
-					}
-
-					/* pfs */
-					switch (librouter_ipsec_get_pfs(*list)) {
-					case 0:
-						fprintf(out, "  no pfs\n");
-						break;
-					case 1:
-						fprintf(out, "  pfs\n");
-						break;
-					}
-
-					/* l2tp ppp */
-					{
-						char netmask[16];
-
-						librouter_ppp_l2tp_get_config(*list, &cfg);
-
-						if (cfg.peer[0]) {
-							if (librouter_quagga_cidr_to_netmask(cfg.peer_mask, netmask) != -1)
-								fprintf(out, "  l2tp peer %s %s\n", cfg.peer, netmask);
-						}
-
-						if (cfg.auth_user[0])
-							fprintf(out, "  l2tp ppp authentication user %s\n", cfg.auth_user);
-
-						if (cfg.auth_pass[0])
-							fprintf(out, "  l2tp ppp authentication pass %s\n", cfg.auth_pass);
-
-						/* exibir ip unnumbered no show running config */
-						if (cfg.ip_unnumbered != -1) {
-							fprintf(out, "  l2tp ppp ip unnumbered ethernet %d\n", cfg.ip_unnumbered);
-						} else {
-							if (cfg.ip_addr[0])
-								fprintf(out, "  l2tp ppp ip address %s\n", cfg.ip_addr);
-							else
-								fprintf(out, "  no l2tp ppp ip address\n");
-						}
-
-						if (cfg.ip_peer_addr[0])
-							fprintf(out, "  l2tp ppp ip peer-address %s\n", cfg.ip_peer_addr);
-						else
-							fprintf(out, "  l2tp ppp ip peer-address pool\n");
-
-						if (cfg.default_route)
-							fprintf(out, "  l2tp ppp ip default-route\n");
-
-						if (cfg.novj)
-							fprintf(out, "  no l2tp ppp ip vj\n");
-						else
-							fprintf(out, "  l2tp ppp ip vj\n");
-
-						if (cfg.echo_interval)
-							fprintf(out, "  l2tp ppp keepalive interval %d\n", cfg.echo_interval);
-
-						if (cfg.echo_failure)
-							fprintf(out, "  l2tp ppp keepalive timeout %d\n", cfg.echo_failure);
-
-						if (cfg.mtu)
-							fprintf(out, "  l2tp ppp mtu %d\n", cfg.mtu);
-					}
-
-					/* l2tp protoport SP1|SP2 */
-					if ((pt = librouter_ipsec_get_protoport(*list)) != NULL) {
-						fprintf(out, "  l2tp protoport %s\n", pt);
-					}
-
-					/* auto */
-					switch (librouter_ipsec_get_link(*list)) {
-					case AUTO_IGNORE:
-						fprintf(out, "  shutdown\n");
-						break;
-					case AUTO_START:
-					case AUTO_ADD:
-						fprintf(out, "  no shutdown\n");
-						break;
-					}
-					free(*list);
-				}
 			}
 			free(list_ini);
 		}
@@ -1537,6 +1542,43 @@ void librouter_ipsec_dump(FILE *out)
 
 	fprintf(out, "!\n");
 }
+
+#ifdef OPTION_PKI
+/************************************************/
+/****************** X.509 ***********************/
+/************************************************/
+int librouter_pki_set_new_cacert()
+{
+
+}
+
+int librouter_pki_del_cacert()
+{
+
+}
+
+int librouter_pki_get_cacert()
+{
+
+}
+
+int librouter_pki_gen_crs()
+{
+
+}
+
+int librouter_pki_get_crs()
+{
+
+}
+
+int librouter_pki_set_cert()
+{
+
+}
+#endif /* OPTION_PKI */
+
+
 
 #endif /* OPTION_IPSEC */
 
