@@ -77,12 +77,30 @@ struct ipsec_connection {
 	int pfs;
 };
 
-/* This is big stuff - 32 KBytes */
+/* This is big stuff */
+#define PKI_MAX_CA	8
+struct pki_ca_data {
+	char name[32];
+	char cert[4096];
+};
+
 struct pki_data {
+	char privkey[4096];
 	char cert[4096];
 	char csr[4096];
-	char cacert[6][4096]; /* 6 Certificate Authorities Maximum */
+	struct pki_ca_data ca[PKI_MAX_CA];
 };
+
+#define PKI_PRIVKEY_PATH	"/etc/ipsec.d/private/my.key"
+#define PKI_CSR_PATH		"/etc/ipsec.d/certs/my.csr"
+#define PKI_CERT_PATH		"/etc/ipsec.d/certs/my.cert"
+#define PKI_CA_PATH		"/etc/ipsec.d/cacerts/%s.cert"
+
+#define PKI_CONTENTS_FILE	"/var/run/pki.contents"
+
+#define OPENSSL_REQ			"/sbin/openssl req -config /etc/ipsec.d/openssl.cnf"
+#define OPENSSL_GENRSA			"/sbin/openssl genrsa"
+#define OPENSSL_X509			"/sbin/openssl x509"
 
 int librouter_ipsec_is_running(void);
 int librouter_ipsec_exec(int opt);
@@ -151,5 +169,25 @@ int librouter_ipsec_get_remote_addr(char *ipsec_conn, char *buf);
 
 
 void librouter_ipsec_dump(FILE *out);
+
+
+int librouter_pki_get_cert_contents(char *buf, int len);
+int librouter_pki_get_cert(char *buf, int len);
+int librouter_pki_set_cert(char *buf, int len);
+
+int librouter_pki_get_csr_contents(char *buf, int len);
+int librouter_pki_get_csr(char *buf, int len);
+int librouter_pki_gen_csr(void);
+
+int librouter_pki_gen_privkey(int keysize);
+int librouter_pki_get_privkey(char *buf, int len);
+
+int librouter_pki_del_cacert(char *name);
+int librouter_pki_set_cacert(char *name, char *buf, int buflen);
+int librouter_pki_get_cacert(char *name, char *buf, int buflen);
+
+int librouter_pki_load(void);
+int librouter_pki_save(void);
+
 
 #endif /* IPSEC_H_ */

@@ -1057,7 +1057,9 @@ int librouter_acl_copy_iface_acls(char *src, char *trg) /* starter/interfaces.c 
 	return 0;
 }
 
-#ifdef OPTION_IPSEC
+
+/* We're using netkey now, so no more virtual interfaces */
+#if 0 //#ifdef OPTION_IPSEC
 int librouter_acl_interface_ipsec(int add_del,
                                   int chain,
                                   char *dev,
@@ -1163,7 +1165,7 @@ int librouter_acl_interface_ipsec(int add_del,
 	}
 	return -1;
 }
-#endif
+#endif /* if 0 */
 
 int delete_module(const char *name); /* libbb ? */
 

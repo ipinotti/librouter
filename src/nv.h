@@ -9,6 +9,7 @@
 
 #include "options.h"
 #include "typedefs.h"
+#include "ipsec.h" /* pki_data */
 
 #define DEV_STARTUP_CONFIG "/dev/startup-config"
 
@@ -92,6 +93,9 @@ char *librouter_nv_get_product_name(char * product_define);
 
 int librouter_nv_save_ipsec_secret(char *data);
 int librouter_nv_load_ipsec_secret(char *data);
+
+int librouter_nv_save_pki(struct pki_data *data);
+int librouter_nv_load_pki(struct pki_data *data);
 
 int librouter_nv_save_ssh_secret(char *filename);
 int librouter_nv_load_ssh_secret(char *filename);

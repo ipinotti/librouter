@@ -240,17 +240,6 @@ static int _ipsec_write_conn_cfg(char *name)
 
 	fprintf(f, "conn %s\n", name);
 
-	/* AUTHBY */
-	switch (c->authby) {
-	case RSA:
-	case X509:
-		fprintf(f, "\tauthby=rsasig\n");
-		break;
-	default:
-		fprintf(f, "\tauthby=secret\n");
-		break;
-	}
-
 #ifdef OBSOLETE
 	/* AUTH */
 	if (c->authtype == AH)
@@ -301,9 +290,6 @@ static int _ipsec_write_conn_cfg(char *name)
 	if (c->left.gateway[0])
 		fprintf(f, "\tleftnexthop= %s\n", c->left.gateway);
 
-	if (c->left.rsa_public_key[0])
-		fprintf(f, "\tleftrsasigkey= %s\n", c->left.rsa_public_key);
-
 	if (c->left.protoport[0])
 		fprintf(f, "\tleftprotoport= %s\n", c->left.protoport);
 
@@ -319,11 +305,31 @@ static int _ipsec_write_conn_cfg(char *name)
 	if (c->right.gateway[0])
 		fprintf(f, "\trightnexthop= %s\n", c->right.gateway);
 
-	if (c->right.rsa_public_key[0])
-		fprintf(f, "\trightrsasigkey= %s\n", c->right.rsa_public_key);
-
 	if (c->right.protoport[0])
 		fprintf(f, "\trightprotoport= %s\n", c->right.protoport);
+
+
+	/* AUTHBY */
+	switch (c->authby) {
+	case RSA:
+		fprintf(f, "\tauthby=rsasig\n");
+		if (c->left.rsa_public_key[0])
+			fprintf(f, "\tleftrsasigkey= %s\n", c->left.rsa_public_key);
+
+		if (c->right.rsa_public_key[0])
+			fprintf(f, "\trightrsasigkey= %s\n", c->right.rsa_public_key);
+		break;
+	case X509:
+		fprintf(f, "\tleftrsasigkey= %s\n", PKI_CERT_PATH);
+		fprintf(f, "\tleftsendcert= always\n");
+		fprintf(f, "\trightrsasigkey= %%cert\n");
+		break;
+	default:
+		fprintf(f, "\tauthby=secret\n");
+		break;
+	}
+
+
 
 	if (c->pfs)
 		fprintf(f, "\tpfs= yes\n");
@@ -631,6 +637,10 @@ static int _ipsec_update_secrets_file(char *name)
 
 		if (librouter_ipsec_set_local_rsakey(name, buf) < 0)
 			return -1;
+	} else if (c->authby == X509) {
+		sprintf(buf, ": RSA /etc/ipsec.d/private/my.key\n");
+		write(fd, buf, strlen(buf));
+		close(fd);
 	} else {
 		char token1[] = ": PSK \"";
 		char token2[] = "\"\n";
@@ -1299,6 +1309,9 @@ static void _ipsec_dump_conn(FILE *out, char *name)
 
 	/* authby */
 	switch (librouter_ipsec_get_auth(name)) {
+	case X509:
+		fprintf(out, "  authby X.509\n");
+		break;
 	case RSA:
 		fprintf(out, "  authby rsa\n");
 		break;
@@ -1547,38 +1560,278 @@ void librouter_ipsec_dump(FILE *out)
 /************************************************/
 /****************** X.509 ***********************/
 /************************************************/
-int librouter_pki_set_new_cacert()
+int _read_file(char *path, char *buf, int buflen)
 {
+	int fd, n;
+	struct stat st;
 
+	ipsec_dbg("Reading file %s\n", name);
+
+	if ((fd = open(path, O_RDONLY)) < 0)
+		return -1;
+
+	fstat(fd, &st);
+
+	if (buflen < st.st_size) {
+		printf("ERROR: buffer smaller than filesize of %s\n", path);
+		close(fd);
+		return -1;
+	}
+
+	n = read(fd, buf, st.st_size);
+	if (n != st.st_size)
+		printf("Wrong number of bytes read\n");
+
+	close(fd);
+
+	return 0;
 }
 
-int librouter_pki_del_cacert()
+int _write_file(char *path, char *buf, int buflen)
 {
+	int fd, n;
+	struct stat st;
 
+	ipsec_dbg("Writing file %s\n", name);
+
+	if ((fd = open(path, O_WRONLY | O_CREAT, 0660)) < 0)
+		return -1;
+
+	n = write(fd, buf, buflen);
+	if (n != buflen)
+		printf("Wrong number of bytes written\n");
+
+	close(fd);
+
+	return 0;
 }
 
-int librouter_pki_get_cacert()
+/**********************************/
+/******* Private RSA Key **********/
+/**********************************/
+int librouter_pki_get_privkey(char *buf, int len)
 {
-
+	return _read_file(PKI_PRIVKEY_PATH, buf, len);
 }
 
-int librouter_pki_gen_crs()
+static int _pki_set_privkey(char *buf, int len)
 {
-
+	return _write_file(PKI_PRIVKEY_PATH, buf, len);
 }
 
-int librouter_pki_get_crs()
+int librouter_pki_gen_privkey(int keysize)
 {
+	char line[256];
 
+	sprintf(line, "%s -out %s %d >/dev/null 2>/dev/null",
+	        OPENSSL_GENRSA, PKI_PRIVKEY_PATH, keysize);
+
+	return system(line);
 }
 
-int librouter_pki_set_cert()
+/*********************************/
+/***** Certificate Authority *****/
+/*********************************/
+int librouter_pki_get_cacert(char *name, char *buf, int buflen)
 {
+	char filename[64];
 
+	sprintf(filename, PKI_CA_PATH, name);
+
+	return _read_file(filename, buf, buflen);
+}
+
+int librouter_pki_set_cacert(char *name, char *buf, int buflen)
+{
+	char filename[64];
+
+	sprintf(filename, PKI_CA_PATH, name);
+
+	return _write_file(filename, buf, buflen);
+}
+
+int librouter_pki_del_cacert(char *name)
+{
+	char filename[64];
+
+	sprintf(filename, PKI_CA_PATH, name);
+
+	return unlink(filename);
+}
+
+/*********************************/
+/** Certificate Signing Request **/
+/*********************************/
+int librouter_pki_get_csr(char *buf, int len)
+{
+	return _read_file(PKI_CSR_PATH, buf, len);
+}
+
+int librouter_pki_get_csr_contents(char *buf, int len)
+{
+	char line[256];
+
+	if (librouter_pki_get_csr(buf, len) < 0)
+		return -1;
+
+	unlink(PKI_CONTENTS_FILE);
+	sprintf(line, "%s -in %s -noout -text -out %s",
+	        OPENSSL_REQ, PKI_CSR_PATH, PKI_CONTENTS_FILE);
+	system(line);
+
+	return _read_file(PKI_CONTENTS_FILE, buf, len);
+}
+
+int _pki_set_csr(char *buf, int len)
+{
+	return _write_file(PKI_CSR_PATH, buf, len);
+}
+
+int librouter_pki_gen_csr(void)
+{
+	struct pki_data pki;
+	char buf[2048];
+
+	if (librouter_pki_get_privkey(buf, sizeof(buf)) < 0) {
+		printf("%% Please generate pki private key first\n");
+		return -1;
+	}
+
+	sprintf(buf, "%s -new -key %s -out %s", OPENSSL_REQ, PKI_PRIVKEY_PATH, PKI_CSR_PATH);
+
+
+	return system(buf);
+}
+
+/**********************************/
+/** Host (Own) X.509 Certificate **/
+/**********************************/
+int librouter_pki_get_cert(char *buf, int len)
+{
+	return _read_file(PKI_CERT_PATH, buf, len);
+}
+
+int librouter_pki_get_cert_contents(char *buf, int len)
+{
+	char line[256];
+
+	if (librouter_pki_get_cert(buf, len) < 0)
+		return -1;
+
+	unlink(PKI_CONTENTS_FILE);
+	sprintf(line, "%s -in %s -noout -text -out %s",
+	        OPENSSL_X509, PKI_CERT_PATH, PKI_CONTENTS_FILE);
+	system(line);
+
+	return _read_file(PKI_CONTENTS_FILE, buf, len);
+}
+
+int librouter_pki_set_cert(char *buf, int len)
+{
+	return _write_file(PKI_CERT_PATH, buf, len);
+}
+
+
+/**********************************/
+/** PKI Load and Save functions ***/
+/**********************************/
+static struct pki_data *_alloc_pki_data(void)
+{
+	struct pki_data *pki;
+
+	pki = malloc(sizeof(struct pki_data));
+	if (pki == NULL) {
+		librouter_logerr("Could not allocate pki structure\n");
+		return NULL;
+	}
+
+	memset(pki, 0, sizeof(struct pki_data));
+
+	return pki;
+}
+
+/**
+ * librouter_pki_load
+ *
+ * Load PKI information from non-volatile memory to filesystem
+ *
+ */
+int librouter_pki_load(void)
+{
+	int i, ret = 0;
+	struct pki_data *pki;
+
+	pki = _alloc_pki_data();
+	if (pki == NULL)
+		return -1;
+
+	if (librouter_nv_load_pki(pki) < 0) {
+		librouter_logerr("Could not load PKI information\n");
+		goto pki_load_end;
+	}
+
+	if (!pki->privkey[0]) {
+		librouter_logerr("Unable to load private key, refusing to load pki data\n");
+		ret = -1;
+		goto pki_load_end;
+	}
+
+	ret = _pki_set_privkey(pki->privkey, strlen(pki->privkey));
+	if (ret < 0)
+		goto pki_load_end;
+
+	if (pki->cert[0]) {
+		ret = librouter_pki_set_cert(pki->cert, strlen(pki->cert));
+		if (ret < 0)
+			goto pki_load_end;
+	}
+
+	for (i = 0; (i < PKI_MAX_CA) && pki->ca[i].name[0]; i++) {
+		ret = librouter_pki_set_cacert(pki->ca[i].name, pki->ca[i].cert, strlen(pki->ca[i].cert));
+		if (ret < 0)
+			goto pki_load_end;
+	}
+
+	if (pki->csr[0]) {
+		ret = _pki_set_csr(pki->csr, strlen(pki->csr));
+		if (ret < 0)
+			goto pki_load_end;
+	}
+
+pki_load_end:
+	free(pki);
+
+	return ret;
+}
+
+/**
+ * librouter_pki_save
+ *
+ * Save PKI information from filesystem to non-volatile memory
+ */
+int librouter_pki_save(void)
+{
+	int ret = 0, i;
+	struct pki_data *pki;
+
+	pki = _alloc_pki_data();
+	if (pki == NULL)
+		return -1;
+
+	librouter_pki_get_privkey(pki->privkey, sizeof(pki->privkey));
+	librouter_pki_get_csr(pki->csr, sizeof(pki->csr));
+	librouter_pki_get_cert(pki->cert, sizeof(pki->cert));
+
+#if 0
+	librouter_pki_get_ca(pki->privkey, sizeof(pki->privkey));
+#endif
+
+	ret = librouter_nv_save_pki(pki);
+
+pki_save_end:
+	free(pki);
+
+	return ret;
 }
 #endif /* OPTION_PKI */
-
-
-
 #endif /* OPTION_IPSEC */
-

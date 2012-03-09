@@ -33,7 +33,6 @@
 #include "flashsave.h"
 #include "exec.h"
 #include "crc32.h"
-#include "ipsec.h"
 
 #include <u-boot/image.h>
 
@@ -833,6 +832,7 @@ int librouter_nv_load_ipsec_secret(char *data)
 	return _nv_load(data, MAGIC_IPSEC);
 }
 
+#ifdef OPTION_PKI
 int librouter_nv_save_pki(struct pki_data *data)
 {
 	int len = sizeof(struct pki_data);
@@ -840,10 +840,11 @@ int librouter_nv_save_pki(struct pki_data *data)
 	return _nv_save((char *)data, len, MAGIC_PKI);
 }
 
-int librouter_nv_load_pki(char *data)
+int librouter_nv_load_pki(struct pki_data *data)
 {
-	return _nv_load(data, MAGIC_PKI);
+	return _nv_load((char *)data, MAGIC_PKI);
 }
+#endif
 
 int librouter_nv_load_snmp_secret(char *filename)
 {
