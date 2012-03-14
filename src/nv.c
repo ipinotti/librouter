@@ -47,7 +47,7 @@ char * librouter_nv_get_product_name(char * product_define)
 	if (!strcmp(product_define, "CONFIG_DIGISTAR_EFM"))
 		return "DIGISTAR-EFM";
 
-	return;
+	return NULL;
 }
 
 /**
@@ -69,6 +69,9 @@ cfg_pack * _get_pack_from_magic(struct _nv *nv, int magic)
 		break;
 	case MAGIC_IPSEC:
 		pack = &nv->secret;
+		break;
+	case MAGIC_PKI:
+		pack = &nv->pki;
 		break;
 	case MAGIC_SLOT0:
 		pack = &nv->slot[0];
@@ -157,6 +160,9 @@ static int _nv_fetch(struct _nv *nv, char *startup_config_path)
 		case MAGIC_IPSEC:
 			pack = &nv->secret;
 			break;
+		case MAGIC_PKI:
+			pack = &nv->pki;
+			break;
 
 		case MAGIC_SLOT0:
 		case MAGIC_SLOT1:
@@ -233,6 +239,9 @@ static int _nv_fetch(struct _nv *nv, char *startup_config_path)
 	if (nv->banner_system.offset)
 		nvdbg("banner_system:0x%lx\n", nv->banner_system.offset);
 
+	if (nv->pki.offset)
+		nvdbg("pki:0x%lx\n", nv->pki.offset);
+
 	nvdbg("next_header:0x%lx\n", nv->next_header);
 
 	return 0;
@@ -283,6 +292,7 @@ static int _nv_clean(int fd, long size, struct _nv *nv)
 	mtd_info_t meminfo;
 	char *config = NULL;
 	char *secret = NULL;
+	char *pki = NULL;
 	char *slot[5];
 	char *ssh = NULL;
 	char *ntp = NULL;
@@ -314,10 +324,13 @@ static int _nv_clean(int fd, long size, struct _nv *nv)
 		if (nv->secret.hdr.magic_number == MAGIC_IPSEC)
 			secret = _nv_read(fd, &nv->secret);
 
+		if (nv->pki.hdr.magic_number == MAGIC_PKI)
+			pki = _nv_read(fd, &nv->pki);
 
-		for (i = 0; i < 5; i++)
+		for (i = 0; i < 5; i++) {
 			if (nv->slot[i].hdr.magic_number == MAGIC_SLOT0 + i)
 				slot[i] = _nv_read(fd, &nv->slot[i]);
+		}
 
 		if (nv->ssh.hdr.magic_number == MAGIC_SSH)
 			ssh = _nv_read(fd, &nv->ssh);
@@ -402,6 +415,12 @@ static int _nv_clean(int fd, long size, struct _nv *nv)
 		free(secret);
 	}
 
+	if (pki != NULL) {
+		write(fd, &nv->pki.hdr, sizeof(cfg_header));
+		write(fd, pki, nv->pki.hdr.size);
+		free(pki);
+	}
+
 	for (i = 0; i < 5; i++) {
 		if (slot[i] != NULL) {
 			write(fd, &nv->slot[i].hdr, sizeof(cfg_header));
@@ -441,11 +460,15 @@ static int _nv_clean(int fd, long size, struct _nv *nv)
 	}
 
 	return 0;
-	error: if (config != NULL)
+error:
+	if (config != NULL)
 		free(config);
 
 	if (secret != NULL)
 		free(secret);
+
+	if (pki != NULL)
+		free(pki);
 
 	for (i = 0; i < 5; i++)
 		free(slot[i]);
@@ -808,6 +831,20 @@ int librouter_nv_load_ipsec_secret(char *data)
 {
 	return _nv_load(data, MAGIC_IPSEC);
 }
+
+#ifdef OPTION_PKI
+int librouter_nv_save_pki(struct pki_data *data)
+{
+	int len = sizeof(struct pki_data);
+
+	return _nv_save((char *)data, len, MAGIC_PKI);
+}
+
+int librouter_nv_load_pki(struct pki_data *data)
+{
+	return _nv_load((char *)data, MAGIC_PKI);
+}
+#endif
 
 int librouter_nv_load_snmp_secret(char *filename)
 {

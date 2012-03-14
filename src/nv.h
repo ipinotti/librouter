@@ -9,6 +9,7 @@
 
 #include "options.h"
 #include "typedefs.h"
+#include "ipsec.h" /* pki_data */
 
 #define DEV_STARTUP_CONFIG "/dev/startup-config"
 
@@ -25,6 +26,7 @@ enum {
 	MAGIC_SNMP,
 	MAGIC_BANNER_LOGIN,
 	MAGIC_BANNER_SYSTEM,
+	MAGIC_PKI,
 	MAGIC_UNUSED = 0xFFFFFFFF,
 };
 
@@ -61,6 +63,7 @@ struct _nv {
 	cfg_pack snmp;
 	cfg_pack banner_login;
 	cfg_pack banner_system;
+	cfg_pack pki;
 };
 
 /* features buffer */
@@ -90,6 +93,9 @@ char *librouter_nv_get_product_name(char * product_define);
 
 int librouter_nv_save_ipsec_secret(char *data);
 int librouter_nv_load_ipsec_secret(char *data);
+
+int librouter_nv_save_pki(struct pki_data *data);
+int librouter_nv_load_pki(struct pki_data *data);
 
 int librouter_nv_save_ssh_secret(char *filename);
 int librouter_nv_load_ssh_secret(char *filename);

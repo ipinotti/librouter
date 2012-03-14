@@ -93,11 +93,10 @@
 #define MAX_CMD_LINE			500+MAX_KEY_SIZE // tamanho maximo da linha de comando
 #define FILE_IKE_CONN_CONF		"/etc/ipsec.%s.conf"
 #define FILE_MAN_CONN_CONF		"/etc/manual.%s.conf" /* !!! */
-#define FILE_STARTER_PID		"/var/run/starter.pid"
 #define FILE_PLUTO_PID			"/var/run/pluto/pluto.pid"
 #define FILE_L2TPD_SOCKET		"/var/run/l2tpctrl"
 #define FILE_L2TPD_PID			"/var/run/l2tpd.pid"
-#define PROG_STARTER			"/lib/ipsec/starter"
+#define PROG_IPSEC			"/bin/ipsec_run"
 #define PROG_L2TPD			"/bin/l2tpd"
 #define MAX_LINE			100
 #define STRING_ANY			"%any"
@@ -131,10 +130,10 @@
 #define STRING_IPSEC_AGGRMODE		"aggrmode="
 #define FILE_TMP_RSAKEYS		"/var/run/rsakeys_tmp"
 #define FILE_SAVED_RSAKEYS		"/var/run/rsakeys"
-#define MAX_ID_LEN			100
+#define MAX_ID_LEN			256
 #define MAX_ADDR_SIZE			200
 #define PROG_PLUTO			"pluto"
-#define PROC_MPC180			"/proc/mpc180"
+
 
 //#define SNMP_THIN_CONF
 #ifdef SNMP_THIN_CONF
@@ -220,12 +219,6 @@ enum {
 	CONN_DOWN,
 	CONN_SHUTDOWN,
 	CONN_WAIT
-};
-
-enum {
-	AUTO_ADD=1,
-	AUTO_START,
-	AUTO_IGNORE
 };
 
 enum {

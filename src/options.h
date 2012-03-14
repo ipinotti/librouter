@@ -43,7 +43,8 @@
 
 /* IPSec */
 #define OPTION_IPSEC
-#define N_IPSEC_IF 5
+#define OPTION_PKI
+
 
 /* BGP */
 #define OPTION_BGP
@@ -137,6 +138,7 @@
 #define OPTION_NUM_EFM_CHANNELS	4
 #undef OPTION_IP_ROUTING
 #undef OPTION_IPSEC
+#undef OPTION_PKI
 #undef OPTION_FIREWALL
 #undef OPTION_NAT
 #undef OPTION_QOS
@@ -152,7 +154,8 @@
 #define OPTION_NUM_EFM_CHANNELS	4
 #define OPTION_IP_ROUTING
 #define OPTION_IPSEC
-#define N_IPSEC_IF 5
+#define OPTION_PKI
+
 #define OPTION_FIREWALL
 #define OPTION_NAT
 #define OPTION_QOS
@@ -208,6 +211,7 @@
 #define OPTION_NUM_EFM_CHANNELS	4
 #undef OPTION_IP_ROUTING
 #undef OPTION_IPSEC
+#undef OPTION_PKI
 #undef OPTION_FIREWALL
 #undef OPTION_NAT
 #undef OPTION_QOS
@@ -223,7 +227,7 @@
 #define OPTION_NUM_EFM_CHANNELS	4
 #define OPTION_IP_ROUTING
 #define OPTION_IPSEC
-#define N_IPSEC_IF 5
+#define OPTION_PKI
 #define OPTION_FIREWALL
 #define OPTION_NAT
 #define OPTION_QOS
@@ -278,7 +282,8 @@
 
 /* IPSec */
 #define OPTION_IPSEC
-#define N_IPSEC_IF 5
+#define OPTION_PKI
+
 
 /* BGP */
 #define OPTION_BGP
