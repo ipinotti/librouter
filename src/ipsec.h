@@ -78,16 +78,16 @@ struct ipsec_connection {
 };
 
 /* This is big stuff */
-#define PKI_MAX_CA	8
+#define PKI_MAX_CA	4
 struct pki_ca_data {
 	char name[32];
-	char cert[4096];
+	char cert[2048];
 };
 
 struct pki_data {
-	char privkey[4096];
-	char cert[4096];
-	char csr[4096];
+	char privkey[2048];
+	char cert[2048];
+	char csr[2048];
 	struct pki_ca_data ca[PKI_MAX_CA];
 };
 
@@ -170,24 +170,31 @@ int librouter_ipsec_get_remote_addr(char *ipsec_conn, char *buf);
 
 void librouter_ipsec_dump(FILE *out);
 
+#ifdef OPTION_PKI
+int librouter_pki_dump_general_info(void);
 
 int librouter_pki_get_cert_contents(char *buf, int len);
 int librouter_pki_get_cert(char *buf, int len);
+int librouter_pki_flush_cert(void);
 int librouter_pki_set_cert(char *buf, int len);
 
 int librouter_pki_get_csr_contents(char *buf, int len);
 int librouter_pki_get_csr(char *buf, int len);
+int librouter_pki_flush_csr(void);
 int librouter_pki_gen_csr(void);
 
 int librouter_pki_gen_privkey(int keysize);
+int librouter_pki_flush_privkey(void);
 int librouter_pki_get_privkey(char *buf, int len);
 
+int librouter_pki_get_ca_num(void);
+int librouter_pki_get_ca_name_by_index(int idx, char *name);
 int librouter_pki_del_cacert(char *name);
 int librouter_pki_set_cacert(char *name, char *buf, int buflen);
 int librouter_pki_get_cacert(char *name, char *buf, int buflen);
 
 int librouter_pki_load(void);
 int librouter_pki_save(void);
-
+#endif /* OPTION_PKI */
 
 #endif /* IPSEC_H_ */

@@ -320,7 +320,8 @@ static int _ipsec_write_conn_cfg(char *name)
 			fprintf(f, "\trightrsasigkey= %s\n", c->right.rsa_public_key);
 		break;
 	case X509:
-		fprintf(f, "\tleftrsasigkey= %s\n", PKI_CERT_PATH);
+		fprintf(f, "\tleftrsasigkey= %%cert\n");
+		fprintf(f, "\tleftcert= %s\n", PKI_CERT_PATH);
 		fprintf(f, "\tleftsendcert= always\n");
 		fprintf(f, "\trightrsasigkey= %%cert\n");
 		break;
@@ -338,6 +339,8 @@ static int _ipsec_write_conn_cfg(char *name)
 
 	/* Always restart if dead peer is detected */
 	fprintf(f, "\tdpdaction= restart\n");
+	fprintf(f, "\tdpdtimeout= 120\n");
+	fprintf(f, "\tdpddelay= 30\n");
 
 	if (c->status)
 		fprintf(f, "\tauto= start\n");
@@ -1565,7 +1568,7 @@ int _read_file(char *path, char *buf, int buflen)
 	int fd, n;
 	struct stat st;
 
-	ipsec_dbg("Reading file %s\n", name);
+	ipsec_dbg("Reading file %s\n", path);
 
 	if ((fd = open(path, O_RDONLY)) < 0)
 		return -1;
@@ -1592,7 +1595,7 @@ int _write_file(char *path, char *buf, int buflen)
 	int fd, n;
 	struct stat st;
 
-	ipsec_dbg("Writing file %s\n", name);
+	ipsec_dbg("Writing file %s\n", path);
 
 	if ((fd = open(path, O_WRONLY | O_CREAT, 0660)) < 0)
 		return -1;
@@ -1604,6 +1607,11 @@ int _write_file(char *path, char *buf, int buflen)
 	close(fd);
 
 	return 0;
+}
+
+int librouter_pki_dump_general_info(void)
+{
+	system("/lib/ipsec/ipsec auto --listall");
 }
 
 /**********************************/
@@ -1619,6 +1627,11 @@ static int _pki_set_privkey(char *buf, int len)
 	return _write_file(PKI_PRIVKEY_PATH, buf, len);
 }
 
+int librouter_pki_flush_privkey(void)
+{
+	return unlink(PKI_PRIVKEY_PATH);
+}
+
 int librouter_pki_gen_privkey(int keysize)
 {
 	char line[256];
@@ -1632,6 +1645,76 @@ int librouter_pki_gen_privkey(int keysize)
 /*********************************/
 /***** Certificate Authority *****/
 /*********************************/
+static int _filter_ca(const struct dirent *d)
+{
+	if (strstr(d->d_name, ".cert"))
+		return 1;
+
+	return 0;
+}
+static int _list_cas(struct dirent ***list)
+{
+	int i, n, count = 0;
+	struct dirent **namelist;
+
+	n = scandir("/etc/ipsec.d/cacerts", &namelist, _filter_ca, alphasort);
+
+	*list = namelist;
+
+	return n;
+}
+
+int librouter_pki_get_ca_num(void)
+{
+	struct dirent **l;
+	int n, i;
+
+	n = _list_cas(&l);
+	if (n < 0) {
+		librouter_logerr("Could not list CA Certs directory\n");
+		return -1;
+	}
+
+	i = n;
+	while (i--) {
+		ipsec_dbg("Getting CA info: %s\n", l[i]->d_name);
+		free(l[i]);
+	}
+	free(l);
+
+	return n;
+}
+
+int librouter_pki_get_ca_name_by_index(int idx, char *name)
+{
+	struct dirent **l;
+	int n, i;
+	char *p;
+
+	n = _list_cas(&l);
+	if (n < 0) {
+		librouter_logerr("Could not list CA Certs directory\n");
+		return -1;
+	}
+
+	strcpy(name, l[idx]->d_name);
+	p = strstr(name, ".cert");
+	if (p) {
+		p[0] = '\0';
+	} else {
+		librouter_logerr("Wrong file name inside cacerts directory : %s\n", name);
+	}
+
+	i = n;
+	while (i--) {
+		ipsec_dbg("Getting CA info: %s\n", l[i]->d_name);
+		free(l[i]);
+	}
+	free(l);
+
+	return 0;
+}
+
 int librouter_pki_get_cacert(char *name, char *buf, int buflen)
 {
 	char filename[64];
@@ -1662,6 +1745,11 @@ int librouter_pki_del_cacert(char *name)
 /*********************************/
 /** Certificate Signing Request **/
 /*********************************/
+int librouter_pki_flush_csr(void)
+{
+	return unlink(PKI_CSR_PATH);
+}
+
 int librouter_pki_get_csr(char *buf, int len)
 {
 	return _read_file(PKI_CSR_PATH, buf, len);
@@ -1726,6 +1814,12 @@ int librouter_pki_get_cert_contents(char *buf, int len)
 	return _read_file(PKI_CONTENTS_FILE, buf, len);
 }
 
+int librouter_pki_flush_cert(void)
+{
+	return unlink(PKI_CERT_PATH);
+}
+
+
 int librouter_pki_set_cert(char *buf, int len)
 {
 	return _write_file(PKI_CERT_PATH, buf, len);
@@ -1771,9 +1865,9 @@ int librouter_pki_load(void)
 	}
 
 	if (!pki->privkey[0]) {
-		librouter_logerr("Unable to load private key, refusing to load pki data\n");
-		ret = -1;
-		goto pki_load_end;
+		ipsec_dbg("Unable to load private key, "
+				"refusing to load certificates owned by us\n");
+		goto pki_load_ca;
 	}
 
 	ret = _pki_set_privkey(pki->privkey, strlen(pki->privkey));
@@ -1786,14 +1880,15 @@ int librouter_pki_load(void)
 			goto pki_load_end;
 	}
 
-	for (i = 0; (i < PKI_MAX_CA) && pki->ca[i].name[0]; i++) {
-		ret = librouter_pki_set_cacert(pki->ca[i].name, pki->ca[i].cert, strlen(pki->ca[i].cert));
+	if (pki->csr[0]) {
+		ret = _pki_set_csr(pki->csr, strlen(pki->csr));
 		if (ret < 0)
 			goto pki_load_end;
 	}
 
-	if (pki->csr[0]) {
-		ret = _pki_set_csr(pki->csr, strlen(pki->csr));
+pki_load_ca:
+	for (i = 0; (i < PKI_MAX_CA) && pki->ca[i].name[0]; i++) {
+		ret = librouter_pki_set_cacert(pki->ca[i].name, pki->ca[i].cert, strlen(pki->ca[i].cert));
 		if (ret < 0)
 			goto pki_load_end;
 	}
@@ -1811,7 +1906,7 @@ pki_load_end:
  */
 int librouter_pki_save(void)
 {
-	int ret = 0, i;
+	int ret = 0, i, n;
 	struct pki_data *pki;
 
 	pki = _alloc_pki_data();
@@ -1822,9 +1917,13 @@ int librouter_pki_save(void)
 	librouter_pki_get_csr(pki->csr, sizeof(pki->csr));
 	librouter_pki_get_cert(pki->cert, sizeof(pki->cert));
 
-#if 0
-	librouter_pki_get_ca(pki->privkey, sizeof(pki->privkey));
-#endif
+
+	n = librouter_pki_get_ca_num();
+	for (i = 0; i < n; i++) {
+		librouter_pki_get_ca_name_by_index(i, pki->ca[i].name);
+		librouter_pki_get_cacert(pki->ca[i].name,
+		                         pki->ca[i].cert, sizeof(pki->ca[i].cert));
+	}
 
 	ret = librouter_nv_save_pki(pki);
 

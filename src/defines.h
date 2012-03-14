@@ -130,7 +130,7 @@
 #define STRING_IPSEC_AGGRMODE		"aggrmode="
 #define FILE_TMP_RSAKEYS		"/var/run/rsakeys_tmp"
 #define FILE_SAVED_RSAKEYS		"/var/run/rsakeys"
-#define MAX_ID_LEN			100
+#define MAX_ID_LEN			256
 #define MAX_ADDR_SIZE			200
 #define PROG_PLUTO			"pluto"
 
