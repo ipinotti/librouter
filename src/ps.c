@@ -54,7 +54,7 @@ static struct {
                 { "ntpd", "NTP Server" },
 #endif
 #ifdef OPTION_IPSEC
-                { "/lib/ipsec/pluto", "VPN Server" },
+                { "pluto", "VPN Server" },
                 { "l2tpd", "L2TP Server" },
 #endif
 #ifdef OPTION_PIMD

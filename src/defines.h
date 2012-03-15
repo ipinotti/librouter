@@ -93,10 +93,12 @@
 #define MAX_CMD_LINE			500+MAX_KEY_SIZE // tamanho maximo da linha de comando
 #define FILE_IKE_CONN_CONF		"/etc/ipsec.%s.conf"
 #define FILE_MAN_CONN_CONF		"/etc/manual.%s.conf" /* !!! */
-#define FILE_PLUTO_PID			"/var/run/pluto/pluto.pid"
+
+
+
 #define FILE_L2TPD_SOCKET		"/var/run/l2tpctrl"
 #define FILE_L2TPD_PID			"/var/run/l2tpd.pid"
-#define PROG_IPSEC			"/bin/ipsec_run"
+
 #define PROG_L2TPD			"/bin/l2tpd"
 #define MAX_LINE			100
 #define STRING_ANY			"%any"

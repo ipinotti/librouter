@@ -238,6 +238,10 @@ static int _ipsec_write_conn_cfg(char *name)
 		return -1;
 	}
 
+#ifdef IPSEC_STRONGSWAN
+	fprintf(f, "\n"); /* Needs empty line at the beggining */
+#endif
+
 	fprintf(f, "conn %s\n", name);
 
 #ifdef OBSOLETE
@@ -251,7 +255,11 @@ static int _ipsec_write_conn_cfg(char *name)
 
 
 	if (c->cypher != CYPHER_ANY) {
+#ifdef IPSEC_OPENSWAN
 		fprintf(f, "\tphase2alg=");
+#else
+		fprintf(f, "\tesp=");
+#endif
 		switch (c->cypher) {
 		case CYPHER_3DES:
 			fprintf(f, "3des-");
@@ -503,6 +511,7 @@ int librouter_ipsec_set_connection(int add_del, char *key, int fd)
 	return ret;
 }
 
+#ifdef IPSEC_SUPPORT_RSA_RAW
 int librouter_ipsec_create_rsakey(int keysize)
 {
 	FILE *f;
@@ -550,6 +559,7 @@ int librouter_ipsec_create_rsakey(int keysize)
 	free(buf);
 	return ret;
 }
+#endif /* IPSEC_SUPPORT_RSA_RAW */
 
 int librouter_ipsec_get_auth(char *ipsec_conn)
 {
@@ -606,6 +616,7 @@ static int _ipsec_update_secrets_file(char *name)
 		return -1;
 	}
 
+#ifdef IPSEC_SUPPORT_RSA_RAW
 	if (c->authby == RSA) {
 		char token1[] = ": RSA	{\n";
 		char token2[] = "	}\n";
@@ -640,7 +651,9 @@ static int _ipsec_update_secrets_file(char *name)
 
 		if (librouter_ipsec_set_local_rsakey(name, buf) < 0)
 			return -1;
-	} else if (c->authby == X509) {
+	} else
+#endif
+	if (c->authby == X509) {
 		sprintf(buf, ": RSA /etc/ipsec.d/private/my.key\n");
 		write(fd, buf, strlen(buf));
 		close(fd);
@@ -1611,7 +1624,11 @@ int _write_file(char *path, char *buf, int buflen)
 
 int librouter_pki_dump_general_info(void)
 {
+#ifdef IPSEC_OPENSWAN
 	system("/lib/ipsec/ipsec auto --listall");
+#else /* STRONGSWAN */
+	system("/sbin/ipsec listcerts");
+#endif
 }
 
 /**********************************/

@@ -10,6 +10,29 @@
 #include "options.h"
 #include "defines.h"
 
+#if 1
+#undef IPSEC_OPENSWAN
+#define IPSEC_STRONGSWAN
+#else
+#define IPSEC_OPENSWAN
+#undef IPSEC_STRONGSWAN
+#endif
+
+#ifdef IPSEC_STRONGSWAN
+#define PROG_IPSEC			"/sbin/ipsec"
+#define FILE_PLUTO_PID			"/var/run/pluto.pid"
+#else
+#define PROG_IPSEC			"/bin/ipsec_run"
+#define FILE_PLUTO_PID			"/var/run/pluto/pluto.pid"
+#endif
+
+/* Whether we support raw RSA key pair authentication (no X.509)
+ * Openswan stil does, Strongswan has removed its support */
+//#define IPSEC_SUPPORT_RSA_RAW
+
+/* Whether we support transport mode instead of tunnel mode */
+//#define IPSEC_SUPPORT_TRANSPORT_MODE
+
 //#define IPSEC_DEBUG
 #ifdef IPSEC_DEBUG
 #define ipsec_dbg(x,...) \
@@ -81,7 +104,7 @@ struct ipsec_connection {
 #define PKI_MAX_CA	4
 struct pki_ca_data {
 	char name[32];
-	char cert[2048];
+	char cert[4096];
 };
 
 struct pki_data {
@@ -114,7 +137,10 @@ int librouter_ipsec_delete_conn(char *name);
 int librouter_ipsec_create_conf(void);
 
 int librouter_ipsec_set_connection(int add_del, char *key, int fd);
+#ifdef IPSEC_SUPPORT_RSA_RAW
 int librouter_ipsec_create_rsakey(int keysize);
+#endif
+
 int librouter_ipsec_get_auth(char *ipsec_conn);
 
 int librouter_ipsec_set_remote_rsakey(char *ipsec_conn, char *rsakey);
