@@ -18,12 +18,21 @@
 #undef IPSEC_STRONGSWAN
 #endif
 
-#ifdef IPSEC_STRONGSWAN
+#if defined(IPSEC_STRONGSWAN)
 #define PROG_IPSEC			"/sbin/ipsec"
+#define PROG_SCEPCLIENT			"/sbin/ipsec scepclient"
 #define FILE_PLUTO_PID			"/var/run/pluto.pid"
-#else
+#undef IPSEC_SUPPORT_LOCAL_ADDRESS_INTERFACE
+#undef IPSEC_SUPPORT_LOCAL_ADDRESS_FQDN
+#define IPSEC_SUPPORT_SCEP
+#elif defined(IPSEC_OPENSWAN)
 #define PROG_IPSEC			"/bin/ipsec_run"
 #define FILE_PLUTO_PID			"/var/run/pluto/pluto.pid"
+#define IPSEC_SUPPORT_LOCAL_ADDRESS_INTERFACE
+#undef IPSEC_SUPPORT_LOCAL_ADDRESS_FQDN
+#undef IPSEC_SUPPORT_SCEP
+#else
+#error "No IPSec solution defined!"
 #endif
 
 /* Whether we support raw RSA key pair authentication (no X.509)
@@ -195,6 +204,8 @@ int librouter_ipsec_get_remote_addr(char *ipsec_conn, char *buf);
 
 
 void librouter_ipsec_dump(FILE *out);
+int librouter_ipsec_show_all(void);
+int librouter_ipsec_show_conn(char *name);
 
 #ifdef OPTION_PKI
 int librouter_pki_dump_general_info(void);
@@ -208,6 +219,9 @@ int librouter_pki_get_csr_contents(char *buf, int len);
 int librouter_pki_get_csr(char *buf, int len);
 int librouter_pki_flush_csr(void);
 int librouter_pki_gen_csr(void);
+#ifdef IPSEC_SUPPORT_SCEP
+int librouter_pki_cert_enroll(char *url, char *ca);
+#endif
 
 int librouter_pki_gen_privkey(int keysize);
 int librouter_pki_flush_privkey(void);

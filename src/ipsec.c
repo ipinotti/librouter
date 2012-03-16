@@ -286,8 +286,13 @@ static int _ipsec_write_conn_cfg(char *name)
 		}
 	}
 
+#ifdef IPSEC_STRONGSWAN
+	if (c->left.addr[0] != '%' || (!strcmp(c->left.addr, STRING_DEFAULTROUTE)))
+		fprintf(f, "\tleft= %s\n", c->left.addr);
+#else
 	if (c->left.addr[0])
 		fprintf(f, "\tleft= %s\n", c->left.addr);
+#endif
 
 	if (c->left.id[0])
 		fprintf(f, "\tleftid= %s\n", c->left.id);
@@ -1572,6 +1577,35 @@ void librouter_ipsec_dump(FILE *out)
 	fprintf(out, "!\n");
 }
 
+int librouter_ipsec_show_conn(char *name)
+{
+	char line[128];
+
+#ifdef IPSEC_STRONGSWAN
+	sprintf(line, "%s status %s", PROG_IPSEC, name);
+#else
+	sprintf(line, "/lib/ipsec/whack --status");
+#endif
+	system(line);
+
+	return 0;
+}
+
+int librouter_ipsec_show_all(void)
+{
+	char line[128];
+
+#ifdef IPSEC_STRONGSWAN
+	sprintf(line, "%s status", PROG_IPSEC);
+#else
+	sprintf(line, "/lib/ipsec/whack --status");
+#endif
+	system(line);
+
+	return 0;
+}
+
+
 #ifdef OPTION_PKI
 /************************************************/
 /****************** X.509 ***********************/
@@ -1762,6 +1796,7 @@ int librouter_pki_del_cacert(char *name)
 /*********************************/
 /** Certificate Signing Request **/
 /*********************************/
+
 int librouter_pki_flush_csr(void)
 {
 	return unlink(PKI_CSR_PATH);
@@ -1808,6 +1843,21 @@ int librouter_pki_gen_csr(void)
 	return system(buf);
 }
 
+#ifdef IPSEC_SUPPORT_SCEP
+int librouter_pki_cert_enroll(char *url, char *ca)
+{
+	char line[256];
+	char cacert[128];
+
+	sprintf(cacert, PKI_CA_PATH, ca);
+
+	sprintf(line, "%s -u %s -i pkcs1=%s -i cacert-enc=%s -i cacert-sig=%s -o cert=%s",
+	        PROG_SCEPCLIENT, url, PKI_PRIVKEY_PATH, cacert, cacert, PKI_CERT_PATH);
+	system(line);
+
+	return 0;
+}
+#endif /* IPSEC_SUPPORT_SCEP */
 /**********************************/
 /** Host (Own) X.509 Certificate **/
 /**********************************/

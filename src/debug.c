@@ -24,6 +24,7 @@ static debuginfo DEBUG[] = { /* !!! Check cish_defines.h */
 	{"config: ","config[","Configuration service", 0},
 #ifdef OPTION_IPSEC
 	{"crypto: ","pluto[","VPN daemon", 0},
+	{"crypto: ","charon:","VPN daemon", 0}, /* Strongswan's IKEv2 daemon */
 #endif
 #ifdef UDHCPD
 	{"dhcp: ","udhcpd[","DHCP service", 0},
