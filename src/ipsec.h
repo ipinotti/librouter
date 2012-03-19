@@ -81,6 +81,17 @@ enum {
 	AUTO_IGNORE = 0, AUTO_START = 1, AUTO_ADD = 2
 };
 
+struct pki_dn {
+	char *c;
+	char *state;
+	char *city;
+	char *org;
+	char *section;
+	char *name;
+	char *email;
+};
+
+
 #define IPSEC_CONNECTION_NAME_LEN	32
 
 struct ipsec_ep {
@@ -220,7 +231,7 @@ int librouter_pki_get_csr(char *buf, int len);
 int librouter_pki_flush_csr(void);
 int librouter_pki_gen_csr(void);
 #ifdef IPSEC_SUPPORT_SCEP
-int librouter_pki_cert_enroll(char *url, char *ca);
+int librouter_pki_cert_enroll(char *url, char *ca, struct pki_dn *dn);
 #endif
 
 int librouter_pki_gen_privkey(int keysize);

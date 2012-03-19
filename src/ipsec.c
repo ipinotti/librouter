@@ -1844,15 +1844,56 @@ int librouter_pki_gen_csr(void)
 }
 
 #ifdef IPSEC_SUPPORT_SCEP
-int librouter_pki_cert_enroll(char *url, char *ca)
+static int _print_dn(char *buf, struct pki_dn *dn)
 {
-	char line[256];
+	char line[32];
+
+
+	sprintf(buf, "--dn \"C=%s, ST=%s, L=%s, O=%s",
+	        	(!dn->c[0]) ? "BR" : dn->c,
+	                (!dn->state[0]) ? "Sao Paulo" : dn->state,
+	                (!dn->city[0]) ? "Sao Paulo" : dn->city,
+	                (!dn->org[0]) ? "Digistar Telecom SA" : dn->org);
+
+	if (dn->section[0]) {
+		sprintf(line, ", OU=%s", dn->section);
+		strcat(buf, line);
+	}
+
+	if (dn->name[0]) {
+		sprintf(line, ", CN=%s", dn->name);
+		strcat(buf, line);
+	}
+
+	if (dn->email[0]) {
+		sprintf(line, ", E=%s", dn->email);
+		strcat(buf, line);
+	}
+
+	strcat(buf, "\""); /* Close double quotes */
+
+	return 0;
+}
+
+int librouter_pki_cert_enroll(char *url, char *ca, struct pki_dn *dn)
+{
+	char line[512];
 	char cacert[128];
+	char dn_str[256];
 
 	sprintf(cacert, PKI_CA_PATH, ca);
 
-	sprintf(line, "%s -u %s -i pkcs1=%s -i cacert-enc=%s -i cacert-sig=%s -o cert=%s",
+	sprintf(line, "%s -u %s"
+		"-i pkcs1=%s -i cacert-enc=%s -i cacert-sig=%s -o cert=%s",
 	        PROG_SCEPCLIENT, url, PKI_PRIVKEY_PATH, cacert, cacert, PKI_CERT_PATH);
+
+	/* Add DN to command */
+	_print_dn(dn_str, dn);
+	strcat(line, dn_str);
+
+#if 0 /* DEBUG */
+	printf("%s\n", line);
+#endif
 	system(line);
 
 	return 0;
