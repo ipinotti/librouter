@@ -1656,12 +1656,33 @@ int _write_file(char *path, char *buf, int buflen)
 	return 0;
 }
 
+static void _printf_ipsec_status(const char *cmd)
+{
+	FILE *f;
+	char buf[256];
+
+	f = popen(cmd, "r");
+
+	if (f == NULL)
+		return;
+
+	while (!feof(f)) {
+		fgets(buf, 255, f);
+		if (strstr(buf, "000"))
+			continue;
+		printf(buf);
+	}
+
+	pclose(f);
+}
+
 int librouter_pki_dump_general_info(void)
 {
 #ifdef IPSEC_OPENSWAN
-	system("/lib/ipsec/ipsec auto --listall");
+	_printf_ipsec_status("/lib/ipsec/ipsec auto --listall");
 #else /* STRONGSWAN */
-	system("/sbin/ipsec listcerts");
+	_printf_ipsec_status("/sbin/ipsec listcerts");
+	_printf_ipsec_status("/sbin/ipsec listcacerts");
 #endif
 }
 
