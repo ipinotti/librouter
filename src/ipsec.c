@@ -286,6 +286,16 @@ static int _ipsec_write_conn_cfg(char *name)
 		}
 	}
 
+#if defined(IPSEC_STRONGSWAN)
+	if (c->ike_version == IKEv2)
+		fprintf(f, "\tkeyexchange= ikev2\n");
+	else
+		fprintf(f, "\tkeyexchange= ikev1\n");
+#elif defined(IPSEC_OPENSWAN)
+	if (c->ike_version == IKEv2)
+		fprintf(f, "\tikev2= insist\n");
+#endif
+
 #ifdef IPSEC_STRONGSWAN
 	if (c->left.addr[0] != '%' || (!strcmp(c->left.addr, STRING_DEFAULTROUTE)))
 		fprintf(f, "\tleft= %s\n", c->left.addr);
@@ -579,6 +589,33 @@ int librouter_ipsec_get_auth(char *ipsec_conn)
 	_ipsec_unmap_conn(c);
 
 	return auth;
+}
+
+int librouter_ipsec_get_ike_version(char *ipsec_conn)
+{
+	struct ipsec_connection *c;
+	int version;
+
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
+		return -1;
+
+	version = c->ike_version;
+
+	_ipsec_unmap_conn(c);
+
+	return version;
+}
+
+int librouter_ipsec_set_ike_version(char *ipsec_conn, int version)
+{
+	struct ipsec_connection *c;
+
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
+		return -1;
+
+	c->ike_version = version;
+
+	return _ipsec_unmap_conn(c);
 }
 
 int librouter_ipsec_set_remote_rsakey(char *ipsec_conn, char *rsakey)
@@ -1362,6 +1399,11 @@ static void _ipsec_dump_conn(FILE *out, char *name)
 		}
 		break;
 	}
+
+	if (librouter_ipsec_get_ike_authproto(name) == IKEv2)
+		fprintf(out, "  ike-version 2\n");
+	else
+		fprintf(out, "  ike-version 1\n");
 
 	/* leftid */
 	buf[0] = '\0';

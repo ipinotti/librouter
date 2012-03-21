@@ -70,6 +70,10 @@ enum {
 };
 
 enum {
+	IKEv1 = 0, IKEv2 = 1
+};
+
+enum {
 	CYPHER_ANY = 0, CYPHER_AES = 1, CYPHER_3DES = 2, CYPHER_DES = 3, CYPHER_NULL = 4
 };
 
@@ -109,6 +113,7 @@ struct ipsec_connection {
 
 	int authby; /* RSA, SECRET, X509 */
 	int authtype; /* ESP or AH */
+	int ike_version; /* IKEv1 (default) or IKEv2 */
 	char sharedkey[512];
 
 	int cypher; /* AES, 3DES, DES, etc. */
@@ -163,9 +168,11 @@ int librouter_ipsec_create_rsakey(int keysize);
 
 int librouter_ipsec_get_auth(char *ipsec_conn);
 
+int librouter_ipsec_get_ike_version(char *ipsec_conn);
+int librouter_ipsec_set_ike_version(char *ipsec_conn, int version);
+
 int librouter_ipsec_set_remote_rsakey(char *ipsec_conn, char *rsakey);
 int librouter_ipsec_set_local_rsakey(char *ipsec_conn, char *rsakey);
-
 
 int librouter_ipsec_create_secrets_file(char *name, int type, char *shared);
 
