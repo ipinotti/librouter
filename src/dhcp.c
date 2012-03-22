@@ -821,6 +821,41 @@ int librouter_dhcp_get_relay(char *buf)
 	return 0;
 }
 
+int librouter_dhcp_server_verify_ip_intf(void)
+{
+	int ret = 0;
+	char *dev = NULL;
+	char *ip_addr = NULL;
+	char *netmask = NULL;
+
+	librouter_dhcp_server_get_iface(&dev);
+
+	if (dev) {
+		/* Special case: if bridge, check if it exists on system */
+		if (strstr(dev, "bridge")) {
+			if (!librouter_br_exists(dev)) {
+				printf("%% %s must be created first\n", dev);
+				free (dev);
+				goto end;
+			}
+		}
+
+		ip_addr = malloc(20);
+		netmask = malloc(20);
+
+		librouter_ip_interface_get_ip_addr(dev, ip_addr, netmask);
+		if (strlen(ip_addr) > 0 && strlen(netmask) > 0)
+			ret = 1;
+
+		free(dev);
+		free(ip_addr);
+		free(netmask);
+	}
+
+end:
+	return ret;
+}
+
 #ifdef OPTION_IPSEC
 /**
  *	The functions below are used by L2TP and use loopback0 interface
@@ -1074,41 +1109,6 @@ int librouter_dhcp_get_server_local(char *buf)
 	if (len > 0)
 		buf[len - 1] = 0;
 	return 0;
-}
-
-int librouter_dhcp_server_verify_ip_intf(void)
-{
-	int ret = 0;
-	char *dev = NULL;
-	char *ip_addr = NULL;
-	char *netmask = NULL;
-
-	librouter_dhcp_server_get_iface(&dev);
-
-	if (dev) {
-		/* Special case: if bridge, check if it exists on system */
-		if (strstr(dev, "bridge")) {
-			if (!librouter_br_exists(dev)) {
-				printf("%% %s must be created first\n", dev);
-				free (dev);
-				goto end;
-			}
-		}
-
-		ip_addr = malloc(20);
-		netmask = malloc(20);
-
-		librouter_ip_interface_get_ip_addr(dev, ip_addr, netmask);
-		if (strlen(ip_addr) > 0 && strlen(netmask) > 0)
-			ret = 1;
-
-		free(dev);
-		free(ip_addr);
-		free(netmask);
-	}
-
-end:
-	return ret;
 }
 
 #endif /* OPTION_IPSEC */
