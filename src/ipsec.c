@@ -147,85 +147,12 @@ int librouter_l2tp_exec(int opt)
 /********* File configuration functions **********/
 /*************************************************/
 
-static int _ipsec_create_conn(char *name)
-{
-	int fd, n, ret = 0;
-	struct ipsec_connection c;
-	char filename[128];
-
-	memset(&c, 0, sizeof(c));
-	strncpy(c.name, name, sizeof(c.name));
-
-	snprintf(filename, sizeof(filename), IPSEC_CONN_MAP_FILE, name);
-
-	if ((fd = open(filename, O_RDWR | O_CREAT, 0664)) < 0) {
-		librouter_pr_error(1, "Could not open IPSec configuration");
-		return -1;
-	}
-
-	n = write(fd, &c, sizeof(c));
-	if (n != sizeof(c)) {
-		printf("Could not create connection bin file\n");
-		ret = -1;
-	}
-
-	close(fd);
-
-	return ret;
-}
-
-static int _ipsec_map_conn(char *name, struct ipsec_connection **c)
-{
-	int fd;
-	char filename[128];
-
-	ipsec_dbg("Mapping connection %s => Starting\n", name);
-
-	snprintf(filename, sizeof(filename), IPSEC_CONN_MAP_FILE, name);
-
-	if ((fd = open(filename, O_RDWR)) < 0) {
-		librouter_pr_error(1, "Could not open IPSec configuration");
-		return -1;
-	}
-
-	*c = mmap(NULL, sizeof(struct ipsec_connection), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-
-	if (*c == ((void *) -1)) {
-		librouter_pr_error(1, "Could not open IPSec configuration");
-		return -1;
-	}
-
-	close (fd);
-
-	ipsec_dbg("Mapping connection %s => Success\n", name);
-
-	return 0;
-}
-
-static int _ipsec_unmap_conn(struct ipsec_connection *c)
-{
-	return munmap(c, sizeof(struct ipsec_connection));
-}
-
-static int _ipsec_delete_conn(char *name)
-{
-	char filename[128];
-
-	snprintf(filename, sizeof(filename), IPSEC_CONN_MAP_FILE, name);
-
-	unlink(filename);
-
-	return 0;
-}
-
-
-static int _ipsec_write_conn_cfg(char *name)
+static int _ipsec_write_conn_cfg(struct ipsec_connection *c)
 {
 	FILE *f;
 	char buf[MAX_CMD_LINE];
-	struct ipsec_connection *c = NULL;
 
-	sprintf(buf, FILE_IKE_CONN_CONF, name);
+	sprintf(buf, FILE_IKE_CONN_CONF, c->name);
 
 	f = fopen(buf, "w+");
 	if (f == NULL) {
@@ -233,16 +160,13 @@ static int _ipsec_write_conn_cfg(char *name)
 		return -1;
 	}
 
-	if (_ipsec_map_conn(name, &c) < 0) {
-		fclose(f);
-		return -1;
-	}
+	ipsec_dbg("Writing IPSec configuration to %s\n", buf);
 
 #ifdef IPSEC_STRONGSWAN
 	fprintf(f, "\n"); /* Needs empty line at the beggining */
 #endif
 
-	fprintf(f, "conn %s\n", name);
+	fprintf(f, "conn %s\n", c->name);
 
 #ifdef OBSOLETE
 	/* AUTH */
@@ -251,8 +175,6 @@ static int _ipsec_write_conn_cfg(char *name)
 	else
 		fprintf(f, "\tauth=esp\n");
 #endif
-
-
 
 	if (c->cypher != CYPHER_ANY) {
 #ifdef IPSEC_OPENSWAN
@@ -372,7 +294,160 @@ static int _ipsec_write_conn_cfg(char *name)
 
 	fclose(f);
 
-	return _ipsec_unmap_conn(c);
+	return 0;
+}
+
+static int _ipsec_update_secrets_file(struct ipsec_connection *c)
+{
+	int fd;
+	char *rsa, filename[60], buf[MAX_KEY_SIZE];
+
+
+	sprintf(filename, FILE_CONN_SECRETS, c->name);
+
+	if (!(fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0660))) {
+		fprintf(stderr, "Could not create secret file\n");
+		return -1;
+	}
+
+#ifdef IPSEC_SUPPORT_RSA_RAW
+	if (c->authby == RSA) {
+		char token1[] = ": RSA	{\n";
+		char token2[] = "	}\n";
+
+		rsa = malloc(8192);
+
+		if (!librouter_nv_load_ipsec_secret(rsa)) {
+			fprintf(stderr,
+			                "%% ERROR: You must create RSA keys first (key generate rsa 1024).\n");
+			close(fd);
+			return -1;
+		}
+
+		ipsec_dbg("Loaded RSA from NV : %s\n", rsa);
+
+		if (c->left.id[0]) {
+			write(fd, c->left.id, strlen(c->left.id));
+			write(fd, " ", 1);
+		}
+
+		write(fd, token1, strlen(token1));
+		write(fd, rsa, strlen(rsa));
+		write(fd, token2, strlen(token2));
+		write(fd, '\0', 1);
+
+		close(fd);
+		free(rsa);
+
+		/* copia a chave publica para o arquivo de configuracao da conexao */
+		if (librouter_str_find_string_in_file(filename, "#pubkey", buf, MAX_KEY_SIZE) < 0)
+			return -1;
+
+		if (librouter_ipsec_set_local_rsakey(name, buf) < 0)
+			return -1;
+	} else
+#endif
+	if (c->authby == X509) {
+		sprintf(buf, ": RSA /etc/ipsec.d/private/my.key\n");
+		write(fd, buf, strlen(buf));
+		close(fd);
+	} else {
+		char token1[] = ": PSK \"";
+		char token2[] = "\"\n";
+
+		if (c->left.id[0] && c->right.id) {
+			sprintf(buf, "%s %s ", c->left.id, c->right.id);
+			write(fd, buf, strlen(buf));
+		} else if (c->left.addr[0] && _check_ip(c->left.addr) && c->right.addr[0]) {
+			sprintf(buf, "%s %s ", c->left.addr, c->right.addr);
+			write(fd, buf, strlen(buf));
+		}
+
+		write(fd, token1, strlen(token1));
+		write(fd, c->sharedkey, strlen(c->sharedkey));
+		write(fd, token2, strlen(token2));
+		write(fd, '\0', 1);
+		close(fd);
+	}
+
+	return 0;
+}
+
+static int _ipsec_map_conn(char *name, struct ipsec_connection **c)
+{
+	int fd;
+	char filename[128];
+
+	ipsec_dbg("Mapping connection %s\n", name);
+
+	snprintf(filename, sizeof(filename), IPSEC_CONN_MAP_FILE, name);
+
+	if ((fd = open(filename, O_RDWR)) < 0) {
+		librouter_pr_error(1, "Could not open IPSec configuration");
+		return -1;
+	}
+
+	*c = mmap(NULL, sizeof(struct ipsec_connection), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+
+	if (*c == ((void *) -1)) {
+		librouter_pr_error(1, "Could not open IPSec configuration");
+		return -1;
+	}
+
+	close (fd);
+
+	return 0;
+}
+
+static int _ipsec_unmap_conn(struct ipsec_connection *c)
+{
+	/* Update configuration file in this point */
+	_ipsec_write_conn_cfg(c);
+
+	/* Update secrets file in this point */
+	_ipsec_update_secrets_file(c);
+
+	return munmap(c, sizeof(struct ipsec_connection));
+}
+
+static int _ipsec_delete_conn(char *name)
+{
+	char filename[128];
+
+	snprintf(filename, sizeof(filename), IPSEC_CONN_MAP_FILE, name);
+
+	unlink(filename);
+
+	return 0;
+}
+
+static int _ipsec_create_conn(char *name)
+{
+	int fd, n, ret = 0;
+	struct ipsec_connection c;
+	char filename[128];
+
+	memset(&c, 0, sizeof(c));
+	strncpy(c.name, name, sizeof(c.name));
+
+	snprintf(filename, sizeof(filename), IPSEC_CONN_MAP_FILE, name);
+
+	ipsec_dbg("Creating connection file: %s\n", filename);
+
+	if ((fd = open(filename, O_RDWR | O_CREAT, 0664)) < 0) {
+		librouter_pr_error(1, "Could not open IPSec configuration");
+		return -1;
+	}
+
+	n = write(fd, &c, sizeof(c));
+	if (n != sizeof(c)) {
+		printf("Could not create connection bin file\n");
+		ret = -1;
+	}
+
+	close(fd);
+
+	return ret;
 }
 
 /*  Updade ipsec.conf
@@ -610,6 +685,8 @@ int librouter_ipsec_set_ike_version(char *ipsec_conn, int version)
 {
 	struct ipsec_connection *c;
 
+	ipsec_dbg("Setting IKE version to %d\n", version);
+
 	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
 		return -1;
 
@@ -640,87 +717,6 @@ int librouter_ipsec_set_local_rsakey(char *ipsec_conn, char *rsakey)
 	strncpy(c->left.rsa_public_key, rsakey, sizeof(c->left.rsa_public_key));
 
 	return _ipsec_unmap_conn(c);
-}
-
-static int _ipsec_update_secrets_file(char *name)
-{
-	int fd;
-	char *rsa, filename[60], buf[MAX_KEY_SIZE];
-	struct ipsec_connection *c;
-
-	if (_ipsec_map_conn(name, &c) < 0)
-		return -1;
-
-	sprintf(filename, FILE_CONN_SECRETS, name);
-
-	if (!(fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0660))) {
-		fprintf(stderr, "Could not create secret file\n");
-		return -1;
-	}
-
-#ifdef IPSEC_SUPPORT_RSA_RAW
-	if (c->authby == RSA) {
-		char token1[] = ": RSA	{\n";
-		char token2[] = "	}\n";
-
-		rsa = malloc(8192);
-
-		if (!librouter_nv_load_ipsec_secret(rsa)) {
-			fprintf(stderr,
-			                "%% ERROR: You must create RSA keys first (key generate rsa 1024).\n");
-			close(fd);
-			return -1;
-		}
-
-		ipsec_dbg("Loaded RSA from NV : %s\n", rsa);
-
-		if (c->left.id[0]) {
-			write(fd, c->left.id, strlen(c->left.id));
-			write(fd, " ", 1);
-		}
-
-		write(fd, token1, strlen(token1));
-		write(fd, rsa, strlen(rsa));
-		write(fd, token2, strlen(token2));
-		write(fd, '\0', 1);
-
-		close(fd);
-		free(rsa);
-
-		/* copia a chave publica para o arquivo de configuracao da conexao */
-		if (librouter_str_find_string_in_file(filename, "#pubkey", buf, MAX_KEY_SIZE) < 0)
-			return -1;
-
-		if (librouter_ipsec_set_local_rsakey(name, buf) < 0)
-			return -1;
-	} else
-#endif
-	if (c->authby == X509) {
-		sprintf(buf, ": RSA /etc/ipsec.d/private/my.key\n");
-		write(fd, buf, strlen(buf));
-		close(fd);
-	} else {
-		char token1[] = ": PSK \"";
-		char token2[] = "\"\n";
-
-		if (c->left.id[0] && c->right.id) {
-			sprintf(buf, "%s %s ", c->left.id, c->right.id);
-			write(fd, buf, strlen(buf));
-		} else if (c->left.addr[0] && _check_ip(c->left.addr) && c->right.addr[0]) {
-			sprintf(buf, "%s %s ", c->left.addr, c->right.addr);
-			write(fd, buf, strlen(buf));
-		}
-
-		write(fd, token1, strlen(token1));
-		write(fd, c->sharedkey, strlen(c->sharedkey));
-		write(fd, token2, strlen(token2));
-		write(fd, '\0', 1);
-		close(fd);
-	}
-
-	_ipsec_unmap_conn(c);
-
-	return 0;
 }
 
 int librouter_ipsec_set_auth(char *ipsec_conn, int auth)
@@ -994,11 +990,11 @@ static int _ipsec_file_filter(const struct dirent *file)
 	if ((p1 = strstr(file->d_name, "ipsec.")) == NULL)
 		return 0;
 
-	if ((p2 = strstr(file->d_name, ".conf")) == NULL)
+	if ((p2 = strstr(file->d_name, ".bin")) == NULL)
 		return 0;
 
 	if (p1 + 6 < p2)
-		return 1; /* ipsec.[conname].conf */
+		return 1; /* ipsec.[conname].bin */
 
 	return 0;
 }
@@ -1009,7 +1005,7 @@ int librouter_ipsec_list_all_names(char ***rcv_p)
 	struct dirent **namelist;
 	char **list, **list_ini;
 
-	n = scandir("/etc/", &namelist, _ipsec_file_filter, alphasort);
+	n = scandir("/var/run/", &namelist, _ipsec_file_filter, alphasort);
 
 	if (n < 0) {
 		librouter_pr_error(0, "scandir failed");
@@ -1267,12 +1263,6 @@ int librouter_ipsec_set_link(char *ipsec_conn, int on_off)
 	}
 
 	_ipsec_unmap_conn(c);
-
-	/* Update configuration file in this point */
-	_ipsec_write_conn_cfg(ipsec_conn);
-
-	/* Update secrets file in this point */
-	_ipsec_update_secrets_file(ipsec_conn);
 }
 
 int librouter_ipsec_get_sharedkey(char *ipsec_conn, char **buf)
@@ -1400,7 +1390,7 @@ static void _ipsec_dump_conn(FILE *out, char *name)
 		break;
 	}
 
-	if (librouter_ipsec_get_ike_authproto(name) == IKEv2)
+	if (librouter_ipsec_get_ike_version(name) == IKEv2)
 		fprintf(out, "  ike-version 2\n");
 	else
 		fprintf(out, "  ike-version 1\n");
