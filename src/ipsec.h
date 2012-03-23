@@ -54,31 +54,59 @@
 
 
 enum {
-	STOP = 0, START, RESTART, RELOAD
+	STOP = 0,
+	START,
+	RESTART,
+	RELOAD
 };
 
 enum {
-	ADDR_DEFAULT = 1, ADDR_INTERFACE, ADDR_ANY, ADDR_IP, ADDR_FQDN
+	ADDR_DEFAULT = 1,
+	ADDR_INTERFACE,
+	ADDR_ANY,
+	ADDR_IP,
+	ADDR_FQDN
 };
 
 enum {
-	RSA = 1, SECRET = 2, X509 = 3
+	RSA = 1,
+	SECRET = 2,
+	X509 = 3
 };
 
 enum {
-	AH = 1, ESP = 2
+	AH = 1,
+	ESP
 };
 
 enum {
-	IKEv1 = 0, IKEv2 = 1
+	IKEv1 = 0,
+	IKEv2
 };
 
 enum {
-	CYPHER_ANY = 0, CYPHER_AES = 1, CYPHER_3DES = 2, CYPHER_DES = 3, CYPHER_NULL = 4
+	CYPHER_AES = 0,
+	CYPHER_AES192,
+	CYPHER_AES256,
+	CYPHER_3DES,
+	CYPHER_DES,
+	CYPHER_NULL
 };
 
 enum {
-	 HASH_ANY = 0, HASH_MD5 = 1, HASH_SHA1 = 2
+	 HASH_MD5 = 0,
+	 HASH_SHA1,
+	 HASH_SHA256,
+	 HASH_SHA384,
+	 HASH_SHA512
+};
+
+
+enum {
+	DH_GROUP_1 = 0,
+	DH_GROUP_2,
+	DH_GROUP_5,
+	DH_GROUP_14,
 };
 
 enum {
@@ -116,8 +144,13 @@ struct ipsec_connection {
 	int ike_version; /* IKEv1 (default) or IKEv2 */
 	char sharedkey[512];
 
-	int cypher; /* AES, 3DES, DES, etc. */
-	int hash; /* MD5, SHA1, etc. */
+	int cypher; /* AES, AES192, AES256, 3DES, DES. */
+	int hash; /* MD5, SHA1 */
+
+	/* encryption, hash and dh-group for IKE */
+	int ikecypher;
+	int ikehash;
+	int ikedh;
 
 	struct ipsec_ep left;
 	struct ipsec_ep right;
@@ -181,7 +214,13 @@ int librouter_ipsec_set_secret(char *ipsec_conn, char *secret);
 
 int librouter_ipsec_get_link(char *ipsec_conn);
 int librouter_ipsec_set_ike_authproto(char *ipsec_conn, int opt);
+
+int librouter_ipsec_get_ike_algs(char *ipsec_conn, char *buf);
+int librouter_ipsec_set_ike_algs(char *ipsec_conn, int cypher, int hash, int dh);
+
+int librouter_ipsec_get_esp(char *ipsec_conn, char *buf);
 int librouter_ipsec_set_esp(char *ipsec_conn, int cypher, int hash);
+
 int librouter_ipsec_set_local_id(char *ipsec_conn, char *id);
 int librouter_ipsec_set_remote_id(char *ipsec_conn, char *id);
 int librouter_ipsec_set_local_addr(char *ipsec_conn, char *addr);

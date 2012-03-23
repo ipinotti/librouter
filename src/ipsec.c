@@ -147,6 +147,39 @@ int librouter_l2tp_exec(int opt)
 /********* File configuration functions **********/
 /*************************************************/
 
+const struct {
+	int cypher;
+	char string[8];
+} ctable[] = {
+		{CYPHER_AES, "aes" },
+		{CYPHER_AES192, "aes192" },
+		{CYPHER_AES256, "aes256" },
+		{CYPHER_3DES, "3des" },
+		{CYPHER_DES, "des" },
+		{CYPHER_NULL, "null" },
+};
+
+const struct {
+	int hash;
+	char string[8];
+} htable[] = {
+		{HASH_MD5, "md5" },
+		{HASH_SHA1, "sha1" },
+		{HASH_SHA256, "sha256" },
+		{HASH_SHA384, "sha384" },
+		{HASH_SHA512, "sha512" },
+};
+
+const struct {
+	int dh;
+	char string[16];
+} dhtable[] = {
+		{DH_GROUP_1, "modp768" },
+		{DH_GROUP_2, "modp1024" },
+		{DH_GROUP_5, "modp1536" },
+		{DH_GROUP_14, "modp2048" },
+};
+
 static int _ipsec_write_conn_cfg(struct ipsec_connection *c)
 {
 	FILE *f;
@@ -176,37 +209,17 @@ static int _ipsec_write_conn_cfg(struct ipsec_connection *c)
 		fprintf(f, "\tauth=esp\n");
 #endif
 
-	if (c->cypher != CYPHER_ANY) {
 #ifdef IPSEC_OPENSWAN
-		fprintf(f, "\tphase2alg=");
+	fprintf(f, "\tphase2alg=");
 #else
-		fprintf(f, "\tesp=");
+	fprintf(f, "\tesp= ");
 #endif
-		switch (c->cypher) {
-		case CYPHER_3DES:
-			fprintf(f, "3des-");
-			break;
-		case CYPHER_AES:
-			fprintf(f, "aes-");
-			break;
-		case CYPHER_NULL:
-			fprintf(f, "null-");
-			break;
-		case CYPHER_DES:
-		default:
-			fprintf(f, "des-");
-			break;
-		}
-		switch (c->hash) {
-		case HASH_MD5:
-			fprintf(f, "md5\n");
-			break;
-		case HASH_SHA1:
-		default:
-			fprintf(f, "sha1\n");
-			break;
-		}
-	}
+	fprintf(f, "%s-%s\n", ctable[c->cypher].string, htable[c->hash].string);
+
+	fprintf(f, "\tike= %s-%s-%s\n",
+	        ctable[c->ikecypher].string,
+	        htable[c->ikehash].string,
+	        dhtable[c->ikedh].string);
 
 #if defined(IPSEC_STRONGSWAN)
 	if (c->ike_version == IKEv2)
@@ -770,6 +783,71 @@ int librouter_ipsec_set_ike_authproto(char *ipsec_conn, int opt)
 	return _ipsec_unmap_conn(c);
 }
 
+int librouter_ipsec_get_ike_algs(char *ipsec_conn, char *buf)
+{
+	struct ipsec_connection *c;
+	int dh;
+
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
+		return -1;
+
+	ipsec_dbg("cypher = %d hash = %d dh = %d\n",
+	          c->ikecypher,
+	          c->ikehash,
+	          c->ikedh);
+
+	if (c->ikedh == DH_GROUP_1)
+		dh = 1;
+	else if (c->ikedh == DH_GROUP_2)
+		dh = 2;
+	else if (c->ikedh == DH_GROUP_5)
+		dh = 5;
+	else
+		dh = 14;
+
+	sprintf(buf, "%s %s %d",
+	        ctable[c->ikecypher].string,
+	        htable[c->ikehash].string,
+	        dh);
+
+	_ipsec_unmap_conn(c);
+
+	return 1;
+}
+
+int librouter_ipsec_set_ike_algs(char *ipsec_conn, int cypher, int hash, int dh)
+{
+	struct ipsec_connection *c;
+
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
+		return -1;
+
+	ipsec_dbg("cypher %d hash %d dh %d\n", cypher, hash, dh);
+
+	c->ikecypher = cypher;
+	c->ikehash = hash;
+	c->ikedh = dh;
+
+	return _ipsec_unmap_conn(c);
+}
+
+int librouter_ipsec_get_esp(char *ipsec_conn, char *buf)
+{
+	struct ipsec_connection *c;
+
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
+		return -1;
+
+	ipsec_dbg("cypher = %d hash = %d\n", c->cypher, c->hash);
+
+	sprintf(buf, "%s %s",
+	        ctable[c->cypher].string, htable[c->hash].string);
+
+	_ipsec_unmap_conn(c);
+
+	return 1;
+}
+
 int librouter_ipsec_set_esp(char *ipsec_conn, int cypher, int hash)
 {
 	struct ipsec_connection *c;
@@ -1186,49 +1264,6 @@ int librouter_ipsec_get_ike_authproto(char *ipsec_conn)
 	return ESP;
 }
 
-int librouter_ipsec_get_esp(char *ipsec_conn, char *buf)
-{
-	struct ipsec_connection *c;
-
-	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
-		return -1;
-
-	ipsec_dbg("cypher = %d hash = %d\n", c->cypher, c->hash);
-
-	switch(c->cypher) {
-	case CYPHER_AES:
-		strcpy(buf, "aes ");
-		break;
-	case CYPHER_3DES:
-		strcpy(buf, "3des ");
-		break;
-	case CYPHER_NULL:
-		strcpy(buf, "null ");
-		break;
-	case CYPHER_DES:
-		strcpy(buf, "des ");
-		break;
-	case CYPHER_ANY:
-		_ipsec_unmap_conn(c);
-		return 0;
-	}
-
-	switch(c->hash) {
-	case HASH_MD5:
-		strcat(buf, "md5");
-		break;
-	case HASH_SHA1:
-		strcat(buf, "sha1");
-		break;
-	default:
-		break;
-	}
-
-	_ipsec_unmap_conn(c);
-
-	return 1;
-}
-
 int librouter_ipsec_get_pfs(char *ipsec_conn)
 {
 	struct ipsec_connection *c;
@@ -1389,6 +1424,9 @@ static void _ipsec_dump_conn(FILE *out, char *name)
 		}
 		break;
 	}
+
+	if (librouter_ipsec_get_ike_algs(name, buf) > 0)
+		fprintf(out, "  ike-algs %s\n", buf);
 
 	if (librouter_ipsec_get_ike_version(name) == IKEv2)
 		fprintf(out, "  ike-version 2\n");
