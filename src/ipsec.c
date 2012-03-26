@@ -266,6 +266,9 @@ static int _ipsec_write_conn_cfg(struct ipsec_connection *c)
 	if (c->right.protoport[0])
 		fprintf(f, "\trightprotoport= %s\n", c->right.protoport);
 
+#if 1 /* Cisco InterOp */
+	fprintf(f, "\trightca= %%same\n");
+#endif
 
 	/* AUTHBY */
 	switch (c->authby) {
