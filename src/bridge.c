@@ -238,7 +238,8 @@ int librouter_br_addif(char *brname, char *ifname)
 			/* Save ethernet IP address/mask */
 			librouter_ip_interface_get_ip_addr(ifname, ip.addr, ip.mask);
 			librouter_ip_interface_set_no_addr(ifname); /* flush */
-			librouter_ip_ethernet_set_addr(brname, ip.addr, ip.mask);
+			if (ip.addr[0])
+				librouter_ip_ethernet_set_addr(brname, ip.addr, ip.mask);
 		} else
 #endif
 			librouter_ip_interface_set_no_addr(ifname); /* flush */
