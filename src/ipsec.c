@@ -1977,13 +1977,31 @@ int librouter_pki_cert_enroll(char *url, char *ca, struct pki_dn *dn)
 
 	sprintf(cacert, PKI_CA_PATH, ca);
 
-	sprintf(line, "%s -u %s"
+	sprintf(line, "%s -u %s "
 		"-i pkcs1=%s -i cacert-enc=%s -i cacert-sig=%s -o cert=%s",
 	        PROG_SCEPCLIENT, url, PKI_PRIVKEY_PATH, cacert, cacert, PKI_CERT_PATH);
 
 	/* Add DN to command */
 	_print_dn(dn_str, dn);
 	strcat(line, dn_str);
+
+#if 0 /* DEBUG */
+	printf("%s\n", line);
+#endif
+	system(line);
+
+	return 0;
+}
+
+int librouter_pki_ca_enroll(char *url, char *ca)
+{
+	char line[512];
+	char cacert[128];
+
+	sprintf(cacert, PKI_CA_PATH, ca);
+
+	sprintf(line, "%s -u %s -o cacert=%s",
+		PROG_SCEPCLIENT, url, cacert);
 
 #if 0 /* DEBUG */
 	printf("%s\n", line);

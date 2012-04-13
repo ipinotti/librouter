@@ -278,6 +278,7 @@ int librouter_pki_flush_csr(void);
 int librouter_pki_gen_csr(void);
 #ifdef IPSEC_SUPPORT_SCEP
 int librouter_pki_cert_enroll(char *url, char *ca, struct pki_dn *dn);
+int librouter_pki_ca_enroll(char *url, char *ca);
 #endif
 
 int librouter_pki_gen_privkey(int keysize);
