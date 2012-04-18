@@ -14,6 +14,8 @@
 #define exec_dbg(x,...)
 #endif
 
+#define MAX_ARGS 10
+
 /* prototipos de funcoes */
 int librouter_exec_telinit(char c, int sleeptime);
 int librouter_exec_init_program(int add_del, char *prog);
@@ -24,6 +26,7 @@ int librouter_exec_get_init_option_value(char *prog,
                                   unsigned int max_len);
 int librouter_exec_check_daemon(char *prog);
 int librouter_exec_prog(int no_out, char *path, ...);
+int librouter_exec_prog_in_background(char *path, ...);
 
 #define librouter_exec_daemon(s) librouter_exec_init_program(1, s)
 #define librouter_kill_daemon(s) librouter_exec_init_program(0, s)

@@ -109,7 +109,57 @@ int librouter_exec_check_daemon(char *prog)
 	return (c == 'u');
 }
 
-#define MAX_ARGS 10
+int librouter_exec_prog_in_background(char *path, ...)
+{
+	pid_t pid, sid;
+	va_list ap;
+	char *argv[MAX_ARGS];
+	int i;
+
+	argv[0] = path;
+	va_start(ap, path);
+	for (i = 1; i < MAX_ARGS; i++) {
+		argv[i]=va_arg(ap, char *);
+		if (argv[i] == NULL)
+			break;
+	}
+	va_end(ap);
+	argv[i] = NULL;
+
+
+	/* already a daemon */
+	if (getppid() == 1)
+		return -1;
+
+	/* Fork off the parent process */
+	pid = fork();
+	if (pid < 0)
+		return -1;
+
+	/* If we got a good PID, then we can exit the parent process. */
+	if (pid > 0)
+		return 0;
+
+
+	/* At this point we are executing as the child process */
+	/* Change the file mode mask */
+	umask(0);
+
+	/* Create a new SID for the child process */
+	sid = setsid();
+	if (sid < 0) {
+		exit(EXIT_FAILURE);
+	}
+
+	/* Change the current working directory.  This prevents the current
+	 directory from being locked; hence not being able to remove it. */
+	if ((chdir("/")) < 0) {
+		exit(EXIT_FAILURE);
+	}
+
+	execv(path, argv);
+	exit(EXIT_FAILURE); /* Not reached */
+}
 
 // Executa o programa "path" com seus argumentos "...", fechando
 // stdout e stderr (para o programa nao apresentar mensagens em caso
