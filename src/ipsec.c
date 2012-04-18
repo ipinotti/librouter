@@ -16,6 +16,9 @@
 #include <arpa/inet.h>
 #include <sys/mman.h>
 
+#include <readline/readline.h>
+#include <readline/history.h>
+
 #include "options.h"
 #include "defines.h"
 #include "device.h"
@@ -39,6 +42,19 @@ static int _check_ip(char *str)
 	struct in_addr ip;
 
 	return inet_aton(str, &(ip));
+}
+
+static int _file_exists(char *filename)
+{
+	int f;
+
+	f = open(filename, O_RDONLY);
+	if (f < 0)
+		return 0;
+
+	close(f);
+
+	return 1;
 }
 
 /*****************************************************/
@@ -201,25 +217,27 @@ static int _ipsec_write_conn_cfg(struct ipsec_connection *c)
 
 	fprintf(f, "conn %s\n", c->name);
 
-#ifdef OBSOLETE
 	/* AUTH */
-	if (c->authtype == AH)
-		fprintf(f, "\tauth=ah\n");
-	else
+	if (c->authtype == AUTH_ESP) {
 		fprintf(f, "\tauth=esp\n");
-#endif
-
 #ifdef IPSEC_OPENSWAN
-	fprintf(f, "\tphase2alg=");
+		fprintf(f, "\tphase2alg=");
 #else
-	fprintf(f, "\tesp= ");
+		fprintf(f, "\tesp= ");
 #endif
-	fprintf(f, "%s-%s\n", ctable[c->cypher].string, htable[c->hash].string);
+		fprintf(f, "%s-%s\n", ctable[c->cypher].string, htable[c->hash].string);
+	} else
+		fprintf(f, "\tauth=ah\n");
 
 	fprintf(f, "\tike= %s-%s-%s\n",
 	        ctable[c->ikecypher].string,
 	        htable[c->ikehash].string,
 	        dhtable[c->ikedh].string);
+
+	if (c->ipcomp)
+		fprintf(f,"\tcompress= yes\n");
+	else
+		fprintf(f,"\tcompress= no\n");
 
 #if defined(IPSEC_STRONGSWAN)
 	if (c->ike_version == IKEv2)
@@ -290,8 +308,6 @@ static int _ipsec_write_conn_cfg(struct ipsec_connection *c)
 		fprintf(f, "\tauthby=secret\n");
 		break;
 	}
-
-
 
 	if (c->pfs)
 		fprintf(f, "\tpfs= yes\n");
@@ -774,7 +790,25 @@ int librouter_ipsec_get_link(char *ipsec_conn)
 	return link;
 }
 
-int librouter_ipsec_set_ike_authproto(char *ipsec_conn, int opt)
+/**
+ * Authentication type (ESP/AH) get and set functions
+ */
+int librouter_ipsec_get_ike_auth_type(char *ipsec_conn)
+{
+	struct ipsec_connection *c;
+	int auth;
+
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
+		return -1;
+
+	auth = c->authtype;
+
+	_ipsec_unmap_conn(c);
+
+	return auth;
+}
+
+int librouter_ipsec_set_ike_auth_type(char *ipsec_conn, int opt)
 {
 	struct ipsec_connection *c;
 
@@ -786,6 +820,42 @@ int librouter_ipsec_set_ike_authproto(char *ipsec_conn, int opt)
 	return _ipsec_unmap_conn(c);
 }
 
+/**
+ * IP Compression get and set functions
+ */
+int librouter_ipsec_get_ipcomp(char *ipsec_conn)
+{
+	struct ipsec_connection *c;
+	int ipcomp;
+
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
+		return -1;
+
+	ipcomp = c->ipcomp;
+
+	_ipsec_unmap_conn(c);
+
+	return ipcomp;
+}
+
+int librouter_ipsec_set_ipcomp(char *ipsec_conn, int enable)
+{
+	struct ipsec_connection *c;
+
+	if (_ipsec_map_conn(ipsec_conn, &c) < 0)
+		return -1;
+
+	if (enable)
+		c->ipcomp = 1;
+	else
+		c->ipcomp = 0;
+
+	return _ipsec_unmap_conn(c);
+}
+
+/**
+ * IKE Algorithms (cypher and hash) get and set functions
+ */
 int librouter_ipsec_get_ike_algs(char *ipsec_conn, char *buf)
 {
 	struct ipsec_connection *c;
@@ -1261,12 +1331,6 @@ int librouter_ipsec_get_nexthop(int position, char *ipsec_conn, char *buf)
 		return 0;
 }
 
-int librouter_ipsec_get_ike_authproto(char *ipsec_conn)
-{
-	/* Dummy function, always return ESP */
-	return ESP;
-}
-
 int librouter_ipsec_get_pfs(char *ipsec_conn)
 {
 	struct ipsec_connection *c;
@@ -1416,12 +1480,12 @@ static void _ipsec_dump_conn(FILE *out, char *name)
 	}
 
 	/* authproto and crypto */
-	switch (librouter_ipsec_get_ike_authproto(name)) {
-	case AH:
-		fprintf(out, "  authproto transport\n");
+	switch (librouter_ipsec_get_ike_auth_type(name)) {
+	case AUTH_AH:
+		fprintf(out, "  authproto tunnel ah\n");
 		break;
-	case ESP:
-		fprintf(out, "  authproto tunnel\n");
+	case AUTH_ESP:
+		fprintf(out, "  authproto tunnel esp\n");
 		if (librouter_ipsec_get_esp(name, buf) > 0) {
 			fprintf(out, "  esp %s\n", buf);
 		}
@@ -1435,6 +1499,9 @@ static void _ipsec_dump_conn(FILE *out, char *name)
 		fprintf(out, "  ike-version 2\n");
 	else
 		fprintf(out, "  ike-version 1\n");
+
+	if (librouter_ipsec_get_ipcomp(name))
+		fprintf(out, "  ip-compression\n");
 
 	/* leftid */
 	buf[0] = '\0';
@@ -1760,6 +1827,99 @@ int librouter_pki_dump_general_info(void)
 }
 
 /**********************************/
+/******* Distinguished Names*******/
+/**********************************/
+int librouter_pki_dn_free(struct pki_dn *dn)
+{
+	if (dn->c)
+		free(dn->c);
+	if (dn->state)
+		free(dn->state);
+	if (dn->city)
+		free(dn->city);
+	if (dn->org)
+		free(dn->org);
+	if (dn->section)
+		free(dn->section);
+	if (dn->name)
+		free(dn->name);
+	if (dn->email)
+		free(dn->email);
+	if (dn->challenge)
+		free(dn->challenge);
+}
+
+int librouter_pki_dn_prompt(struct pki_dn *dn)
+{
+	memset(dn, 0, sizeof(struct pki_dn));
+
+	printf("You are about to be asked to enter information that will be incorporated\n"
+			"into your certificate request.\n"
+			"What you are about to enter is what is called a Distinguished Name or a DN.\n"
+			"There are quite a few fields but you can leave some blank\n"
+			"For some fields there will be a default value,\n");
+
+
+	fflush(STDIN_FILENO);
+	printf("Country Name (2 letter code) [BR]:");
+	dn->c = readline(NULL);
+	printf("State or Province Name [SP]:");
+	dn->state = readline(NULL);
+	printf("Locality Name (eg, city) []:");
+	dn->city = readline(NULL);
+	printf("Organization Name (eg, company) [DigistarTelecom]:");
+	dn->org = readline(NULL);
+	printf("Organizational Unit Name (eg, section) []:");
+	dn->section = readline(NULL);
+	printf("Common Name (eg, YOUR name) []:");
+	dn->name = readline(NULL);
+	printf("Email Address []:");
+	dn->email = readline(NULL);
+	printf("Challenge Password []:");
+	dn->challenge = readline(NULL);
+
+	return 0;
+}
+
+static int _write_openssl_conf(struct pki_dn *dn)
+{
+	FILE *f;
+
+	f = fopen(OPENSSL_CONF, "w+");
+	if (f == NULL)
+		return -1;
+
+	fprintf(f, "[ req ]\n");
+	fprintf(f, "prompt = no\n");
+	fprintf(f, "distinguished_name = req_distinguished_name\n");
+	fprintf(f, "attributes=req_attributes\n");
+	fprintf(f, "[ req_distinguished_name ]\n");
+	fprintf(f, "C=%s\n", (dn->c[0]) ? dn->c : "BR");
+	fprintf(f, "ST=%s\n", (dn->state[0]) ? dn->state : "SP");
+	if (dn->city[0])
+		fprintf(f, "L=%s\n", dn->city);
+
+	fprintf(f, "O=%s\n", (dn->org[0]) ? dn->org : "DigistarTelecom");
+
+	if (dn->section[0])
+		fprintf(f, "OU=%s\n", dn->section);
+
+	if (dn->name[0])
+		fprintf(f, "CN=%s\n", dn->name);
+
+	if (dn->email[0])
+		fprintf(f, "E=%s\n", dn->email);
+
+	if (dn->challenge[0]) {
+		fprintf(f, "[ req_attributes ]\n");
+		fprintf(f, "challengePassword=%s\n", dn->challenge);
+	}
+
+	fclose(f);
+	return 0;
+}
+
+/**********************************/
 /******* Private RSA Key **********/
 /**********************************/
 int librouter_pki_get_privkey(char *buf, int len)
@@ -1863,10 +2023,21 @@ int librouter_pki_get_ca_name_by_index(int idx, char *name)
 int librouter_pki_get_cacert(char *name, char *buf, int buflen)
 {
 	char filename[64];
+	char fullname[64];
+	int i;
 
 	sprintf(filename, PKI_CA_PATH, name);
+	if (_file_exists(filename))
+		return _read_file(filename, buf, buflen);
 
-	return _read_file(filename, buf, buflen);
+	/* Try to find one with suffixes added by SSCEP */
+	for (i = 2; i >= 0; i--) {
+		sprintf(fullname, "%s-%d", filename, i);
+		if (_file_exists(fullname))
+			return _read_file(fullname, buf, buflen);
+	}
+
+	return -1;
 }
 
 int librouter_pki_set_cacert(char *name, char *buf, int buflen)
@@ -1921,7 +2092,7 @@ int _pki_set_csr(char *buf, int len)
 	return _write_file(PKI_CSR_PATH, buf, len);
 }
 
-int librouter_pki_gen_csr(void)
+int librouter_pki_gen_csr(struct pki_dn *dn)
 {
 	struct pki_data pki;
 	char buf[2048];
@@ -1931,13 +2102,65 @@ int librouter_pki_gen_csr(void)
 		return -1;
 	}
 
-	sprintf(buf, "%s -new -key %s -out %s", OPENSSL_REQ, PKI_PRIVKEY_PATH, PKI_CSR_PATH);
+	_write_openssl_conf(dn);
 
+	sprintf(buf, "%s -new -key %s -out %s",
+	        OPENSSL_REQ, PKI_PRIVKEY_PATH, PKI_CSR_PATH);
 
 	return system(buf);
 }
 
 #ifdef IPSEC_SUPPORT_SCEP
+static int _write_sscep_conf(struct scep_info *info)
+{
+	FILE *f;
+	char file[128];
+
+	f = fopen(SCEP_CONFIG_PATH, "w+");
+	if (f == NULL) {
+		printf("%% Could not create SCEP configuration file\n");
+		return -1;
+	}
+
+	fprintf(f, "# SSCEP Configuration\n");
+	fprintf(f, "# Autogenerated by LibRouter\n");
+
+	fprintf(f, "PrivateKeyFile %s\n", PKI_PRIVKEY_PATH);
+	fprintf(f, "LocalCertFile %s\n", PKI_CERT_PATH);
+	fprintf(f, "CertReqFile %s\n", PKI_CSR_PATH);
+
+	fprintf(f, "PollInterval 60\n");
+	fprintf(f, "MaxPollTime 28800\n");
+	fprintf(f, "MaxPollCount 256\n");
+
+	fprintf(f, "Verbose no\n");
+	fprintf(f, "Debug no\n");
+
+	fprintf(f, "URL %s\n", info->url);
+
+	/* Check for several certificates, because GetCA may have
+	 * responded with RA and CA. Windows Server 2008 sends 2 RA and
+	 * 1 CA certificate. */
+
+	if (_file_exists(info->cacert_file)) {
+		fprintf(f, "CACertFile %s\n", info->cacert_file);
+	} else {
+		sprintf(file, "%s-0", info->cacert_file);
+		if (_file_exists(file))
+			fprintf(f, "CACertFile %s\n", file);
+
+		sprintf(file, "%s-1", info->cacert_file);
+		if (_file_exists(file))
+			fprintf(f, "EncCertFile %s\n", file);
+
+	}
+
+	fclose(f);
+
+	return 0;
+}
+
+#if 0 /* Enroll using scepclient from Strongswan - did not work */
 static int _print_dn(char *buf, struct pki_dn *dn)
 {
 	char line[32];
@@ -1992,25 +2215,47 @@ int librouter_pki_cert_enroll(char *url, char *ca, struct pki_dn *dn)
 
 	return 0;
 }
+#else /* Enroll using SSCEP project - functional */
+int librouter_pki_cert_enroll(char *url, char *ca)
+{
+	char line[512];
+	struct scep_info info;
+	int ret;
+
+	snprintf(info.cacert_file, sizeof(info.cacert_file), PKI_CA_PATH, ca);
+	strncpy(info.url, url, sizeof(info.url));
+
+	_write_sscep_conf(&info);
+
+	ret = librouter_exec_prog_in_background(
+			PROG_SCEPCLIENT, "enroll", "-f", SCEP_CONFIG_PATH, NULL);
+	return ret;
+}
+#endif
 
 int librouter_pki_ca_enroll(char *url, char *ca)
 {
-	char line[512];
 	char cacert[128];
+	int ret;
 
 	sprintf(cacert, PKI_CA_PATH, ca);
-
-	sprintf(line, "%s -u %s -o cacert=%s",
+#if 0
+	sprintf(line, "%s getca -u %s -c %s",
 		PROG_SCEPCLIENT, url, cacert);
 
 #if 0 /* DEBUG */
 	printf("%s\n", line);
 #endif
 	system(line);
+#else
+	ret = librouter_exec_prog_in_background(
+				PROG_SCEPCLIENT, "getca", "-u", url, "-c", cacert, NULL);
+#endif
 
-	return 0;
+	return ret;
 }
 #endif /* IPSEC_SUPPORT_SCEP */
+
 /**********************************/
 /** Host (Own) X.509 Certificate **/
 /**********************************/

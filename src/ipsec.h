@@ -20,7 +20,6 @@
 
 #if defined(IPSEC_STRONGSWAN)
 #define PROG_IPSEC			"/sbin/ipsec"
-#define PROG_SCEPCLIENT			"/sbin/ipsec scepclient"
 #define FILE_PLUTO_PID			"/var/run/pluto.pid"
 #undef IPSEC_SUPPORT_LOCAL_ADDRESS_INTERFACE
 #undef IPSEC_SUPPORT_LOCAL_ADDRESS_FQDN
@@ -75,8 +74,8 @@ enum {
 };
 
 enum {
-	AH = 1,
-	ESP
+	AUTH_AH = 1,
+	AUTH_ESP
 };
 
 enum {
@@ -121,10 +120,21 @@ struct pki_dn {
 	char *section;
 	char *name;
 	char *email;
+	char *challenge;
 };
 
 
 #define IPSEC_CONNECTION_NAME_LEN	32
+
+#define PROG_SCEPCLIENT			"/bin/sscep"
+#define SCEP_CONFIG_PATH	"/etc/sscep.conf"
+
+struct scep_info {
+	char url[256];
+	char cacert_file[128];
+
+
+};
 
 struct ipsec_ep {
 	char addr[32]; /* IP or interface */
@@ -155,7 +165,8 @@ struct ipsec_connection {
 	struct ipsec_ep left;
 	struct ipsec_ep right;
 
-	int pfs;
+	int pfs;	/* Perfect Forward Secrecy */
+	int ipcomp; /* IP Compression */
 };
 
 /* This is big stuff */
@@ -179,6 +190,7 @@ struct pki_data {
 
 #define PKI_CONTENTS_FILE	"/var/run/pki.contents"
 
+#define OPENSSL_CONF			"/etc/ipsec.d/openssl.cnf"
 #define OPENSSL_REQ			"/sbin/openssl req -config /etc/ipsec.d/openssl.cnf"
 #define OPENSSL_GENRSA			"/sbin/openssl genrsa"
 #define OPENSSL_X509			"/sbin/openssl x509"
@@ -212,8 +224,13 @@ int librouter_ipsec_create_secrets_file(char *name, int type, char *shared);
 int librouter_ipsec_set_auth(char *ipsec_conn, int auth);
 int librouter_ipsec_set_secret(char *ipsec_conn, char *secret);
 
+int librouter_ipsec_get_ipcomp(char *ipsec_conn);
+int librouter_ipsec_set_ipcomp(char *ipsec_conn, int enable);
+
 int librouter_ipsec_get_link(char *ipsec_conn);
-int librouter_ipsec_set_ike_authproto(char *ipsec_conn, int opt);
+
+int librouter_ipsec_get_ike_auth_type(char *ipsec_conn);
+int librouter_ipsec_set_ike_auth_type(char *ipsec_conn, int opt);
 
 int librouter_ipsec_get_ike_algs(char *ipsec_conn, char *buf);
 int librouter_ipsec_set_ike_algs(char *ipsec_conn, int cypher, int hash, int dh);
@@ -242,7 +259,7 @@ int librouter_ipsec_get_id(int position, char *ipsec_conn, char *buf);
 int librouter_ipsec_get_subnet(int position, char *ipsec_conn, char *buf);
 int librouter_ipsec_get_local_addr(char *ipsec_conn, char *buf);
 int librouter_ipsec_get_nexthop(int position, char *ipsec_conn, char *buf);
-int librouter_ipsec_get_ike_authproto(char *ipsec_conn);
+
 int librouter_ipsec_get_esp(char *ipsec_conn, char *buf);
 int librouter_ipsec_get_pfs(char *ipsec_conn);
 int librouter_ipsec_set_link(char *ipsec_conn, int on_off);
@@ -267,6 +284,9 @@ int librouter_ipsec_show_conn(char *name);
 #ifdef OPTION_PKI
 int librouter_pki_dump_general_info(void);
 
+int librouter_pki_dn_free(struct pki_dn *dn);
+int librouter_pki_dn_prompt(struct pki_dn *dn);
+
 int librouter_pki_get_cert_contents(char *buf, int len);
 int librouter_pki_get_cert(char *buf, int len);
 int librouter_pki_flush_cert(void);
@@ -275,9 +295,10 @@ int librouter_pki_set_cert(char *buf, int len);
 int librouter_pki_get_csr_contents(char *buf, int len);
 int librouter_pki_get_csr(char *buf, int len);
 int librouter_pki_flush_csr(void);
-int librouter_pki_gen_csr(void);
+int librouter_pki_gen_csr(struct pki_dn *dn);
 #ifdef IPSEC_SUPPORT_SCEP
-int librouter_pki_cert_enroll(char *url, char *ca, struct pki_dn *dn);
+//int librouter_pki_cert_enroll(char *url, char *ca, struct pki_dn *dn);
+int librouter_pki_cert_enroll(char *url, char *ca);
 int librouter_pki_ca_enroll(char *url, char *ca);
 #endif
 
