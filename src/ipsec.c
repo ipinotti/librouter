@@ -16,9 +16,6 @@
 #include <arpa/inet.h>
 #include <sys/mman.h>
 
-#include <readline/readline.h>
-#include <readline/history.h>
-
 #include "options.h"
 #include "defines.h"
 #include "device.h"
@@ -1847,38 +1844,6 @@ int librouter_pki_dn_free(struct pki_dn *dn)
 		free(dn->email);
 	if (dn->challenge)
 		free(dn->challenge);
-}
-
-int librouter_pki_dn_prompt(struct pki_dn *dn)
-{
-	memset(dn, 0, sizeof(struct pki_dn));
-
-	printf("You are about to be asked to enter information that will be incorporated\n"
-			"into your certificate request.\n"
-			"What you are about to enter is what is called a Distinguished Name or a DN.\n"
-			"There are quite a few fields but you can leave some blank\n"
-			"For some fields there will be a default value,\n");
-
-
-	fflush(STDIN_FILENO);
-	printf("Country Name (2 letter code) [BR]:");
-	dn->c = readline(NULL);
-	printf("State or Province Name [SP]:");
-	dn->state = readline(NULL);
-	printf("Locality Name (eg, city) []:");
-	dn->city = readline(NULL);
-	printf("Organization Name (eg, company) [DigistarTelecom]:");
-	dn->org = readline(NULL);
-	printf("Organizational Unit Name (eg, section) []:");
-	dn->section = readline(NULL);
-	printf("Common Name (eg, YOUR name) []:");
-	dn->name = readline(NULL);
-	printf("Email Address []:");
-	dn->email = readline(NULL);
-	printf("Challenge Password []:");
-	dn->challenge = readline(NULL);
-
-	return 0;
 }
 
 static int _write_openssl_conf(struct pki_dn *dn)

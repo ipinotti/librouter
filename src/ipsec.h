@@ -285,7 +285,6 @@ int librouter_ipsec_show_conn(char *name);
 int librouter_pki_dump_general_info(void);
 
 int librouter_pki_dn_free(struct pki_dn *dn);
-int librouter_pki_dn_prompt(struct pki_dn *dn);
 
 int librouter_pki_get_cert_contents(char *buf, int len);
 int librouter_pki_get_cert(char *buf, int len);
