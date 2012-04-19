@@ -223,9 +223,9 @@ int librouter_dev_get_mtu(char *dev)
 	strcpy(ifr.ifr_name, dev);
 
 	if (ioctl(s, SIOCGIFMTU, &ifr) < 0) {
-		perror("SIOCGIFMTU");
+		/* error("SIOCGIFMTU"); */
 		close(s);
-		return -1;
+		return 1500; /* Return default value in error */
 	}
 
 	close(s);
