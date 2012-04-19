@@ -1859,12 +1859,18 @@ static int _write_openssl_conf(struct pki_dn *dn)
 	fprintf(f, "distinguished_name = req_distinguished_name\n");
 	fprintf(f, "attributes=req_attributes\n");
 	fprintf(f, "[ req_distinguished_name ]\n");
-	fprintf(f, "C=%s\n", (dn->c[0]) ? dn->c : "BR");
-	fprintf(f, "ST=%s\n", (dn->state[0]) ? dn->state : "SP");
+
+	if (dn->c[0])
+		fprintf(f, "C=%s\n", dn->c);
+
+	if (dn->state[0])
+		fprintf(f, "ST=%s\n", dn->state);
+
 	if (dn->city[0])
 		fprintf(f, "L=%s\n", dn->city);
 
-	fprintf(f, "O=%s\n", (dn->org[0]) ? dn->org : "DigistarTelecom");
+	if (dn->org[0])
+		fprintf(f, "O=%s\n", dn->org);
 
 	if (dn->section[0])
 		fprintf(f, "OU=%s\n", dn->section);
