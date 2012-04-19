@@ -1875,16 +1875,25 @@ static int _write_openssl_conf(struct pki_dn *dn)
 	if (dn->section[0])
 		fprintf(f, "OU=%s\n", dn->section);
 
-	if (dn->name[0])
+	/*
+	 * At least one default value is needed
+	 * So set name as hostname as default
+	 */
+	if (dn->name[0]) {
 		fprintf(f, "CN=%s\n", dn->name);
+	} else {
+		char hostname[64];
+		gethostname(hostname, sizeof(hostname)-1);
+		hostname[64] = '\0';
+		fprintf(f, "CN=%s\n", hostname);
+	}
 
 	if (dn->email[0])
 		fprintf(f, "E=%s\n", dn->email);
 
-	if (dn->challenge[0]) {
-		fprintf(f, "[ req_attributes ]\n");
+	fprintf(f, "[ req_attributes ]\n");
+	if (dn->challenge[0])
 		fprintf(f, "challengePassword=%s\n", dn->challenge);
-	}
 
 	fclose(f);
 	return 0;
