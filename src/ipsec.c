@@ -215,7 +215,12 @@ static int _ipsec_write_conn_cfg(struct ipsec_connection *c)
 	fprintf(f, "conn %s\n", c->name);
 
 	/* AUTH */
-	if (c->authtype == AUTH_ESP) {
+	switch (c->authtype) {
+	case AUTH_AH:
+		fprintf(f, "\tauth=ah\n");
+		break;
+	case AUTH_ESP:
+	default:
 		fprintf(f, "\tauth=esp\n");
 #ifdef IPSEC_OPENSWAN
 		fprintf(f, "\tphase2alg=");
@@ -223,8 +228,8 @@ static int _ipsec_write_conn_cfg(struct ipsec_connection *c)
 		fprintf(f, "\tesp= ");
 #endif
 		fprintf(f, "%s-%s\n", ctable[c->cypher].string, htable[c->hash].string);
-	} else
-		fprintf(f, "\tauth=ah\n");
+		break;
+	}
 
 	fprintf(f, "\tike= %s-%s-%s\n",
 	        ctable[c->ikecypher].string,
@@ -1482,6 +1487,7 @@ static void _ipsec_dump_conn(FILE *out, char *name)
 		fprintf(out, "  authproto tunnel ah\n");
 		break;
 	case AUTH_ESP:
+	default:
 		fprintf(out, "  authproto tunnel esp\n");
 		if (librouter_ipsec_get_esp(name, buf) > 0) {
 			fprintf(out, "  esp %s\n", buf);

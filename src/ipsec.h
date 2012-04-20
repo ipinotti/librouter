@@ -74,8 +74,8 @@ enum {
 };
 
 enum {
-	AUTH_AH = 1,
-	AUTH_ESP
+	AUTH_ESP = 0,
+	AUTH_AH
 };
 
 enum {
