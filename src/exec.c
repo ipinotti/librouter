@@ -126,12 +126,8 @@ int librouter_exec_prog_in_background(char *path, ...)
 	va_end(ap);
 	argv[i] = NULL;
 
-
-	/* already a daemon */
-	if (getppid() == 1)
-		return -1;
-
 	/* Fork off the parent process */
+	exec_dbg("Forking to run %s\n", path);
 	pid = fork();
 	if (pid < 0)
 		return -1;
