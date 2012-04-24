@@ -1001,13 +1001,9 @@ int librouter_ipsec_set_nexthop_inf(int position,
 
 	switch (position) {
 	case LOCAL:
-		//memset(c->left.gateway, 0, sizeof(c->left.gateway));
-		//memcpy(c->left.gateway, nexthop, strlen(nexthop));
 		strncpy(c->left.gateway, nexthop, sizeof(c->left.gateway));
 		break;
 	case REMOTE:
-		//memset(c->right.gateway, 0, sizeof(c->right.gateway));
-		//memcpy(c->right.gateway, nexthop, strlen(nexthop));
 		strncpy(c->right.gateway, nexthop, sizeof(c->right.gateway));
 		break;
 	default:
@@ -1036,13 +1032,9 @@ int librouter_ipsec_set_subnet_inf(int position,
 
 	switch (position) {
 	case LOCAL:
-		//memset(c->left.network, 0, sizeof(c->left.network));
-		//memcpy(c->left.network, subnet, strlen(subnet));
 		strncpy(c->left.network, subnet, sizeof(c->left.network));
 		break;
 	case REMOTE:
-		//memset(c->right.network, 0, sizeof(c->right.network));
-		//memcpy(c->right.network, subnet, strlen(subnet));
 		strncpy(c->right.network, subnet, sizeof(c->right.network));
 		break;
 	default:
@@ -2219,24 +2211,15 @@ int librouter_pki_cert_enroll(char *url, char *ca)
 }
 #endif
 
-int librouter_pki_ca_enroll(char *url, char *ca)
+int librouter_pki_ca_authenticate(char *url, char *ca)
 {
 	char cacert[128];
 	int ret;
 
 	sprintf(cacert, PKI_CA_PATH, ca);
-#if 0
-	sprintf(line, "%s getca -u %s -c %s",
-		PROG_SCEPCLIENT, url, cacert);
 
-#if 0 /* DEBUG */
-	printf("%s\n", line);
-#endif
-	system(line);
-#else
 	ret = librouter_exec_prog_in_background(
 				PROG_SCEPCLIENT, "getca", "-u", url, "-c", cacert, NULL);
-#endif
 
 	return ret;
 }

@@ -126,7 +126,7 @@ struct pki_dn {
 
 #define IPSEC_CONNECTION_NAME_LEN	32
 
-#define PROG_SCEPCLIENT			"/bin/sscep"
+#define PROG_SCEPCLIENT		"/bin/sscep"
 #define SCEP_CONFIG_PATH	"/etc/sscep.conf"
 
 struct scep_info {
@@ -298,7 +298,7 @@ int librouter_pki_gen_csr(struct pki_dn *dn);
 #ifdef IPSEC_SUPPORT_SCEP
 //int librouter_pki_cert_enroll(char *url, char *ca, struct pki_dn *dn);
 int librouter_pki_cert_enroll(char *url, char *ca);
-int librouter_pki_ca_enroll(char *url, char *ca);
+int librouter_pki_ca_authenticate(char *url, char *ca);
 #endif
 
 int librouter_pki_gen_privkey(int keysize);
