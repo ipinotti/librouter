@@ -347,8 +347,16 @@ void librouter_mangle_dump(char *xmangle, FILE *F, int conf_format)
 				if ((tos = strstr(buf, "TOS match 0x")))
 					tos += 12;
 
-				if ((mark = strstr(buf, "MARK xset 0x")))
+				/* FIXME New IPtables versions changed the string xset to set,
+				 but perhaps the best here is to use libiptc to get these values
+				 */
+#ifdef CONFIG_DIGISTAR_MRG
+				if (mark = strstr(buf, "MARK set 0x"))
+					mark += 11;
+#else
+				if (mark = strstr(buf, "MARK xset 0x")
 					mark += 12;
+#endif
 
 				if ((dscp = strstr(buf, "DSCP set 0x")))
 					dscp += 11;
